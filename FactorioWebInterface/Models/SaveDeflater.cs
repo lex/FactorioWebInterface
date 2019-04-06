@@ -11,7 +11,7 @@ namespace FactorioWebInterface.Models
         private static readonly string FILE_MISSING_MESSAGE = "error('File was removed to decrease save file size. Please visit https://github.com/Refactorio/RedMew if you wish to download this scenario.')";
         private static readonly Regex luaPathRegex = new Regex(@"(?<=.*/)(.*)", RegexOptions.Compiled);
         private static readonly Regex lineRegex = new Regex(@"(^.*?(?=(--)))|^((?!--).)*", RegexOptions.Compiled);
-        private static readonly Regex pathRegex = new Regex(@"(?<=require\s*\(?\s*('|""))((\w|/|\.|_)+)", RegexOptions.Compiled);
+        private static readonly Regex pathRegex = new Regex(@"(?<=require\s*\(?\s*('|""))((\w|/|\.|_|-)+)", RegexOptions.Compiled);
         private static readonly Regex dirRegex = new Regex(@"(.*/)(?<=\w*)", RegexOptions.Compiled);
 
         private Dictionary<string, string[]> luaFileRequirePaths;
