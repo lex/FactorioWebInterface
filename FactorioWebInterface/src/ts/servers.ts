@@ -51,6 +51,7 @@ interface FactorioServerSettings {
     Tags: string[];
     MaxPlayers: number;
     GamePassword: string;
+    MaxUploadSlots: number;
     AutoPause: boolean;
     UseDefaultAdmins: boolean;
     Admins: string[];
@@ -119,6 +120,7 @@ const configDescriptionInput = document.getElementById('configDescriptionInput')
 const configTagsInput = document.getElementById('configTagsInput') as HTMLTextAreaElement;
 const configMaxPlayersInput = document.getElementById('configMaxPlayersInput') as HTMLInputElement;
 const configPasswordInput = document.getElementById('configPasswordInput') as HTMLInputElement;
+const configMaxUploadSlots = document.getElementById('configMaxUploadSlots') as HTMLInputElement;
 const configPauseInput = document.getElementById('configPauseInput') as HTMLInputElement;
 const configAdminUseDefault = document.getElementById('configAdminUseDefault') as HTMLInputElement;
 const configAdminInput = document.getElementById('configAdminInput') as HTMLTextAreaElement;
@@ -185,6 +187,7 @@ async function getSettings() {
 
     configMaxPlayersInput.value = settings.MaxPlayers + "";
     configPasswordInput.value = settings.GamePassword;
+    configMaxUploadSlots.value = settings.MaxUploadSlots + "";
     configPauseInput.checked = settings.AutoPause;
     configAdminUseDefault.checked = settings.UseDefaultAdmins;
     configAdminInput.value = settings.Admins.join(', ');
@@ -1027,12 +1030,18 @@ configSaveButton.onclick = async () => {
         slots = 20;
     }
 
+    let maxUploadSlots = parseInt(configMaxUploadSlots.value);
+    if (isNaN(maxUploadSlots)) {
+        maxUploadSlots = 32;
+    }
+
     let settings: FactorioServerSettings = {
         Name: configNameInput.value,
         Description: configDescriptionInput.value,
         Tags: tags,
         MaxPlayers: max_players,
         GamePassword: configPasswordInput.value,
+        MaxUploadSlots: maxUploadSlots,
         AutoPause: configPauseInput.checked,
         UseDefaultAdmins: configAdminUseDefault.checked,
         Admins: configAdminInput.value.split(','),

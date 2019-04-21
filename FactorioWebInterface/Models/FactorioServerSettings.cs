@@ -37,6 +37,9 @@ namespace FactorioWebInterface.Models
         [JsonProperty(PropertyName = "max_upload_in_kilobytes_per_second")]
         public double MaxUploadInKilobytesPerSecond { get; set; }
 
+        [JsonProperty(PropertyName = "max_upload_slots")]
+        public int MaxUploadSlots { get; set; }
+
         [JsonProperty(PropertyName = "minimum_latency_in_ticks")]
         public int MinimumLatencyInTicks { get; set; }
 
@@ -84,6 +87,7 @@ namespace FactorioWebInterface.Models
             GamePassword = "",
             RequireUserVerification = true,
             MaxUploadInKilobytesPerSecond = 0,
+            MaxUploadSlots = 32,
             MinimumLatencyInTicks = 0,
             IgnorePlayerLimitForReturningPlayers = false,
             AllowCommands = FactorioServerSettingsConfigAllowCommands.AdminsOnly,
