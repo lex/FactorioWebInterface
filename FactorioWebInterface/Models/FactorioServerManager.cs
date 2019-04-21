@@ -3513,6 +3513,7 @@ namespace FactorioWebInterface.Models
                     Tags = serverSettings.Tags,
                     MaxPlayers = serverSettings.MaxPlayers,
                     GamePassword = serverSettings.GamePassword,
+                    MaxUploadSlots = serverSettings.MaxUploadSlots,
                     AutoPause = serverSettings.AutoPause,
                     UseDefaultAdmins = serverSettings.UseDefaultAdmins,
                     Admins = adminList,
@@ -3549,6 +3550,7 @@ namespace FactorioWebInterface.Models
                 serverSettigns.Tags = settings.Tags.Select(x => x.Replace(' ', '\u00a0')).ToList(); // \u00a0 is &nbsp;. Factorio splits tags on space, but not on &nbsp;.
                 serverSettigns.MaxPlayers = settings.MaxPlayers < 0 ? 0 : settings.MaxPlayers;
                 serverSettigns.GamePassword = settings.GamePassword;
+                serverSettigns.MaxUploadSlots = settings.MaxUploadSlots < 0 ? 0 : settings.MaxUploadSlots;
                 serverSettigns.AutoPause = settings.AutoPause;
                 serverSettigns.UseDefaultAdmins = settings.UseDefaultAdmins;
                 serverSettigns.AutosaveSlots = settings.AutosaveSlots < 0 ? 0 : settings.AutosaveSlots;

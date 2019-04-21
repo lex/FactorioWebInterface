@@ -20,6 +20,9 @@ namespace FactorioWebInterface.Models
         [JsonProperty(PropertyName = "game_password")]
         public string GamePassword { get; set; }
 
+        [JsonProperty(PropertyName = "max_upload_slots")]
+        public int MaxUploadSlots { get; set; }
+
         [JsonProperty(PropertyName = "auto_pause")]
         public bool AutoPause { get; set; }
 
