@@ -25,7 +25,11 @@ namespace FactorioWebInterface.Models
     public class FactorioServerManager : IFactorioServerManager
     {
         // Match on first [*] and capture everything after.
-        private static readonly Regex tag_regex = new Regex(@"(\[[^\[\]]+\])\s*((?:.|\s)*)\s*", RegexOptions.Compiled);
+        private static readonly Regex tagRegex = new Regex(@"(\[[^\[\]]+\])\s*((?:.|\s)*)\s*", RegexOptions.Compiled);
+
+        // Match all [*]. 
+        private static readonly Regex serverTagRegex = new Regex(@"\[.*?\]", RegexOptions.Compiled);
+        
 
         private static readonly JsonSerializerSettings banListSerializerSettings = new JsonSerializerSettings()
         {
@@ -1205,7 +1209,7 @@ namespace FactorioWebInterface.Models
 
             _ = SendToFactorioControl(serverId, messageData);
 
-            var match = tag_regex.Match(data);
+            var match = tagRegex.Match(data);
             if (!match.Success || match.Index > 20)
             {
                 return;
@@ -2553,7 +2557,10 @@ namespace FactorioWebInterface.Models
             string name = null;
             if (serverData.ExtraServerSettings.SetDiscordChannelName)
             {
-                name = $"s{serverId}-{serverData.ServerSettings.Name} {serverData.Version.Replace('.', '_')}";
+                string cleanServerName = serverTagRegex.Replace(serverData.ServerSettings.Name, "");
+                string cleanVersion = serverData.Version.Replace('.', '_');
+
+                name = $"s{serverId}-{cleanServerName}-{cleanVersion}";
             }
             var t3 = _discordBotContext.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
 
