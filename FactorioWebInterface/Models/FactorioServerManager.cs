@@ -144,15 +144,27 @@ namespace FactorioWebInterface.Models
 
         private void FactorioDiscordDataReceived(DiscordBotContext sender, ServerMessageEventArgs eventArgs)
         {
-            var name = SanitizeDiscordChat(eventArgs.User.Username);
-            var message = SanitizeDiscordChat(eventArgs.Message);
+            var serverId = eventArgs.ServerId;
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
 
-            string data = $"/silent-command game.print('[Discord] {name}: {message}')";
-            SendToFactorioProcess(eventArgs.ServerId, data);
+            if (serverData.ExtraServerSettings.DiscordToGameChat)
+            {
+                var name = SanitizeDiscordChat(eventArgs.User.Username);
+                var message = SanitizeDiscordChat(eventArgs.Message);
+
+                string data = $"/silent-command game.print('[Discord] {name}: {message}')";
+                SendToFactorioProcess(eventArgs.ServerId, data);
+
+                LogChat(serverId, $"[Discord] {name}: {message}", DateTime.UtcNow);
+            }
 
             var messageData = new MessageData()
             {
-                ServerId = eventArgs.ServerId,
+                ServerId = serverId,
                 MessageType = MessageType.Discord,
                 Message = $"[Discord] {eventArgs.User.Username}: {eventArgs.Message}"
             };
@@ -1206,15 +1218,37 @@ namespace FactorioWebInterface.Models
             switch (tag)
             {
                 case Constants.ChatTag:
-                    _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                    {
+                        if (!servers.TryGetValue(serverId, out var serverData))
+                        {
+                            _logger.LogError("Unknown serverId: {serverId}", serverId);
+                            break;
+                        }
 
-                    LogChat(serverId, content, dateTime);
-                    break;
+                        if (serverData.ExtraServerSettings.GameChatToDiscord)
+                        {
+                            _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                        }
+
+                        LogChat(serverId, content, dateTime);
+                        break;
+                    }
                 case Constants.ShoutTag:
-                    _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                    {
+                        if (!servers.TryGetValue(serverId, out var serverData))
+                        {
+                            _logger.LogError("Unknown serverId: {serverId}", serverId);
+                            break;
+                        }
 
-                    LogChat(serverId, content, dateTime);
-                    break;
+                        if (serverData.ExtraServerSettings.GameShoutToDiscord)
+                        {
+                            _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                        }
+
+                        LogChat(serverId, content, dateTime);
+                        break;
+                    }
                 case Constants.DiscordTag:
                     content = content.Replace("\\n", "\n");
                     content = SanitizeGameChat(content);

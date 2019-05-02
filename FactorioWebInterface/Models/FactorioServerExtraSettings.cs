@@ -17,13 +17,28 @@ namespace FactorioWebInterface.Models
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool SetDiscordChannelName { get; set; }
 
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool GameChatToDiscord { get; set; }
+
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool GameShoutToDiscord { get; set; }
+
+        [DefaultValue(true)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool DiscordToGameChat { get; set; }
+
         public static FactorioServerExtraSettings Default()
         {
             return new FactorioServerExtraSettings()
             {
                 SyncBans = true,
                 BuildBansFromDatabaseOnStart = true,
-                SetDiscordChannelName = true
+                SetDiscordChannelName = true,
+                GameChatToDiscord = true,
+                GameShoutToDiscord = true,
+                DiscordToGameChat = true
             };
         }
 
@@ -33,7 +48,10 @@ namespace FactorioWebInterface.Models
             {
                 SyncBans = SyncBans,
                 BuildBansFromDatabaseOnStart = BuildBansFromDatabaseOnStart,
-                SetDiscordChannelName = SetDiscordChannelName
+                SetDiscordChannelName = SetDiscordChannelName,
+                GameChatToDiscord = GameChatToDiscord,
+                GameShoutToDiscord = GameShoutToDiscord,
+                DiscordToGameChat = DiscordToGameChat
             };
         }
     }
