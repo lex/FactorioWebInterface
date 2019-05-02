@@ -25,7 +25,11 @@ namespace FactorioWebInterface.Models
     public class FactorioServerManager : IFactorioServerManager
     {
         // Match on first [*] and capture everything after.
-        private static readonly Regex tag_regex = new Regex(@"(\[[^\[\]]+\])\s*((?:.|\s)*)\s*", RegexOptions.Compiled);
+        private static readonly Regex tagRegex = new Regex(@"(\[[^\[\]]+\])\s*((?:.|\s)*)\s*", RegexOptions.Compiled);
+
+        // Match all [*]. 
+        private static readonly Regex serverTagRegex = new Regex(@"\[.*?\]", RegexOptions.Compiled);
+        
 
         private static readonly JsonSerializerSettings banListSerializerSettings = new JsonSerializerSettings()
         {
@@ -144,15 +148,27 @@ namespace FactorioWebInterface.Models
 
         private void FactorioDiscordDataReceived(DiscordBotContext sender, ServerMessageEventArgs eventArgs)
         {
-            var name = SanitizeDiscordChat(eventArgs.User.Username);
-            var message = SanitizeDiscordChat(eventArgs.Message);
+            var serverId = eventArgs.ServerId;
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
 
-            string data = $"/silent-command game.print('[Discord] {name}: {message}')";
-            SendToFactorioProcess(eventArgs.ServerId, data);
+            if (serverData.ExtraServerSettings.DiscordToGameChat)
+            {
+                var name = SanitizeDiscordChat(eventArgs.User.Username);
+                var message = SanitizeDiscordChat(eventArgs.Message);
+
+                string data = $"/silent-command game.print('[Discord] {name}: {message}')";
+                SendToFactorioProcess(eventArgs.ServerId, data);
+
+                LogChat(serverId, $"[Discord] {name}: {message}", DateTime.UtcNow);
+            }
 
             var messageData = new MessageData()
             {
-                ServerId = eventArgs.ServerId,
+                ServerId = serverId,
                 MessageType = MessageType.Discord,
                 Message = $"[Discord] {eventArgs.User.Username}: {eventArgs.Message}"
             };
@@ -1193,7 +1209,7 @@ namespace FactorioWebInterface.Models
 
             _ = SendToFactorioControl(serverId, messageData);
 
-            var match = tag_regex.Match(data);
+            var match = tagRegex.Match(data);
             if (!match.Success || match.Index > 20)
             {
                 return;
@@ -1206,15 +1222,37 @@ namespace FactorioWebInterface.Models
             switch (tag)
             {
                 case Constants.ChatTag:
-                    _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                    {
+                        if (!servers.TryGetValue(serverId, out var serverData))
+                        {
+                            _logger.LogError("Unknown serverId: {serverId}", serverId);
+                            break;
+                        }
 
-                    LogChat(serverId, content, dateTime);
-                    break;
+                        if (serverData.ExtraServerSettings.GameChatToDiscord)
+                        {
+                            _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                        }
+
+                        LogChat(serverId, content, dateTime);
+                        break;
+                    }
                 case Constants.ShoutTag:
-                    _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                    {
+                        if (!servers.TryGetValue(serverId, out var serverData))
+                        {
+                            _logger.LogError("Unknown serverId: {serverId}", serverId);
+                            break;
+                        }
 
-                    LogChat(serverId, content, dateTime);
-                    break;
+                        if (serverData.ExtraServerSettings.GameShoutToDiscord)
+                        {
+                            _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                        }
+
+                        LogChat(serverId, content, dateTime);
+                        break;
+                    }
                 case Constants.DiscordTag:
                     content = content.Replace("\\n", "\n");
                     content = SanitizeGameChat(content);
@@ -2519,7 +2557,10 @@ namespace FactorioWebInterface.Models
             string name = null;
             if (serverData.ExtraServerSettings.SetDiscordChannelName)
             {
-                name = $"s{serverId}-{serverData.ServerSettings.Name} {serverData.Version.Replace('.', '_')}";
+                string cleanServerName = serverTagRegex.Replace(serverData.ServerSettings.Name, "");
+                string cleanVersion = serverData.Version.Replace('.', '_');
+
+                name = $"s{serverId}-{cleanServerName}-{cleanVersion}";
             }
             var t3 = _discordBotContext.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
 

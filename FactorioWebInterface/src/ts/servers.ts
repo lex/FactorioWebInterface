@@ -63,8 +63,11 @@ interface FactorioServerSettings {
 
 interface FactorioServerExtraSettings {
     SyncBans: boolean;
-    BuildBansFromDatabaseOnStart: boolean
-    SetDiscordChannelName: boolean
+    BuildBansFromDatabaseOnStart: boolean;
+    SetDiscordChannelName: boolean;
+    GameChatToDiscord: boolean;
+    GameShoutToDiscord: boolean;
+    DiscordToGameChat: boolean;
 }
 
 const maxMessageCount = 200;
@@ -133,6 +136,9 @@ const configSyncBans = document.getElementById('configSyncBans') as HTMLInputEle
 const configBuildBansFromDb = document.getElementById('configBuildBansFromDb') as HTMLInputElement;
 const configSetDiscordChannelName = document.getElementById('configSetDiscordChannelName') as HTMLInputElement;
 const configExtraSaveButton = document.getElementById('configExtraSaveButton') as HTMLButtonElement;
+const configSetGameChatToDiscord = document.getElementById('configSetGameChatToDiscord') as HTMLInputElement;
+const configSetGameShoutToDiscord = document.getElementById('configSetGameShoutToDiscord') as HTMLInputElement;
+const configSetDiscordToGameChat = document.getElementById('configSetDiscordToGameChat') as HTMLInputElement;
 
 let messageCount = 0;
 let commandHistory: string[] = [];
@@ -207,6 +213,9 @@ async function getExtraSettings() {
     configSyncBans.checked = settings.SyncBans;
     configBuildBansFromDb.checked = settings.BuildBansFromDatabaseOnStart;
     configSetDiscordChannelName.checked = settings.SetDiscordChannelName;
+    configSetGameChatToDiscord.checked = settings.GameChatToDiscord;
+    configSetGameShoutToDiscord.checked = settings.GameShoutToDiscord;
+    configSetDiscordToGameChat.checked = settings.DiscordToGameChat;
 }
 
 async function getVersion() {
@@ -1064,7 +1073,10 @@ configExtraSaveButton.onclick = async () => {
     let settings: FactorioServerExtraSettings = {
         SyncBans: configSyncBans.checked,
         BuildBansFromDatabaseOnStart: configBuildBansFromDb.checked,
-        SetDiscordChannelName: configSetDiscordChannelName.checked
+        SetDiscordChannelName: configSetDiscordChannelName.checked,
+        GameChatToDiscord: configSetGameChatToDiscord.checked,
+        GameShoutToDiscord: configSetGameShoutToDiscord.checked,
+        DiscordToGameChat: configSetDiscordToGameChat.checked,
     }
 
     let result: Result = await connection.invoke('SaveServerExtraSettings', settings);
