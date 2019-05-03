@@ -29,6 +29,7 @@
         public const string ChatLogDirectoryName = "chat_logs";
         public const string CurrentChatLogName = "chat-current.log";
         public const string ArchiveDirectoryName = "archive";
+        public const string ModsDirectoryName = "mods";
 
 #if WINDOWS
         public const string ExecutablePath = "bin/x64/factorio.exe";

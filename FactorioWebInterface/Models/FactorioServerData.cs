@@ -23,6 +23,7 @@ namespace FactorioWebInterface.Models
         public static string GlobalSavesDirectoryPath { get; } = Path.GetFullPath(Path.Combine(baseDirectoryPath, Constants.GlobalSavesDirectoryName));
         public static string ScenarioDirectoryPath { get; } = Path.GetFullPath(Path.Combine(baseDirectoryPath, Constants.ScenarioDirectoryName));
         public static string UpdateCacheDirectoryPath { get; } = Path.GetFullPath(Path.Combine(baseDirectoryPath, Constants.UpdateCacheDirectoryName));
+        public static string ModsDirectoryPath { get; } = Path.GetFullPath(Path.Combine(baseDirectoryPath, Constants.ModsDirectoryName));
 
         public static HashSet<string> ValidSaveDirectories { get; } = new HashSet<string>();
 
@@ -49,12 +50,11 @@ namespace FactorioWebInterface.Models
         public FactorioServerSettings ServerSettings { get; set; }
         public FactorioServerExtraSettings ExtraServerSettings { get; set; }
         public List<string> ServerAdminList { get; set; }
-        //public bool SyncBans { get; set; }
-        //public bool BuildBansFromDatabaseOnStart { get; set; }
         public string ChatLogsDirectoryPath { get; set; }
         public string ChatLogsArchiveDirectoryPath { get; set; }
         public string ChatLogCurrentPath { get; set; }
         public Logger ChatLogger { get; set; }
+        public string ModDirectory { get; set; }
 
         public SortedList<string, int> OnlinePlayers { get; set; }
         public int OnlinePlayerCount { get; set; }
@@ -137,7 +137,7 @@ namespace FactorioWebInterface.Models
                 ValidSaveDirectories.Add($"{serverId}/{Constants.TempSavesDirectoryName}");
                 ValidSaveDirectories.Add($"{serverId}/{Constants.LocalSavesDirectoryName}");
                 ValidSaveDirectories.Add($"{serverId}\\{Constants.TempSavesDirectoryName}");
-                ValidSaveDirectories.Add($"{serverId}\\{Constants.LocalSavesDirectoryName}");                
+                ValidSaveDirectories.Add($"{serverId}\\{Constants.LocalSavesDirectoryName}");
             }
 
             //Servers["7"].IsRemote = true;
