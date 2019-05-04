@@ -35,7 +35,7 @@ namespace FactorioWebInterface.Pages.Admin
 
             if (user == null || user.Suspended)
             {
-                HttpContext.Session.SetString("returnUrl", "bans");
+                HttpContext.Session.SetString("returnUrl", "mods");
                 return RedirectToPage("signIn");
             }
 
@@ -61,6 +61,40 @@ namespace FactorioWebInterface.Pages.Admin
             }
 
             return new JsonResult(result);
+        }
+
+        public async Task<IActionResult> OnGetFileAsync(string modPack, string fileName)
+        {
+            var user = await _userManger.GetUserAsync(User);
+
+            if (user == null || user.Suspended)
+            {
+                HttpContext.Session.SetString("returnUrl", "mods");
+                return RedirectToPage("signIn");
+            }
+
+            var file = _factorioModManager.GetModPackFile(modPack, fileName);
+
+            if (file == null)
+            {
+                return BadRequest();
+            }
+
+            string contentType;
+            switch (file.Extension)
+            {
+                case ".zip":
+                    contentType = "application/zip";
+                    break;
+                case ".json":
+                    contentType = "application/zip";
+                    break;
+                default:
+                    contentType = "application/octet-stream";
+                    break;
+            }
+
+            return File(file.OpenRead(), contentType, file.Name);
         }
     }
 }

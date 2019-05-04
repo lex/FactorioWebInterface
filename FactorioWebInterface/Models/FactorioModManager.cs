@@ -318,7 +318,7 @@ namespace FactorioWebInterface.Models
                 using (var readStream = file.OpenReadStream())
                 {
                     await readStream.CopyToAsync(writeStream);
-                    await writeStream.FlushAsync();                    
+                    await writeStream.FlushAsync();
                 }
             }
 
@@ -329,6 +329,45 @@ namespace FactorioWebInterface.Models
             else
             {
                 return Result.OK;
+            }
+        }
+
+        public FileInfo GetModPackFile(string modPack, string fileName)
+        {
+            try
+            {
+                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                    return null;
+                }
+
+                if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(" "))
+                {
+                    return null;
+                }
+
+                string safeName = Path.GetFullPath(fileName);
+                string filePath = Path.Combine(dir.Name, safeName);
+                var fileInfo = new FileInfo(filePath);
+
+                if (!fileInfo.Exists)
+                {
+                    return null;
+                }
+                if (fileInfo.Directory != dir)
+                {
+                    return null;
+                }
+
+                return fileInfo;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(GetModPackFile));
+                return null;
             }
         }
     }
