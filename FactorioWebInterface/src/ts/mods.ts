@@ -16,11 +16,32 @@ import * as $ from "jquery";
         Size: number;
     }
 
+    interface Result {
+        Success: boolean;
+        Errors: Error[];
+    }
+
     const modPacksTable = document.getElementById('modPacksTable') as HTMLTableElement;
+
+    const newModPackButton = document.getElementById('newModPackButton') as HTMLButtonElement;
+
+
+    const newModPackModal = document.getElementById('newModPackModal') as HTMLDivElement;
+    const newModPackModalBackground = document.getElementById('newModPackModalBackground') as HTMLDivElement;
+    const newModPackModalCloseButton = document.getElementById('newModPackModalCloseButton') as HTMLDivElement;
+    const newModPackModalNameInput = document.getElementById('newModPackModalNameInput') as HTMLInputElement;
+    const newModPackModalCreateButton = document.getElementById('newModPackModalCreateButton') as HTMLButtonElement;
+
+    const renameModPackModal = document.getElementById('renameModPackModal') as HTMLDivElement;
+    const renameModPackModalBackground = document.getElementById('renameModPackModalBackground') as HTMLDivElement;
+    const renameModPackModalCloseButton = document.getElementById('renameModPackModalCloseButton') as HTMLDivElement;
+    const renameModPackModalNameInput = document.getElementById('renameModPackModalNameInput') as HTMLInputElement;
+    const renameModPackModalConfirmButton = document.getElementById('renameModPackModalConfirmButton') as HTMLButtonElement;
 
     // XSRF/CSRF token, see https://docs.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-2.1
     let requestVerificationToken = (document.querySelector('input[name="__RequestVerificationToken"][type="hidden"]') as HTMLInputElement).value
 
+    let renameOldName: string = null;
     let currentModPack: string = null;
 
     const connection = new signalR.HubConnectionBuilder()
@@ -84,12 +105,28 @@ import * as $ from "jquery";
         }
     }
 
-    function renameModPack(this, ev: MouseEvent) {
+    function renameModPack(this: HTMLButtonElement, ev: MouseEvent) {
+        let row = this.parentElement.parentElement;
+        let child = row.firstElementChild as HTMLElement;
+        let name = child.innerText
 
+        renameOldName = name;
+
+        renameModPackModal.classList.add('is-active');
+        renameModPackModalNameInput.value = name;
+        renameModPackModalNameInput.focus();
     }
 
-    function deleteModPack(this, ev: MouseEvent) {
+    async function deleteModPack(this: HTMLButtonElement, ev: MouseEvent) {
+        let row = this.parentElement.parentElement;
+        let child = row.firstElementChild as HTMLElement;
+        let name = child.innerText
 
+        let result = await connection.invoke('DeleteModPack', name) as Result;
+
+        if (!result.Success) {
+            alert(JSON.stringify(result.Errors));
+        }
     }
 
     function updateModPackFiles(modPack: string, files: ModPackFileMetaData[]) {
@@ -101,6 +138,64 @@ import * as $ from "jquery";
     connection.on("SendModPacks", updateModPacks)
 
     connection.on("SendModPackFiles", updateModPackFiles)
+
+    newModPackButton.onclick = () => {
+        newModPackModal.classList.add('is-active');
+        newModPackModalNameInput.focus();
+    };
+
+    function closeNewModPackModal() {
+        newModPackModal.classList.remove('is-active');
+    }
+
+    newModPackModalBackground.onclick = closeNewModPackModal;
+    newModPackModalCloseButton.onclick = closeNewModPackModal;
+
+    async function createNewModPack() {
+        let name = newModPackModalNameInput.value;
+
+        let result = await connection.invoke('CreateModPack', name) as Result;
+
+        if (result.Success) {
+            closeNewModPackModal();
+        }
+        else {
+            alert(JSON.stringify(result.Errors));
+        }
+    }
+
+    newModPackModalCreateButton.onclick = createNewModPack;
+    newModPackModalNameInput.onkeydown = function (this: HTMLInputElement, ev: KeyboardEvent) {
+        if (ev.keyCode === 13) {
+            createNewModPack();
+        }
+    };
+
+    function closeRenameModPackModal() {
+        renameModPackModal.classList.remove('is-active');
+    }
+
+    renameModPackModalBackground.onclick = closeRenameModPackModal;
+    renameModPackModalCloseButton.onclick = closeRenameModPackModal;
+
+    async function requestRenameModPack() {
+        let name = renameModPackModalNameInput.value;
+
+        let result = await connection.invoke('RenameModPack', renameOldName, name) as Result;
+
+        if (result.Success) {
+            closeRenameModPackModal();
+        } else {
+            alert(JSON.stringify(result.Errors));
+        }
+    }
+
+    renameModPackModalConfirmButton.onclick = requestRenameModPack;
+    renameModPackModalNameInput.onkeydown = function (this: HTMLInputElement, ev: KeyboardEvent) {
+        if (ev.keyCode === 13) {
+            requestRenameModPack();
+        }
+    }
 
     function pad(number) {
         return number < 10 ? '0' + number : number;

@@ -65,15 +65,15 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(new Error(Constants.InvalidFileNameErrorKey, $"Name {name} cannot contain spaces."));
                 }
 
-                string safeName = Path.GetFullPath(name);
-                string modPackPath = Path.Combine(dir.Name, safeName);
+                string safeName = Path.GetFileName(name);
+                string modPackPath = Path.Combine(dir.FullName, safeName);
                 var modPackDir = new DirectoryInfo(modPackPath);
 
                 if (modPackDir.Exists)
                 {
                     return Result.Failure(new Error(Constants.FileAlreadyExistsErrorKey, $"Mod pack {name} already exists."));
                 }
-                if (modPackDir.Parent != dir)
+                if (modPackDir.Parent.FullName != dir.FullName)
                 {
                     return Result.Failure(new Error(Constants.FileErrorKey, $"Error creating mod pack with name {name}."));
                 }
@@ -100,15 +100,15 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
 
-                string safeName = Path.GetFullPath(name);
-                string modPackPath = Path.Combine(dir.Name, safeName);
+                string safeName = Path.GetFileName(name);
+                string modPackPath = Path.Combine(dir.FullName, safeName);
                 var modPackDir = new DirectoryInfo(modPackPath);
 
                 if (!modPackDir.Exists)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
-                if (modPackDir.Parent != dir)
+                if (modPackDir.Parent.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
@@ -135,15 +135,15 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
 
-                string safeName = Path.GetFullPath(name);
-                string modPackPath = Path.Combine(dir.Name, safeName);
+                string safeName = Path.GetFileName(name);
+                string modPackPath = Path.Combine(dir.FullName, safeName);
                 var modPackDir = new DirectoryInfo(modPackPath);
 
                 if (!modPackDir.Exists)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
-                if (modPackDir.Parent != dir)
+                if (modPackDir.Parent.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
@@ -157,15 +157,15 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(new Error(Constants.InvalidFileNameErrorKey, $"Name {newName} cannot contain spaces."));
                 }
 
-                string safeNewName = Path.GetFullPath(newName);
-                string modPackNewPath = Path.Combine(dir.Name, safeNewName);
+                string safeNewName = Path.GetFileName(newName);
+                string modPackNewPath = Path.Combine(dir.FullName, safeNewName);
                 var modPackNewDir = new DirectoryInfo(modPackNewPath);
 
                 if (modPackNewDir.Exists)
                 {
                     return Result.Failure(new Error(Constants.FileAlreadyExistsErrorKey, $"Mod pack {newName} already exists."));
                 }
-                if (modPackNewDir.Parent != dir)
+                if (modPackNewDir.Parent.FullName != dir.FullName)
                 {
                     return Result.Failure(new Error(Constants.FileErrorKey, $"Error renaming mod pack from {name} to {newName}."));
                 }
@@ -192,15 +192,15 @@ namespace FactorioWebInterface.Models
                     return Array.Empty<ModPackFileMetaData>();
                 }
 
-                string safeName = Path.GetFullPath(name);
-                string modPackPath = Path.Combine(dir.Name, safeName);
+                string safeName = Path.GetFileName(name);
+                string modPackPath = Path.Combine(dir.FullName, safeName);
                 var modPackDir = new DirectoryInfo(modPackPath);
 
                 if (!modPackDir.Exists)
                 {
                     return Array.Empty<ModPackFileMetaData>();
                 }
-                if (modPackDir.Parent != dir)
+                if (modPackDir.Parent.FullName != dir.FullName)
                 {
                     return Array.Empty<ModPackFileMetaData>();
                 }
@@ -244,8 +244,8 @@ namespace FactorioWebInterface.Models
                         continue;
                     }
 
-                    string safeName = Path.GetFullPath(file);
-                    string filePath = Path.Combine(dir.Name, safeName);
+                    string safeName = Path.GetFileName(file);
+                    string filePath = Path.Combine(dir.FullName, safeName);
                     var fileInfo = new FileInfo(filePath);
 
                     if (!fileInfo.Exists)
@@ -253,7 +253,7 @@ namespace FactorioWebInterface.Models
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
                     }
-                    if (fileInfo.Directory != dir)
+                    if (fileInfo.Directory.FullName != dir.FullName)
                     {
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
@@ -299,8 +299,8 @@ namespace FactorioWebInterface.Models
                     continue;
                 }
 
-                string safeName = Path.GetFullPath(fileName);
-                string filePath = Path.Combine(dir.Name, safeName);
+                string safeName = Path.GetFileName(fileName);
+                string filePath = Path.Combine(dir.FullName, safeName);
                 var fileInfo = new FileInfo(filePath);
 
                 if (fileInfo.Exists)
@@ -308,7 +308,7 @@ namespace FactorioWebInterface.Models
                     errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, fileName));
                     continue;
                 }
-                if (fileInfo.Directory != dir)
+                if (fileInfo.Directory.FullName != dir.FullName)
                 {
                     errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName));
                     continue;
@@ -349,15 +349,15 @@ namespace FactorioWebInterface.Models
                     return null;
                 }
 
-                string safeName = Path.GetFullPath(fileName);
-                string filePath = Path.Combine(dir.Name, safeName);
+                string safeName = Path.GetFileName(fileName);
+                string filePath = Path.Combine(dir.FullName, safeName);
                 var fileInfo = new FileInfo(filePath);
 
                 if (!fileInfo.Exists)
                 {
                     return null;
                 }
-                if (fileInfo.Directory != dir)
+                if (fileInfo.Directory.FullName != dir.FullName)
                 {
                     return null;
                 }

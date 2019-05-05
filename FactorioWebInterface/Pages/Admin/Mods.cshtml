@@ -117,6 +117,77 @@
 
     </section>
 
+    <div id="newModPackModal" class="modal">
+        <div id="newModPackModalBackground" class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">New Mod Pack</p>
+                <button id="newModPackModalCloseButton" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+
+                <div class="columns is-centered">
+
+                    <div class="column is-8">
+                        <div class="field is-horizontal">
+                            <div class="field-label">
+                                <label for="newModPackModalNameInput" class="label">Name</label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="control">
+                                        <input id="newModPackModalNameInput" type="text" class="input" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="column" style="flex-grow:0">
+                        <button id="newModPackModalCreateButton" class="button is-success">Create</button>
+                    </div>
+
+                </div>
+            </section>
+            <footer class="modal-card-foot"></footer>
+        </div>
+    </div>
+
+    <div id="renameModPackModal" class="modal">
+        <div id="renameModPackModalBackground" class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Rename Mod Pack</p>
+                <button id="renameModPackModalCloseButton" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+
+                <div class="columns is-centered">
+
+                    <div class="column is-8">                        
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label for="renameModPackModalNameInput" class="label">New&nbsp;Name</label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="control">
+                                        <input id="renameModPackModalNameInput" type="text" class="input" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="column" style="flex-grow:0">
+                        <button id="renameModPackModalConfirmButton" class="button is-success">Confirm</button>
+                    </div>
+
+                </div>
+            </section>
+            <footer class="modal-card-foot"></footer>
+        </div>
+    </div>
 
     @section Scripts{
         <environment include="Development">
