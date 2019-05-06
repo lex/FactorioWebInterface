@@ -234,6 +234,19 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
 
+                string safeModPackName = Path.GetFileName(modPack);
+                string modPackPath = Path.Combine(dir.FullName, safeModPackName);
+                var modPackDir = new DirectoryInfo(modPackPath);
+
+                if (!modPackDir.Exists)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
+                }
+                if (modPackDir.Parent.FullName != dir.FullName)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
+                }
+
                 var errors = new List<Error>();
 
                 foreach (var file in files)
@@ -245,7 +258,7 @@ namespace FactorioWebInterface.Models
                     }
 
                     string safeName = Path.GetFileName(file);
-                    string filePath = Path.Combine(dir.FullName, safeName);
+                    string filePath = Path.Combine(modPackDir.FullName, safeName);
                     var fileInfo = new FileInfo(filePath);
 
                     if (!fileInfo.Exists)
@@ -253,7 +266,7 @@ namespace FactorioWebInterface.Models
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
                     }
-                    if (fileInfo.Directory.FullName != dir.FullName)
+                    if (fileInfo.Directory.FullName != modPackDir.FullName)
                     {
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
@@ -288,6 +301,19 @@ namespace FactorioWebInterface.Models
                 return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
             }
 
+            string safeModPackName = Path.GetFileName(modPack);
+            string modPackPath = Path.Combine(dir.FullName, safeModPackName);
+            var modPackDir = new DirectoryInfo(modPackPath);
+
+            if (!modPackDir.Exists)
+            {
+                return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
+            }
+            if (modPackDir.Parent.FullName != dir.FullName)
+            {
+                return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
+            }
+
             var errors = new List<Error>();
 
             foreach (var file in files)
@@ -300,7 +326,7 @@ namespace FactorioWebInterface.Models
                 }
 
                 string safeName = Path.GetFileName(fileName);
-                string filePath = Path.Combine(dir.FullName, safeName);
+                string filePath = Path.Combine(modPackDir.FullName, safeName);
                 var fileInfo = new FileInfo(filePath);
 
                 if (fileInfo.Exists)
@@ -308,7 +334,7 @@ namespace FactorioWebInterface.Models
                     errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, fileName));
                     continue;
                 }
-                if (fileInfo.Directory.FullName != dir.FullName)
+                if (fileInfo.Directory.FullName != modPackDir.FullName)
                 {
                     errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName));
                     continue;
@@ -344,20 +370,33 @@ namespace FactorioWebInterface.Models
                     return null;
                 }
 
+                string safeModPackName = Path.GetFileName(modPack);
+                string modPackPath = Path.Combine(dir.FullName, safeModPackName);
+                var modPackDir = new DirectoryInfo(modPackPath);
+
+                if (!modPackDir.Exists)
+                {
+                    return null;
+                }
+                if (modPackDir.Parent.FullName != dir.FullName)
+                {
+                    return null;
+                }
+
                 if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(" "))
                 {
                     return null;
                 }
 
                 string safeName = Path.GetFileName(fileName);
-                string filePath = Path.Combine(dir.FullName, safeName);
+                string filePath = Path.Combine(modPackDir.FullName, safeName);
                 var fileInfo = new FileInfo(filePath);
 
                 if (!fileInfo.Exists)
                 {
                     return null;
                 }
-                if (fileInfo.Directory.FullName != dir.FullName)
+                if (fileInfo.Directory.FullName != modPackDir.FullName)
                 {
                     return null;
                 }

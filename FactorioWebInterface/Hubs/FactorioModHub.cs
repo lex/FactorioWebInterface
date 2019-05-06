@@ -65,10 +65,7 @@ namespace FactorioWebInterface.Hubs
         {
             var result = _factorioModManager.DeleteModPackFiles(modPack, files);
 
-            if (result.Success)
-            {
-                Clients.All.SendModPackFiles(modPack, _factorioModManager.GetModPackFiles(modPack));
-            }
+            Clients.All.SendModPackFiles(modPack, _factorioModManager.GetModPackFiles(modPack));
 
             return Task.FromResult(result);
         }
