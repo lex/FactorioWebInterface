@@ -9,10 +9,13 @@ namespace FactorioWebInterface.Hubs
     public class FactorioModHub : Hub<IFactorioModClientMethods>
     {
         private readonly FactorioModManager _factorioModManager;
+        private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
 
-        public FactorioModHub(FactorioModManager factorioModManager)
+        public FactorioModHub(FactorioModManager factorioModManager,
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub)
         {
             _factorioModManager = factorioModManager;
+            _factorioControlHub = factorioControlHub;
         }
 
         public Task<ModPackMetaData[]> GetModPacks()
@@ -26,7 +29,9 @@ namespace FactorioWebInterface.Hubs
 
             if (result.Success)
             {
-                Clients.All.SendModPacks(_factorioModManager.GetModPacks());
+                var modPacks = _factorioModManager.GetModPacks();
+                Clients.All.SendModPacks(modPacks);
+                _factorioControlHub.Clients.All.SendModPacks(modPacks);
             }
 
             return Task.FromResult(result);
@@ -38,7 +43,9 @@ namespace FactorioWebInterface.Hubs
 
             if (result.Success)
             {
-                Clients.All.SendModPacks(_factorioModManager.GetModPacks());
+                var modPacks = _factorioModManager.GetModPacks();
+                Clients.All.SendModPacks(modPacks);
+                _factorioControlHub.Clients.All.SendModPacks(modPacks);
             }
 
             return Task.FromResult(result);
@@ -50,7 +57,9 @@ namespace FactorioWebInterface.Hubs
 
             if (result.Success)
             {
-                Clients.All.SendModPacks(_factorioModManager.GetModPacks());
+                var modPacks = _factorioModManager.GetModPacks();
+                Clients.All.SendModPacks(modPacks);
+                _factorioControlHub.Clients.All.SendModPacks(modPacks);
             }
 
             return Task.FromResult(result);
@@ -66,6 +75,10 @@ namespace FactorioWebInterface.Hubs
             var result = _factorioModManager.DeleteModPackFiles(modPack, files);
 
             Clients.All.SendModPackFiles(modPack, _factorioModManager.GetModPackFiles(modPack));
+
+            var modPacks = _factorioModManager.GetModPacks();
+            Clients.All.SendModPacks(modPacks);
+            _factorioControlHub.Clients.All.SendModPacks(modPacks);
 
             return Task.FromResult(result);
         }

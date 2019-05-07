@@ -42,6 +42,7 @@ import * as $ from "jquery";
     const renameModPackModal = document.getElementById('renameModPackModal') as HTMLDivElement;
     const renameModPackModalBackground = document.getElementById('renameModPackModalBackground') as HTMLDivElement;
     const renameModPackModalCloseButton = document.getElementById('renameModPackModalCloseButton') as HTMLDivElement;
+    const renameModPackModalOldNameLabel = document.getElementById('renameModPackModalOldNameLabel') as HTMLLabelElement;
     const renameModPackModalNameInput = document.getElementById('renameModPackModalNameInput') as HTMLInputElement;
     const renameModPackModalConfirmButton = document.getElementById('renameModPackModalConfirmButton') as HTMLButtonElement;
 
@@ -146,6 +147,7 @@ import * as $ from "jquery";
 
         let rows: HTMLTableRowElement[] = []
 
+        let currentModPackAvailable = false
         for (let modPack of modPacks) {
             let row = document.createElement('tr');
             row.onclick = modPackRowClick;
@@ -175,6 +177,15 @@ import * as $ from "jquery";
             row.appendChild(cell4);
 
             rows.push(row);
+
+            if (currentModPack === modPack.Name) {
+                currentModPackAvailable = true;
+            }
+        }
+
+        if (!currentModPackAvailable) {
+            currentModPack = null;
+            modPackFilesDiv.classList.add('is-invisible');
         }
 
         let jTable = $(modPacksTable);
@@ -198,6 +209,7 @@ import * as $ from "jquery";
         renameOldName = name;
 
         renameModPackModal.classList.add('is-active');
+        renameModPackModalOldNameLabel.innerText = name;
         renameModPackModalNameInput.value = name;
         renameModPackModalNameInput.focus();
     }
@@ -234,16 +246,20 @@ import * as $ from "jquery";
         closeDeleteModPackModal();
     }
 
-    async function modPackRowClick(this: HTMLTableRowElement, ev: MouseEvent) {
-        let child = this.firstElementChild as HTMLElement;
-        let modPack = child.innerText
-
+    async function selectModPack(modPack: string) {
         currentModPack = modPack;
         currentModPackTitle.innerText = modPack;
 
         let files = await connection.invoke('GetModPackFiles', modPack) as ModPackFileMetaData[];
 
         updateModPackFiles(modPack, files);
+    }
+
+    function modPackRowClick(this: HTMLTableRowElement, ev: MouseEvent) {
+        let child = this.firstElementChild as HTMLElement;
+        let modPack = child.innerText
+
+        selectModPack(modPack);
     }
 
     function updateModPackFiles(modPack: string, files: ModPackFileMetaData[]) {
@@ -352,11 +368,16 @@ import * as $ from "jquery";
 
     async function requestRenameModPack() {
         let name = renameModPackModalNameInput.value;
+        let current = currentModPack;
 
         let result = await connection.invoke('RenameModPack', renameOldName, name) as Result;
 
         if (result.Success) {
             closeRenameModPackModal();
+
+            if (renameOldName === current) {
+                selectModPack(name);
+            }
         } else {
             alert(JSON.stringify(result.Errors));
         }

@@ -16,17 +16,20 @@ namespace FactorioWebInterface.Pages.Admin
         private readonly UserManager<ApplicationUser> _userManger;
         private readonly FactorioModManager _factorioModManager;
         private readonly IHubContext<FactorioModHub, IFactorioModClientMethods> _factorioModHub;
+        private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
 
         public ModsModel
         (
             UserManager<ApplicationUser> userManger,
             FactorioModManager factorioModManager,
-            IHubContext<FactorioModHub, IFactorioModClientMethods> factorioModHub
+            IHubContext<FactorioModHub, IFactorioModClientMethods> factorioModHub,
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub
         )
         {
             _userManger = userManger;
             _factorioModManager = factorioModManager;
             _factorioModHub = factorioModHub;
+            _factorioControlHub = factorioControlHub;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -44,6 +47,14 @@ namespace FactorioWebInterface.Pages.Admin
 
         public async Task<IActionResult> OnPostUploadFilesAsync(string modPack, List<IFormFile> files)
         {
+            var user = await _userManger.GetUserAsync(User);
+
+            if (user == null || user.Suspended)
+            {
+                HttpContext.Session.SetString("returnUrl", "mods");
+                return RedirectToPage("signIn");
+            }
+
             if (string.IsNullOrWhiteSpace(modPack))
             {
                 return BadRequest();
@@ -56,6 +67,10 @@ namespace FactorioWebInterface.Pages.Admin
             var result = await _factorioModManager.UploadFiles(modPack, files);
 
             _ = _factorioModHub.Clients.All.SendModPackFiles(modPack, _factorioModManager.GetModPackFiles(modPack));
+
+            var modPacks = _factorioModManager.GetModPacks();
+            _ = _factorioModHub.Clients.All.SendModPacks(modPacks);
+            _ = _factorioControlHub.Clients.All.SendModPacks(modPacks);
 
             return new JsonResult(result);
         }

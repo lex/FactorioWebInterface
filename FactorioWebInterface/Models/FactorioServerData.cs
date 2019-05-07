@@ -54,7 +54,7 @@ namespace FactorioWebInterface.Models
         public string ChatLogsArchiveDirectoryPath { get; set; }
         public string ChatLogCurrentPath { get; set; }
         public Logger ChatLogger { get; set; }
-        public string ModDirectory { get; set; }
+        public string ModPack { get; set; } = "";
 
         public SortedList<string, int> OnlinePlayers { get; set; }
         public int OnlinePlayerCount { get; set; }

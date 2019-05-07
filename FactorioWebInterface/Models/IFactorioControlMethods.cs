@@ -53,6 +53,9 @@ namespace FactorioWebInterface.Models
         Task<Result> DeflateSave(string directoryPath, string fileName, string newFileName);
         Task RequestGetDownloadableVersions();
         Task<string> GetVersion();
+        Task<ModPackMetaData[]> GetModPacks();
+        Task<string> GetModPack();
+        Task SetModPack(string modPack);
     }
 
     public interface IFactorioControlClientMethods
@@ -69,5 +72,7 @@ namespace FactorioWebInterface.Models
         Task SendDownloadableVersions(List<string> versions);
         Task SendCachedVersions(List<string> versions);
         Task SendVersion(string version);
+        Task SendModPacks(ModPackMetaData[] modPacks);
+        Task SendSelectedModPack(string modPack);
     }
 }

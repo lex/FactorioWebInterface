@@ -130,6 +130,14 @@ namespace FactorioWebInterface.Pages.Admin
 
         public async Task<IActionResult> OnPostFileUploadAsync(string directory, List<IFormFile> files)
         {
+            var user = await _userManger.GetUserAsync(User);
+
+            if (user == null || user.Suspended)
+            {
+                HttpContext.Session.SetString("returnUrl", "servers/" + Id);
+                return RedirectToPage("signIn");
+            }
+
             if (string.IsNullOrWhiteSpace(directory))
             {
                 return BadRequest();

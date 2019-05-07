@@ -63,5 +63,7 @@ namespace FactorioWebInterface.Models
         Task<List<string>> GetCachedVersions();
         bool DeleteCachedVersion(string version);
         string GetVersion(string serverId);
+        Task<string> GetModPack(string serverId);
+        Task SetModPack(string serverId, string modPack);
     }
 }

@@ -7,6 +7,13 @@
 @Html.AntiForgeryToken()
 
 <div class="container-fluid">
+    <section class="container section">
+        <h2 class="title is-2">Mods</h2>
+        <p>Mod packs can be selected for use on the server page.</p>
+        <p>Click on a mod pack to manage the files.</p>
+        <p>You can upload more than one file at a time.</p>
+        <p>Uploads must not exceed 1GB.</p>
+    </section>
     <section class="container">
         <h2 class="title is-3">Mod Packs</h2>
         <button id="newModPackButton" class="button is-success">
@@ -111,8 +118,13 @@
             <section class="modal-card-body">
 
                 <div class="columns is-centered">
-
                     <div class="column is-8">
+
+                        <div class="field is-grouped">
+                            <label class="label">Old Name:&nbsp;</label>
+                            <label id="renameModPackModalOldNameLabel" class="label"></label>
+                        </div>
+
                         <div class="field is-horizontal">
                             <div class="field-label is-normal">
                                 <label for="renameModPackModalNameInput" class="label">New&nbsp;Name</label>
@@ -124,11 +136,11 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="column" style="flex-grow:0">
-                        <button id="renameModPackModalConfirmButton" class="button is-success">Confirm</button>
+                            <div class="control">
+                                <button id="renameModPackModalConfirmButton" class="button is-success">Confirm</button>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

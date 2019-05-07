@@ -45,6 +45,40 @@ namespace FactorioWebInterface.Models
             }
         }
 
+        public DirectoryInfo GetModPackDirectoryInfo(string modPack)
+        {
+            try
+            {
+                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                    return null;
+                }
+
+                string safeName = Path.GetFileName(modPack);
+                string modPackPath = Path.Combine(dir.FullName, safeName);
+                var modPackDir = new DirectoryInfo(modPackPath);
+
+                if (!modPackDir.Exists)
+                {
+                    return null;
+                }
+                if (modPackDir.Parent.FullName != dir.FullName)
+                {
+                    return null;
+                }
+
+                return modPackDir;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(GetModPackDirectoryInfo));
+                return null;
+            }
+        }
+
         public Result CreateModPack(string name)
         {
             try
@@ -79,6 +113,7 @@ namespace FactorioWebInterface.Models
                 }
 
                 Directory.CreateDirectory(modPackPath);
+
                 return Result.OK;
             }
             catch (Exception ex)
