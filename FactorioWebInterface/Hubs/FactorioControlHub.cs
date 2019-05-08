@@ -12,10 +12,12 @@ namespace FactorioWebInterface.Hubs
     public class FactorioControlHub : Hub<IFactorioControlClientMethods>, IFactorioControlServerMethods
     {
         private IFactorioServerManager _factorioServerManager;
+        private FactorioModManager _factorioModManager;
 
-        public FactorioControlHub(IFactorioServerManager factorioServerManager)
+        public FactorioControlHub(IFactorioServerManager factorioServerManager, FactorioModManager factorioModManager)
         {
             _factorioServerManager = factorioServerManager;
+            _factorioModManager = factorioModManager;
         }
 
         public async Task<FactorioContorlClientData> SetServerId(string serverId)
@@ -299,6 +301,25 @@ namespace FactorioWebInterface.Hubs
             string serverId = Context.GetDataOrDefault<string>();
 
             return Task.FromResult(_factorioServerManager.GetVersion(serverId));
+        }
+
+        public Task<ModPackMetaData[]> GetModPacks()
+        {
+            return Task.FromResult(_factorioModManager.GetModPacks());
+        }
+
+        public Task<string> GetModPack()
+        {
+            string serverId = Context.GetDataOrDefault<string>();
+            return _factorioServerManager.GetModPack(serverId);
+        }
+
+        public async Task SetModPack(string modPack)
+        {
+            string serverId = Context.GetDataOrDefault<string>();
+            await _factorioServerManager.SetModPack(serverId, modPack);
+
+            _ = Clients.Group(serverId).SendSelectedModPack(modPack);
         }
     }
 }

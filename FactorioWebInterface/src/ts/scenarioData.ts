@@ -82,6 +82,8 @@ import * as $ from "jquery";
         jTable.data('value', r => r.children[1].textContent.toLowerCase());
     }
 
+    buildDataTable();
+
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/scenarioDataHub")
         .withHubProtocol(new MessagePackHubProtocol())
@@ -92,8 +94,6 @@ import * as $ from "jquery";
             await connection.start();
 
             await reBuildDataSetsSelect();
-            buildDataTable();
-
         } catch (ex) {
             console.log(ex.message);
             setTimeout(() => start(), 2000);

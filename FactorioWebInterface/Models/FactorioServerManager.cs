@@ -29,7 +29,7 @@ namespace FactorioWebInterface.Models
 
         // Match all [*]. 
         private static readonly Regex serverTagRegex = new Regex(@"\[.*?\]", RegexOptions.Compiled);
-        
+
 
         private static readonly JsonSerializerSettings banListSerializerSettings = new JsonSerializerSettings()
         {
@@ -47,6 +47,7 @@ namespace FactorioWebInterface.Models
         private readonly ILogger<FactorioServerManager> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly FactorioUpdater _factorioUpdater;
+        private readonly FactorioModManager _factorioModManager;
 
         //private SemaphoreSlim serverLock = new SemaphoreSlim(1, 1);
         private Dictionary<string, FactorioServerData> servers = FactorioServerData.Servers;
@@ -64,7 +65,8 @@ namespace FactorioWebInterface.Models
             DbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
             IHttpClientFactory httpClientFactory,
-            FactorioUpdater factorioUpdater
+            FactorioUpdater factorioUpdater,
+            FactorioModManager factorioModManager
         )
         {
             _configuration = configuration;
@@ -77,6 +79,7 @@ namespace FactorioWebInterface.Models
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _factorioUpdater = factorioUpdater;
+            _factorioModManager = factorioModManager;
 
             string name = _configuration[Constants.FactorioWrapperNameKey];
             if (string.IsNullOrWhiteSpace(name))
@@ -438,7 +441,21 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        private async Task PrepareServer(FactorioServerData serverData)
+        private string PrepareModDirectory(FactorioServerData serverData)
+        {
+            var dir = _factorioModManager.GetModPackDirectoryInfo(serverData.ModPack);
+            if (dir == null)
+            {
+                serverData.ModPack = "";
+                return "";
+            }
+            else
+            {
+                return dir.FullName;
+            }
+        }
+
+        private async Task<string> PrepareServer(FactorioServerData serverData)
         {
             var banTask = BuildBanList(serverData);
             var adminTask = BuildAdminList(serverData);
@@ -449,9 +466,13 @@ namespace FactorioWebInterface.Models
             serverData.OnlinePlayers.Clear();
             serverData.OnlinePlayerCount = 0;
 
+            string modDirPath = PrepareModDirectory(serverData);
+
             await banTask;
             await adminTask;
             await logTask;
+
+            return modDirPath;
         }
 
         public bool IsValidServerId(string serverId)
@@ -485,7 +506,7 @@ namespace FactorioWebInterface.Models
                             return Result.Failure(Constants.MissingFileErrorKey, "No file to resume server from.");
                         }
 
-                        await PrepareServer(serverData);
+                        string modDirPath = await PrepareServer(serverData);
 
                         string basePath = serverData.BaseDirectoryPath;
 
@@ -509,6 +530,11 @@ namespace FactorioWebInterface.Models
                             arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-latest --server-settings {basePath}/server-settings.json --port {serverData.Port}";
                         }
 #endif
+                        if (modDirPath != "")
+                        {
+                            arguments += $" --mod-directory {modDirPath}";
+                        }
+
                         var startInfo = new ProcessStartInfo
                         {
                             FileName = fullName,
@@ -599,7 +625,7 @@ namespace FactorioWebInterface.Models
                                 return Result.Failure(Constants.UnexpctedErrorKey, $"File {saveFile.FullName}.");
                         }
 
-                        await PrepareServer(serverData);
+                        string modDirPath = await PrepareServer(serverData);
 
                         string basePath = serverData.BaseDirectoryPath;
 
@@ -623,6 +649,11 @@ namespace FactorioWebInterface.Models
                             arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server {saveFile.Name} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
                         }
 #endif
+                        if (modDirPath != "")
+                        {
+                            arguments += $" --mod-directory {modDirPath}";
+                        }
+
                         var startInfo = new ProcessStartInfo
                         {
                             FileName = fullName,
@@ -711,7 +742,7 @@ namespace FactorioWebInterface.Models
                 FileHelpers.CreateDirectorySymlink(FactorioServerData.ScenarioDirectoryPath, localScenarioDirectoryPath);
             }
 
-            await PrepareServer(serverData);
+            string modDirPath = await PrepareServer(serverData);
 
             string fullName;
             string arguments;
@@ -733,6 +764,11 @@ namespace FactorioWebInterface.Models
                 arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-scenario {scenarioName} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
             }
 #endif
+            if (modDirPath != "")
+            {
+                arguments += $" --mod-directory {modDirPath}";
+            }
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = fullName,
@@ -3829,6 +3865,45 @@ namespace FactorioWebInterface.Models
                     serverData.ServerLock.Release();
                 }
             });
+        }
+
+        public async Task<string> GetModPack(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return null;
+            }
+
+            try
+            {
+                await serverData.ServerLock.WaitAsync();
+
+                return serverData.ModPack;
+            }
+            finally
+            {
+                serverData.ServerLock.Release();
+            }
+        }
+
+        public async Task SetModPack(string serverId, string modPack)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+            }
+
+            try
+            {
+                await serverData.ServerLock.WaitAsync();
+
+                serverData.ModPack = modPack;
+            }
+            finally
+            {
+                serverData.ServerLock.Release();
+            }
         }
     }
 }
