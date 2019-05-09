@@ -47,7 +47,8 @@ namespace FactorioWebInterface.Models
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
-        private readonly ScenarioDataManger _scenarioDataManger;
+        private readonly FactorioBanManager _factorioBanManager;
+        private readonly ScenarioDataManager _scenarioDataManger;
 
         //private SemaphoreSlim serverLock = new SemaphoreSlim(1, 1);
         private Dictionary<string, FactorioServerData> servers = FactorioServerData.Servers;
@@ -66,7 +67,8 @@ namespace FactorioWebInterface.Models
             IHttpClientFactory httpClientFactory,
             FactorioUpdater factorioUpdater,
             FactorioModManager factorioModManager,
-            ScenarioDataManger scenarioDataManger
+            FactorioBanManager factorioBanManager,
+            ScenarioDataManager scenarioDataManger
         )
         {
             _configuration = configuration;
@@ -79,6 +81,7 @@ namespace FactorioWebInterface.Models
             _httpClientFactory = httpClientFactory;
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
+            _factorioBanManager = factorioBanManager;
             _scenarioDataManger = scenarioDataManger;
 
             string name = _configuration[Constants.FactorioWrapperNameKey];
@@ -93,9 +96,56 @@ namespace FactorioWebInterface.Models
 
             _discordBotContext.FactorioDiscordDataReceived += FactorioDiscordDataReceived;
             _scenarioDataManger.EntryChanged += _scenarioDataManger_EntryChanged;
+            _factorioBanManager.BanAdded += _factorioBanManager_BanAdded;
+            _factorioBanManager.BanRemoved += _factorioBanManager_BanRemoved;
         }
 
-        private void _scenarioDataManger_EntryChanged(ScenarioDataManger sender, ScenarioDataEntryChangedEventArgs eventArgs)
+        private void _factorioBanManager_BanAdded(FactorioBanManager sender, FactorioBanAddedEventArgs eventArgs)
+        {
+            if (!eventArgs.SynchronizeWithServers)
+            {
+                return;
+            }
+
+            var ban = eventArgs.Ban;
+
+            // /ban doesn't support names with spaces.
+            if (ban.Username.Contains(' '))
+            {
+                return;
+            }
+
+            var command = $"/ban {ban.Username} {ban.Reason}";
+
+            if (command.EndsWith('.'))
+            {
+                command.Substring(0, command.Length - 1);
+            }
+
+            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+        }
+
+        private void _factorioBanManager_BanRemoved(FactorioBanManager sender, FactorioBanRemovedEventArgs eventArgs)
+        {
+            if (!eventArgs.SynchronizeWithServers)
+            {
+                return;
+            }
+
+            var username = eventArgs.Username;
+
+            // /ban doesn't support names with spaces.
+            if (username.Contains(' '))
+            {
+                return;
+            }
+
+            var command = $"/unban {username}";
+
+            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+        }
+
+        private void _scenarioDataManger_EntryChanged(ScenarioDataManager sender, ScenarioDataEntryChangedEventArgs eventArgs)
         {
             _ = Task.Run(async () =>
              {
@@ -1865,7 +1915,7 @@ namespace FactorioWebInterface.Models
             SendToFactorioProcess(serverId, command);
         }
 
-        public async Task FactorioControlDataReceived(string serverId, string data, string userName)
+        public async Task FactorioControlDataReceived(string serverId, string data, string actor)
         {
             if (string.IsNullOrWhiteSpace(data))
             {
@@ -1897,7 +1947,7 @@ namespace FactorioWebInterface.Models
                 {
                     Username = player,
                     Reason = reason,
-                    Admin = userName,
+                    Admin = actor,
                     DateTime = DateTime.UtcNow
                 };
 
@@ -1921,14 +1971,7 @@ namespace FactorioWebInterface.Models
                     return;
                 }
 
-                // /ban doesn't support names with spaces.
-                if (!player.Contains(' '))
-                {
-                    SendBanCommandToEachRunningServerExcept(command, serverId);
-                }
-
-                await AddBanToDatabase(ban);
-
+                await _factorioBanManager.AddBanFromGame(ban, serverId);
             }
             else if (data.StartsWith("/unban"))
             {
@@ -1958,13 +2001,7 @@ namespace FactorioWebInterface.Models
                     return;
                 }
 
-                // /unban doesn't support names with spaces.
-                if (!player.Contains(' '))
-                {
-                    SendBanCommandToEachRunningServerExcept(command, serverId);
-                }
-
-                await RemoveBanFromDatabase(player, userName);
+                await _factorioBanManager.RemoveBanFromGame(player, serverId, actor);
             }
             else if (data.StartsWith('/'))
             {
@@ -1981,7 +2018,7 @@ namespace FactorioWebInterface.Models
                 var messageData = new MessageData()
                 {
                     ServerId = serverId,
-                    Message = $"[Server] {userName}: {data}",
+                    Message = $"[Server] {actor}: {data}",
                     MessageType = MessageType.Output
                 };
 
@@ -1991,7 +2028,7 @@ namespace FactorioWebInterface.Models
                     if (sourceServerData.Status == FactorioServerStatus.Running)
                     {
                         string message = SanitizeDiscordChat(data);
-                        string command = $"/silent-command game.print('[Server] {userName}: {message}')";
+                        string command = $"/silent-command game.print('[Server] {actor}: {message}')";
                         _ = SendToFactorioProcess(serverId, command);
 
                         LogChat(serverId, messageData.Message, DateTime.UtcNow);
@@ -2006,153 +2043,6 @@ namespace FactorioWebInterface.Models
 
                 _ = _discordBotContext.SendToFactorioChannel(serverId, messageData.Message);
             }
-        }
-
-        public async Task<Result> BanPlayer(Ban ban, bool synchronizeWithServers)
-        {
-            List<Error> errors = new List<Error>();
-
-            if (string.IsNullOrWhiteSpace(ban.Username))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.Username)));
-            }
-            if (string.IsNullOrWhiteSpace(ban.Reason))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.Reason)));
-            }
-            if (string.IsNullOrWhiteSpace(ban.Admin))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.Admin)));
-            }
-            if (ban.DateTime == default)
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.DateTime)));
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-
-            if (synchronizeWithServers)
-            {
-                // /ban doesn't support names with spaces.
-                if (!ban.Username.Contains(' '))
-                {
-                    var command = $"/ban {ban.Username} {ban.Reason}";
-                    command.Substring(0, command.Length - 1);
-
-                    SendBanCommandToEachRunningServer(command);
-                }
-            }
-
-            bool added = await AddBanToDatabase(ban);
-            if (added)
-            {
-                return Result.OK;
-            }
-            else
-            {
-                return Result.Failure(Constants.FailedToAddBanToDatabaseErrorKey);
-            }
-        }
-
-        public async Task<Result> UnBanPlayer(string username, string admin, bool synchronizeWithServers)
-        {
-            List<Error> errors = new List<Error>();
-
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(username)));
-            }
-            if (string.IsNullOrWhiteSpace(admin))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(admin)));
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-
-            if (synchronizeWithServers)
-            {
-                // /unban doesn't support names with spaces.
-                if (!username.Contains(' '))
-                {
-                    var command = $"/unban {username}";
-                    SendBanCommandToEachRunningServer(command);
-                }
-            }
-
-            await RemoveBanFromDatabase(username, admin);
-
-            return Result.OK;
-        }
-
-        private async Task<bool> AddBanToDatabase(Ban ban)
-        {
-            ban.Username = ban.Username.ToLowerInvariant();
-
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-            int retryCount = 10;
-            while (retryCount >= 0)
-            {
-                var old = await db.Bans.FirstOrDefaultAsync(b => b.Username == ban.Username);
-
-                try
-                {
-                    if (old == null)
-                    {
-                        db.Add(ban);
-                    }
-                    else
-                    {
-                        old.Admin = ban.Admin;
-                        old.DateTime = ban.DateTime;
-                        old.Reason = ban.Reason;
-                        db.Update(old);
-                    }
-
-
-                    await db.SaveChangesAsync();
-
-                    _ = _factorioBanHub.Clients.All.SendAddBan(ban);
-
-                    _logger.LogInformation("[BAN] {username} was banned by: {admin}. Reason: {reason}", ban.Username, ban.Admin, ban.Reason);
-
-                    return true;
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    // This exception is thrown if the old entry no longer exists in the database 
-                    // when trying to update it. The solution is to remove the old cached entry
-                    // and try again.
-                    if (old != null)
-                    {
-                        db.Entry(old).State = EntityState.Detached;
-                    }
-                    retryCount--;
-                }
-                catch (DbUpdateException)
-                {
-                    // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
-                    // Key pair already exists, when adding a new entry. The solution is to remove
-                    // the cached new entry so that the old entry is fetched from the database not
-                    // from the cache. Then the new entry can be properly compared and updated.
-                    db.Entry(ban).State = EntityState.Detached;
-                    retryCount--;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, nameof(AddBanToDatabase));
-                    return false;
-                }
-            }
-
-            _logger.LogWarning("AddBanToDatabase failed to add ban: {@Ban}", ban);
-            return false;
         }
 
         private async Task DoBan(string serverId, string content)
@@ -2227,15 +2117,6 @@ namespace FactorioWebInterface.Models
             reasonIndex += 1;
             string reason = string.Join(' ', words, reasonIndex, words.Length - reasonIndex);
 
-            // /ban doesn't support names with spaces.
-            if (!player.Contains(' '))
-            {
-                var command = $"/ban {player} {reason}";
-                command.Substring(0, command.Length - 1);
-
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
             if (reason.EndsWith(".."))
             {
                 reason = reason.Substring(0, reason.Length - 1);
@@ -2249,80 +2130,7 @@ namespace FactorioWebInterface.Models
                 DateTime = DateTime.UtcNow
             };
 
-            await AddBanToDatabase(ban);
-        }
-
-        private async Task DoSyncBan(string serverId, string content)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
-            }
-
-            if (!serverData.ExtraServerSettings.SyncBans)
-            {
-                return;
-            }
-
-            Ban ban;
-            try
-            {
-                ban = JsonConvert.DeserializeObject<Ban>(content);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(DoSyncBan) + " deserialization");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Username))
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Admin))
-            {
-                ban.Admin = "<script>";
-            }
-
-            ban.DateTime = DateTime.UtcNow;
-
-            // /ban doesn't support names with spaces.
-            if (!ban.Username.Contains(' '))
-            {
-                var command = $"/ban {ban.Username} {ban.Reason}";
-                command.Substring(0, command.Length - 1);
-
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
-            await AddBanToDatabase(ban);
-        }
-
-        private async Task RemoveBanFromDatabase(string username, string admin)
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-                var old = await db.Bans.SingleOrDefaultAsync(b => b.Username == username);
-                if (old == null)
-                {
-                    return;
-                }
-
-                db.Bans.Remove(old);
-                await db.SaveChangesAsync();
-
-                _ = _factorioBanHub.Clients.All.SendRemoveBan(username);
-
-                _logger.LogInformation("[UNBAN] {username} was unbanned by: {admin}", username, admin);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(DoBan));
-            }
+            await _factorioBanManager.AddBanFromGame(ban, serverId);
         }
 
         private async Task DoUnBan(string serverId, string content)
@@ -2353,58 +2161,7 @@ namespace FactorioWebInterface.Models
                 return;
             }
 
-            // /unban doesn't support names with spaces.
-            if (!player.Contains(' '))
-            {
-                var command = $"/unban {player}";
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
-            await RemoveBanFromDatabase(player, admin);
-        }
-
-        private async Task DoUnBannedSync(string serverId, string content)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
-            }
-
-            if (!serverData.ExtraServerSettings.SyncBans)
-            {
-                return;
-            }
-
-            Ban ban;
-            try
-            {
-                ban = JsonConvert.DeserializeObject<Ban>(content);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(DoUnBannedSync) + " deserialization");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Username))
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Admin))
-            {
-                ban.Admin = "<script>";
-            }
-
-            // /unban doesn't support names with spaces.
-            if (!ban.Username.Contains(' '))
-            {
-                var command = $"/unban {ban.Username}";
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
-            await RemoveBanFromDatabase(ban.Username, ban.Admin);
+            await _factorioBanManager.RemoveBanFromGame(player, serverId, admin);
         }
 
         public void FactorioWrapperDataReceived(string serverId, string data, DateTime dateTime)
@@ -2619,22 +2376,6 @@ namespace FactorioWebInterface.Models
                 await contorlTask1;
             if (controlTask2 != null)
                 await controlTask2;
-        }
-
-        public async Task<List<Ban>> GetBansAsync()
-        {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Bans.AsNoTracking().ToListAsync();
-        }
-
-        public async Task<List<string>> GetBanUserNamesAsync()
-        {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Bans
-                .AsNoTracking()
-                .Select(x => x.Username)
-                .OrderBy(x => x.ToLowerInvariant())
-                .ToListAsync();
         }
 
         public async Task<List<Admin>> GetAdminsAsync()

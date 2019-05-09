@@ -101,5 +101,6 @@
         public const string NotSupportedErrorKey = "notSupportedError";
         public const string RequiredFieldErrorKey = "requiredField";
         public const string FailedToAddBanToDatabaseErrorKey = "failedToAddBanToDatabase";
+        public const string FailedToRemoveBanFromDatabaseErrorKey = "failedToRemoveBanFromDatabase";
     }
 }

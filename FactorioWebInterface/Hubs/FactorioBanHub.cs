@@ -2,7 +2,6 @@
 using FactorioWebInterface.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Hubs
@@ -10,27 +9,43 @@ namespace FactorioWebInterface.Hubs
     [Authorize]
     public class FactorioBanHub : Hub<IFactorioBanClientMethods>
     {
-        private IFactorioServerManager _factorioServerManager;
+        private readonly FactorioBanManager _factorioBanManager;
 
-        public FactorioBanHub(IFactorioServerManager factorioServerManager)
+        public FactorioBanHub(FactorioBanManager factorioBanManager)
         {
-            _factorioServerManager = factorioServerManager;
+            _factorioBanManager = factorioBanManager;
         }
 
-        public Task<List<Ban>> GetAllBans()
+        public Task RequestAllBans()
         {
-            return _factorioServerManager.GetBansAsync();
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(async () =>
+            {
+                var bans = await _factorioBanManager.GetBansAsync();
+
+                var tableData = new TableData<Ban>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = bans
+                };
+
+                await client.SendBans(tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
         public Task<Result> AddBan(Ban ban, bool synchronizeWithServers)
         {
-            return _factorioServerManager.BanPlayer(ban, synchronizeWithServers);
+            string actor = Context.User.Identity.Name;
+            return _factorioBanManager.AddBanFromWeb(ban, synchronizeWithServers, actor);
         }
 
         public Task<Result> RemoveBan(string username, bool synchronizeWithServers)
         {
-            string admin = Context.User.Identity.Name;
-            return _factorioServerManager.UnBanPlayer(username, admin, synchronizeWithServers);
+            string actor = Context.User.Identity.Name;
+            return _factorioBanManager.RemoveBanFromWeb(username, synchronizeWithServers, actor);
         }
     }
 }

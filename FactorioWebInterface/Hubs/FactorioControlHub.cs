@@ -78,9 +78,9 @@ namespace FactorioWebInterface.Hubs
         public Task SendToFactorio(string data)
         {
             string serverId = Context.GetDataOrDefault<string>();
-            string userName = Context.User.Identity.Name;
+            string actor = Context.User.Identity.Name;
 
-            return _factorioServerManager.FactorioControlDataReceived(serverId, data, userName);
+            return _factorioServerManager.FactorioControlDataReceived(serverId, data, actor);
         }
 
         public Task<Result> Resume()
