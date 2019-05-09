@@ -54,11 +54,6 @@ namespace FactorioWebInterface.Models
         Task<Result> Install(string id, string userName, string version);
         Task<Result> Save(string id, string userName, string saveName);
         Result DeflateSave(string connectionId, string directoryPath, string fileName, string newFileName);
-        Task<ScenarioDataEntry> GetScenarioData(string dataSet, string key);
-        Task<ScenarioDataEntry[]> GetScenarioData(string dataSet);
-        Task<ScenarioDataEntry[]> GetAllScenarioData();
-        Task<string[]> GetAllScenarioDataSets();
-        Task UpdateScenarioDataFromWeb(ScenarioDataEntry data);
         Task<List<string>> GetDownloadableVersions();
         Task<List<string>> GetCachedVersions();
         bool DeleteCachedVersion(string version);

@@ -28,6 +28,7 @@
     <None Remove="src\ts\mods.ts" />
     <None Remove="src\ts\plaguesplayground.ts" />
     <None Remove="src\ts\saves.ts" />
+    <None Remove="src\ts\table.ts" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.css" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.css.map" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.min.css" />
@@ -98,6 +99,7 @@
     <TypeScriptCompile Include="src\ts\plaguesPlayground.ts" />
     <TypeScriptCompile Include="src\ts\saves.ts" />
     <TypeScriptCompile Include="src\ts\servers.ts" />
+    <TypeScriptCompile Include="src\ts\table.ts" />
   </ItemGroup>
 
   <ItemGroup>

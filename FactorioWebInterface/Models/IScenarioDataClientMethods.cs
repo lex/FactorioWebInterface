@@ -5,8 +5,7 @@ namespace FactorioWebInterface.Models
 {
     public interface IScenarioDataClientMethods
     {
-        Task SendAllEntries(ScenarioDataEntry[] data);
-        Task SendAllEntriesForDataSet(string dataSet, ScenarioDataEntry[] data);
-        Task SendEntry(ScenarioDataEntry data);
+        Task SendDataSets(string[] dataSets);
+        Task SendEntries(string dataSet, TableData<ScenarioDataKeyValue> data);
     }
 }

@@ -15,4 +15,14 @@ namespace FactorioWebInterface.Data
         [JsonProperty(PropertyName = "value")]
         public string Value { get; set; }
     }
+
+    public class ScenarioDataKeyValue
+    {
+        [JsonProperty(PropertyName = "key")]
+        public string Key { get; set; }
+
+        [Required]
+        [JsonProperty(PropertyName = "value")]
+        public string Value { get; set; }
+    }
 }

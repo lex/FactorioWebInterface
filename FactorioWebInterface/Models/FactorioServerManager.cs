@@ -41,13 +41,13 @@ namespace FactorioWebInterface.Models
         private readonly DiscordBotContext _discordBotContext;
         private readonly IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> _factorioProcessHub;
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
-        private readonly IHubContext<ScenarioDataHub, IScenarioDataClientMethods> _scenariolHub;
         private readonly IHubContext<FactorioBanHub, IFactorioBanClientMethods> _factorioBanHub;
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
+        private readonly ScenarioDataManger _scenarioDataManger;
 
         //private SemaphoreSlim serverLock = new SemaphoreSlim(1, 1);
         private Dictionary<string, FactorioServerData> servers = FactorioServerData.Servers;
@@ -60,26 +60,26 @@ namespace FactorioWebInterface.Models
             DiscordBotContext discordBotContext,
             IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> factorioProcessHub,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
-            IHubContext<ScenarioDataHub, IScenarioDataClientMethods> scenariolHub,
             IHubContext<FactorioBanHub, IFactorioBanClientMethods> factorioBanHub,
             DbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
             IHttpClientFactory httpClientFactory,
             FactorioUpdater factorioUpdater,
-            FactorioModManager factorioModManager
+            FactorioModManager factorioModManager,
+            ScenarioDataManger scenarioDataManger
         )
         {
             _configuration = configuration;
             _discordBotContext = discordBotContext;
             _factorioProcessHub = factorioProcessHub;
             _factorioControlHub = factorioControlHub;
-            _scenariolHub = scenariolHub;
             _factorioBanHub = factorioBanHub;
             _dbContextFactory = dbContextFactory;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
+            _scenarioDataManger = scenarioDataManger;
 
             string name = _configuration[Constants.FactorioWrapperNameKey];
             if (string.IsNullOrWhiteSpace(name))
@@ -92,6 +92,54 @@ namespace FactorioWebInterface.Models
             }
 
             _discordBotContext.FactorioDiscordDataReceived += FactorioDiscordDataReceived;
+            _scenarioDataManger.EntryChanged += _scenarioDataManger_EntryChanged;
+        }
+
+        private void _scenarioDataManger_EntryChanged(ScenarioDataManger sender, ScenarioDataEntryChangedEventArgs eventArgs)
+        {
+            _ = Task.Run(async () =>
+             {
+                 var sourceId = eventArgs.Source;
+                 var data = eventArgs.ScenarioDataEntry;
+
+                 var dataSet = data.DataSet;
+
+                 var cb = FactorioCommandBuilder
+                     .ServerCommand("raise_data_set")
+                     .Add("{data_set=")
+                     .AddQuotedString(data.DataSet)
+                     .Add(",key=")
+                     .AddQuotedString(data.Key);
+
+                 if (data.Value != null)
+                 {
+                     cb.Add(",value=").Add(data.Value);
+                 }
+
+                 var command = cb.Add("}").Build();
+
+                 var clients = _factorioProcessHub.Clients;
+                 foreach (var entry in servers)
+                 {
+                     var id = entry.Key;
+                     var server = entry.Value;
+                     if (id != sourceId && server.Status == FactorioServerStatus.Running)
+                     {
+                         try
+                         {
+                             await server.ServerLock.WaitAsync();
+                             if (server.TrackingDataSets.Contains(dataSet))
+                             {
+                                 _ = clients.Group(id).SendToFactorio(command);
+                             }
+                         }
+                         finally
+                         {
+                             server.ServerLock.Release();
+                         }
+                     }
+                 }
+             });
         }
 
         private Task SendControlMessageNonLocking(FactorioServerData serverData, MessageData message)
@@ -1681,8 +1729,7 @@ namespace FactorioWebInterface.Models
 
             try
             {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                var entry = await db.ScenarioDataEntries.AsNoTracking().FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
+                var value = await _scenarioDataManger.GetValue(data.DataSet, data.Key);
 
                 var cb = FactorioCommandBuilder
                     .ServerCommand("raise_callback")
@@ -1691,9 +1738,9 @@ namespace FactorioWebInterface.Models
                     .Add("{data_set=").AddDoubleQuotedString(data.DataSet)
                     .Add(",key=").AddDoubleQuotedString(data.Key);
 
-                if (entry != null)
+                if (value != null)
                 {
-                    cb.Add(",value=").Add(entry.Value);
+                    cb.Add(",value=").Add(value);
                 }
 
                 var command = cb.Add("}").Build();
@@ -1741,8 +1788,7 @@ namespace FactorioWebInterface.Models
 
             try
             {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                var entries = await db.ScenarioDataEntries.AsNoTracking().Where(x => x.DataSet == data.DataSet).ToArrayAsync();
+                var entries = await _scenarioDataManger.GetAllEntries(data.DataSet);
 
                 var cb = FactorioCommandBuilder
                         .ServerCommand("raise_callback")
@@ -1775,117 +1821,7 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        private async Task SendDataToTrackingServers(string sourceId, ScenarioDataEntry data)
-        {
-            var dataSet = data.DataSet;
-
-            var cb = FactorioCommandBuilder
-                .ServerCommand("raise_data_set")
-                .Add("{data_set=")
-                .AddQuotedString(data.DataSet)
-                .Add(",key=")
-                .AddQuotedString(data.Key);
-
-            if (data.Value != null)
-            {
-                cb.Add(",value=").Add(data.Value);
-            }
-
-            var command = cb.Add("}").Build();
-
-            var clients = _factorioProcessHub.Clients;
-            foreach (var entry in servers)
-            {
-                var id = entry.Key;
-                var server = entry.Value;
-                if (id != sourceId && server.Status == FactorioServerStatus.Running)
-                {
-                    try
-                    {
-                        await server.ServerLock.WaitAsync();
-                        if (server.TrackingDataSets.Contains(dataSet))
-                        {
-                            _ = clients.Group(id).SendToFactorio(command);
-                        }
-                    }
-                    finally
-                    {
-                        server.ServerLock.Release();
-                    }
-                }
-            }
-        }
-
-        private async Task UpdateDataSetDb(ScenarioDataEntry data)
-        {
-            var db = _dbContextFactory.Create<ScenarioDbContext>();
-
-            int retryCount = 10;
-            while (retryCount >= 0)
-            {
-                var old = await db.ScenarioDataEntries.FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
-
-                try
-                {
-                    if (data.Value == null)
-                    {
-                        if (old != null)
-                        {
-                            db.Remove(old);
-                            await db.SaveChangesAsync();
-                        }
-                    }
-                    else
-                    {
-                        if (old != null)
-                        {
-                            db.Entry(old).Property(x => x.Value).CurrentValue = data.Value;
-                        }
-                        else
-                        {
-                            db.Add(data);
-                        }
-                        await db.SaveChangesAsync();
-                    }
-
-                    return;
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    // This exception is thrown if the old entry no longer exists in the database 
-                    // when trying to update it. The solution is to remove the old cached entry
-                    // and try again.
-                    if (old != null)
-                    {
-                        db.Entry(old).State = EntityState.Detached;
-                    }
-                    retryCount--;
-                }
-                catch (DbUpdateException)
-                {
-                    // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
-                    // Key pair already exists, when adding a new entry. The solution is to remove
-                    // the cached new entry so that the old entry is fetched from the database not
-                    // from the cache. Then the new entry can be properly compared and updated.
-                    db.Entry(data).State = EntityState.Detached;
-                    retryCount--;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, nameof(UpdateDataSetDb));
-                    return;
-                }
-            }
-
-            _logger.LogWarning("UpdateDataSetDb failed to update data. DataSet: {DataSet}, Key: {Key}, Value: {Value}", data.DataSet, data.Key, data.Value);
-        }
-
-        private Task SendDataToWeb(ScenarioDataEntry data)
-        {
-            return _scenariolHub.Clients.Group(data.DataSet).SendEntry(data);
-        }
-
-        public async Task DoSetData(string serverId, string content)
+        private async Task DoSetData(string serverId, string content)
         {
             ScenarioDataEntry data;
             try
@@ -1898,99 +1834,7 @@ namespace FactorioWebInterface.Models
                 return;
             }
 
-            var t1 = SendDataToTrackingServers(serverId, data);
-            var t2 = UpdateDataSetDb(data);
-
-            await t1;
-            await t2;
-
-            await SendDataToWeb(data);
-        }
-
-        public async Task<ScenarioDataEntry> GetScenarioData(string dataSet, string key)
-        {
-            if (dataSet == null || key == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.AsNoTracking().FirstOrDefaultAsync(x => x.DataSet == dataSet && x.Key == key);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetScenarioData));
-            }
-
-            return null;
-        }
-
-        public async Task<ScenarioDataEntry[]> GetScenarioData(string dataSet)
-        {
-            if (dataSet == null)
-            {
-                return new ScenarioDataEntry[0];
-            }
-
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.AsNoTracking().Where(x => x.DataSet == dataSet).ToArrayAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetScenarioData));
-            }
-
-            return new ScenarioDataEntry[0];
-        }
-
-        public async Task<ScenarioDataEntry[]> GetAllScenarioData()
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.AsNoTracking().ToArrayAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetAllScenarioData));
-            }
-
-            return new ScenarioDataEntry[0];
-        }
-
-        public async Task<string[]> GetAllScenarioDataSets()
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.Select(x => x.DataSet).Distinct().ToArrayAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetAllScenarioData));
-            }
-
-            return new string[0];
-        }
-
-        public async Task UpdateScenarioDataFromWeb(ScenarioDataEntry data)
-        {
-            if (data.DataSet == null || data.Key == null)
-            {
-                return;
-            }
-
-            var t1 = SendDataToTrackingServers("", data);
-            var t2 = UpdateDataSetDb(data);
-
-            await t1;
-            await t2;
-
-            await SendDataToWeb(data);
+            await _scenarioDataManger.UpdateEntry(data, serverId);
         }
 
         public void DoPing(string serverId, string content)
