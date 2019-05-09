@@ -18,7 +18,7 @@ import * as Table from "./table";
     const refreshDataSets = document.getElementById('refreshDataSets') as HTMLButtonElement;
     const datasetsSelect = document.getElementById('datasetsSelect') as HTMLDivElement;
 
-    let dataTable: Table.Table
+    let dataTable: Table.Table;
     let placeholderOption: HTMLOptionElement = null;
     let currentDataSet = "";
 
@@ -74,11 +74,11 @@ import * as Table from "./table";
 
     function buildTable() {
         function buildCell(cell: HTMLTableCellElement, data: any) {
-            cell.innerText = data
+            cell.innerText = data;
         }
 
         function sortCell(cell: HTMLTableCellElement) {
-            return cell.textContent;
+            return cell.textContent.toLowerCase();
         }
 
         function rowEqual(rowElement: HTMLTableRowElement, data: any): boolean {

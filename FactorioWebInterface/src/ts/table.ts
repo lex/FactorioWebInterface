@@ -185,6 +185,10 @@ export class Table {
         this.reBuild();
     }
 
+    rowsCount() {
+        return this.tableRows.length;
+    }
+
     private onHeaderClick(index: number) {
         let ascending: boolean;
         if (this.sortIndex === index) {
