@@ -11,9 +11,9 @@ namespace FactorioWebInterface.Hubs
     public class ScenarioDataHub : Hub<IScenarioDataClientMethods>
     {
         private IFactorioServerManager _factorioServerManager;
-        private ScenarioDataManger _scenarioDataManger;
+        private ScenarioDataManager _scenarioDataManger;
 
-        public ScenarioDataHub(IFactorioServerManager factorioServerManager, ScenarioDataManger scenarioDataManger)
+        public ScenarioDataHub(IFactorioServerManager factorioServerManager, ScenarioDataManager scenarioDataManger)
         {
             _factorioServerManager = factorioServerManager;
             _scenarioDataManger = scenarioDataManger;
@@ -46,12 +46,11 @@ namespace FactorioWebInterface.Hubs
         {
             var client = Clients.Client(Context.ConnectionId);
 
-            async Task Reply()
+            _ = Task.Run(async () =>
             {
                 var data = await _scenarioDataManger.GetAllDataSets();
                 await client.SendDataSets(data);
-            }
-            _ = Reply();
+            });
 
             return Task.CompletedTask;
         }
@@ -60,7 +59,7 @@ namespace FactorioWebInterface.Hubs
         {
             var client = Clients.Client(Context.ConnectionId);
 
-            async Task Reply()
+            _ = Task.Run(async () =>
             {
                 var data = await _scenarioDataManger.GetAllEntries(dataSet);
 
@@ -71,8 +70,7 @@ namespace FactorioWebInterface.Hubs
                 };
 
                 await client.SendEntries(dataSet, tableData);
-            }
-            _ = Reply();
+            });
 
             return Task.FromResult(0);
         }

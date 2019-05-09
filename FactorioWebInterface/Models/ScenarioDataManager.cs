@@ -10,16 +10,16 @@ using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Models
 {
-    public class ScenarioDataManger
+    public class ScenarioDataManager
     {
         private readonly DbContextFactory _dbContextFactory;
-        private readonly ILogger<ScenarioDataManger> _logger;
+        private readonly ILogger<ScenarioDataManager> _logger;
         private readonly IHubContext<ScenarioDataHub, IScenarioDataClientMethods> _scenariolHub;
 
-        public event EventHandler<ScenarioDataManger, ScenarioDataEntryChangedEventArgs> EntryChanged;
+        public event EventHandler<ScenarioDataManager, ScenarioDataEntryChangedEventArgs> EntryChanged;
 
-        public ScenarioDataManger(DbContextFactory dbContextFactory,
-            ILogger<ScenarioDataManger> logger,
+        public ScenarioDataManager(DbContextFactory dbContextFactory,
+            ILogger<ScenarioDataManager> logger,
             IHubContext<ScenarioDataHub, IScenarioDataClientMethods> scenariolHub)
         {
             _dbContextFactory = dbContextFactory;
@@ -29,7 +29,7 @@ namespace FactorioWebInterface.Models
             EntryChanged += ScenarioDataManger_EntryChanged;
         }
 
-        private void ScenarioDataManger_EntryChanged(ScenarioDataManger sender, ScenarioDataEntryChangedEventArgs eventArgs)
+        private void ScenarioDataManger_EntryChanged(ScenarioDataManager sender, ScenarioDataEntryChangedEventArgs eventArgs)
         {
             var entry = eventArgs.ScenarioDataEntry;
             var value = entry.Value;
