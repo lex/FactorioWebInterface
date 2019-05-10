@@ -1,24 +1,27 @@
 ﻿export interface CellBuilder {
-    Property: string;
+    Property: string | undefined;
     CellBuilder: (cell: HTMLTableCellElement, data: any) => void;
     SortKeySelector?: (r: HTMLTableCellElement) => any;
+    HeaderBuilder?: (cell: HTMLTableHeaderCellElement, symbol: string) => void
 }
 
 export enum TableDataType {
     Reset = "Reset",
     Remove = "Remove",
     Add = "Add",
-    Update = "Update"
+    Update = "Update",
+    Compound = "Compound"
 }
 
-export interface TableData {
+export interface TableData<T = any> {
     Type: TableDataType;
-    Rows: any[];
+    Rows: T[];
+    TableDatas: TableData<T>[];
 }
 
-export class Table {
+export class Table<T = any> {
     private cellBuilders: CellBuilder[];
-    private equal: (rowElement: HTMLTableRowElement, data: any) => boolean;
+    private equal: (rowElement: HTMLTableRowElement, data: T) => boolean;
     private onRowClick: (this: HTMLTableRowElement, ev: MouseEvent) => void;
     private tableHeaders: HTMLCollectionOf<HTMLTableHeaderCellElement>;
     private tableBody: HTMLTableSectionElement;
@@ -27,11 +30,11 @@ export class Table {
     private sortIndex: number;
 
     constructor(table: HTMLTableElement, cellBuilders: CellBuilder[],
-        equal: (rowElement: HTMLTableRowElement, data: any) => boolean,
+        equal?: (rowElement: HTMLTableRowElement, data: T) => boolean,
         onRowClick?: (this: HTMLTableRowElement, ev: MouseEvent) => void) {
 
         this.cellBuilders = cellBuilders;
-        this.equal = equal;
+        this.equal = equal || (function () { return false; });
         this.onRowClick = onRowClick;
 
         this.tableHeaders = table.tHead.rows[0].cells;
@@ -62,102 +65,131 @@ export class Table {
         }
     }
 
-    update(tableUpdate: TableData): void {
-        let type = tableUpdate.Type;
-        let rows = tableUpdate.Rows;
+    private buildCell(builder: CellBuilder, rowElement: HTMLTableRowElement, row: T) {
+        let data;
+        let prop = builder.Property;
+        if (prop === undefined) {
+            data = row;
+        } else {
+            data = row[prop];
+        }
+
+        let cell = document.createElement('td');
+        rowElement.appendChild(cell);
+        builder.CellBuilder(cell, data);
+    }
+
+    private doAdd(rows: T[]) {
         let tableRows = this.tableRows;
 
-        switch (type) {
-            case TableDataType.Reset: {
-                tableRows = [];
-                this.tableRows = tableRows;
-                // Fall through to add case.
+        for (let row of rows) {
+            let rowElement = document.createElement('tr');
+            if (this.onRowClick !== undefined) {
+                rowElement.onclick = this.onRowClick;
             }
-            case TableDataType.Add: {
-                for (let row of rows) {
-                    let rowElement = document.createElement('tr');
-                    if (this.onRowClick !== undefined) {
-                        rowElement.onclick = this.onRowClick;
-                    }
 
-                    for (let builder of this.cellBuilders) {
-                        let cell = document.createElement('td');
-                        let data = row[builder.Property];
-
-                        rowElement.appendChild(cell);
-                        builder.CellBuilder(cell, data);
-                    }
-
-                    tableRows.push(rowElement);
-                }
-
-                this.sort();
-                this.reBuild();
-
-                break;
+            for (let builder of this.cellBuilders) {
+                this.buildCell(builder, rowElement, row);
             }
-            case TableDataType.Remove: {
-                let equal = this.equal;
 
-                for (let row of rows) {
-
-                    let i = this.tableRows.findIndex(function (e) {
-                        return equal(e, row);
-                    });
-
-                    if (i !== -1) {
-                        let rowElement = tableRows[i];
-                        rowElement.remove();
-                        tableRows.splice(i, 1);
-                    }
-                }
-
-                break;
-            }
-            case TableDataType.Update: {
-                let equal = this.equal;
-
-                for (let row of rows) {
-
-                    let rowElement = this.tableRows.find(function (e) {
-                        return equal(e, row);
-                    });
-
-                    if (rowElement === undefined) {
-                        rowElement = document.createElement('tr');
-                        if (this.onRowClick !== undefined) {
-                            rowElement.onclick = this.onRowClick;
-                        }
-
-                        for (let builder of this.cellBuilders) {
-                            let cell = document.createElement('td');
-                            let data = row[builder.Property];
-
-                            rowElement.appendChild(cell);
-                            builder.CellBuilder(cell, data);
-                        }
-
-                        tableRows.push(rowElement);
-                    } else {
-
-                        rowElement.innerHTML = "";
-                        for (let builder of this.cellBuilders) {
-                            let cell = document.createElement('td');
-                            let data = row[builder.Property];
-
-                            rowElement.appendChild(cell);
-                            builder.CellBuilder(cell, data);
-                        }
-                    }
-                }
-
-                this.sort();
-                this.reBuild();
-                break;
-            }
-            default:
-                break;
+            tableRows.push(rowElement);
         }
+
+        return true;
+    }
+
+    private doReset(rows: T[]) {
+        this.tableRows = [];
+        this.doAdd(rows);
+        return true;
+    }
+
+    private doRemove(rows: T[]) {
+        let tableRows = this.tableRows;
+        let equal = this.equal;
+
+        for (let row of rows) {
+
+            let i = this.tableRows.findIndex(function (e) {
+                return equal(e, row);
+            });
+
+            if (i !== -1) {
+                let rowElement = tableRows[i];
+                rowElement.remove();
+                tableRows.splice(i, 1);
+            }
+        }
+
+        return false;
+    }
+
+    private doUpdate(rows: T[]) {
+        let tableRows = this.tableRows;
+        let equal = this.equal;
+
+        for (let row of rows) {
+
+            let rowElement = this.tableRows.find(function (e) {
+                return equal(e, row);
+            });
+
+            if (rowElement === undefined) {
+                rowElement = document.createElement('tr');
+                if (this.onRowClick !== undefined) {
+                    rowElement.onclick = this.onRowClick;
+                }
+
+                for (let builder of this.cellBuilders) {
+                    this.buildCell(builder, rowElement, row);
+                }
+
+                tableRows.push(rowElement);
+            } else {
+                rowElement.innerHTML = "";
+
+                for (let builder of this.cellBuilders) {
+                    this.buildCell(builder, rowElement, row);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private innerUpdate(tableUpdate: TableData): boolean {
+        let type = tableUpdate.Type;
+        let rows = tableUpdate.Rows;
+
+        switch (type) {
+            case TableDataType.Reset:
+                return this.doReset(rows)
+            case TableDataType.Add:
+                return this.doAdd(rows);
+            case TableDataType.Remove:
+                return this.doRemove(rows);
+            case TableDataType.Update:
+                return this.doUpdate(rows);
+            case TableDataType.Compound:
+                let dirty = false;
+                for (let td of tableUpdate.TableDatas) {
+                    dirty = dirty || this.innerUpdate(td);
+                }
+                return dirty;
+            default:
+                return false;
+        }
+    }
+
+    update(tableUpdate: TableData): void {
+        if (this.innerUpdate(tableUpdate)) {
+            this.reBuild();
+        }
+    }
+
+    clear(): void {
+        this.tableRows = [];
+        this.tableBody.innerHTML = "";
     }
 
     sortBy(column: number, ascending: boolean = true): void {
@@ -168,25 +200,39 @@ export class Table {
         let oldColumn = this.sortIndex;
         if (oldColumn !== undefined) {
             let oldHeader = this.tableHeaders[oldColumn];
-            let text = oldHeader.innerText;
-            if (text.endsWith(' ▼') || text.endsWith(' ▲')) {
-                oldHeader.innerText = text.substr(0, text.length - 1);
+            let headerBuilder = this.cellBuilders[oldColumn].HeaderBuilder;
+            if (headerBuilder === undefined) {
+                let text = oldHeader.textContent;
+                if (text.endsWith(' ▼') || text.endsWith(' ▲')) {
+                    oldHeader.textContent = text.substr(0, text.length - 2);
+                }
+            }
+            else {
+                headerBuilder(oldHeader, '');
             }
         }
 
         let newHeader = this.tableHeaders[column];
+        let newHeaderBuilder = this.cellBuilders[column].HeaderBuilder;
         let symbol = ascending ? ' ▲' : ' ▼';
-        newHeader.innerText += symbol;
+        if (newHeaderBuilder === undefined) {
+            newHeader.textContent += symbol;
+        } else {
+            newHeaderBuilder(newHeader, symbol);
+        }
 
         this.sortIndex = column;
         this.ascending = ascending;
 
-        this.sort();
         this.reBuild();
     }
 
     rowsCount() {
         return this.tableRows.length;
+    }
+
+    rows() {
+        return this.tableRows;
     }
 
     private onHeaderClick(index: number) {
@@ -236,6 +282,8 @@ export class Table {
     }
 
     private reBuild() {
+        this.sort();
+
         this.tableBody.innerHTML = "";
 
         for (let row of this.tableRows) {
