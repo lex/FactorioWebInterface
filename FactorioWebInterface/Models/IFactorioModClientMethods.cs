@@ -4,7 +4,7 @@ namespace FactorioWebInterface.Models
 {
     public interface IFactorioModClientMethods
     {
-        Task SendModPacks(ModPackMetaData[] modPacks);
-        Task SendModPackFiles(string modPack, ModPackFileMetaData[] files);
+        Task SendModPacks(TableData<ModPackMetaData> data);
+        Task SendModPackFiles(string modPack, TableData<ModPackFileMetaData> data);
     }
 }

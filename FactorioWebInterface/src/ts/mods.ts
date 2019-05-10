@@ -1,6 +1,8 @@
 ﻿import * as signalR from "@aspnet/signalr";
-import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
-import * as $ from "jquery";
+import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack";
+import { Result, Utils } from "./utils";
+import * as Table from "./table";
+import { TableData } from "./table";
 
 !function () {
     interface ModPackMetaData {
@@ -16,17 +18,12 @@ import * as $ from "jquery";
         Size: number;
     }
 
-    interface Result {
-        Success: boolean;
-        Errors: Error[];
-    }
-
-    const modPacksTable = document.getElementById('modPacksTable') as HTMLTableElement;
+    const modPacksTableElement = document.getElementById('modPacksTable') as HTMLTableElement;
     const newModPackButton = document.getElementById('newModPackButton') as HTMLButtonElement;
     const modPackFilesDiv = document.getElementById('modPackFilesDiv') as HTMLDivElement;
 
     const currentModPackTitle = document.getElementById('currentModPackTitle') as HTMLHeadingElement;
-    const fileTable = document.getElementById('fileTable') as HTMLTableElement;
+    const fileTableElement = document.getElementById('fileTable') as HTMLTableElement;
     const uploadfileInput = document.getElementById('uploadfileInput') as HTMLInputElement;
     const uploadFileButton = document.getElementById('uploadFileButton') as HTMLButtonElement;
     const fileProgress = document.getElementById('fileProgress') as HTMLProgressElement;
@@ -56,147 +53,175 @@ import * as $ from "jquery";
     // XSRF/CSRF token, see https://docs.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-2.1
     let requestVerificationToken = (document.querySelector('input[name="__RequestVerificationToken"][type="hidden"]') as HTMLInputElement).value
 
-    let modPackTableBody = modPacksTable.tBodies[0];
-    let fileTableBody = fileTable.tBodies[0];
+    let modPacksTable: Table.Table<ModPackMetaData>;
+    let fileTable: Table.Table<ModPackFileMetaData>;
 
     let renameOldName: string = null;
     let currentModPack: string = null;
-
-    function buildModPackTable() {
-        let cells = modPacksTable.tHead.rows[0].cells;
-
-        cells[0].onclick = () => sortTable(modPacksTable, 'name');
-        cells[1].onclick = () => sortTable(modPacksTable, 'lastModifiedTime');
-
-        let jTable = $(modPacksTable);
-
-        jTable.data('name', r => r.children[0].firstChild.textContent.toLowerCase());
-        jTable.data('lastModifiedTime', r => r.children[1].textContent);
-
-        jTable.data('sortProperty', 'lastModifiedTime');
-        jTable.data('ascending', false);
-    }
-
-    function buildFileTable() {
-        let cells = fileTable.tHead.rows[0].cells;
-
-
-        let fileTableselectionCheckbox = cells[0].firstElementChild as HTMLInputElement;
-        fileTableselectionCheckbox.onchange = () => {
-            let checkboxes = fileTable.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
-
-            for (let checkbox of checkboxes) {
-                checkbox.checked = fileTableselectionCheckbox.checked;
-            }
-        };
-
-        cells[0].onclick = () => sortTable(fileTable, 'select');
-        cells[1].onclick = () => sortTable(fileTable, 'name');
-        cells[2].onclick = () => sortTable(fileTable, 'lastModifiedTime');
-        cells[3].onclick = () => sortTable(fileTable, 'size');
-
-        let jTable = $(fileTable);
-
-        jTable.data('select', r => {
-            let value = r.children[0].firstChild as HTMLInputElement;
-            return value.checked ? 1 : 0;
-        });
-
-        jTable.data('name', r => r.children[1].firstChild.textContent.toLowerCase());
-        jTable.data('lastModifiedTime', r => r.children[2].textContent);
-        jTable.data('size', r => parseInt(r.children[3].getAttribute('data-size')));
-
-        jTable.data('sortProperty', 'lastModifiedTime');
-        jTable.data('ascending', false);
-    }
-
-    function onPageLoad() {
-        buildModPackTable();
-        buildFileTable();
-    }
-
-    onPageLoad();
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/factorioModHub")
         .withHubProtocol(new MessagePackHubProtocol())
         .build();
 
-    async function start() {
-        try {
-            await connection.start();
-            UpdatePage();
+    function buildTextCell(cell: HTMLTableCellElement, data: any) {
+        cell.innerText = data;
+    }
 
-        } catch (ex) {
-            console.log(ex.message);
-            setTimeout(() => start(), 2000);
+    function buildDateCell(cell: HTMLTableCellElement, data: any) {
+        cell.innerText = Utils.formatDate(data);
+    }
+
+    function sortTextCell(cell: HTMLTableCellElement) {
+        return cell.textContent.toLowerCase();
+    }
+
+    function sortDateCell(cell: HTMLTableCellElement) {
+        return cell.textContent;
+    }
+
+    function buildModPackTable() {
+        function rowEqual(rowElement: HTMLTableRowElement, data: ModPackMetaData): boolean {
+            return rowElement.cells[0].innerText === data.Name;
         }
-    }
 
-    connection.onclose(async () => {
-        await start();
-    });
+        function onRowClicked(this: HTMLTableRowElement, ev: MouseEvent) {
+            let child = this.firstElementChild as HTMLElement;
+            let modPack = child.innerText
 
-    async function UpdatePage() {
-        let modPacks = await connection.invoke('GetModPacks') as ModPackMetaData[];
-        updateModPacks(modPacks);
-    }
+            selectModPack(modPack);
+        }
 
-    function updateModPacks(modPacks: ModPackMetaData[]) {
-        modPackTableBody.innerHTML = "";
+        function buildRenameCell(cell: HTMLTableCellElement, data: any) {
+            let button = document.createElement('button');
+            button.innerText = 'Rename';
+            button.onclick = renameModPack;
+            button.classList.add('button', 'is-link');
+            cell.appendChild(button);
+        }
 
-        let rows: HTMLTableRowElement[] = []
+        function buildDeleteCell(cell: HTMLTableCellElement, data: any) {
+            let button = document.createElement('button');
+            button.innerText = 'Delete';
+            button.onclick = showConfirmDeleteModPackModal;
+            button.classList.add('button', 'is-danger');
+            cell.appendChild(button);
+        }
 
-        let currentModPackAvailable = false
-        for (let modPack of modPacks) {
-            let row = document.createElement('tr');
-            row.onclick = modPackRowClick;
-
-            let cell1 = document.createElement('td');
-            cell1.innerText = modPack.Name;
-            row.appendChild(cell1);
-
-            let cell2 = document.createElement('td');
-            cell2.innerText = formatDate(modPack.LastModifiedTime);
-            row.appendChild(cell2);
-
-            let cell3 = document.createElement('td');
-            let renameButton = document.createElement('button');
-            renameButton.innerText = 'Rename';
-            renameButton.onclick = renameModPack;
-            renameButton.classList.add('button', 'is-link');
-            cell3.appendChild(renameButton);
-            row.appendChild(cell3);
-
-            let cell4 = document.createElement('td');
-            let deleteButton = document.createElement('button');
-            deleteButton.innerText = 'Delete';
-            deleteButton.onclick = showConfirmDeleteModPackModal;
-            deleteButton.classList.add('button', 'is-danger');
-            cell4.appendChild(deleteButton);
-            row.appendChild(cell4);
-
-            rows.push(row);
-
-            if (currentModPack === modPack.Name) {
-                currentModPackAvailable = true;
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                Property: 'Name',
+                CellBuilder: buildTextCell,
+                SortKeySelector: sortTextCell
+            },
+            {
+                Property: 'LastModifiedTime',
+                CellBuilder: buildDateCell,
+                SortKeySelector: sortDateCell
+            },
+            {
+                Property: 'Rename',
+                CellBuilder: buildRenameCell,
+            },
+            {
+                Property: 'Delete',
+                CellBuilder: buildDeleteCell,
             }
+        ];
+
+        modPacksTable = new Table.Table<ModPackMetaData>(modPacksTableElement, cellBuilders, rowEqual, onRowClicked)
+        modPacksTable.sortBy(1, false);
+    }
+
+    function buildFileTable() {
+        function buildCheckboxCell(cell: HTMLTableCellElement, data: string) {
+            let checkbox = document.createElement('input') as HTMLInputElement;
+            checkbox.type = 'checkbox';
+            checkbox.setAttribute('data-name', data);
+            cell.appendChild(checkbox);
         }
 
-        if (!currentModPackAvailable) {
-            currentModPack = null;
-            modPackFilesDiv.classList.add('is-invisible');
+        function buildNameCell(cell: HTMLTableCellElement, data: string) {
+            let link = document.createElement('a') as HTMLAnchorElement;
+            link.innerText = data;
+            link.href = `/admin/mods?handler=file&modPack=${currentModPack}&fileName=${data}`;
+            cell.appendChild(link);
         }
 
-        let jTable = $(modPacksTable);
+        function buildSizeCell(cell: HTMLTableCellElement, data: number) {
+            cell.innerText = Utils.bytesToSize(data);
+            cell.setAttribute('data-size', data.toString());
+        }
 
-        jTable.data('rows', rows);
+        function sortNameCell(cell: HTMLTableCellElement) {
+            return cell.firstElementChild.textContent.toLowerCase();
+        }
 
-        let ascending = !jTable.data('ascending');
-        jTable.data('ascending', ascending);
-        let property = jTable.data('sortProperty');
+        function sortCheckboxCell(cell: HTMLTableCellElement) {
+            let checkbox = cell.firstElementChild as HTMLInputElement;
+            return checkbox.checked ? 1 : 0;
+        }
 
-        sortTable(modPacksTable, property);
+        function sortSizeCell(cell: HTMLTableCellElement) {
+            return cell.getAttribute('data-size');
+        }
+
+        function buildCheckboxHeader(cell: HTMLTableHeaderCellElement, symbol: string) {
+            cell.childNodes[1].textContent = ' Select' + symbol;
+        }
+
+        function rowEqual(rowElement: HTMLTableRowElement, data: ModPackFileMetaData): boolean {
+            return rowElement.cells[1].innerText === data.Name;
+        }
+
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                Property: 'Name',
+                CellBuilder: buildCheckboxCell,
+                SortKeySelector: sortCheckboxCell,
+                HeaderBuilder: buildCheckboxHeader
+            },
+            {
+                Property: 'Name',
+                CellBuilder: buildNameCell,
+                SortKeySelector: sortNameCell
+            },
+            {
+                Property: 'LastModifiedTime',
+                CellBuilder: buildDateCell,
+                SortKeySelector: sortDateCell
+            },
+            {
+                Property: 'Size',
+                CellBuilder: buildSizeCell,
+                SortKeySelector: sortSizeCell
+            }
+        ];
+
+        fileTable = new Table.Table<ModPackFileMetaData>(fileTableElement, cellBuilders, rowEqual)
+        fileTable.sortBy(2, false);
+
+        let fileTableselectionCheckbox = fileTableElement.tHead.rows[0].cells[0].firstElementChild as HTMLInputElement;
+        fileTableselectionCheckbox.onchange = () => {
+            let checkboxes = fileTableElement.tBodies[0].querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+
+            for (let checkbox of checkboxes) {
+                checkbox.checked = fileTableselectionCheckbox.checked;
+            }
+        };
+
+        fileTableselectionCheckbox.onclick = function (this, ev: MouseEvent) {
+            ev.stopPropagation();
+        }
+    }
+
+    function selectModPack(modPack: string) {
+        connection.invoke('RequestModPackFiles', modPack);
+
+        currentModPack = modPack;
+        currentModPackTitle.innerText = modPack;
+        fileTable.clear();
+        modPackFilesDiv.classList.remove('is-invisible');
     }
 
     function renameModPack(this: HTMLButtonElement, ev: MouseEvent) {
@@ -245,87 +270,6 @@ import * as $ from "jquery";
 
         closeDeleteModPackModal();
     }
-
-    async function selectModPack(modPack: string) {
-        currentModPack = modPack;
-        currentModPackTitle.innerText = modPack;
-
-        let files = await connection.invoke('GetModPackFiles', modPack) as ModPackFileMetaData[];
-
-        updateModPackFiles(modPack, files);
-    }
-
-    function modPackRowClick(this: HTMLTableRowElement, ev: MouseEvent) {
-        let child = this.firstElementChild as HTMLElement;
-        let modPack = child.innerText
-
-        selectModPack(modPack);
-    }
-
-    function updateModPackFiles(modPack: string, files: ModPackFileMetaData[]) {
-        if (modPack === null) {
-            modPackFilesDiv.classList.add('is-invisible');
-            return;
-        }
-
-        modPackFilesDiv.classList.remove('is-invisible');
-
-        let body = fileTableBody;
-        body.innerHTML = "";
-
-        let rows: HTMLTableRowElement[] = []
-
-        for (let file of files) {
-            let row = document.createElement('tr');
-
-            let cell1 = document.createElement('td');
-            let checkbox = document.createElement('input') as HTMLInputElement;
-            checkbox.type = 'checkbox';
-            checkbox.setAttribute('data-name', file.Name);
-            cell1.appendChild(checkbox);
-            row.appendChild(cell1);
-
-            let cell2 = document.createElement('td');
-            let link = document.createElement('a') as HTMLAnchorElement;
-            link.innerText = file.Name;
-            link.href = `/admin/mods?handler=file&modPack=${currentModPack}&fileName=${file.Name}`;
-            cell2.appendChild(link);
-            row.appendChild(cell2);
-
-            let cell3 = document.createElement('td');
-            cell3.innerText = formatDate(file.LastModifiedTime);
-            row.appendChild(cell3);
-
-            let cell4 = document.createElement('td');
-            cell4.innerText = bytesToSize(file.Size);
-            cell4.setAttribute('data-size', file.Size.toString());
-            row.appendChild(cell4);
-
-            rows.push(row);
-        }
-
-        let jTable = $(fileTable);
-
-        jTable.data('rows', rows);
-
-        let ascending = !jTable.data('ascending');
-        jTable.data('ascending', ascending);
-        let property = jTable.data('sortProperty');
-
-        sortTable(fileTable, property);
-    }
-
-    function sendModPackFiles(modPack: string, files: ModPackFileMetaData[]) {
-        if (modPack !== currentModPack) {
-            return;
-        }
-
-        updateModPackFiles(modPack, files);
-    }
-
-    connection.on("SendModPacks", updateModPacks)
-
-    connection.on("SendModPackFiles", sendModPackFiles)
 
     newModPackButton.onclick = () => {
         newModPackModal.classList.add('is-active');
@@ -436,7 +380,7 @@ import * as $ from "jquery";
     }
 
     deleteFileButton.onclick = async () => {
-        let checkboxes = document.querySelectorAll('input[type=checkbox]:checked');
+        let checkboxes = fileTableElement.tBodies[0].querySelectorAll('input[type=checkbox]:checked');
 
         if (checkboxes.length == 0) {
             alert('Please select files to delete.');
@@ -459,86 +403,57 @@ import * as $ from "jquery";
         }
     }
 
-    function pad(number) {
-        return number < 10 ? '0' + number : number;
-    }
+    function UpdatePage() {
+        connection.invoke('RequestModPacks');
 
-    function formatDate(dateString: string): string {
-        let date = new Date(dateString);
-        let year = pad(date.getUTCFullYear());
-        let month = pad(date.getUTCMonth() + 1);
-        let day = pad(date.getUTCDate());
-        let hour = pad(date.getUTCHours());
-        let min = pad(date.getUTCMinutes());
-        let sec = pad(date.getUTCSeconds());
-        return year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec;
-    }
-
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    function bytesToSize(bytes: number) {
-        // https://gist.github.com/lanqy/5193417
-
-        if (bytes === 0)
-            return 'n/a';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        if (i === 0)
-            return `${bytes} ${sizes[i]}`;
-        else
-            return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`;
-    }
-
-    function sortTable(table: HTMLTableElement, property: string) {
-        let jTable = $(table);
-
-        let rows: HTMLTableRowElement[] = jTable.data('rows');
-        let keySelector: (r: HTMLTableRowElement) => any = jTable.data(property);
-
-        let sortProperty = jTable.data('sortProperty');
-
-        let ascending: boolean;
-        if (sortProperty === property) {
-            ascending = !jTable.data('ascending');
-            jTable.data('ascending', ascending);
-        } else {
-            jTable.data('sortProperty', property);
-            ascending = true;
-            jTable.data('ascending', ascending);
-        }
-
-        if (ascending) {
-            rows.sort((a, b) => {
-                let left = keySelector(a);
-                let right = keySelector(b);
-                if (left === right) {
-                    return 0;
-                } else if (left > right) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            });
-        } else {
-            rows.sort((a, b) => {
-                let left = keySelector(a);
-                let right = keySelector(b);
-                if (left === right) {
-                    return 0;
-                } else if (left > right) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
-        }
-
-        let body = table.tBodies[0];
-        body.innerHTML = "";
-
-        for (let i = 0; i < rows.length; i++) {
-            let r = rows[i];
-            body.appendChild(r);
+        if (currentModPack !== null) {
+            connection.invoke('RequestModPackFiles', currentModPack);
         }
     }
 
-    start();
+    async function startConnection() {
+        try {
+            await connection.start();
+            UpdatePage();
+
+        } catch (ex) {
+            console.log(ex.message);
+            setTimeout(() => startConnection(), 2000);
+        }
+    }
+
+    connection.onclose(async () => {
+        await startConnection();
+    });
+
+    connection.on("SendModPacks", (data: TableData<ModPackMetaData>) => {
+        modPacksTable.update(data);
+
+        let currentModPackAvailable = false;
+        for (let row of modPacksTable.rows()) {
+            if (currentModPack === row.cells[0].textContent) {
+                currentModPackAvailable = true;
+                break;
+            }
+        }
+
+        if (!currentModPackAvailable) {
+            currentModPack = null;
+            modPackFilesDiv.classList.add('is-invisible');
+        }
+    });
+
+    connection.on("SendModPackFiles", (modPack: string, data: TableData<ModPackFileMetaData>) => {
+        if (currentModPack === modPack) {
+            fileTable.update(data);
+        }
+    });
+
+    function onPageLoad() {
+        buildModPackTable();
+        buildFileTable();
+        startConnection();
+    }
+
+    onPageLoad();
 }();

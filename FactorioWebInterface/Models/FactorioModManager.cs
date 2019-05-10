@@ -1,20 +1,92 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FactorioWebInterface.Hubs;
+using FactorioWebInterface.Utils;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+//using static FactorioWebInterface.Models.ModPackChangedType;
 
 namespace FactorioWebInterface.Models
 {
     public class FactorioModManager
     {
+        private readonly IHubContext<FactorioModHub, IFactorioModClientMethods> _factorioModHub;
         private readonly ILogger<FactorioModManager> _logger;
 
-        public FactorioModManager(ILogger<FactorioModManager> logger)
+        public event EventHandler<FactorioModManager, ModPackChangedEventArgs> ModPackChanged;
+        public event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
+
+        public FactorioModManager(IHubContext<FactorioModHub, IFactorioModClientMethods> factorioModHub,
+            ILogger<FactorioModManager> logger)
         {
+            _factorioModHub = factorioModHub;
             _logger = logger;
+
+            ModPackChanged += FactorioModManager_ModPackChanged;
+            ModPackFilesChanged += FactorioModManager_ModPackFilesChanged;
+        }
+
+        private void FactorioModManager_ModPackChanged(FactorioModManager sender, ModPackChangedEventArgs eventArgs)
+        {
+            TableData<ModPackMetaData> Create(ModPackChangedEventArgs e)
+            {
+                return new TableData<ModPackMetaData>
+                {
+                    Type = TableDataType.Update,
+                    Rows = new[] { e.NewOrUpdated }
+                };
+            }
+
+            TableData<ModPackMetaData> Delete(ModPackChangedEventArgs e)
+            {
+                return new TableData<ModPackMetaData>
+                {
+                    Type = TableDataType.Remove,
+                    Rows = new[] { e.Old }
+                };
+            }
+
+            var clients = _factorioModHub.Clients.All;
+
+            switch (eventArgs.Type)
+            {
+                case ModPackChangedType.Create:
+                    clients.SendModPacks(Create(eventArgs));
+                    break;
+                case ModPackChangedType.Delete:
+                    clients.SendModPacks(Delete(eventArgs));
+                    break;
+                case ModPackChangedType.Rename:
+                    var td = new TableData<ModPackMetaData>()
+                    {
+                        Type = TableDataType.Compound,
+                        TableDatas = new[]
+                        {
+                            Delete(eventArgs),
+                            Create(eventArgs)
+                        }
+                    };
+                    clients.SendModPacks(td);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void FactorioModManager_ModPackFilesChanged(FactorioModManager sender, ModPackFilesChangedEventArgs eventArgs)
+        {
+            var clients = _factorioModHub.Clients.All;
+            var tableData = new TableData<ModPackFileMetaData>
+            {
+                Rows = eventArgs.Files,
+                Type = eventArgs.Type == ModPackFilesChangedType.Create ? TableDataType.Update : TableDataType.Remove
+            };
+
+            clients.SendModPackFiles(eventArgs.ModPack, tableData);
         }
 
         public ModPackMetaData[] GetModPacks()
@@ -112,7 +184,17 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(new Error(Constants.FileErrorKey, $"Error creating mod pack with name {name}."));
                 }
 
-                Directory.CreateDirectory(modPackPath);
+                modPackDir = Directory.CreateDirectory(modPackPath);
+
+                var modPack = new ModPackMetaData()
+                {
+                    Name = modPackDir.Name,
+                    CreatedTime = modPackDir.CreationTimeUtc,
+                    LastModifiedTime = modPackDir.LastAccessTimeUtc
+                };
+
+                var ev = new ModPackChangedEventArgs(ModPackChangedType.Create, modPack);
+                Task.Run(() => ModPackChanged?.Invoke(this, ev));
 
                 return Result.OK;
             }
@@ -148,7 +230,18 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
 
+                var modPack = new ModPackMetaData()
+                {
+                    Name = modPackDir.Name,
+                    CreatedTime = modPackDir.CreationTimeUtc,
+                    LastModifiedTime = modPackDir.LastAccessTimeUtc
+                };
+
                 modPackDir.Delete(true);
+
+                var ev = new ModPackChangedEventArgs(ModPackChangedType.Delete, null, modPack);
+                Task.Run(() => ModPackChanged?.Invoke(this, ev));
+
                 return Result.OK;
             }
             catch (Exception ex)
@@ -205,7 +298,26 @@ namespace FactorioWebInterface.Models
                     return Result.Failure(new Error(Constants.FileErrorKey, $"Error renaming mod pack from {name} to {newName}."));
                 }
 
+                var oldModPack = new ModPackMetaData()
+                {
+                    Name = modPackDir.Name,
+                    CreatedTime = modPackDir.CreationTimeUtc,
+                    LastModifiedTime = modPackDir.LastAccessTimeUtc
+                };
+
                 modPackDir.MoveTo(modPackNewPath);
+                modPackNewDir.Refresh();
+
+                var newModpack = new ModPackMetaData()
+                {
+                    Name = modPackNewDir.Name,
+                    CreatedTime = modPackNewDir.CreationTimeUtc,
+                    LastModifiedTime = modPackNewDir.LastAccessTimeUtc
+                };
+
+                var ev = new ModPackChangedEventArgs(ModPackChangedType.Rename, newModpack, oldModPack);
+                Task.Run(() => ModPackChanged?.Invoke(this, ev));
+
                 return Result.OK;
             }
             catch (Exception ex)
@@ -259,6 +371,8 @@ namespace FactorioWebInterface.Models
 
         public Result DeleteModPackFiles(string modPack, string[] files)
         {
+            var changedFiles = new List<ModPackFileMetaData>();
+
             try
             {
                 var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
@@ -307,6 +421,16 @@ namespace FactorioWebInterface.Models
                         continue;
                     }
 
+                    var fileMetaData = new ModPackFileMetaData()
+                    {
+                        Name = fileInfo.Name,
+                        CreatedTime = fileInfo.CreationTimeUtc,
+                        LastModifiedTime = fileInfo.LastAccessTimeUtc,
+                        Size = fileInfo.Length
+                    };
+
+                    changedFiles.Add(fileMetaData);
+
                     fileInfo.Delete();
                 }
 
@@ -324,72 +448,110 @@ namespace FactorioWebInterface.Models
                 _logger.LogError(ex, nameof(DeleteModPackFiles));
                 return Result.Failure(Constants.FileErrorKey, $"Error deleting mod pack files.");
             }
+            finally
+            {
+                if (changedFiles.Count > 0)
+                {
+                    var ev = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Delete, modPack, changedFiles);
+                    Task.Run(() => ModPackFilesChanged?.Invoke(this, ev));
+                }
+            }
         }
 
         public async Task<Result> UploadFiles(string modPack, IList<IFormFile> files)
         {
-            var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+            var changedFiles = new List<ModPackFileMetaData>();
 
-            if (!dir.Exists)
+            try
             {
-                dir.Create();
-                return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
-            }
+                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
 
-            string safeModPackName = Path.GetFileName(modPack);
-            string modPackPath = Path.Combine(dir.FullName, safeModPackName);
-            var modPackDir = new DirectoryInfo(modPackPath);
-
-            if (!modPackDir.Exists)
-            {
-                return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
-            }
-            if (modPackDir.Parent.FullName != dir.FullName)
-            {
-                return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
-            }
-
-            var errors = new List<Error>();
-
-            foreach (var file in files)
-            {
-                string fileName = file.FileName;
-                if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(" "))
+                if (!dir.Exists)
                 {
-                    errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName ?? ""));
-                    continue;
+                    dir.Create();
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
 
-                string safeName = Path.GetFileName(fileName);
-                string filePath = Path.Combine(modPackDir.FullName, safeName);
-                var fileInfo = new FileInfo(filePath);
+                string safeModPackName = Path.GetFileName(modPack);
+                string modPackPath = Path.Combine(dir.FullName, safeModPackName);
+                var modPackDir = new DirectoryInfo(modPackPath);
 
-                if (fileInfo.Exists)
+                if (!modPackDir.Exists)
                 {
-                    errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, fileName));
-                    continue;
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
-                if (fileInfo.Directory.FullName != modPackDir.FullName)
+                if (modPackDir.Parent.FullName != dir.FullName)
                 {
-                    errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName));
-                    continue;
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
 
-                using (var writeStream = fileInfo.OpenWrite())
-                using (var readStream = file.OpenReadStream())
+                var errors = new List<Error>();
+
+                foreach (var file in files)
                 {
-                    await readStream.CopyToAsync(writeStream);
-                    await writeStream.FlushAsync();
+                    string fileName = file.FileName;
+                    if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(" "))
+                    {
+                        errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName ?? ""));
+                        continue;
+                    }
+
+                    string safeName = Path.GetFileName(fileName);
+                    string filePath = Path.Combine(modPackDir.FullName, safeName);
+                    var fileInfo = new FileInfo(filePath);
+
+                    if (fileInfo.Exists)
+                    {
+                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, fileName));
+                        continue;
+                    }
+                    if (fileInfo.Directory.FullName != modPackDir.FullName)
+                    {
+                        errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName));
+                        continue;
+                    }
+
+                    using (var writeStream = fileInfo.OpenWrite())
+                    using (var readStream = file.OpenReadStream())
+                    {
+                        await readStream.CopyToAsync(writeStream);
+                        await writeStream.FlushAsync();
+                    }
+
+                    fileInfo.Refresh();
+
+                    var fileMetaData = new ModPackFileMetaData()
+                    {
+                        Name = fileInfo.Name,
+                        CreatedTime = fileInfo.CreationTimeUtc,
+                        LastModifiedTime = fileInfo.LastAccessTimeUtc,
+                        Size = fileInfo.Length
+                    };
+
+                    changedFiles.Add(fileMetaData);
+                }
+
+                if (errors.Count != 0)
+                {
+                    return Result.Failure(errors);
+                }
+                else
+                {
+                    return Result.OK;
                 }
             }
-
-            if (errors.Count != 0)
+            catch (Exception ex)
             {
-                return Result.Failure(errors);
+                _logger.LogError(ex, nameof(UploadFiles));
+                return Result.Failure(Constants.FileErrorKey, $"Error uploading mod pack files.");
             }
-            else
+            finally
             {
-                return Result.OK;
+                if (changedFiles.Count > 0)
+                {
+                    var ev = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, modPack, changedFiles);
+                    _ = Task.Run(() => ModPackFilesChanged?.Invoke(this, ev));
+                }
             }
         }
 

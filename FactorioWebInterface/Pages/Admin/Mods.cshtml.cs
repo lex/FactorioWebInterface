@@ -65,13 +65,6 @@ namespace FactorioWebInterface.Pages.Admin
             }
 
             var result = await _factorioModManager.UploadFiles(modPack, files);
-
-            _ = _factorioModHub.Clients.All.SendModPackFiles(modPack, _factorioModManager.GetModPackFiles(modPack));
-
-            var modPacks = _factorioModManager.GetModPacks();
-            _ = _factorioModHub.Clients.All.SendModPacks(modPacks);
-            _ = _factorioControlHub.Clients.All.SendModPacks(modPacks);
-
             return new JsonResult(result);
         }
 
