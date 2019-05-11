@@ -17,6 +17,7 @@ import * as Table from "./table";
     const updateButton = document.getElementById('updateButton') as HTMLButtonElement;
     const refreshDataSets = document.getElementById('refreshDataSets') as HTMLButtonElement;
     const datasetsSelect = document.getElementById('datasetsSelect') as HTMLDivElement;
+    const dataSetHeading = document.getElementById('dataSetHeading') as HTMLHeadingElement;
 
     let dataTable: Table.Table;
     let placeholderOption: HTMLOptionElement = null;
@@ -44,6 +45,8 @@ import * as Table from "./table";
         currentDataSet = set;
         connection.send('TrackDataSet', set);
         connection.send('RequestAllDataForDataSet', set);
+
+        dataSetHeading.textContent = currentDataSet;
     };
 
     updateButton.onclick = () => {
@@ -56,7 +59,7 @@ import * as Table from "./table";
             data.Value = value;
         }
 
-        connection.invoke('UpdateData', data);
+        connection.invoke('UpdateData', data);        
     };
 
     function reBuildDataSetsSelect() {
@@ -138,9 +141,12 @@ import * as Table from "./table";
     });
 
     connection.on('SendEntries', (dataSet: string, data: Table.TableData) => {
-        if (currentDataSet === dataSet) {
-            dataTable.update(data);
+        if (currentDataSet !== dataSet) {
+            return;            
         }
+
+        dataTable.update(data);
+        dataSetHeading.textContent = currentDataSet + ` (${dataTable.rowsCount()})`;
     });
 
     function onPageLoad() {
