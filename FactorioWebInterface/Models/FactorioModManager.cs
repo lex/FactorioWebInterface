@@ -106,7 +106,7 @@ namespace FactorioWebInterface.Models
                     {
                         Name = x.Name,
                         CreatedTime = x.CreationTimeUtc,
-                        LastModifiedTime = x.LastAccessTimeUtc
+                        LastModifiedTime = x.LastWriteTimeUtc
                     })
                     .ToArray();
             }
@@ -190,7 +190,7 @@ namespace FactorioWebInterface.Models
                 {
                     Name = modPackDir.Name,
                     CreatedTime = modPackDir.CreationTimeUtc,
-                    LastModifiedTime = modPackDir.LastAccessTimeUtc
+                    LastModifiedTime = modPackDir.LastWriteTimeUtc
                 };
 
                 var ev = new ModPackChangedEventArgs(ModPackChangedType.Create, modPack);
@@ -234,7 +234,7 @@ namespace FactorioWebInterface.Models
                 {
                     Name = modPackDir.Name,
                     CreatedTime = modPackDir.CreationTimeUtc,
-                    LastModifiedTime = modPackDir.LastAccessTimeUtc
+                    LastModifiedTime = modPackDir.LastWriteTimeUtc
                 };
 
                 modPackDir.Delete(true);
@@ -302,7 +302,7 @@ namespace FactorioWebInterface.Models
                 {
                     Name = modPackDir.Name,
                     CreatedTime = modPackDir.CreationTimeUtc,
-                    LastModifiedTime = modPackDir.LastAccessTimeUtc
+                    LastModifiedTime = modPackDir.LastWriteTimeUtc
                 };
 
                 modPackDir.MoveTo(modPackNewPath);
@@ -312,7 +312,7 @@ namespace FactorioWebInterface.Models
                 {
                     Name = modPackNewDir.Name,
                     CreatedTime = modPackNewDir.CreationTimeUtc,
-                    LastModifiedTime = modPackNewDir.LastAccessTimeUtc
+                    LastModifiedTime = modPackNewDir.LastWriteTimeUtc
                 };
 
                 var ev = new ModPackChangedEventArgs(ModPackChangedType.Rename, newModpack, oldModPack);
@@ -357,7 +357,7 @@ namespace FactorioWebInterface.Models
                         {
                             Name = x.Name,
                             CreatedTime = x.CreationTimeUtc,
-                            LastModifiedTime = x.LastAccessTimeUtc,
+                            LastModifiedTime = x.LastWriteTimeUtc,
                             Size = x.Length
                         })
                         .ToArray();
@@ -425,7 +425,7 @@ namespace FactorioWebInterface.Models
                     {
                         Name = fileInfo.Name,
                         CreatedTime = fileInfo.CreationTimeUtc,
-                        LastModifiedTime = fileInfo.LastAccessTimeUtc,
+                        LastModifiedTime = fileInfo.LastWriteTimeUtc,
                         Size = fileInfo.Length
                     };
 
@@ -524,7 +524,7 @@ namespace FactorioWebInterface.Models
                     {
                         Name = fileInfo.Name,
                         CreatedTime = fileInfo.CreationTimeUtc,
-                        LastModifiedTime = fileInfo.LastAccessTimeUtc,
+                        LastModifiedTime = fileInfo.LastWriteTimeUtc,
                         Size = fileInfo.Length
                     };
 
