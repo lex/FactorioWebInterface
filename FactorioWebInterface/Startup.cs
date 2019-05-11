@@ -90,6 +90,7 @@ namespace FactorioWebInterface
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
             services.AddSingleton<DiscordBot, DiscordBot>();
             services.AddSingleton<FactorioUpdater, FactorioUpdater>();
+            services.AddSingleton<FactorioAdminManager, FactorioAdminManager>();
             services.AddSingleton<FactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
             services.AddSingleton<FactorioBanManager, FactorioBanManager>();
@@ -176,6 +177,7 @@ namespace FactorioWebInterface
             {
                 routes.MapHub<FactorioControlHub>("/factorioControlHub");
                 routes.MapHub<FactorioProcessHub>("/factorioProcessHub");
+                routes.MapHub<FactorioAdminHub>("/factorioAdminHub");
                 routes.MapHub<ScenarioDataHub>("/scenarioDataHub");
                 routes.MapHub<FactorioBanHub>("/factorioBanHub");
                 routes.MapHub<PlaguesPlaygroundHub>("/plaguesPlaygroundHub");

@@ -1,5 +1,4 @@
-﻿using FactorioWebInterface.Data;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Shared;
 using System;
 using System.Collections.Generic;
@@ -25,9 +24,6 @@ namespace FactorioWebInterface.Models
         void FactorioWrapperDataReceived(string serverId, string data, DateTime dateTime);
         Task OnProcessRegistered(string serverId);
         Task StatusChanged(string serverId, FactorioServerStatus newStatus, FactorioServerStatus oldStatus, DateTime dateTime);
-        Task<List<Admin>> GetAdminsAsync();
-        Task AddAdminsFromStringAsync(string data);
-        Task RemoveAdmin(string name);
         FileMetaData[] GetLocalSaveFiles(string serverId);
         FileMetaData[] GetTempSaveFiles(string serverId);
         FileMetaData[] GetGlobalSaveFiles();

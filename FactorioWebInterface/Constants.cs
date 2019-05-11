@@ -102,5 +102,7 @@
         public const string RequiredFieldErrorKey = "requiredField";
         public const string FailedToAddBanToDatabaseErrorKey = "failedToAddBanToDatabase";
         public const string FailedToRemoveBanFromDatabaseErrorKey = "failedToRemoveBanFromDatabase";
+        public const string FailedToAddAdminsErrorKey = "failedToAddAdminsErrorKey";
+        public const string FailedToRemoveAdminErrorKey = "failedToRemoveAdminErrorKey";
     }
 }

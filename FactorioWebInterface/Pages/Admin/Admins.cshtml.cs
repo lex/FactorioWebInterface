@@ -1,10 +1,8 @@
 ﻿using FactorioWebInterface.Data;
-using FactorioWebInterface.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Pages.Admin
@@ -12,23 +10,11 @@ namespace FactorioWebInterface.Pages.Admin
     public class AdminsModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManger;
-        private readonly IFactorioServerManager _factorioServerManager;
 
-        public AdminsModel(UserManager<ApplicationUser> userManger, IFactorioServerManager factorioServerManager)
+        public AdminsModel(UserManager<ApplicationUser> userManger)
         {
             _userManger = userManger;
-            _factorioServerManager = factorioServerManager;
         }
-
-        public List<Data.Admin> Admins { get; private set; }
-
-        public class InputModel
-        {
-            public string Admins { get; set; }
-        }
-
-        [BindProperty]
-        public InputModel Input { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -40,40 +26,7 @@ namespace FactorioWebInterface.Pages.Admin
                 return RedirectToPage("signIn");
             }
 
-            Admins = await _factorioServerManager.GetAdminsAsync();
-
             return Page();
-        }
-
-        public async Task<IActionResult> OnPostAsync()
-        {
-            var user = await _userManger.GetUserAsync(User);
-
-            if (user == null || user.Suspended)
-            {
-                HttpContext.Session.SetString("returnUrl", "admins");
-                return RedirectToPage("signIn");
-            }
-
-            var data = Input.Admins;
-            await _factorioServerManager.AddAdminsFromStringAsync(data);
-
-            return RedirectToPage();
-        }
-
-        public async Task<IActionResult> OnPostRemoveAdminAsync(string name)
-        {
-            var user = await _userManger.GetUserAsync(User);
-
-            if (user == null || user.Suspended)
-            {
-                HttpContext.Session.SetString("returnUrl", "admins");
-                return RedirectToPage("signIn");
-            }
-
-            await _factorioServerManager.RemoveAdmin(name);
-
-            return RedirectToPage();
         }
     }
 }

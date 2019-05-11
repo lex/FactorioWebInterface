@@ -45,6 +45,7 @@ namespace FactorioWebInterface.Models
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly FactorioAdminManager _factorioAdminManager;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
         private readonly FactorioBanManager _factorioBanManager;
@@ -65,6 +66,7 @@ namespace FactorioWebInterface.Models
             DbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
             IHttpClientFactory httpClientFactory,
+            FactorioAdminManager factorioAdminManager,
             FactorioUpdater factorioUpdater,
             FactorioModManager factorioModManager,
             FactorioBanManager factorioBanManager,
@@ -79,6 +81,7 @@ namespace FactorioWebInterface.Models
             _dbContextFactory = dbContextFactory;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _factorioAdminManager = factorioAdminManager;
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
             _factorioBanManager = factorioBanManager;
@@ -479,7 +482,7 @@ namespace FactorioWebInterface.Models
                 return;
             }
 
-            var a = await GetAdminsAsync();
+            var a = await _factorioAdminManager.GetAdmins();
             var admins = a.Select(x => x.Name).ToList();
 
             serverData.ServerAdminList = admins;
@@ -2378,58 +2381,6 @@ namespace FactorioWebInterface.Models
                 await controlTask2;
         }
 
-        public async Task<List<Admin>> GetAdminsAsync()
-        {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Admins.ToListAsync();
-        }
-
-        public async Task AddAdminsFromStringAsync(string data)
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-                var admins = db.Admins;
-
-                var names = data.Split(',').Select(x => x.Trim());
-                foreach (var name in names)
-                {
-                    if (admins.Any(a => a.Name == name))
-                    {
-                        continue;
-                    }
-
-                    admins.Add(new Admin() { Name = name });
-                }
-
-                await db.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(AddAdminsFromStringAsync));
-            }
-        }
-
-        public async Task RemoveAdmin(string name)
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-                var admins = db.Admins;
-
-                var admin = await admins.SingleOrDefaultAsync(a => a.Name == name);
-                if (admin != null)
-                {
-                    admins.Remove(admin);
-                    await db.SaveChangesAsync();
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(RemoveAdmin));
-            }
-        }
-
         public Task OnProcessRegistered(string serverId)
         {
             return _factorioProcessHub.Clients.Group(serverId).GetStatus();
@@ -3133,7 +3084,7 @@ namespace FactorioWebInterface.Models
                 return adminList;
             }
 
-            var a = await GetAdminsAsync();
+            var a = await _factorioAdminManager.GetAdmins();
             adminList = a.Select(x => x.Name).ToList();
 
             serverData.ServerAdminList = adminList;
@@ -3230,7 +3181,7 @@ namespace FactorioWebInterface.Models
                 }
                 else
                 {
-                    var a = await GetAdminsAsync();
+                    var a = await _factorioAdminManager.GetAdmins();
                     admins = a.Select(x => x.Name).ToList();
                 }
 
