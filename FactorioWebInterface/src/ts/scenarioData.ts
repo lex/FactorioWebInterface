@@ -70,7 +70,7 @@ import * as Table from "./table";
         connection.send('RequestAllDataSets');
     }
 
-    refreshDataSets.onclick = reBuildDataSetsSelect;    
+    refreshDataSets.onclick = reBuildDataSetsSelect;
 
     function buildTable() {
         function buildCell(cell: HTMLTableCellElement, data: any) {
@@ -79,10 +79,6 @@ import * as Table from "./table";
 
         function sortCell(cell: HTMLTableCellElement) {
             return cell.textContent.toLowerCase();
-        }
-
-        function rowEqual(rowElement: HTMLTableRowElement, data: any): boolean {
-            return rowElement.cells[0].innerText === data['Key'];
         }
 
         function onRowClicked(this: HTMLTableRowElement) {
@@ -97,7 +93,8 @@ import * as Table from "./table";
             {
                 Property: 'Key',
                 CellBuilder: buildCell,
-                SortKeySelector: sortCell
+                SortKeySelector: sortCell,
+                IsKey: true
             },
             {
                 Property: 'Value',
@@ -106,7 +103,7 @@ import * as Table from "./table";
             },
         ];
 
-        dataTable = new Table.Table(dataTableElement, cellBuilders, rowEqual, onRowClicked)
+        dataTable = new Table.Table(dataTableElement, cellBuilders, onRowClicked)
         dataTable.sortBy(0, true);
     }
 

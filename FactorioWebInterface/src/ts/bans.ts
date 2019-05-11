@@ -53,10 +53,6 @@ import { Result, Utils } from "./utils";
             return cell.textContent;
         }
 
-        function rowEqual(rowElement: HTMLTableRowElement, data: any): boolean {
-            return rowElement.cells[0].innerText === data['Username'];
-        }
-
         function onRowClicked(this: HTMLTableRowElement) {
             setform(this);
         }
@@ -82,7 +78,8 @@ import { Result, Utils } from "./utils";
             {
                 Property: 'Username',
                 CellBuilder: buildCell,
-                SortKeySelector: sortTextCell
+                SortKeySelector: sortTextCell,
+                IsKey: true
             },
             {
                 Property: 'Reason',
@@ -105,7 +102,7 @@ import { Result, Utils } from "./utils";
             }
         ];
 
-        table = new Table.Table(tableElement, cellBuilders, rowEqual, onRowClicked);
+        table = new Table.Table(tableElement, cellBuilders, onRowClicked);
         table.sortBy(3, false);
     }
 

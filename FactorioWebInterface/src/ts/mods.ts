@@ -81,10 +81,6 @@ import { TableData } from "./table";
     }
 
     function buildModPackTable() {
-        function rowEqual(rowElement: HTMLTableRowElement, data: ModPackMetaData): boolean {
-            return rowElement.cells[0].innerText === data.Name;
-        }
-
         function onRowClicked(this: HTMLTableRowElement, ev: MouseEvent) {
             let child = this.firstElementChild as HTMLElement;
             let modPack = child.innerText
@@ -112,7 +108,8 @@ import { TableData } from "./table";
             {
                 Property: 'Name',
                 CellBuilder: buildTextCell,
-                SortKeySelector: sortTextCell
+                SortKeySelector: sortTextCell,
+                IsKey: true
             },
             {
                 Property: 'LastModifiedTime',
@@ -129,7 +126,7 @@ import { TableData } from "./table";
             }
         ];
 
-        modPacksTable = new Table.Table<ModPackMetaData>(modPacksTableElement, cellBuilders, rowEqual, onRowClicked)
+        modPacksTable = new Table.Table<ModPackMetaData>(modPacksTableElement, cellBuilders, onRowClicked)
         modPacksTable.sortBy(1, false);
     }
 
@@ -170,10 +167,6 @@ import { TableData } from "./table";
             cell.childNodes[1].textContent = ' Select' + symbol;
         }
 
-        function rowEqual(rowElement: HTMLTableRowElement, data: ModPackFileMetaData): boolean {
-            return rowElement.cells[1].innerText === data.Name;
-        }
-
         let cellBuilders: Table.CellBuilder[] = [
             {
                 Property: 'Name',
@@ -184,7 +177,8 @@ import { TableData } from "./table";
             {
                 Property: 'Name',
                 CellBuilder: buildNameCell,
-                SortKeySelector: sortNameCell
+                SortKeySelector: sortNameCell,
+                IsKey: true
             },
             {
                 Property: 'LastModifiedTime',
@@ -198,7 +192,7 @@ import { TableData } from "./table";
             }
         ];
 
-        fileTable = new Table.Table<ModPackFileMetaData>(fileTableElement, cellBuilders, rowEqual)
+        fileTable = new Table.Table<ModPackFileMetaData>(fileTableElement, cellBuilders)
         fileTable.sortBy(2, false);
 
         let fileTableselectionCheckbox = fileTableElement.tHead.rows[0].cells[0].firstElementChild as HTMLInputElement;
@@ -229,7 +223,7 @@ import { TableData } from "./table";
 
         let row = this.parentElement.parentElement;
         let child = row.firstElementChild as HTMLElement;
-        let name = child.innerText
+        let name = child.innerText;
 
         renameOldName = name;
 
@@ -403,7 +397,7 @@ import { TableData } from "./table";
         }
     }
 
-    function UpdatePage() {
+    function updatePage() {
         connection.invoke('RequestModPacks');
 
         if (currentModPack !== null) {
@@ -414,7 +408,7 @@ import { TableData } from "./table";
     async function startConnection() {
         try {
             await connection.start();
-            UpdatePage();
+            updatePage();
 
         } catch (ex) {
             console.log(ex.message);

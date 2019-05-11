@@ -1,8 +1,9 @@
 ﻿export interface CellBuilder {
-    Property: string | undefined;
+    Property?: string | undefined;
     CellBuilder: (cell: HTMLTableCellElement, data: any) => void;
     SortKeySelector?: (r: HTMLTableCellElement) => any;
-    HeaderBuilder?: (cell: HTMLTableHeaderCellElement, symbol: string) => void
+    HeaderBuilder?: (cell: HTMLTableHeaderCellElement, symbol: string) => void;
+    IsKey?: boolean;
 }
 
 export enum TableDataType {
@@ -21,20 +22,21 @@ export interface TableData<T = any> {
 
 export class Table<T = any> {
     private cellBuilders: CellBuilder[];
-    private equal: (rowElement: HTMLTableRowElement, data: T) => boolean;
+    private keySelector: (data: T) => any;
     private onRowClick: (this: HTMLTableRowElement, ev: MouseEvent) => void;
     private tableHeaders: HTMLCollectionOf<HTMLTableHeaderCellElement>;
     private tableBody: HTMLTableSectionElement;
     private tableRows: HTMLTableRowElement[];
+    private tableMap: Map<any, HTMLTableRowElement>;
     private ascending: boolean = true;
     private sortIndex: number;
 
     constructor(table: HTMLTableElement, cellBuilders: CellBuilder[],
-        equal?: (rowElement: HTMLTableRowElement, data: T) => boolean,
-        onRowClick?: (this: HTMLTableRowElement, ev: MouseEvent) => void) {
+        onRowClick?: (this: HTMLTableRowElement, ev: MouseEvent) => void,
+        keySelector?: (data: T) => any) {
 
         this.cellBuilders = cellBuilders;
-        this.equal = equal || (function () { return false; });
+        this.keySelector = keySelector
         this.onRowClick = onRowClick;
 
         this.tableHeaders = table.tHead.rows[0].cells;
@@ -53,6 +55,20 @@ export class Table<T = any> {
             if (onRowClick !== undefined) {
                 row.onclick = onRowClick;
             }
+        }
+
+        if (this.keySelector === undefined) {
+            for (let cb of cellBuilders) {
+                if (cb.IsKey) {
+                    let prop = cb.Property
+                    this.keySelector = (data: T) => data[prop];
+                    break;
+                }
+            }
+        }
+
+        if (this.keySelector !== undefined) {
+            this.tableMap = new Map<any, HTMLTableRowElement>();
         }
 
         for (let i = 0; i < cellBuilders.length; i++) {
@@ -80,6 +96,7 @@ export class Table<T = any> {
     }
 
     private doAdd(rows: T[]) {
+        let keySelector = this.keySelector;
         let tableRows = this.tableRows;
 
         for (let row of rows) {
@@ -93,6 +110,11 @@ export class Table<T = any> {
             }
 
             tableRows.push(rowElement);
+
+            if (keySelector !== undefined) {
+                let key = keySelector(row);
+                this.tableMap.set(key, rowElement);
+            }
         }
 
         return true;
@@ -105,19 +127,29 @@ export class Table<T = any> {
     }
 
     private doRemove(rows: T[]) {
+        let keySelector = this.keySelector;
+
+        if (keySelector === undefined) {
+            console.error('Table keySelector must be set to support removal.');
+            return false;
+        }
+
+        let tableMap = this.tableMap;
         let tableRows = this.tableRows;
-        let equal = this.equal;
 
         for (let row of rows) {
 
-            let i = this.tableRows.findIndex(function (e) {
-                return equal(e, row);
-            });
+            let key = keySelector(row);
+            let oldRow = tableMap.get(key);
+            if (oldRow !== undefined) {
+                tableMap.delete(key);
 
-            if (i !== -1) {
-                let rowElement = tableRows[i];
-                rowElement.remove();
-                tableRows.splice(i, 1);
+                let index = tableRows.indexOf(oldRow);
+                if (index !== -1) {
+                    tableRows.splice(index, 1);
+                }
+
+                oldRow.remove();
             }
         }
 
@@ -125,14 +157,20 @@ export class Table<T = any> {
     }
 
     private doUpdate(rows: T[]) {
+        let keySelector = this.keySelector;
+
+        if (keySelector === undefined) {
+            console.error('Table keySelector must be set to support update.');
+            return false;
+        }
+
+        let tableMap = this.tableMap;
         let tableRows = this.tableRows;
-        let equal = this.equal;
 
         for (let row of rows) {
 
-            let rowElement = this.tableRows.find(function (e) {
-                return equal(e, row);
-            });
+            let key = keySelector(row);
+            let rowElement = tableMap.get(key);
 
             if (rowElement === undefined) {
                 rowElement = document.createElement('tr');
@@ -145,6 +183,7 @@ export class Table<T = any> {
                 }
 
                 tableRows.push(rowElement);
+                tableMap.set(key, rowElement);
             } else {
                 rowElement.innerHTML = "";
 
