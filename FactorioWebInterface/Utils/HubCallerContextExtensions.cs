@@ -4,7 +4,7 @@ namespace FactorioWebInterface.Utils
 {
     public static class HubCallerContextExtensions
     {
-        public static T GetDataOrDefault<T>(this HubCallerContext context)
+        public static T GetDataOrDefault<T>(this HubCallerContext context, T defaultValue = default)
         {
             if (context.Items.TryGetValue(typeof(T), out object data))
             {
@@ -12,7 +12,7 @@ namespace FactorioWebInterface.Utils
             }
             else
             {
-                return default;
+                return defaultValue;
             }
         }
 

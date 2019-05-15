@@ -160,7 +160,7 @@ import { TableData } from "./table";
         }
 
         function sortSizeCell(cell: HTMLTableCellElement) {
-            return cell.getAttribute('data-size');
+            return Number.parseInt(cell.getAttribute('data-size'));
         }
 
         function buildCheckboxHeader(cell: HTMLTableHeaderCellElement, symbol: string) {
