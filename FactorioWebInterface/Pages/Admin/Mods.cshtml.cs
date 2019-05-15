@@ -82,7 +82,7 @@ namespace FactorioWebInterface.Pages.Admin
                     contentType = "application/zip";
                     break;
                 case ".json":
-                    contentType = "application/zip";
+                    contentType = "application/json";
                     break;
                 default:
                     contentType = "application/octet-stream";
