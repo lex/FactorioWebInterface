@@ -94,6 +94,7 @@ namespace FactorioWebInterface
             services.AddSingleton<FactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
             services.AddSingleton<FactorioBanManager, FactorioBanManager>();
+            services.AddSingleton<FactorioFileManager, FactorioFileManager>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
 
             services.AddRouting(o => o.LowercaseUrls = true);

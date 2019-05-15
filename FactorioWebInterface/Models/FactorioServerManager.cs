@@ -3,7 +3,6 @@ using DSharpPlus.Entities;
 using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,7 +40,6 @@ namespace FactorioWebInterface.Models
         private readonly DiscordBotContext _discordBotContext;
         private readonly IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> _factorioProcessHub;
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
-        private readonly IHubContext<FactorioBanHub, IFactorioBanClientMethods> _factorioBanHub;
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
@@ -49,6 +47,7 @@ namespace FactorioWebInterface.Models
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
         private readonly FactorioBanManager _factorioBanManager;
+        private readonly FactorioFileManager _factorioFileManager;
         private readonly ScenarioDataManager _scenarioDataManger;
 
         //private SemaphoreSlim serverLock = new SemaphoreSlim(1, 1);
@@ -62,7 +61,6 @@ namespace FactorioWebInterface.Models
             DiscordBotContext discordBotContext,
             IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> factorioProcessHub,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
-            IHubContext<FactorioBanHub, IFactorioBanClientMethods> factorioBanHub,
             DbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
             IHttpClientFactory httpClientFactory,
@@ -70,6 +68,7 @@ namespace FactorioWebInterface.Models
             FactorioUpdater factorioUpdater,
             FactorioModManager factorioModManager,
             FactorioBanManager factorioBanManager,
+            FactorioFileManager factorioFileManager,
             ScenarioDataManager scenarioDataManger
         )
         {
@@ -77,7 +76,6 @@ namespace FactorioWebInterface.Models
             _discordBotContext = discordBotContext;
             _factorioProcessHub = factorioProcessHub;
             _factorioControlHub = factorioControlHub;
-            _factorioBanHub = factorioBanHub;
             _dbContextFactory = dbContextFactory;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
@@ -85,6 +83,7 @@ namespace FactorioWebInterface.Models
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
             _factorioBanManager = factorioBanManager;
+            _factorioFileManager = factorioFileManager;
             _scenarioDataManger = scenarioDataManger;
 
             string name = _configuration[Constants.FactorioWrapperNameKey];
@@ -101,6 +100,193 @@ namespace FactorioWebInterface.Models
             _scenarioDataManger.EntryChanged += _scenarioDataManger_EntryChanged;
             _factorioBanManager.BanAdded += _factorioBanManager_BanAdded;
             _factorioBanManager.BanRemoved += _factorioBanManager_BanRemoved;
+            _factorioFileManager.TempSaveFilesChanged += _factorioFileManager_TempSaveFilesChanged;
+            _factorioFileManager.LocalSaveFilesChanged += _factorioFileManager_LocalSaveFilesChanged;
+            _factorioFileManager.GlobalSaveFilesChanged += _factorioFileManager_GlobalSaveFilesChanged;
+            _factorioFileManager.LogFilesChanged += _factorioFileManager_LogFilesChanged;
+            _factorioFileManager.ChatLogFilesChanged += _factorioFileManager_ChatLogFilesChanged;
+            _factorioFileManager.ScenariosChanged += _factorioFileManager_ScenariosChanged;
+            _factorioModManager.ModPackChanged += _factorioModManager_ModPackChanged;
+        }
+
+        private void DoFileChange(FilesChangedEventArgs eventArgs, Func<IFactorioControlClientMethods, string, TableData<FileMetaData>, Task> method)
+        {
+            TableData<FileMetaData> Create(FilesChangedEventArgs e)
+            {
+                return new TableData<FileMetaData>
+                {
+                    Type = TableDataType.Update,
+                    Rows = e.NewOrUpdated
+                };
+            }
+
+            TableData<FileMetaData> Delete(FilesChangedEventArgs e)
+            {
+                return new TableData<FileMetaData>
+                {
+                    Type = TableDataType.Remove,
+                    Rows = e.Old
+                };
+            }
+
+            var serverId = eventArgs.ServerId;
+
+            IFactorioControlClientMethods clients;
+            if (string.IsNullOrEmpty(serverId))
+            {
+                clients = _factorioControlHub.Clients.All;
+            }
+            else
+            {
+                clients = _factorioControlHub.Clients.Group(eventArgs.ServerId);
+            }
+
+            switch (eventArgs.Type)
+            {
+                case FilesChangedType.Create:
+                    {
+                        var td = Create(eventArgs);
+                        method(clients, serverId, td);
+                        break;
+                    }
+                case FilesChangedType.Delete:
+                    {
+                        var td = Delete(eventArgs);
+                        method(clients, serverId, td);
+                        break;
+                    }
+                case FilesChangedType.Rename:
+                    {
+                        var td = new TableData<FileMetaData>()
+                        {
+                            Type = TableDataType.Compound,
+                            TableDatas = new[]
+                            {
+                                Delete(eventArgs),
+                                Create(eventArgs)
+                            }
+                        };
+                        method(clients, serverId, td);
+                        break;
+                    }
+            }
+        }
+
+        private void _factorioFileManager_TempSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendTempSavesFiles(id, td));
+        }
+
+        private void _factorioFileManager_LocalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendLocalSaveFiles(id, td));
+        }
+
+        private void _factorioFileManager_GlobalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendGlobalSaveFiles(td));
+        }
+
+        private void _factorioFileManager_LogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendLogFiles(id, td));
+        }
+
+        private void _factorioFileManager_ChatLogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendChatLogFiles(id, td));
+        }
+
+        private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, ScenariosChangedEventArgs eventArgs)
+        {
+            TableData<ScenarioMetaData> Create(ScenariosChangedEventArgs e)
+            {
+                return new TableData<ScenarioMetaData>
+                {
+                    Type = TableDataType.Update,
+                    Rows = e.NewOrUpdated
+                };
+            }
+
+            TableData<ScenarioMetaData> Delete(ScenariosChangedEventArgs e)
+            {
+                return new TableData<ScenarioMetaData>
+                {
+                    Type = TableDataType.Remove,
+                    Rows = e.Old
+                };
+            }
+
+            TableData<ScenarioMetaData> td = null;
+
+            switch (eventArgs.Type)
+            {
+                case ScenariosChangedType.Create:
+                    td = Create(eventArgs);
+                    break;
+                case ScenariosChangedType.Delete:
+                    td = Delete(eventArgs);
+                    break;
+                case ScenariosChangedType.Rename:
+                    td = new TableData<ScenarioMetaData>()
+                    {
+                        Type = TableDataType.Compound,
+                        TableDatas = new[]
+                        {
+                            Delete(eventArgs),
+                            Create(eventArgs)
+                        }
+                    };
+                    break;
+            }
+
+            _factorioControlHub.Clients.All.SendScenarios(td);
+        }
+
+        private void _factorioModManager_ModPackChanged(FactorioModManager sender, ModPackChangedEventArgs eventArgs)
+        {
+            TableData<ModPackMetaData> Create(ModPackChangedEventArgs e)
+            {
+                return new TableData<ModPackMetaData>
+                {
+                    Type = TableDataType.Update,
+                    Rows = new[] { e.NewOrUpdated }
+                };
+            }
+
+            TableData<ModPackMetaData> Delete(ModPackChangedEventArgs e)
+            {
+                return new TableData<ModPackMetaData>
+                {
+                    Type = TableDataType.Remove,
+                    Rows = new[] { e.Old }
+                };
+            }
+
+            TableData<ModPackMetaData> td = null;
+
+            switch (eventArgs.Type)
+            {
+                case ModPackChangedType.Create:
+                    td = Create(eventArgs);
+                    break;
+                case ModPackChangedType.Delete:
+                    td = Delete(eventArgs);
+                    break;
+                case ModPackChangedType.Rename:
+                    td = new TableData<ModPackMetaData>()
+                    {
+                        Type = TableDataType.Compound,
+                        TableDatas = new[]
+                        {
+                            Delete(eventArgs),
+                            Create(eventArgs)
+                        }
+                    };
+                    break;
+            }
+
+            _factorioControlHub.Clients.All.SendModPacks(td);
         }
 
         private void _factorioBanManager_BanAdded(FactorioBanManager sender, FactorioBanAddedEventArgs eventArgs)
@@ -695,7 +881,7 @@ namespace FactorioWebInterface.Models
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            var saveFile = GetSaveFile(directoryName, fileName);
+            var saveFile = _factorioFileManager.GetSaveFile(serverId, directoryName, fileName);
             if (saveFile == null)
             {
                 return Result.Failure(Constants.MissingFileErrorKey, $"File {Path.Combine(directoryName, fileName)} not found.");
@@ -2386,657 +2572,6 @@ namespace FactorioWebInterface.Models
             return _factorioProcessHub.Clients.Group(serverId).GetStatus();
         }
 
-        private FileMetaData[] GetFilesMetaData(string path, string directory)
-        {
-            try
-            {
-                var di = new DirectoryInfo(path);
-                if (!di.Exists)
-                {
-                    di.Create();
-                }
-
-                var files = di.EnumerateFiles("*.zip")
-                    .Select(f => new FileMetaData()
-                    {
-                        Name = f.Name,
-                        Directory = directory,
-                        CreatedTime = f.CreationTimeUtc,
-                        LastModifiedTime = f.LastWriteTimeUtc,
-                        Size = f.Length
-                    })
-                    .ToArray();
-
-                return files;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.ToString());
-                return new FileMetaData[0];
-            }
-        }
-
-        public FileMetaData[] GetTempSaveFiles(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new FileMetaData[0];
-            }
-
-            var path = serverData.TempSavesDirectoryPath;
-            var dir = Path.Combine(serverId, Constants.TempSavesDirectoryName);
-
-            return GetFilesMetaData(path, dir);
-        }
-
-        public FileMetaData[] GetLocalSaveFiles(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new FileMetaData[0];
-            }
-
-            var path = serverData.LocalSavesDirectoroyPath;
-            var dir = Path.Combine(serverId, Constants.LocalSavesDirectoryName);
-
-            return GetFilesMetaData(path, dir);
-        }
-
-        public FileMetaData[] GetGlobalSaveFiles()
-        {
-            var path = FactorioServerData.GlobalSavesDirectoryPath;
-
-            return GetFilesMetaData(path, Constants.GlobalSavesDirectoryName);
-        }
-
-        public List<FileMetaData> GetLogs(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new List<FileMetaData>();
-            }
-
-            List<FileMetaData> logs = new List<FileMetaData>();
-
-            var currentLog = new FileInfo(serverData.CurrentLogPath);
-            if (currentLog.Exists)
-            {
-                logs.Add(new FileMetaData()
-                {
-                    Name = currentLog.Name,
-                    CreatedTime = currentLog.CreationTimeUtc,
-                    LastModifiedTime = currentLog.LastWriteTimeUtc,
-                    Directory = Path.Combine(serverId),
-                    Size = currentLog.Length
-                });
-            }
-
-            var logsDir = new DirectoryInfo(serverData.LogsDirectoryPath);
-            if (logsDir.Exists)
-            {
-                var logfiles = logsDir.EnumerateFiles("*.log")
-                    .Select(x => new FileMetaData()
-                    {
-                        Name = x.Name,
-                        CreatedTime = x.CreationTimeUtc,
-                        LastModifiedTime = x.LastWriteTimeUtc,
-                        Directory = Path.Combine(serverId, Constants.LogDirectoryName),
-                        Size = x.Length
-                    })
-                    .OrderByDescending(x => x.CreatedTime);
-
-                logs.AddRange(logfiles);
-            }
-
-            return logs;
-        }
-
-        public List<FileMetaData> GetChatLogs(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new List<FileMetaData>();
-            }
-
-            List<FileMetaData> logs = new List<FileMetaData>();
-
-            var logsDir = new DirectoryInfo(serverData.ChatLogsDirectoryPath);
-            if (logsDir.Exists)
-            {
-                var logfiles = logsDir.EnumerateFiles("*.log")
-                    .Select(x => new FileMetaData()
-                    {
-                        Name = x.Name,
-                        CreatedTime = x.CreationTimeUtc,
-                        LastModifiedTime = x.LastWriteTimeUtc,
-                        Directory = Path.Combine(serverId, Constants.ChatLogDirectoryName),
-                        Size = x.Length
-                    })
-                    .OrderByDescending(x => x.CreatedTime);
-
-                logs.AddRange(logfiles);
-            }
-
-            return logs;
-        }
-
-        public FileInfo GetLogFile(string directoryName, string fileName)
-        {
-            string safeFileName = Path.GetFileName(fileName);
-            string path = Path.Combine(FactorioServerData.baseDirectoryPath, directoryName, safeFileName);
-            path = Path.GetFullPath(path);
-
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
-            {
-                return null;
-            }
-
-            var file = new FileInfo(path);
-            if (!file.Exists)
-            {
-                return null;
-            }
-
-            if (file.Extension != ".log")
-            {
-                return null;
-            }
-
-            if (file.Directory.Name == Constants.LogDirectoryName)
-            {
-                return file;
-            }
-            else if (file.Name == Constants.CurrentLogFileName)
-            {
-                return file;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public FileInfo GetChatLogFile(string directoryName, string fileName)
-        {
-            string safeFileName = Path.GetFileName(fileName);
-            string path = Path.Combine(FactorioServerData.baseDirectoryPath, directoryName, safeFileName);
-            path = Path.GetFullPath(path);
-
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
-            {
-                return null;
-            }
-
-            var file = new FileInfo(path);
-            if (!file.Exists)
-            {
-                return null;
-            }
-
-            if (file.Extension != ".log")
-            {
-                return null;
-            }
-
-            if (file.Directory.Name == Constants.ChatLogDirectoryName)
-            {
-                return file;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private bool IsSaveDirectory(string dirName)
-        {
-            switch (dirName)
-            {
-                case Constants.GlobalSavesDirectoryName:
-                case Constants.LocalSavesDirectoryName:
-                case Constants.TempSavesDirectoryName:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        private DirectoryInfo GetSaveDirectory(string dirName)
-        {
-            try
-            {
-                if (FactorioServerData.ValidSaveDirectories.Contains(dirName))
-                {
-                    var dirPath = Path.Combine(FactorioServerData.baseDirectoryPath, dirName);
-                    dirPath = Path.GetFullPath(dirPath);
-
-                    if (!dirPath.StartsWith(FactorioServerData.baseDirectoryPath))
-                        return null;
-
-                    var dir = new DirectoryInfo(dirPath);
-                    if (!dir.Exists)
-                    {
-                        dir.Create();
-                    }
-
-                    return dir;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        private string SafeFilePath(string dirPath, string fileName)
-        {
-            fileName = Path.GetFileName(fileName);
-            string path = Path.Combine(dirPath, fileName);
-            path = Path.GetFullPath(path);
-
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
-            {
-                return null;
-            }
-
-            return path;
-        }
-
-        public FileInfo GetSaveFile(string directoryName, string fileName)
-        {
-            var directory = GetSaveDirectory(directoryName);
-
-            if (directory == null)
-            {
-                return null;
-            }
-
-            string path = SafeFilePath(directory.FullName, fileName);
-            if (path == null)
-            {
-                return null;
-            }
-
-            if (Path.GetExtension(fileName) != ".zip")
-            {
-                return null;
-            }
-
-            try
-            {
-                FileInfo fi = new FileInfo(path);
-                if (fi.Exists)
-                {
-                    return fi;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetSaveFile));
-                return null;
-            }
-        }
-
-        public async Task<Result> UploadFiles(string directoryName, IList<IFormFile> files)
-        {
-            var directory = GetSaveDirectory(directoryName);
-
-            if (directory == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, directoryName));
-            }
-
-            var errors = new List<Error>();
-
-            foreach (var file in files)
-            {
-                if (string.IsNullOrWhiteSpace(file.FileName))
-                {
-                    errors.Add(new Error(Constants.InvalidFileNameErrorKey, file.FileName ?? ""));
-                    continue;
-                }
-                if (file.FileName.Contains(" "))
-                {
-                    errors.Add(new Error(Constants.InvalidFileNameErrorKey, $"name {file.FileName} cannot contain spaces."));
-                    continue;
-                }
-
-                string path = SafeFilePath(directory.FullName, file.FileName);
-                if (path == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error uploading {file.FileName}."));
-                    continue;
-                }
-
-                try
-                {
-                    var fi = new FileInfo(path);
-
-                    if (fi.Exists)
-                    {
-                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, $"{file.FileName} already exists."));
-                        continue;
-                    }
-
-                    using (var writeStream = fi.OpenWrite())
-                    using (var readStream = file.OpenReadStream())
-                    {
-                        await readStream.CopyToAsync(writeStream);
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error Uploading file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error uploading {file.FileName}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public Result DeleteFiles(List<string> filePaths)
-        {
-            var errors = new List<Error>();
-
-            foreach (string filePath in filePaths)
-            {
-                var dirName = Path.GetDirectoryName(filePath);
-                var dir = GetSaveDirectory(dirName);
-
-                if (dir == null)
-                {
-                    errors.Add(new Error(Constants.InvalidDirectoryErrorKey, dirName));
-                    continue;
-                }
-
-                string path = SafeFilePath(dir.FullName, filePath);
-                if (path == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error deleting {filePath}."));
-                    continue;
-                }
-
-                try
-                {
-                    var fi = new FileInfo(path);
-
-                    if (!fi.Exists)
-                    {
-                        errors.Add(new Error(Constants.MissingFileErrorKey, $"{filePath} doesn't exists."));
-                        continue;
-                    }
-
-                    fi.Delete();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error Deleting file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error deleting {filePath}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public Result MoveFiles(string destination, List<string> filePaths)
-        {
-            string targetDirPath = Path.Combine(FactorioServerData.baseDirectoryPath, destination);
-
-            var targetDir = GetSaveDirectory(destination);
-            if (targetDir == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, destination));
-            }
-
-            var errors = new List<Error>();
-
-            foreach (var filePath in filePaths)
-            {
-                var sourceDirName = Path.GetDirectoryName(filePath);
-                var sourceDir = GetSaveDirectory(sourceDirName);
-
-                if (sourceDir == null)
-                {
-                    errors.Add(new Error(Constants.InvalidDirectoryErrorKey, sourceDirName));
-                    continue;
-                }
-
-                string sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
-                if (sourceFullPath == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error moveing {filePath}."));
-                    continue;
-                }
-
-                try
-                {
-                    var sourceFile = new FileInfo(sourceFullPath);
-
-                    if (!sourceFile.Exists)
-                    {
-                        errors.Add(new Error(Constants.MissingFileErrorKey, $"{filePath} doesn't exists."));
-                        continue;
-                    }
-
-                    string destinationFilePath = Path.Combine(targetDir.FullName, sourceFile.Name);
-
-                    var destinationFileInfo = new FileInfo(destinationFilePath);
-
-                    if (destinationFileInfo.Exists)
-                    {
-                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, $"{destination}/{filePath} already exists."));
-                        continue;
-                    }
-
-                    sourceFile.MoveTo(destinationFilePath);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error moveing file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error moveing {filePath}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public async Task<Result> CopyFiles(string destination, List<string> filePaths)
-        {
-            string targetDirPath = Path.Combine(FactorioServerData.baseDirectoryPath, destination);
-
-            var targetDir = GetSaveDirectory(destination);
-            if (targetDir == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, destination));
-            }
-
-            var errors = new List<Error>();
-
-            foreach (var filePath in filePaths)
-            {
-                var sourceDirName = Path.GetDirectoryName(filePath);
-                var sourceDir = GetSaveDirectory(sourceDirName);
-
-                if (sourceDir == null)
-                {
-                    errors.Add(new Error(Constants.InvalidDirectoryErrorKey, sourceDirName));
-                    continue;
-                }
-
-                string sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
-                if (sourceFullPath == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error coppying {filePath}."));
-                    continue;
-                }
-
-                try
-                {
-                    var sourceFile = new FileInfo(sourceFullPath);
-
-                    if (!sourceFile.Exists)
-                    {
-                        errors.Add(new Error(Constants.MissingFileErrorKey, $"{filePath} doesn't exists."));
-                        continue;
-                    }
-
-                    string destinationFilePath = Path.Combine(targetDir.FullName, sourceFile.Name);
-
-                    var destinationFileInfo = new FileInfo(destinationFilePath);
-
-                    if (destinationFileInfo.Exists)
-                    {
-                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, $"{destination}/{filePath} already exists."));
-                        continue;
-                    }
-
-
-                    await sourceFile.CopyToAsync(destinationFileInfo);
-                    destinationFileInfo.LastWriteTimeUtc = sourceFile.LastWriteTimeUtc;
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error copying file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error coppying {filePath}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public ScenarioMetaData[] GetScenarios()
-        {
-            try
-            {
-                var dir = new DirectoryInfo(FactorioServerData.ScenarioDirectoryPath);
-                if (!dir.Exists)
-                {
-                    dir.Create();
-                }
-
-                return dir.EnumerateDirectories().Select(d =>
-                    new ScenarioMetaData()
-                    {
-                        Name = d.Name,
-                        CreatedTime = d.CreationTimeUtc,
-                        LastModifiedTime = d.LastWriteTimeUtc
-                    }
-                ).ToArray();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.ToString());
-                return new ScenarioMetaData[0];
-            }
-        }
-
-        public Result RenameFile(string directoryPath, string fileName, string newFileName = "")
-        {
-            if (string.IsNullOrWhiteSpace(newFileName))
-            {
-                return Result.Failure(Constants.InvalidFileNameErrorKey, newFileName);
-            }
-            if (newFileName.Contains(" "))
-            {
-                return Result.Failure(Constants.InvalidFileNameErrorKey, $"name { newFileName} cannot contain spaces.");
-            }
-
-            var directory = GetSaveDirectory(directoryPath);
-
-            if (directory == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, directoryPath));
-            }
-
-            try
-            {
-                string actualFileName = Path.GetFileName(fileName);
-
-                if (actualFileName != fileName)
-                {
-                    return Result.Failure(Constants.FileErrorKey, $"Invalid file name {fileName}");
-                }
-
-                string actualNewFileName = Path.GetFileName(newFileName);
-
-                if (actualNewFileName != newFileName)
-                {
-                    return Result.Failure(Constants.FileErrorKey, $"Invalid file name {newFileName}");
-                }
-
-
-                string filePath = Path.Combine(directory.FullName, fileName);
-                var fileInfo = new FileInfo(filePath);
-
-                if (!fileInfo.Exists)
-                {
-                    return Result.Failure(Constants.MissingFileErrorKey, $"File {fileName} doesn't exist.");
-                }
-
-                string newFilePath = Path.Combine(directory.FullName, newFileName);
-                if (Path.GetExtension(newFilePath) != ".zip")
-                {
-                    newFilePath += ".zip";
-                }
-
-                var newFileInfo = new FileInfo(newFilePath);
-
-                if (newFileInfo.Exists)
-                {
-                    return Result.Failure(Constants.FileAlreadyExistsErrorKey, $"File {fileName} already exists.");
-                }
-
-                fileInfo.MoveTo(newFilePath);
-
-                return Result.OK;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError("Error renaming file.", e);
-                return Result.Failure(Constants.FileErrorKey, $"Error renaming files");
-            }
-        }
-
         private async Task<FactorioServerSettings> GetServerSettings(FactorioServerData serverData)
         {
             var serverSettings = serverData.ServerSettings;
@@ -3255,13 +2790,13 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public Result DeflateSave(string connectionId, string directoryPath, string fileName, string newFileName = "")
+        public Result DeflateSave(string connectionId, string serverId, string directoryName, string fileName, string newFileName = "")
         {
-            var directory = GetSaveDirectory(directoryPath);
+            var directory = _factorioFileManager.GetSaveDirectory(serverId, directoryName);
 
             if (directory == null)
             {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, directoryPath));
+                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, Path.Combine(serverId, directoryName)));
             }
 
             try
@@ -3321,6 +2856,39 @@ namespace FactorioWebInterface.Models
                         deflater.Deflate(newFilePath);
 
                         _factorioControlHub.Clients.Clients(connectionId).DeflateFinished(Result.OK);
+
+                        newFileInfo.Refresh();
+
+                        string dirName = directory.Name;
+
+                        var data = new[]
+                        {
+                            new FileMetaData()
+                            {
+                                Name = newFileInfo.Name,
+                                CreatedTime = newFileInfo.CreationTimeUtc,
+                                LastModifiedTime = newFileInfo.LastWriteTimeUtc,
+                                Directory = dirName,
+                                Size = newFileInfo.Length
+                            }
+                        };
+
+                        var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, data, null);
+
+                        switch (dirName)
+                        {
+                            case Constants.TempSavesDirectoryName:
+                                _factorioFileManager.RaiseTempFilesChanged(ev);
+                                break;
+                            case Constants.LocalSavesDirectoryName:
+                                _factorioFileManager.RaiseLocalFilesChanged(ev);
+                                break;
+                            case Constants.GlobalSavesDirectoryName:
+                                _factorioFileManager.RaiseGlobalFilesChanged(ev);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     catch (Exception e)
                     {
@@ -3403,7 +2971,7 @@ namespace FactorioWebInterface.Models
             });
         }
 
-        public async Task<string> GetModPack(string serverId)
+        public async Task<string> GetSelectedModPack(string serverId)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
@@ -3423,23 +2991,83 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public async Task SetModPack(string serverId, string modPack)
+        public Task SetSelectedModPack(string serverId, string modPack)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
                 _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return Task.CompletedTask;
             }
 
-            try
+            return Task.Run(async () =>
             {
-                await serverData.ServerLock.WaitAsync();
+                try
+                {
+                    await serverData.ServerLock.WaitAsync();
 
-                serverData.ModPack = modPack;
-            }
-            finally
+                    serverData.ModPack = modPack;
+
+                    _ = _factorioControlHub.Clients.Group(serverId).SendSelectedModPack(modPack);
+                }
+                finally
+                {
+                    serverData.ServerLock.Release();
+                }
+            });
+        }
+
+        public FileMetaData[] GetTempSaveFiles(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
             {
-                serverData.ServerLock.Release();
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return Array.Empty<FileMetaData>();
             }
+
+            return _factorioFileManager.GetTempSaveFiles(serverData);
+        }
+
+        public FileMetaData[] GetLocalSaveFiles(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return Array.Empty<FileMetaData>();
+            }
+
+            return _factorioFileManager.GetLocalSaveFiles(serverData);
+        }
+
+        public FileMetaData[] GetGlobalSaveFiles()
+        {
+            return _factorioFileManager.GetGlobalSaveFiles();
+        }
+
+        public ScenarioMetaData[] GetScenarios()
+        {
+            return _factorioFileManager.GetScenarios();
+        }
+
+        public List<FileMetaData> GetLogs(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return new List<FileMetaData>(0);
+            }
+
+            return _factorioFileManager.GetLogs(serverData);
+        }
+
+        public List<FileMetaData> GetChatLogs(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return new List<FileMetaData>(0);
+            }
+
+            return _factorioFileManager.GetChatLogs(serverData);
         }
     }
 }

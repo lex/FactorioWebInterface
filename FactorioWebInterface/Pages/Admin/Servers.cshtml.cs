@@ -17,13 +17,13 @@ namespace FactorioWebInterface.Pages.Admin
         public static readonly FileTableModel globalSaves = new FileTableModel() { Name = "Global Saves", Id = "globalSaveFilesTable" };
 
         private readonly UserManager<ApplicationUser> _userManger;
-        private readonly IFactorioServerManager _factorioServerManager;
+        private readonly FactorioFileManager _factorioFileManager;
         private readonly ILogger<ServersModel> _logger;
 
-        public ServersModel(UserManager<ApplicationUser> userManger, IFactorioServerManager factorioServerManager, ILogger<ServersModel> logger)
+        public ServersModel(UserManager<ApplicationUser> userManger, FactorioFileManager factorioFileManager, ILogger<ServersModel> logger)
         {
             _userManger = userManger;
-            _factorioServerManager = factorioServerManager;
+            _factorioFileManager = factorioFileManager;
             _logger = logger;
         }
 
@@ -57,7 +57,7 @@ namespace FactorioWebInterface.Pages.Admin
             return Page();
         }
 
-        public async Task<IActionResult> OnGetFile(string directory, string name)
+        public async Task<IActionResult> OnGetFile(string serverId, string directory, string name)
         {
             var user = await _userManger.GetUserAsync(User);
 
@@ -67,7 +67,7 @@ namespace FactorioWebInterface.Pages.Admin
                 return RedirectToPage("signIn");
             }
 
-            var file = _factorioServerManager.GetSaveFile(directory, name);
+            var file = _factorioFileManager.GetSaveFile(serverId, directory, name);
             if (file == null)
             {
                 return BadRequest();
@@ -86,7 +86,7 @@ namespace FactorioWebInterface.Pages.Admin
                 return RedirectToPage("signIn");
             }
 
-            var file = _factorioServerManager.GetLogFile(directory, name);
+            var file = _factorioFileManager.GetLogFile(directory, name);
             if (file == null)
             {
                 return BadRequest();
@@ -112,7 +112,7 @@ namespace FactorioWebInterface.Pages.Admin
                 return RedirectToPage("signIn");
             }
 
-            var file = _factorioServerManager.GetChatLogFile(directory, name);
+            var file = _factorioFileManager.GetChatLogFile(directory, name);
             if (file == null)
             {
                 return BadRequest();
@@ -128,7 +128,7 @@ namespace FactorioWebInterface.Pages.Admin
             }
         }
 
-        public async Task<IActionResult> OnPostFileUploadAsync(string directory, List<IFormFile> files)
+        public async Task<IActionResult> OnPostFileUploadAsync(string serverId, List<IFormFile> files)
         {
             var user = await _userManger.GetUserAsync(User);
 
@@ -138,7 +138,7 @@ namespace FactorioWebInterface.Pages.Admin
                 return RedirectToPage("signIn");
             }
 
-            if (string.IsNullOrWhiteSpace(directory))
+            if (string.IsNullOrWhiteSpace(serverId))
             {
                 return BadRequest();
             }
@@ -147,7 +147,7 @@ namespace FactorioWebInterface.Pages.Admin
                 return BadRequest();
             }
 
-            var result = await _factorioServerManager.UploadFiles(directory, files);
+            var result = await _factorioFileManager.UploadFiles(serverId, files);
 
             return new JsonResult(result);
         }

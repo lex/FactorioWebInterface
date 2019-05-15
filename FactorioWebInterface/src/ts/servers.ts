@@ -1,6 +1,9 @@
 ﻿import * as signalR from "@aspnet/signalr";
-import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
+import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack";
 import * as $ from "jquery";
+import * as Table from "./table";
+import { TableData, TableDataType } from "./table";
+import { Error, Result, Utils } from "./utils";
 
 !function () {
 
@@ -43,16 +46,6 @@ import * as $ from "jquery";
         Messages: MessageData[];
     }
 
-    interface Error {
-        Key: string;
-        Description: string;
-    }
-
-    interface Result {
-        Success: boolean;
-        Errors: Error[];
-    }
-
     interface FactorioServerSettings {
         Name: string;
         Description: string;
@@ -78,8 +71,6 @@ import * as $ from "jquery";
         DiscordToGameChat: boolean;
     }
 
-    const maxMessageCount = 200;
-
     const divMessages: HTMLDivElement = document.querySelector("#divMessages");
     const tbMessage: HTMLInputElement = document.querySelector("#tbMessage");
     const btnSend: HTMLButtonElement = document.querySelector("#btnSend");
@@ -96,12 +87,12 @@ import * as $ from "jquery";
     const statusText: HTMLLabelElement = document.getElementById('statusText') as HTMLLabelElement;
     const versionText: HTMLLabelElement = document.getElementById('versionText') as HTMLLabelElement;
 
-    const tempSaveFilesTable: HTMLTableElement = document.getElementById('tempSaveFilesTable') as HTMLTableElement;
-    const localSaveFilesTable: HTMLTableElement = document.getElementById('localSaveFilesTable') as HTMLTableElement;
-    const globalSaveFilesTable: HTMLTableElement = document.getElementById('globalSaveFilesTable') as HTMLTableElement;
-    const scenarioTable: HTMLTableElement = document.getElementById('scenarioTable') as HTMLTableElement;
-    const logsFileTable: HTMLTableElement = document.getElementById('logsFileTable') as HTMLTableElement;
-    const chatLogsFileTable: HTMLTableElement = document.getElementById('chatLogsFileTable') as HTMLTableElement;
+    const tempSaveFilesTableElement: HTMLTableElement = document.getElementById('tempSaveFilesTable') as HTMLTableElement;
+    const localSaveFilesTableElement: HTMLTableElement = document.getElementById('localSaveFilesTable') as HTMLTableElement;
+    const globalSaveFilesTableElement: HTMLTableElement = document.getElementById('globalSaveFilesTable') as HTMLTableElement;
+    const scenarioTableElement: HTMLTableElement = document.getElementById('scenarioTable') as HTMLTableElement;
+    const logsFileTableElement: HTMLTableElement = document.getElementById('logsFileTable') as HTMLTableElement;
+    const chatLogsFileTableElement: HTMLTableElement = document.getElementById('chatLogsFileTable') as HTMLTableElement;
 
     const updateModal = document.getElementById('updateModal') as HTMLDivElement;
     const closeModalButton = document.getElementById('closeModalButton') as HTMLButtonElement;
@@ -110,7 +101,7 @@ import * as $ from "jquery";
     const downloadAndUpdateButton = document.getElementById('downloadAndUpdateButton') as HTMLButtonElement;
     const cachedVersionsTableBody = document.getElementById('cachedVersionsTableBody') as HTMLBodyElement;
 
-    const modPackTable: HTMLTableElement = document.getElementById('modPackTable') as HTMLTableElement;
+    const modPackTableElement: HTMLTableElement = document.getElementById('modPackTable') as HTMLTableElement;
 
     // XSRF/CSRF token, see https://docs.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-2.1
     let requestVerificationToken = (document.querySelector('input[name="__RequestVerificationToken"][type="hidden"]') as HTMLInputElement).value
@@ -150,6 +141,16 @@ import * as $ from "jquery";
     const configSetGameShoutToDiscord = document.getElementById('configSetGameShoutToDiscord') as HTMLInputElement;
     const configSetDiscordToGameChat = document.getElementById('configSetDiscordToGameChat') as HTMLInputElement;
 
+    let tempSaveFilesTable: Table.Table;
+    let localSaveFilesTable: Table.Table;
+    let globalSaveFilesTable: Table.Table;
+    let scenarioTable: Table.Table;
+    let logsFileTable: Table.Table;
+    let chatLogsFileTable: Table.Table;
+    let modPackTable: Table.Table;
+
+    const maxMessageCount = 200;
+
     let messageCount = 0;
     let commandHistory: string[] = [];
     let commandHistoryIndex = 0;
@@ -165,30 +166,11 @@ import * as $ from "jquery";
         configAdminInput.disabled = configAdminUseDefault.checked;
     }
 
-    async function getFiles() {
-        let tempFiles = await connection.invoke('GetTempSaveFiles') as FileMetaData[];
-        updateFileTable(tempSaveFilesTable, tempFiles);
-
-        let localFiles = await connection.invoke('GetLocalSaveFiles') as FileMetaData[];
-        updateFileTable(localSaveFilesTable, localFiles);
-
-        let globalFiles = await connection.invoke('GetGlobalSaveFiles') as FileMetaData[];
-        updateFileTable(globalSaveFilesTable, globalFiles);
-    }
-
-    async function getScenarios() {
-        let scenarios = await connection.invoke('GetScenarios') as ScenarioMetaData[];
-        updateBuildScenarioTable(scenarioTable, scenarios);
-    }
-
-    async function getLogs() {
-        let logs = await connection.invoke('GetLogFiles') as FileMetaData[];
-        updateLogFileTable(logsFileTable, logs, 'logFile')
-    }
-
-    async function getChatLogs() {
-        let logs = await connection.invoke('GetChatLogFiles') as FileMetaData[];
-        updateLogFileTable(chatLogsFileTable, logs, 'chatLogFile')
+    function getFiles() {
+        connection.send('RequestTempSaveFiles');
+        connection.send('RequestLocalSaveFiles');
+        connection.send('RequestLogFiles');
+        connection.send('RequestChatLogFiles');
     }
 
     async function getSettings() {
@@ -234,42 +216,23 @@ import * as $ from "jquery";
         versionText.textContent = await connection.invoke('GetVersion')
     }
 
-    async function getModPacks() {
-        let modPacks = await connection.invoke('GetModPacks') as ModPackMetaData[];
-        let selectedModPack = await connection.invoke('GetModPack') as string;
-
-        updateModPackTable(modPackTable, modPacks, selectedModPack);
+    function getSelectedModPack() {
+        connection.send('RequestSelectedModPack');
     }
 
-    function onPageLoad() {
-        buildFileTable(tempSaveFilesTable);
-        buildFileTable(localSaveFilesTable);
-        buildFileTable(globalSaveFilesTable);
-        buildScenarioTable(scenarioTable);
-        buildLogFileTable(logsFileTable);
-        buildLogFileTable(chatLogsFileTable);
-        buildModPackTable(modPackTable);
-
-        let value = serverSelect.value;
-        history.replaceState({ value: value }, '', `/admin/servers/${value}`);
-    }
-
-    onPageLoad();
-
-    async function updatePage() {
-        let data = await connection.invoke('SetServerId', serverSelect.value) as FactorioContorlClientData;
+    async function updateLocalPageData() {
+        let promise = connection.invoke('SetServerId', serverSelect.value);
 
         messageCount = 0;
         divMessages.innerHTML = "";
 
         getFiles();
-        getScenarios();
-        getModPacks();
-        getLogs();
-        getChatLogs();
         getSettings();
         getExtraSettings();
         getVersion();
+        getSelectedModPack();
+
+        let data = await promise as FactorioContorlClientData;
 
         statusText.innerText = data.Status;
 
@@ -278,25 +241,32 @@ import * as $ from "jquery";
         }
     }
 
-    async function start() {
+    function updateGlobalPageData() {
+        connection.send('RequestGlobalSaveFiles');
+        connection.send('RequestScenarios');
+        connection.send('RequestModPacks');
+    }
+
+    async function startConnection() {
         try {
             await connection.start();
 
-            await updatePage();
+            updateLocalPageData();
+            updateGlobalPageData();
         } catch (ex) {
             console.log(ex.message);
-            setTimeout(() => start(), 2000);
+            setTimeout(() => startConnection(), 2000);
         }
     }
 
     connection.onclose(async () => {
-        await start();
+        await startConnection();
     });
 
     serverSelect.onchange = function (this: HTMLSelectElement) {
         let value = this.value;
         history.pushState({ value: value }, '', `/admin/servers/${value}`);
-        updatePage();
+        updateLocalPageData();
     };
 
     onpopstate = function (e) {
@@ -304,7 +274,7 @@ import * as $ from "jquery";
         console.log(state);
         if (state) {
             serverSelect.value = state.value;
-            updatePage();
+            updateLocalPageData();
         }
     };
 
@@ -589,386 +559,258 @@ import * as $ from "jquery";
         window.scrollTo(left, top);
     }
 
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    function bytesToSize(bytes: number) {
-        // https://gist.github.com/lanqy/5193417
-
-        if (bytes === 0)
-            return 'n/a';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        if (i === 0)
-            return `${bytes} ${sizes[i]}`;
-        else
-            return `${(bytes / (1024 ** i)).toFixed(1)} ${sizes[i]}`;
+    function buildTextCell(cell: HTMLTableCellElement, data: any) {
+        cell.innerText = data;
     }
 
-    function buildFileTable(table: HTMLTableElement) {
-        let cells = table.tHead.rows[0].cells;
-
-        let input = cells[0].firstChild as HTMLInputElement;
-        input.onchange = () => toggleSelectTable(input, table);
-
-        cells[0].onclick = () => sortTable(table, 'select');
-        cells[1].onclick = () => sortTable(table, 'name');
-        cells[2].onclick = () => sortTable(table, 'createdTime');
-        cells[3].onclick = () => sortTable(table, 'lastModifiedTime');
-        cells[4].onclick = () => sortTable(table, 'size');
-
-        let jTable = $(table);
-
-        jTable.data('select', r => {
-            let value = r.children[0].firstChild as HTMLInputElement;
-            return value.checked ? 1 : 0;
-        });
-
-        jTable.data('name', r => r.children[1].firstChild.textContent.toLowerCase());
-        jTable.data('createdTime', r => r.children[2].textContent);
-        jTable.data('lastModifiedTime', r => r.children[3].textContent);
-        jTable.data('size', r => parseInt(r.children[4].getAttribute('data-size')));
-
-        jTable.data('sortProperty', 'lastModifiedTime');
-        jTable.data('ascending', false);
+    function buildDateCell(cell: HTMLTableCellElement, data: any) {
+        cell.innerText = Utils.formatDate(data);
     }
 
-    function updateFileTable(table: HTMLTableElement, files: FileMetaData[]) {
-        let body = table.tBodies[0];
+    function buildSizeCell(cell: HTMLTableCellElement, data: number) {
+        cell.innerText = Utils.bytesToSize(data);
+        cell.setAttribute('data-size', data.toString());
+    }
 
-        body.innerHTML = "";
+    function sortTextCell(cell: HTMLTableCellElement) {
+        return cell.textContent.toLowerCase();
+    }
 
-        for (let file of files) {
-            let row = document.createElement('tr');
+    function sortDateCell(cell: HTMLTableCellElement) {
+        return cell.textContent;
+    }
 
-            let cell = document.createElement('td');
+    function sortSizeCell(cell: HTMLTableCellElement) {
+        return Number.parseInt(cell.getAttribute('data-size'));
+    }
+
+    function toggleSelectTable(tableBody: HTMLTableSectionElement, checked: boolean) {
+        let checkboxes = tableBody.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+
+        for (let checkbox of checkboxes) {
+            checkbox.checked = checked;
+        }
+    }
+
+    function buildFileTable(tableElement: HTMLTableElement): Table.Table {
+        function buildCheckboxCell(cell: HTMLTableCellElement, data: FileMetaData) {
             let checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
             checkbox.name = 'fileCheckbox';
-            checkbox.setAttribute('data-directory', file.Directory);
-            checkbox.setAttribute('data-name', file.Name);
+            checkbox.setAttribute('data-directory', data.Directory);
+            checkbox.setAttribute('data-name', data.Name);
             cell.appendChild(checkbox);
-            row.appendChild(cell);
+        }
 
-            let cell2 = document.createElement('td');
+        function buildNameCell(cell: HTMLTableCellElement, data: FileMetaData) {
             let link = document.createElement('a') as HTMLAnchorElement;
-            link.innerText = file.Name;
-            link.href = `/admin/servers?handler=file&directory=${file.Directory}&name=${file.Name}`;
-            cell2.appendChild(link);
-            row.appendChild(cell2);
-
-            let cell3 = document.createElement('td');
-            cell3.innerText = formatDate(file.CreatedTime);
-            row.appendChild(cell3);
-
-            let cell4 = document.createElement('td');
-            cell4.innerText = formatDate(file.LastModifiedTime);
-            row.appendChild(cell4);
-
-            let cell5 = document.createElement('td');
-            cell5.innerText = bytesToSize(file.Size);
-            cell5.setAttribute('data-size', file.Size.toString());
-            row.appendChild(cell5);
-
-            body.appendChild(row);
+            link.innerText = data.Name;
+            link.href = `/admin/servers?handler=file&serverId=${serverSelect.value}&directory=${data.Directory}&name=${data.Name}`;
+            cell.appendChild(link);
         }
 
-        let jTable = $(table);
-
-        let rows: HTMLTableRowElement[] = []
-        let rc = body.rows;
-        for (let i = 0; i < rc.length; i++) {
-            let r = rc[i];
-            rows.push(r);
+        function sortNameCell(cell: HTMLTableCellElement) {
+            return cell.firstElementChild.textContent.toLowerCase();
         }
 
-        jTable.data('rows', rows);
+        function sortCheckboxCell(cell: HTMLTableCellElement) {
+            let checkbox = cell.firstElementChild as HTMLInputElement;
+            return checkbox.checked ? 1 : 0;
+        }
 
-        let ascending = !jTable.data('ascending');
-        jTable.data('ascending', ascending);
-        let property = jTable.data('sortProperty');
+        function buildCheckboxHeader(cell: HTMLTableHeaderCellElement, symbol: string) {
+            cell.childNodes[1].textContent = ' Select' + symbol;
+        }
 
-        sortTable(table, property);
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                CellBuilder: buildCheckboxCell,
+                SortKeySelector: sortCheckboxCell,
+                HeaderBuilder: buildCheckboxHeader
+            },
+            {
+                CellBuilder: buildNameCell,
+                SortKeySelector: sortNameCell,
+            },
+            {
+                Property: "LastModifiedTime",
+                CellBuilder: buildDateCell,
+                SortKeySelector: sortDateCell,
+            },
+            {
+                Property: "Size",
+                CellBuilder: buildSizeCell,
+                SortKeySelector: sortSizeCell,
+            }
+        ];
+
+        function keySelector(data: FileMetaData) {
+            return data.Name;
+        }
+
+        let table = new Table.Table(tableElement, cellBuilders, undefined, keySelector);
+        table.sortBy(2, false);
+
+        let select = tableElement.tHead.rows[0].cells[0].firstElementChild as HTMLInputElement;
+        select.onchange = () => toggleSelectTable(tableElement.tBodies[0], select.checked);
+        select.onclick = function (this, ev: MouseEvent) {
+            ev.stopPropagation();
+        }
+
+        return table;
     }
 
-    function buildLogFileTable(table: HTMLTableElement) {
-        let cells = table.tHead.rows[0].cells;
-
-        cells[0].onclick = () => sortTable(table, 'name');
-        cells[1].onclick = () => sortTable(table, 'createdTime');
-        cells[2].onclick = () => sortTable(table, 'lastModifiedTime');
-        cells[3].onclick = () => sortTable(table, 'size');
-
-        let jTable = $(table);
-
-        jTable.data('name', r => r.children[0].firstChild.textContent.toLowerCase());
-        jTable.data('createdTime', r => r.children[1].textContent);
-        jTable.data('lastModifiedTime', r => r.children[2].textContent);
-        jTable.data('size', r => parseInt(r.children[3].getAttribute('data-size')));
-
-        jTable.data('sortProperty', 'lastModifiedTime');
-        jTable.data('ascending', false);
-    }
-
-    function updateLogFileTable(table: HTMLTableElement, files: FileMetaData[], handler: string) {
-        let body = table.tBodies[0];
-
-        body.innerHTML = "";
-
-        for (let file of files) {
-            let row = document.createElement('tr');
-
-            let cell2 = document.createElement('td');
+    function buildLogFileTable(tableElement: HTMLTableElement, handler: string): Table.Table {
+        function buildNameCell(cell: HTMLTableCellElement, data: FileMetaData) {
             let link = document.createElement('a') as HTMLAnchorElement;
-            link.innerText = file.Name;
-            link.href = `/admin/servers?handler=${handler}&directory=${file.Directory}&name=${file.Name}`;
-            cell2.appendChild(link);
-            row.appendChild(cell2);
-
-            let cell3 = document.createElement('td');
-            cell3.innerText = formatDate(file.CreatedTime);
-            row.appendChild(cell3);
-
-            let cell4 = document.createElement('td');
-            cell4.innerText = formatDate(file.LastModifiedTime);
-            row.appendChild(cell4);
-
-            let cell5 = document.createElement('td');
-            cell5.innerText = bytesToSize(file.Size);
-            cell5.setAttribute('data-size', file.Size.toString());
-            row.appendChild(cell5);
-
-            body.appendChild(row);
+            link.innerText = data.Name;
+            link.href = `/admin/servers?handler=${handler}&directory=${data.Directory}&name=${data.Name}`;
+            cell.appendChild(link);
         }
 
-        let jTable = $(table);
-
-        let rows: HTMLTableRowElement[] = []
-        let rc = body.rows;
-        for (let i = 0; i < rc.length; i++) {
-            let r = rc[i];
-            rows.push(r);
+        function sortNameCell(cell: HTMLTableCellElement) {
+            return cell.firstElementChild.textContent.toLowerCase();
         }
-        jTable.data('rows', rows);
 
-        let ascending = !jTable.data('ascending');
-        jTable.data('ascending', ascending);
-        let property = jTable.data('sortProperty');
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                CellBuilder: buildNameCell,
+                SortKeySelector: sortNameCell,
+            },
+            {
+                Property: "LastModifiedTime",
+                CellBuilder: buildDateCell,
+                SortKeySelector: sortDateCell,
+            },
+            {
+                Property: "Size",
+                CellBuilder: buildSizeCell,
+                SortKeySelector: sortSizeCell,
+            }
+        ];
 
-        sortTable(table, property);
+        function keySelector(data: FileMetaData) {
+            return data.Name;
+        }
+
+        let table = new Table.Table(tableElement, cellBuilders, undefined, keySelector);
+        table.sortBy(1, false);
+
+        return table;
     }
 
-    function buildScenarioTable(table: HTMLTableElement) {
-        let cells = table.tHead.rows[0].cells;
-
-        let input = cells[0].firstChild as HTMLInputElement;
-        input.onchange = () => toggleSelectTable(input, table);
-
-        cells[0].onclick = () => sortTable(table, 'select');
-        cells[1].onclick = () => sortTable(table, 'name');
-        cells[2].onclick = () => sortTable(table, 'createdTime');
-        cells[3].onclick = () => sortTable(table, 'lastModifiedTime');
-
-        let jTable = $(table);
-
-        jTable.data('select', r => {
-            let value = r.children[0].firstChild as HTMLInputElement;
-            return value.checked ? 1 : 0;
-        });
-
-        jTable.data('name', r => r.children[1].firstChild.textContent.toLowerCase());
-        jTable.data('createdTime', r => r.children[2].textContent);
-        jTable.data('lastModifiedTime', r => r.children[3].textContent);
-
-        jTable.data('sortProperty', 'lastModifiedTime');
-        jTable.data('ascending', false);
-    }
-
-    function updateBuildScenarioTable(table: HTMLTableElement, scenarios: ScenarioMetaData[]) {
-        let body = table.tBodies[0];
-
-        body.innerHTML = "";
-
-        for (let scenario of scenarios) {
-            let row = document.createElement('tr');
-
-            let cell = document.createElement('td');
+    function buildScenarioTable(tableElement: HTMLTableElement): Table.Table {
+        function buildCheckboxCell(cell: HTMLTableCellElement, data: ScenarioMetaData) {
             let checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
             checkbox.name = 'scenarioCheckbox';
-            checkbox.setAttribute('data-name', scenario.Name);
+            checkbox.setAttribute('data-name', data.Name);
             cell.appendChild(checkbox);
-            row.appendChild(cell);
-
-            createCell(row, scenario.Name);
-
-            let cell3 = document.createElement('td');
-            cell3.innerText = formatDate(scenario.CreatedTime);
-            row.appendChild(cell3);
-
-            let cell4 = document.createElement('td');
-            cell4.innerText = formatDate(scenario.LastModifiedTime);
-            row.appendChild(cell4);
-
-            body.appendChild(row);
         }
 
-        let jTable = $(table);
-
-        let rows: HTMLTableRowElement[] = []
-        let rc = body.rows;
-        for (let i = 0; i < rc.length; i++) {
-            let r = rc[i];
-            rows.push(r);
+        function sortCheckboxCell(cell: HTMLTableCellElement) {
+            let checkbox = cell.firstElementChild as HTMLInputElement;
+            return checkbox.checked ? 1 : 0;
         }
-        jTable.data('rows', rows);
 
-        let ascending = !jTable.data('ascending');
-        jTable.data('ascending', ascending);
-        let property = jTable.data('sortProperty');
+        function buildCheckboxHeader(cell: HTMLTableHeaderCellElement, symbol: string) {
+            cell.childNodes[1].textContent = ' Select' + symbol;
+        }
 
-        sortTable(table, property);
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                CellBuilder: buildCheckboxCell,
+                SortKeySelector: sortCheckboxCell,
+                HeaderBuilder: buildCheckboxHeader
+            },
+            {
+                Property: 'Name',
+                CellBuilder: buildTextCell,
+                SortKeySelector: sortTextCell,
+                IsKey: true
+            },
+            {
+                Property: "LastModifiedTime",
+                CellBuilder: buildDateCell,
+                SortKeySelector: sortDateCell,
+            }
+        ];
+
+        let table = new Table.Table(tableElement, cellBuilders);
+        table.sortBy(2, false);
+
+        let select = tableElement.tHead.rows[0].cells[0].firstElementChild as HTMLInputElement;
+        select.onchange = () => toggleSelectTable(tableElement.tBodies[0], select.checked);
+        select.onclick = function (this, ev: MouseEvent) {
+            ev.stopPropagation();
+        }
+
+        return table;
     }
 
-    function buildModPackTable(table: HTMLTableElement) {
-        let cells = table.tHead.rows[0].cells;
-
-        let input = cells[0].firstChild as HTMLInputElement;
-        input.onchange = () => toggleSelectTable(input, table);
-
-        cells[0].onclick = () => sortTable(table, 'select');
-        cells[1].onclick = () => sortTable(table, 'name');
-        cells[2].onclick = () => sortTable(table, 'lastModifiedTime');
-
-        let jTable = $(table);
-
-        jTable.data('select', r => {
-            let value = r.children[0].firstChild as HTMLInputElement;
-            return value.checked ? 1 : 0;
-        });
-
-        jTable.data('name', r => r.children[1].firstChild.textContent.toLowerCase());
-        jTable.data('lastModifiedTime', r => r.children[2].textContent);
-
-        jTable.data('sortProperty', 'lastModifiedTime');
-        jTable.data('ascending', false);
-    }
-
-    function updateModPackTable(table: HTMLTableElement, modPacks: ModPackMetaData[], newSelectedModPack: string) {
-        let body = table.tBodies[0];
-
-        body.innerHTML = "";
-
-        let rows: HTMLTableRowElement[] = []
-
-        let row = document.createElement('tr');
-
-        let cell1 = document.createElement('td');
-        let radio = document.createElement('input') as HTMLInputElement;
-        radio.type = 'radio';
-        radio.name = 'modPack';
-        radio.value = "";
-        if (newSelectedModPack === "") {
-            radio.checked = true;
-        }
-        radio.onchange = modPackSelected;
-        cell1.appendChild(radio);
-        row.appendChild(cell1);
-
-        createCell(row, 'Vanilla (no mods)');
-
-        let cell3 = document.createElement('td');
-        cell3.innerText = 'N/A';
-        row.appendChild(cell3);
-
-        rows.push(row);
-
-        for (let modPack of modPacks) {
-            let row = document.createElement('tr');
-
-            let cell1 = document.createElement('td');
+    function buildModPackTable(tableElement: HTMLTableElement) {
+        function buildRadioCell(cell: HTMLTableCellElement, data: ModPackMetaData) {
             let radio = document.createElement('input') as HTMLInputElement;
             radio.type = 'radio';
             radio.name = 'modPack';
-            radio.value = modPack.Name;
-            if (newSelectedModPack === modPack.Name) {
-                radio.checked = true;
-            }
+            radio.value = data.Name;
+            radio.checked = selectedModPack === data.Name;
             radio.onchange = modPackSelected;
-            cell1.appendChild(radio);
-            row.appendChild(cell1);
-
-            createCell(row, modPack.Name);
-
-            let cell3 = document.createElement('td');
-            cell3.innerText = formatDate(modPack.LastModifiedTime);
-            row.appendChild(cell3);
-
-            rows.push(row);
+            cell.appendChild(radio);
         }
 
-        let checkedRadio = document.querySelector('input[type="radio"][name="modPack"]:checked');
-        if (checkedRadio === undefined || checkedRadio === null) {
-            radio.checked = true;
-            selectedModPack = "";
+        function buildNameCell(cell: HTMLTableCellElement, data: string) {
+            if (data === "") {
+                data = 'Vanilla (no mods)';
+            }
+
+            cell.innerText = data;
         }
 
-        let jTable = $(table);
+        function buildModPackDateCell(cell: HTMLTableCellElement, data: ModPackMetaData) {
+            if (data.Name === "") {
+                buildTextCell(cell, 'N/A');
+            } else {
+                buildDateCell(cell, data.LastModifiedTime);
+            }
+        }
 
-        jTable.data('rows', rows);
+        function sortRadioCell(cell: HTMLTableCellElement) {
+            let checkbox = cell.firstElementChild as HTMLInputElement;
+            return checkbox.checked ? 1 : 0;
+        }
 
-        let ascending = !jTable.data('ascending');
-        jTable.data('ascending', ascending);
-        let property = jTable.data('sortProperty');
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                CellBuilder: buildRadioCell,
+                SortKeySelector: sortRadioCell,
+            },
+            {
+                Property: 'Name',
+                CellBuilder: buildNameCell,
+                SortKeySelector: sortTextCell,
+            },
+            {
+                CellBuilder: buildModPackDateCell,
+                SortKeySelector: sortDateCell,
+            }
+        ];
 
-        sortTable(table, property);
+        function keySelector(data: FileMetaData) {
+            return data.Name;
+        }
+
+        let table = new Table.Table(tableElement, cellBuilders, undefined, keySelector);
+        table.sortBy(2, false);
+
+        return table;
     }
 
     function modPackSelected(this: HTMLInputElement, ev: MouseEvent) {
         if (this.checked) {
             let modPack = this.value;
-            connection.invoke('SetModPack', modPack);
+            connection.invoke('SetSelectedModPack', modPack);
         }
-    }
-
-    connection.on('SendSelectedModPack', function (modPack: string) {
-        let radios = document.querySelectorAll('input[type="radio"][name="modPack"]');
-
-        selectedModPack = modPack;
-
-        for (let element of radios) {
-            let radio = element as HTMLInputElement;
-            if (radio.value === modPack) {
-                radio.checked = true;
-                return;
-            }
-        }
-
-        let noMod = document.querySelectorAll('input[type="radio"][name="modPack"][value=""]');
-        let noModRadio = noMod[0] as HTMLInputElement
-        noModRadio.checked = true;
-    });
-
-    connection.on('SendModPacks', function (modPacks: ModPackMetaData[]) {
-        updateModPackTable(modPackTable, modPacks, selectedModPack);
-    });
-
-    function pad(number) {
-        return number < 10 ? '0' + number : number;
-    }
-
-    function formatDate(dateString: string): string {
-        let date = new Date(dateString);
-        let year = pad(date.getUTCFullYear());
-        let month = pad(date.getUTCMonth() + 1);
-        let day = pad(date.getUTCDate());
-        let hour = pad(date.getUTCHours());
-        let min = pad(date.getUTCMinutes());
-        let sec = pad(date.getUTCSeconds());
-        return year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec;
-    }
-
-    function createCell(parent: HTMLElement, content: string) {
-        let cell = document.createElement('td');
-        cell.innerText = content;
-        parent.appendChild(cell);
     }
 
     fileUplaodButton.onclick = () => {
@@ -981,7 +823,7 @@ import * as $ from "jquery";
         }
 
         let formData = new FormData();
-        formData.set('directory', `${serverSelect.value}/local_saves`);
+        formData.set('serverId', serverSelect.value);
 
         let files = fileUploadInput.files
         for (let i = 0; i < files.length; i++) {
@@ -1003,7 +845,6 @@ import * as $ from "jquery";
 
         xhr.onloadend = function (event) {
             fileProgressContiner.hidden = true;
-            getFiles();
 
             var result = JSON.parse(xhr.responseText) as Result;
             if (!result.Success) {
@@ -1041,8 +882,6 @@ import * as $ from "jquery";
         if (!result.Success) {
             alert(JSON.stringify(result.Errors));
         }
-
-        getFiles();
     }
 
     fileMoveButton.onclick = async () => {
@@ -1071,8 +910,6 @@ import * as $ from "jquery";
         if (!result.Success) {
             alert(JSON.stringify(result.Errors));
         }
-
-        getFiles();
     }
 
     fileCopyButton.onclick = async () => {
@@ -1101,8 +938,6 @@ import * as $ from "jquery";
         if (!result.Success) {
             alert(JSON.stringify(result.Errors));
         }
-
-        getFiles();
     }
 
     saveRenameButton.onclick = async () => {
@@ -1128,8 +963,6 @@ import * as $ from "jquery";
         if (!result.Success) {
             alert(JSON.stringify(result.Errors));
         }
-
-        getFiles();
     }
 
     saveDeflateButton.onclick = async () => {
@@ -1157,7 +990,6 @@ import * as $ from "jquery";
 
     connection.on('DeflateFinished', (result: Result) => {
         deflateProgress.hidden = true;
-        getFiles();
 
         if (!result.Success) {
             alert(JSON.stringify(result.Errors));
@@ -1232,66 +1064,97 @@ import * as $ from "jquery";
         await getExtraSettings();
     };
 
-    function toggleSelectTable(input: HTMLInputElement, table: HTMLTableElement) {
-        let checkboxes = table.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+    function ensureModPackSelected() {
+        let radios = modPackTableElement.querySelectorAll('input[type="radio"]');
 
-        for (let checkbox of checkboxes) {
-            checkbox.checked = input.checked;
+        for (let element of radios) {
+            let radio = element as HTMLInputElement;
+            if (radio.value === selectedModPack) {
+                radio.checked = true;
+                return;
+            }
         }
+
+        let noMods = radios[0] as HTMLInputElement;
+
+        if (noMods === undefined) {
+            return;
+        }
+
+        noMods.checked = true;
     }
 
-    function sortTable(table: HTMLTableElement, property: string) {
-        let jTable = $(table);
-
-        let rows: HTMLTableRowElement[] = jTable.data('rows');
-        let keySelector: (r: HTMLTableRowElement) => any = jTable.data(property);
-
-        let sortProperty = jTable.data('sortProperty');
-
-        let ascending: boolean;
-        if (sortProperty === property) {
-            ascending = !jTable.data('ascending');
-            jTable.data('ascending', ascending);
-        } else {
-            jTable.data('sortProperty', property);
-            ascending = true;
-            jTable.data('ascending', ascending);
+    connection.on('SendTempSavesFiles', (serverId: string, data: TableData) => {
+        if (serverId !== serverSelect.value) {
+            return;
         }
 
-        if (ascending) {
-            rows.sort((a, b) => {
-                let left = keySelector(a);
-                let right = keySelector(b);
-                if (left === right) {
-                    return 0;
-                } else if (left > right) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            });
-        } else {
-            rows.sort((a, b) => {
-                let left = keySelector(a);
-                let right = keySelector(b);
-                if (left === right) {
-                    return 0;
-                } else if (left > right) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
+        tempSaveFilesTable.update(data);
+    });
+
+    connection.on('SendLocalSaveFiles', (serverId: string, data: TableData) => {
+        if (serverId !== serverSelect.value) {
+            return;
         }
 
-        let body = table.tBodies[0];
-        body.innerHTML = "";
+        localSaveFilesTable.update(data);
+    });
 
-        for (let r of rows) {
-            body.appendChild(r);
+    connection.on('SendGlobalSaveFiles', (data: TableData) => {
+        globalSaveFilesTable.update(data);
+    });
+
+    connection.on('SendScenarios', (data: TableData) => {
+        scenarioTable.update(data);
+    });
+
+    connection.on('SendModPacks', (data: TableData) => {
+        if (data.Type === TableDataType.Reset) {
+            let noMods: ModPackMetaData = { Name: "", CreatedTime: "", LastModifiedTime: "" };
+            data.Rows.push(noMods);
         }
+
+        modPackTable.update(data);
+
+        ensureModPackSelected();
+    });
+
+    connection.on('SendLogFiles', (serverId: string, data: TableData) => {
+        if (serverId !== serverSelect.value) {
+            return;
+        }
+
+        logsFileTable.update(data);
+    });
+
+    connection.on('SendChatLogFiles', (serverId: string, data: TableData) => {
+        if (serverId !== serverSelect.value) {
+            return;
+        }
+
+        chatLogsFileTable.update(data);
+    });
+
+    connection.on('SendSelectedModPack', function (modPack: string) {
+        selectedModPack = modPack;
+        ensureModPackSelected();
+    });
+
+    function onPageLoad() {
+        tempSaveFilesTable = buildFileTable(tempSaveFilesTableElement);
+        localSaveFilesTable = buildFileTable(localSaveFilesTableElement);
+        globalSaveFilesTable = buildFileTable(globalSaveFilesTableElement);
+        scenarioTable = buildScenarioTable(scenarioTableElement);
+        logsFileTable = buildLogFileTable(logsFileTableElement, 'logFile');
+        chatLogsFileTable = buildLogFileTable(chatLogsFileTableElement, 'chatLogFile');
+        modPackTable = buildModPackTable(modPackTableElement);
+
+        let value = serverSelect.value;
+        history.replaceState({ value: value }, '', `/admin/servers/${value}`);
+
+        startConnection();
     }
 
-    start();
+    onPageLoad();
 }();
 
