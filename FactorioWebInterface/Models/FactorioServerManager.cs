@@ -905,6 +905,21 @@ namespace FactorioWebInterface.Models
                             case Constants.LocalSavesDirectoryName:
                                 string copyToPath = Path.Combine(serverData.TempSavesDirectoryPath, saveFile.Name);
                                 saveFile.CopyTo(copyToPath, true);
+
+                                var fi = new FileInfo(copyToPath);
+                                fi.LastWriteTimeUtc = DateTime.UtcNow;
+
+                                var data = new FileMetaData()
+                                {
+                                    Name = fi.Name,
+                                    CreatedTime = fi.CreationTimeUtc,
+                                    LastModifiedTime = fi.LastWriteTimeUtc,
+                                    Size = fi.Length,
+                                    Directory = Constants.TempSavesDirectoryName
+                                };
+                                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, new[] { data });
+
+                                _factorioFileManager.RaiseTempFilesChanged(ev);
                                 break;
                             case Constants.TempSavesDirectoryName:
                                 break;
