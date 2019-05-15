@@ -12,8 +12,6 @@
     </thead>
     <tbody>
         @{
-            Array.Sort(Model.Saves, (a, b) => -a.LastModifiedTime.CompareTo(b.LastModifiedTime));
-
             foreach (var file in Model.Saves)
             {
                 string path = $"/saves?directory={file.Directory}&file={file.Name}";
