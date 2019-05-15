@@ -1,6 +1,5 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack";
-import * as $ from "jquery";
 import * as Table from "./table";
 import { TableData, TableDataType } from "./table";
 import { Error, Result, Utils } from "./utils";
@@ -87,21 +86,20 @@ import { Error, Result, Utils } from "./utils";
     const statusText: HTMLLabelElement = document.getElementById('statusText') as HTMLLabelElement;
     const versionText: HTMLLabelElement = document.getElementById('versionText') as HTMLLabelElement;
 
-    const tempSaveFilesTableElement: HTMLTableElement = document.getElementById('tempSaveFilesTable') as HTMLTableElement;
-    const localSaveFilesTableElement: HTMLTableElement = document.getElementById('localSaveFilesTable') as HTMLTableElement;
-    const globalSaveFilesTableElement: HTMLTableElement = document.getElementById('globalSaveFilesTable') as HTMLTableElement;
-    const scenarioTableElement: HTMLTableElement = document.getElementById('scenarioTable') as HTMLTableElement;
-    const logsFileTableElement: HTMLTableElement = document.getElementById('logsFileTable') as HTMLTableElement;
-    const chatLogsFileTableElement: HTMLTableElement = document.getElementById('chatLogsFileTable') as HTMLTableElement;
+    const tempSaveFilesTableElement = document.getElementById('tempSaveFilesTable') as HTMLTableElement;
+    const localSaveFilesTableElement = document.getElementById('localSaveFilesTable') as HTMLTableElement;
+    const globalSaveFilesTableElement = document.getElementById('globalSaveFilesTable') as HTMLTableElement;
+    const scenarioTableElement = document.getElementById('scenarioTable') as HTMLTableElement;
+    const modPackTableElement = document.getElementById('modPackTable') as HTMLTableElement;
+    const logsFileTableElement = document.getElementById('logsFileTable') as HTMLTableElement;
+    const chatLogsFileTableElement = document.getElementById('chatLogsFileTable') as HTMLTableElement;
 
     const updateModal = document.getElementById('updateModal') as HTMLDivElement;
     const closeModalButton = document.getElementById('closeModalButton') as HTMLButtonElement;
     const modalBackground = document.getElementById('modalBackground') as HTMLDivElement;
     const updateSelect = document.getElementById('updateSelect') as HTMLSelectElement;
     const downloadAndUpdateButton = document.getElementById('downloadAndUpdateButton') as HTMLButtonElement;
-    const cachedVersionsTableBody = document.getElementById('cachedVersionsTableBody') as HTMLBodyElement;
-
-    const modPackTableElement: HTMLTableElement = document.getElementById('modPackTable') as HTMLTableElement;
+    const cachedVersionsTableElement = document.getElementById('cachedVersionsTable') as HTMLTableElement;
 
     // XSRF/CSRF token, see https://docs.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-2.1
     let requestVerificationToken = (document.querySelector('input[name="__RequestVerificationToken"][type="hidden"]') as HTMLInputElement).value
@@ -148,6 +146,7 @@ import { Error, Result, Utils } from "./utils";
     let logsFileTable: Table.Table;
     let chatLogsFileTable: Table.Table;
     let modPackTable: Table.Table;
+    let cachedVersionsTable: Table.Table;
 
     const maxMessageCount = 200;
 
@@ -409,8 +408,8 @@ import { Error, Result, Utils } from "./utils";
     }
 
     updateButton.onclick = () => {
-        connection.send('RequestGetDownloadableVersions');
-        connection.send('RequestGetCachedVersions');
+        connection.send('RequestDownloadableVersions');
+        connection.send('RequestCachedVersions');
 
         updateModal.classList.add('is-active');
         updateSelect.parentElement.classList.add('is-loading');
@@ -444,52 +443,7 @@ import { Error, Result, Utils } from "./utils";
         updateSelect.parentElement.classList.remove('is-loading');
     });
 
-    function cachedUpdate(this: HTMLElement) {
-        let row = this.parentElement.parentElement as HTMLTableRowElement;
-        let cell = row.cells[0];
-        let version = cell.textContent;
 
-        install(version);
-        closeModal();
-    }
-
-    function deleteCachedVersion(this: HTMLElement) {
-        let row = this.parentElement.parentElement as HTMLTableRowElement;
-        let cell = row.cells[0];
-        let version = cell.textContent;
-
-        connection.send('DeleteCachedVersion', version);
-    }
-
-    connection.on('SendCachedVersions', (versions: string[]) => {
-        cachedVersionsTableBody.innerHTML = "";
-
-        for (let version of versions) {
-            let row = document.createElement('tr');
-
-            let cell1 = document.createElement('td');
-            cell1.innerText = version;
-            row.appendChild(cell1);
-
-            let cell2 = document.createElement('td');
-            let deleteButton = document.createElement('button');
-            deleteButton.classList.add('button', 'is-danger');
-            deleteButton.innerText = 'Delete';
-            deleteButton.onclick = deleteCachedVersion;
-            cell2.appendChild(deleteButton);
-            row.appendChild(cell2);
-
-            let cell3 = document.createElement('td');
-            let UpdateButton = document.createElement('button');
-            UpdateButton.classList.add('button', 'is-success');
-            UpdateButton.innerText = 'Update';
-            UpdateButton.onclick = cachedUpdate;
-            cell3.appendChild(UpdateButton);
-            row.appendChild(cell3);
-
-            cachedVersionsTableBody.appendChild(row);
-        }
-    });
 
     forceStopButton.onclick = () => {
         connection.invoke("ForceStop")
@@ -802,6 +756,64 @@ import { Error, Result, Utils } from "./utils";
 
         let table = new Table.Table(tableElement, cellBuilders, undefined, keySelector);
         table.sortBy(2, false);
+
+        return table;
+    }
+
+    function buildCachedVersionsTable(tableElement: HTMLTableElement) {
+        function deleteCachedVersion(this: HTMLElement) {
+            let row = this.parentElement.parentElement as HTMLTableRowElement;
+            let cell = row.cells[0];
+            let version = cell.textContent;
+
+            connection.send('DeleteCachedVersion', version);
+        }
+
+        function cachedUpdate(this: HTMLElement) {
+            let row = this.parentElement.parentElement as HTMLTableRowElement;
+            let cell = row.cells[0];
+            let version = cell.textContent;
+
+            install(version);
+            closeModal();
+        }
+
+        function buildDeleteCell(cell: HTMLTableCellElement, data: string) {
+            let deleteButton = document.createElement('button');
+            deleteButton.classList.add('button', 'is-danger');
+            deleteButton.innerText = 'Delete';
+            deleteButton.onclick = deleteCachedVersion;
+            cell.appendChild(deleteButton);
+        }
+
+        function buildUpdateCell(cell: HTMLTableCellElement, data: string) {
+
+            let UpdateButton = document.createElement('button');
+            UpdateButton.classList.add('button', 'is-success');
+            UpdateButton.innerText = 'Update';
+            UpdateButton.onclick = cachedUpdate;
+            cell.appendChild(UpdateButton);
+        }
+
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                CellBuilder: buildTextCell,
+                SortKeySelector: sortDateCell,
+            },
+            {
+                CellBuilder: buildDeleteCell
+            },
+            {
+                CellBuilder: buildUpdateCell,
+            }
+        ];
+
+        function keySelector(data: string) {
+            return data;
+        }
+
+        let table = new Table.Table(tableElement, cellBuilders, undefined, keySelector);
+        table.sortBy(0, false);
 
         return table;
     }
@@ -1140,6 +1152,10 @@ import { Error, Result, Utils } from "./utils";
         ensureModPackSelected();
     });
 
+    connection.on('SendCachedVersions', (data: TableData<string>) => {
+        cachedVersionsTable.update(data);
+    });
+
     function onPageLoad() {
         tempSaveFilesTable = buildFileTable(tempSaveFilesTableElement);
         localSaveFilesTable = buildFileTable(localSaveFilesTableElement);
@@ -1148,6 +1164,7 @@ import { Error, Result, Utils } from "./utils";
         logsFileTable = buildLogFileTable(logsFileTableElement, 'logFile');
         chatLogsFileTable = buildLogFileTable(chatLogsFileTableElement, 'chatLogFile');
         modPackTable = buildModPackTable(modPackTableElement);
+        cachedVersionsTable = buildCachedVersionsTable(cachedVersionsTableElement);
 
         let value = serverSelect.value;
         history.replaceState({ value: value }, '', `/admin/servers/${value}`);

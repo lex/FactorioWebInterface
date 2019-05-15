@@ -52,7 +52,8 @@ namespace FactorioWebInterface.Models
         Task<FactorioServerExtraSettings> GetServerExtraSettings();
         Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings);
         Task<Result> DeflateSave(string directoryPath, string fileName, string newFileName);
-        Task RequestGetDownloadableVersions();
+        Task RequestDownloadableVersions();
+        Task RequestCachedVersions();
         Task<string> GetVersion();
         Task RequestSelectedModPack();
         Task SetSelectedModPack(string modPack);
@@ -74,7 +75,7 @@ namespace FactorioWebInterface.Models
         Task SendChatLogFiles(string serverId, TableData<FileMetaData> data);
         Task DeflateFinished(Result result);
         Task SendDownloadableVersions(List<string> versions);
-        Task SendCachedVersions(List<string> versions);
+        Task SendCachedVersions(TableData<string> data);
         Task SendVersion(string version);
         Task SendSelectedModPack(string modPack);
     }

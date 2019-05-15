@@ -368,7 +368,7 @@ namespace FactorioWebInterface.Hubs
             return await _factorioServerManager.Install(serverId, name, version);
         }
 
-        public Task RequestGetDownloadableVersions()
+        public Task RequestDownloadableVersions()
         {
             var client = Clients.Client(Context.ConnectionId);
 
@@ -381,32 +381,44 @@ namespace FactorioWebInterface.Hubs
             return Task.FromResult(0);
         }
 
-        public Task RequestGetCachedVersions()
+        public Task RequestCachedVersions()
         {
             var client = Clients.Client(Context.ConnectionId);
 
             _ = Task.Run(async () =>
             {
-                var result = await _factorioServerManager.GetCachedVersions();
-                _ = client.SendCachedVersions(result);
+                var versions = await _factorioServerManager.GetCachedVersions();
+                var td = new TableData<string>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = versions
+                };
+
+                _ = client.SendCachedVersions(td);
             });
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task DeleteCachedVersion(string version)
         {
-            var client = Clients.Client(Context.ConnectionId);
+            var client = Clients.All;
 
             _ = Task.Run(async () =>
             {
                 _ = _factorioServerManager.DeleteCachedVersion(version);
 
-                var result = await _factorioServerManager.GetCachedVersions();
-                _ = client.SendCachedVersions(result);
+                var versions = await _factorioServerManager.GetCachedVersions();
+                var td = new TableData<string>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = versions
+                };
+
+                _ = client.SendCachedVersions(td);
             });
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task<string> GetVersion()
