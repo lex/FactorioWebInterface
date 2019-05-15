@@ -29,6 +29,8 @@ namespace FactorioWebInterface.Models
         // Match all [*]. 
         private static readonly Regex serverTagRegex = new Regex(@"\[.*?\]", RegexOptions.Compiled);
 
+        // Match number and capture everything after.
+        private static readonly Regex outputRegex = new Regex(@"\d+\.\d+ (.+)", RegexOptions.Compiled);
 
         private static readonly JsonSerializerSettings banListSerializerSettings = new JsonSerializerSettings()
         {
@@ -752,6 +754,8 @@ namespace FactorioWebInterface.Models
 
             serverData.OnlinePlayers.Clear();
             serverData.OnlinePlayerCount = 0;
+
+            serverData.LastTempFilesChecked = DateTime.UtcNow;
 
             string modDirPath = PrepareModDirectory(serverData);
 
@@ -1531,22 +1535,8 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public async Task FactorioDataReceived(string serverId, string data, DateTime dateTime)
+        private async Task DoTags(string serverId, string data, DateTime dateTime)
         {
-            if (data == null)
-            {
-                return;
-            }
-
-            var messageData = new MessageData()
-            {
-                ServerId = serverId,
-                MessageType = MessageType.Output,
-                Message = data
-            };
-
-            _ = SendToFactorioControl(serverId, messageData);
-
             var match = tagRegex.Match(data);
             if (!match.Success || match.Index > 20)
             {
@@ -1726,6 +1716,51 @@ namespace FactorioWebInterface.Models
                 default:
                     break;
             }
+        }
+
+        private void DoCheckSave(string serverId, string data)
+        {
+            var match = outputRegex.Match(data);
+            if (!match.Success)
+            {
+                return;
+            }
+
+            string line = match.Groups[1].Value;
+            if (!line.EndsWith("Saving finished"))
+            {
+                return;
+            }
+
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
+
+            _factorioFileManager.RaiseRecentTempFiles(serverData);
+        }
+
+        public async Task FactorioDataReceived(string serverId, string data, DateTime dateTime)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            var messageData = new MessageData()
+            {
+                ServerId = serverId,
+                MessageType = MessageType.Output,
+                Message = data
+            };
+
+            _ = SendToFactorioControl(serverId, messageData);
+
+            var t1 = DoTags(serverId, data, dateTime);
+            DoCheckSave(serverId, data);
+
+            await t1;
         }
 
         private static string BuildServerTopicFromOnlinePlayers(SortedList<string, int> onlinePlayers, int count)
@@ -2523,6 +2558,8 @@ namespace FactorioWebInterface.Models
                 {
                     serverData.ServerLock.Release();
                 }
+
+                await _factorioFileManager.RaiseRecentTempFiles(serverData);
 
                 await DoStoppedCallback(serverData);
             }

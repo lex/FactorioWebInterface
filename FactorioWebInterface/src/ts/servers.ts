@@ -547,12 +547,21 @@ import { Error, Result, Utils } from "./utils";
     }
 
     function buildFileTable(tableElement: HTMLTableElement): Table.Table {
-        function buildCheckboxCell(cell: HTMLTableCellElement, data: FileMetaData) {
+        function buildCheckboxCell(cell: HTMLTableCellElement, data: FileMetaData, oldCell: HTMLTableCellElement) {
+            let wasChecked;
+            if (oldCell) {
+                let oldCheckbox = oldCell.firstElementChild as HTMLInputElement;
+                wasChecked = oldCheckbox.checked
+            } else {
+                wasChecked = false;
+            }
+
             let checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
             checkbox.name = 'fileCheckbox';
             checkbox.setAttribute('data-directory', data.Directory);
             checkbox.setAttribute('data-name', data.Name);
+            checkbox.checked = wasChecked;
             cell.appendChild(checkbox);
         }
 

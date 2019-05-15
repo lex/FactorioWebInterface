@@ -55,6 +55,7 @@ namespace FactorioWebInterface.Models
         public string ChatLogCurrentPath { get; set; }
         public Logger ChatLogger { get; set; }
         public string ModPack { get; set; } = "";
+        public DateTime LastTempFilesChecked = default;
 
         public SortedList<string, int> OnlinePlayers { get; set; }
         public int OnlinePlayerCount { get; set; }

@@ -1,6 +1,6 @@
 ﻿export interface CellBuilder {
     Property?: string | undefined;
-    CellBuilder: (cell: HTMLTableCellElement, data: any) => void;
+    CellBuilder: (cell: HTMLTableCellElement, data: any, oldCell?: HTMLTableCellElement) => void;
     SortKeySelector?: (r: HTMLTableCellElement) => any;
     HeaderBuilder?: (cell: HTMLTableHeaderCellElement, symbol: string) => void;
     IsKey?: boolean;
@@ -81,7 +81,7 @@ export class Table<T = any> {
         }
     }
 
-    private buildCell(builder: CellBuilder, rowElement: HTMLTableRowElement, row: T) {
+    private buildCell(builder: CellBuilder, rowElement: HTMLTableRowElement, row: T, oldCell?: HTMLTableCellElement) {
         let data;
         let prop = builder.Property;
         if (prop === undefined) {
@@ -91,8 +91,15 @@ export class Table<T = any> {
         }
 
         let cell = document.createElement('td');
-        rowElement.appendChild(cell);
-        builder.CellBuilder(cell, data);
+
+        if (oldCell === undefined) {
+            rowElement.appendChild(cell);
+        } else {
+            rowElement.insertBefore(cell, oldCell);
+            oldCell.remove();
+        }
+
+        builder.CellBuilder(cell, data, oldCell);
     }
 
     private doAdd(rows: T[]) {
@@ -185,10 +192,11 @@ export class Table<T = any> {
                 tableRows.push(rowElement);
                 tableMap.set(key, rowElement);
             } else {
-                rowElement.innerHTML = "";
+                for (let i = 0; i < this.cellBuilders.length; i++) {
+                    let builder = this.cellBuilders[i];
+                    let oldCell = rowElement.cells[i];
 
-                for (let builder of this.cellBuilders) {
-                    this.buildCell(builder, rowElement, row);
+                    this.buildCell(builder, rowElement, row, oldCell);
                 }
             }
         }

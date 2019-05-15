@@ -952,6 +952,68 @@ namespace FactorioWebInterface.Models
             Task.Run(() => GlobalSaveFilesChanged?.Invoke(this, ev));
         }
 
+        public Task RaiseRecentTempFiles(FactorioServerData serverData)
+        {
+            return Task.Run(async () =>
+            {
+                DateTime lastChecked;
+
+                try
+                {
+                    await serverData.ServerLock.WaitAsync();
+
+                    lastChecked = serverData.LastTempFilesChecked;
+                    serverData.LastTempFilesChecked = DateTime.UtcNow;
+                }
+                finally
+                {
+                    serverData.ServerLock.Release();
+                }
+
+                try
+                {
+                    var dir = new DirectoryInfo(serverData.TempSavesDirectoryPath);
+
+                    if (!dir.Exists)
+                    {
+                        dir.Create();
+                        return;
+                    }
+
+                    var data = dir.EnumerateFiles()
+                        .Where(f => f.LastWriteTimeUtc >= lastChecked)
+                        .Select(f => new FileMetaData()
+                        {
+                            Name = f.Name,
+                            CreatedTime = f.CreationTimeUtc,
+                            LastModifiedTime = f.LastWriteTimeUtc,
+                            Size = f.Length,
+                            Directory = Constants.TempSavesDirectoryName
+                        })
+                        .ToArray();
+
+                    var ev = new FilesChangedEventArgs(serverData.ServerId, FilesChangedType.Create, data);
+
+                    TempSaveFilesChanged?.Invoke(this, ev);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(nameof(RaiseRecentTempFiles), ex);
+                }
+            });
+        }
+
+        public void NotifyTempFilesChanged(FactorioServerData serverData)
+        {
+            Task.Run(() =>
+            {
+                var files = GetTempSaveFiles(serverData);
+                var ev = new FilesChangedEventArgs(serverData.ServerId, FilesChangedType.Create, files);
+
+                TempSaveFilesChanged?.Invoke(this, ev);
+            });
+        }
+
         public void NotifyScenariosChanged()
         {
             var scenarios = GetScenarios();
