@@ -429,9 +429,29 @@ namespace FactorioWebInterface.Models
                         Size = fileInfo.Length
                     };
 
-                    changedFiles.Add(fileMetaData);
-
                     fileInfo.Delete();
+
+                    changedFiles.Add(fileMetaData);
+                }
+
+                if (changedFiles.Count > 0)
+                {
+                    modPackDir.Refresh();
+                    var data = new ModPackMetaData()
+                    {
+                        Name = modPack,
+                        CreatedTime = modPackDir.CreationTimeUtc,
+                        LastModifiedTime = modPackDir.LastWriteTimeUtc
+                    };
+
+                    var packEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, data);
+                    var filesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Delete, modPack, changedFiles);
+
+                    Task.Run(() =>
+                    {
+                        ModPackChanged?.Invoke(this, packEventArgs);
+                        ModPackFilesChanged?.Invoke(this, filesEventArgs);
+                    });
                 }
 
                 if (errors.Count != 0)
@@ -447,14 +467,6 @@ namespace FactorioWebInterface.Models
             {
                 _logger.LogError(ex, nameof(DeleteModPackFiles));
                 return Result.Failure(Constants.FileErrorKey, $"Error deleting mod pack files.");
-            }
-            finally
-            {
-                if (changedFiles.Count > 0)
-                {
-                    var ev = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Delete, modPack, changedFiles);
-                    Task.Run(() => ModPackFilesChanged?.Invoke(this, ev));
-                }
             }
         }
 
@@ -531,6 +543,26 @@ namespace FactorioWebInterface.Models
                     changedFiles.Add(fileMetaData);
                 }
 
+                if (changedFiles.Count > 0)
+                {
+                    modPackDir.Refresh();
+                    var data = new ModPackMetaData()
+                    {
+                        Name = modPack,
+                        CreatedTime = modPackDir.CreationTimeUtc,
+                        LastModifiedTime = modPackDir.LastWriteTimeUtc
+                    };
+
+                    var packEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, data);
+                    var filesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, modPack, changedFiles);
+
+                    _ = Task.Run(() =>
+                    {
+                        ModPackChanged?.Invoke(this, packEventArgs);
+                        ModPackFilesChanged?.Invoke(this, filesEventArgs);
+                    });
+                }
+
                 if (errors.Count != 0)
                 {
                     return Result.Failure(errors);
@@ -544,14 +576,6 @@ namespace FactorioWebInterface.Models
             {
                 _logger.LogError(ex, nameof(UploadFiles));
                 return Result.Failure(Constants.FileErrorKey, $"Error uploading mod pack files.");
-            }
-            finally
-            {
-                if (changedFiles.Count > 0)
-                {
-                    var ev = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, modPack, changedFiles);
-                    _ = Task.Run(() => ModPackFilesChanged?.Invoke(this, ev));
-                }
             }
         }
 
