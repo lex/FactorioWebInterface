@@ -400,7 +400,7 @@ namespace FactorioWebInterface.Models
 
                 foreach (var file in files)
                 {
-                    if (string.IsNullOrWhiteSpace(file) || file.Contains(" "))
+                    if (string.IsNullOrWhiteSpace(file))
                     {
                         errors.Add(new Error(Constants.InvalidFileNameErrorKey, file ?? ""));
                         continue;
@@ -502,11 +502,13 @@ namespace FactorioWebInterface.Models
                 foreach (var file in files)
                 {
                     string fileName = file.FileName;
-                    if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(" "))
+                    if (string.IsNullOrWhiteSpace(fileName))
                     {
                         errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName ?? ""));
                         continue;
                     }
+
+                    fileName = fileName.Trim();
 
                     string safeName = Path.GetFileName(fileName);
                     string filePath = Path.Combine(modPackDir.FullName, safeName);
@@ -604,7 +606,7 @@ namespace FactorioWebInterface.Models
                     return null;
                 }
 
-                if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains(" "))
+                if (string.IsNullOrWhiteSpace(fileName))
                 {
                     return null;
                 }
