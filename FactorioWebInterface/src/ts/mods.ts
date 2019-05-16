@@ -141,7 +141,7 @@ import { TableData } from "./table";
         function buildNameCell(cell: HTMLTableCellElement, data: string) {
             let link = document.createElement('a') as HTMLAnchorElement;
             link.innerText = data;
-            link.href = `/admin/mods?handler=file&modPack=${currentModPack}&fileName=${data}`;
+            link.href = `/admin/mods?handler=file&modPack=${encodeURIComponent(currentModPack)}&fileName=${encodeURIComponent(data)}`;
             cell.appendChild(link);
         }
 
