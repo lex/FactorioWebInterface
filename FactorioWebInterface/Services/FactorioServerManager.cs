@@ -1446,7 +1446,7 @@ namespace FactorioWebInterface.Services
 
                 var messageData = new MessageData()
                 {
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updating} by user {userName}"
                 };
 
