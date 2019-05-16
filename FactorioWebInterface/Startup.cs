@@ -5,6 +5,7 @@ using FactorioWebInterface.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -108,6 +109,13 @@ namespace FactorioWebInterface
                 services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
             })
             .AddGitHubWebHooks();
+
+            services.Configure<FormOptions>(o =>
+            {
+                o.ValueLengthLimit = int.MaxValue;
+                o.MultipartBodyLengthLimit = int.MaxValue;
+                //o.MultipartHeadersLengthLimit = int.MaxValue;
+            });
 
             services.AddSignalR()
                 .AddMessagePackProtocol();
