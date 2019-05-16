@@ -1,24 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using FactorioWebInterface.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Hubs
 {
-    public enum MessageType
-    {
-        Output,
-        Wrapper,
-        Control,
-        Status,
-        Discord
-    }
-
-    public class MessageData
-    {
-        public string ServerId { get; set; }
-        public MessageType MessageType { get; set; }
-        public string Message { get; set; }
-    }
-
     public class FactorioContorlClientData
     {
         public string Status { get; set; }

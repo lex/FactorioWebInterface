@@ -2,6 +2,7 @@
 using DSharpPlus.Entities;
 using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
+using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class FactorioServerManager : IFactorioServerManager
     {
@@ -403,7 +404,7 @@ namespace FactorioWebInterface.Models
                 message = new MessageData()
                 {
                     ServerId = serverData.ServerId,
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS] Change from {oldStatusString} to {newStatusString}"
                 };
             }
@@ -412,7 +413,7 @@ namespace FactorioWebInterface.Models
                 message = new MessageData()
                 {
                     ServerId = serverData.ServerId,
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS] Change from {oldStatusString} to {newStatusString} by user {byUser}"
                 };
             }
@@ -461,7 +462,7 @@ namespace FactorioWebInterface.Models
             var messageData = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Discord,
+                MessageType = Models.MessageType.Discord,
                 Message = $"[Discord] {eventArgs.User.Username}: {eventArgs.Message}"
             };
 
@@ -854,7 +855,7 @@ namespace FactorioWebInterface.Models
                         var message = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = $"Server resumed by user: {userName}"
                         };
 
@@ -989,7 +990,7 @@ namespace FactorioWebInterface.Models
                         var message = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = $"Server load file: {saveFile.Name} by user: {userName}"
                         };
 
@@ -1104,7 +1105,7 @@ namespace FactorioWebInterface.Models
             var message = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Control,
+                MessageType = Models.MessageType.Control,
                 Message = $"Server load scenario: {scenarioName} by user: {userName}"
             };
 
@@ -1202,7 +1203,7 @@ namespace FactorioWebInterface.Models
             var message = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Control,
+                MessageType = Models.MessageType.Control,
                 Message = $"Server stopped by user {userName}"
             };
 
@@ -1280,7 +1281,7 @@ namespace FactorioWebInterface.Models
                         var message = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = $"Server killed by user {userName}"
                         };
 
@@ -1319,7 +1320,7 @@ namespace FactorioWebInterface.Models
             var message = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Control,
+                MessageType = Models.MessageType.Control,
                 Message = $"Server saved by user {userName}"
             };
             _ = SendToFactorioControl(serverId, message);
@@ -1360,7 +1361,7 @@ namespace FactorioWebInterface.Models
                         var messageData = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Status,
+                            MessageType = Models.MessageType.Status,
                             Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updated}"
                         };
 
@@ -1378,7 +1379,7 @@ namespace FactorioWebInterface.Models
                         var messageData = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Status,
+                            MessageType = Models.MessageType.Status,
                             Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Crashed}"
                         };
 
@@ -1388,7 +1389,7 @@ namespace FactorioWebInterface.Models
                         var messageData2 = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = result.ToString()
                         };
 
@@ -1751,7 +1752,7 @@ namespace FactorioWebInterface.Models
             var messageData = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Output,
+                MessageType = Models.MessageType.Output,
                 Message = data
             };
 
@@ -2258,7 +2259,7 @@ namespace FactorioWebInterface.Models
                 {
                     ServerId = serverId,
                     Message = $"[Server] {actor}: {data}",
-                    MessageType = MessageType.Output
+                    MessageType = Models.MessageType.Output
                 };
 
                 try
@@ -2408,7 +2409,7 @@ namespace FactorioWebInterface.Models
             var messageData = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Wrapper,
+                MessageType = Models.MessageType.Wrapper,
                 Message = data
             };
 
@@ -2603,7 +2604,7 @@ namespace FactorioWebInterface.Models
                 var messageData = new MessageData()
                 {
                     ServerId = serverId,
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS]: Changed from {oldStatus} to {newStatus}"
                 };
 

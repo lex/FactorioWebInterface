@@ -1,4 +1,5 @@
 ﻿using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;

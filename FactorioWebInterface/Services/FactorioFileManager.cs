@@ -1,4 +1,5 @@
-﻿using FactorioWebInterface.Utils;
+﻿using FactorioWebInterface.Models;
+using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
@@ -7,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class FactorioFileManager
     {

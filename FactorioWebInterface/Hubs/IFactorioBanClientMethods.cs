@@ -1,7 +1,8 @@
 ﻿using FactorioWebInterface.Data;
+using FactorioWebInterface.Models;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Hubs
 {
     public interface IFactorioBanClientMethods
     {

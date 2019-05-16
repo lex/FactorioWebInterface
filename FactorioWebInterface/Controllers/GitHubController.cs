@@ -1,5 +1,6 @@
 ﻿using FactorioWebInterface.Data.GitHub;
 using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebHooks;

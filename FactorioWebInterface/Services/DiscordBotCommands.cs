@@ -3,7 +3,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class DiscordBotCommands
     {
@@ -83,7 +83,7 @@ namespace FactorioWebInterface.Models
                 await ErrorSetSever(ctx, serverId);
                 return;
             }
-            
+
             if (!await _discordBotContext.SetServer(serverId, ctx.Channel.Id))
             {
                 await ErrorSetSever(ctx, serverId);

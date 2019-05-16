@@ -1,9 +1,11 @@
-﻿using Shared;
+﻿using FactorioWebInterface.Hubs;
+using FactorioWebInterface.Models;
+using Shared;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public interface IFactorioServerManager
     {

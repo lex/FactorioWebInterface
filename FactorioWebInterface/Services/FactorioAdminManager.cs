@@ -1,5 +1,6 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
+using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class FactorioAdminManager
     {

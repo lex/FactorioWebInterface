@@ -1,4 +1,5 @@
 ﻿using FactorioWebInterface.Hubs;
+using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
@@ -10,7 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 //using static FactorioWebInterface.Models.ModPackChangedType;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class FactorioModManager
     {

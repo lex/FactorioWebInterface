@@ -1,7 +1,8 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
+using FactorioWebInterface.Models;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class DiscordBot
     {
