@@ -47,6 +47,7 @@ import * as Table from "./table";
         connection.send('RequestAllDataForDataSet', set);
 
         dataSetHeading.textContent = currentDataSet;
+        dataTable.clear();
     };
 
     updateButton.onclick = () => {
@@ -59,7 +60,7 @@ import * as Table from "./table";
             data.Value = value;
         }
 
-        connection.invoke('UpdateData', data);        
+        connection.invoke('UpdateData', data);
     };
 
     function reBuildDataSetsSelect() {
@@ -142,7 +143,7 @@ import * as Table from "./table";
 
     connection.on('SendEntries', (dataSet: string, data: Table.TableData) => {
         if (currentDataSet !== dataSet) {
-            return;            
+            return;
         }
 
         dataTable.update(data);

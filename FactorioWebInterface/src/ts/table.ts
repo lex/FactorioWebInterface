@@ -129,7 +129,10 @@ export class Table<T = any> {
 
     private doReset(rows: T[]) {
         this.tableRows = [];
+        this.tableMap.clear();
+
         this.doAdd(rows);
+
         return true;
     }
 
@@ -236,6 +239,7 @@ export class Table<T = any> {
 
     clear(): void {
         this.tableRows = [];
+        this.tableMap.clear();
         this.tableBody.innerHTML = "";
     }
 
