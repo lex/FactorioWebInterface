@@ -557,7 +557,6 @@
                         <tr>
                             <th><input type="checkbox" /> Select</th>
                             <th>Name</th>
-                            <th>Created Time</th>
                             <th>Modified Time</th>
                         </tr>
                     </thead>
@@ -587,7 +586,6 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Created Time</th>
                             <th>Modified Time</th>
                             <th>Size</th>
                         </tr>
@@ -601,7 +599,6 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Created Time</th>
                             <th>Modified Time</th>
                             <th>Size</th>
                         </tr>
@@ -639,20 +636,18 @@
                 </section>
 
                 <div class="columns is-centered">
-                    <div class="column" style="flex-grow: 0;">
-                        <div>
-                            <h4 class="title is-4">Cached Updates</h4>
-                            <table class="table is-bordered is-striped is-hoverable">
-                                <thead>
-                                    <tr>
-                                        <th>Version</th>
-                                        <th>Delete</th>
-                                        <th>Update</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cachedVersionsTableBody"></tbody>
-                            </table>
-                        </div>
+                    <div class="column is-8 is-center" style="flex-grow: 0;">
+                        <h4 class="title is-4" style="text-align:center;">Cached Updates</h4>
+                        <table id="cachedVersionsTable" class="table is-bordered is-striped is-hoverable" style="margin-left:auto; margin-right: auto;">
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Delete</th>
+                                    <th>Update</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
 

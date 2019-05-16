@@ -1,6 +1,7 @@
 using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -90,7 +91,11 @@ namespace FactorioWebInterface
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
             services.AddSingleton<DiscordBot, DiscordBot>();
             services.AddSingleton<FactorioUpdater, FactorioUpdater>();
+            services.AddSingleton<FactorioAdminManager, FactorioAdminManager>();
             services.AddSingleton<FactorioModManager, FactorioModManager>();
+            services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
+            services.AddSingleton<FactorioBanManager, FactorioBanManager>();
+            services.AddSingleton<FactorioFileManager, FactorioFileManager>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
@@ -174,6 +179,7 @@ namespace FactorioWebInterface
             {
                 routes.MapHub<FactorioControlHub>("/factorioControlHub");
                 routes.MapHub<FactorioProcessHub>("/factorioProcessHub");
+                routes.MapHub<FactorioAdminHub>("/factorioAdminHub");
                 routes.MapHub<ScenarioDataHub>("/scenarioDataHub");
                 routes.MapHub<FactorioBanHub>("/factorioBanHub");
                 routes.MapHub<PlaguesPlaygroundHub>("/plaguesPlaygroundHub");

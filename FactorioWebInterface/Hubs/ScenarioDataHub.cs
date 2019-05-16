@@ -1,5 +1,6 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -11,10 +12,12 @@ namespace FactorioWebInterface.Hubs
     public class ScenarioDataHub : Hub<IScenarioDataClientMethods>
     {
         private IFactorioServerManager _factorioServerManager;
+        private ScenarioDataManager _scenarioDataManger;
 
-        public ScenarioDataHub(IFactorioServerManager factorioServerManager)
+        public ScenarioDataHub(IFactorioServerManager factorioServerManager, ScenarioDataManager scenarioDataManger)
         {
             _factorioServerManager = factorioServerManager;
+            _scenarioDataManger = scenarioDataManger;
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
@@ -40,22 +43,17 @@ namespace FactorioWebInterface.Hubs
             await Groups.AddToGroupAsync(connectionId, dataSet);
         }
 
-        public Task<string[]> GetAllDataSets()
-        {
-            return _factorioServerManager.GetAllScenarioDataSets();
-        }
-
-        public Task RequestAllData()
+        public Task RequestAllDataSets()
         {
             var client = Clients.Client(Context.ConnectionId);
 
             _ = Task.Run(async () =>
             {
-                var data = await _factorioServerManager.GetAllScenarioData();
-                _ = client.SendAllEntries(data);
+                var data = await _scenarioDataManger.GetAllDataSets();
+                await client.SendDataSets(data);
             });
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task RequestAllDataForDataSet(string dataSet)
@@ -64,8 +62,15 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(async () =>
             {
-                var data = await _factorioServerManager.GetScenarioData(dataSet);
-                _ = client.SendAllEntriesForDataSet(dataSet, data);
+                var data = await _scenarioDataManger.GetAllEntries(dataSet);
+
+                var tableData = new TableData<ScenarioDataKeyValue>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                await client.SendEntries(dataSet, tableData);
             });
 
             return Task.FromResult(0);
@@ -73,7 +78,7 @@ namespace FactorioWebInterface.Hubs
 
         public Task UpdateData(ScenarioDataEntry data)
         {
-            return _factorioServerManager.UpdateScenarioDataFromWeb(data);
+            return _scenarioDataManger.UpdateEntry(data);
         }
     }
 }

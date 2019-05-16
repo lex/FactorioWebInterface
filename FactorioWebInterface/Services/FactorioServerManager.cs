@@ -2,8 +2,8 @@
 using DSharpPlus.Entities;
 using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
+using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +20,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class FactorioServerManager : IFactorioServerManager
     {
@@ -30,6 +30,8 @@ namespace FactorioWebInterface.Models
         // Match all [*]. 
         private static readonly Regex serverTagRegex = new Regex(@"\[.*?\]", RegexOptions.Compiled);
 
+        // Match number and capture everything after.
+        private static readonly Regex outputRegex = new Regex(@"\d+\.\d+ (.+)", RegexOptions.Compiled);
 
         private static readonly JsonSerializerSettings banListSerializerSettings = new JsonSerializerSettings()
         {
@@ -41,13 +43,15 @@ namespace FactorioWebInterface.Models
         private readonly DiscordBotContext _discordBotContext;
         private readonly IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> _factorioProcessHub;
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
-        private readonly IHubContext<ScenarioDataHub, IScenarioDataClientMethods> _scenariolHub;
-        private readonly IHubContext<FactorioBanHub, IFactorioBanClientMethods> _factorioBanHub;
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly FactorioAdminManager _factorioAdminManager;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
+        private readonly FactorioBanManager _factorioBanManager;
+        private readonly FactorioFileManager _factorioFileManager;
+        private readonly ScenarioDataManager _scenarioDataManger;
 
         //private SemaphoreSlim serverLock = new SemaphoreSlim(1, 1);
         private Dictionary<string, FactorioServerData> servers = FactorioServerData.Servers;
@@ -60,26 +64,30 @@ namespace FactorioWebInterface.Models
             DiscordBotContext discordBotContext,
             IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> factorioProcessHub,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
-            IHubContext<ScenarioDataHub, IScenarioDataClientMethods> scenariolHub,
-            IHubContext<FactorioBanHub, IFactorioBanClientMethods> factorioBanHub,
             DbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
             IHttpClientFactory httpClientFactory,
+            FactorioAdminManager factorioAdminManager,
             FactorioUpdater factorioUpdater,
-            FactorioModManager factorioModManager
+            FactorioModManager factorioModManager,
+            FactorioBanManager factorioBanManager,
+            FactorioFileManager factorioFileManager,
+            ScenarioDataManager scenarioDataManger
         )
         {
             _configuration = configuration;
             _discordBotContext = discordBotContext;
             _factorioProcessHub = factorioProcessHub;
             _factorioControlHub = factorioControlHub;
-            _scenariolHub = scenariolHub;
-            _factorioBanHub = factorioBanHub;
             _dbContextFactory = dbContextFactory;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _factorioAdminManager = factorioAdminManager;
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
+            _factorioBanManager = factorioBanManager;
+            _factorioFileManager = factorioFileManager;
+            _scenarioDataManger = scenarioDataManger;
 
             string name = _configuration[Constants.FactorioWrapperNameKey];
             if (string.IsNullOrWhiteSpace(name))
@@ -92,6 +100,288 @@ namespace FactorioWebInterface.Models
             }
 
             _discordBotContext.FactorioDiscordDataReceived += FactorioDiscordDataReceived;
+            _scenarioDataManger.EntryChanged += _scenarioDataManger_EntryChanged;
+            _factorioBanManager.BanAdded += _factorioBanManager_BanAdded;
+            _factorioBanManager.BanRemoved += _factorioBanManager_BanRemoved;
+            _factorioFileManager.TempSaveFilesChanged += _factorioFileManager_TempSaveFilesChanged;
+            _factorioFileManager.LocalSaveFilesChanged += _factorioFileManager_LocalSaveFilesChanged;
+            _factorioFileManager.GlobalSaveFilesChanged += _factorioFileManager_GlobalSaveFilesChanged;
+            _factorioFileManager.LogFilesChanged += _factorioFileManager_LogFilesChanged;
+            _factorioFileManager.ChatLogFilesChanged += _factorioFileManager_ChatLogFilesChanged;
+            _factorioFileManager.ScenariosChanged += _factorioFileManager_ScenariosChanged;
+            _factorioModManager.ModPackChanged += _factorioModManager_ModPackChanged;
+        }
+
+        private void DoFileChange(FilesChangedEventArgs eventArgs, Func<IFactorioControlClientMethods, string, TableData<FileMetaData>, Task> method)
+        {
+            TableData<FileMetaData> Create(FilesChangedEventArgs e)
+            {
+                return new TableData<FileMetaData>
+                {
+                    Type = TableDataType.Update,
+                    Rows = e.NewOrUpdated
+                };
+            }
+
+            TableData<FileMetaData> Delete(FilesChangedEventArgs e)
+            {
+                return new TableData<FileMetaData>
+                {
+                    Type = TableDataType.Remove,
+                    Rows = e.Old
+                };
+            }
+
+            var serverId = eventArgs.ServerId;
+
+            IFactorioControlClientMethods clients;
+            if (string.IsNullOrEmpty(serverId))
+            {
+                clients = _factorioControlHub.Clients.All;
+            }
+            else
+            {
+                clients = _factorioControlHub.Clients.Group(eventArgs.ServerId);
+            }
+
+            switch (eventArgs.Type)
+            {
+                case FilesChangedType.Create:
+                    {
+                        var td = Create(eventArgs);
+                        method(clients, serverId, td);
+                        break;
+                    }
+                case FilesChangedType.Delete:
+                    {
+                        var td = Delete(eventArgs);
+                        method(clients, serverId, td);
+                        break;
+                    }
+                case FilesChangedType.Rename:
+                    {
+                        var td = new TableData<FileMetaData>()
+                        {
+                            Type = TableDataType.Compound,
+                            TableDatas = new[]
+                            {
+                                Delete(eventArgs),
+                                Create(eventArgs)
+                            }
+                        };
+                        method(clients, serverId, td);
+                        break;
+                    }
+            }
+        }
+
+        private void _factorioFileManager_TempSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendTempSavesFiles(id, td));
+        }
+
+        private void _factorioFileManager_LocalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendLocalSaveFiles(id, td));
+        }
+
+        private void _factorioFileManager_GlobalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendGlobalSaveFiles(td));
+        }
+
+        private void _factorioFileManager_LogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendLogFiles(id, td));
+        }
+
+        private void _factorioFileManager_ChatLogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        {
+            DoFileChange(eventArgs, (c, id, td) => c.SendChatLogFiles(id, td));
+        }
+
+        private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, ScenariosChangedEventArgs eventArgs)
+        {
+            TableData<ScenarioMetaData> Create(ScenariosChangedEventArgs e)
+            {
+                return new TableData<ScenarioMetaData>
+                {
+                    Type = TableDataType.Update,
+                    Rows = e.NewOrUpdated
+                };
+            }
+
+            TableData<ScenarioMetaData> Delete(ScenariosChangedEventArgs e)
+            {
+                return new TableData<ScenarioMetaData>
+                {
+                    Type = TableDataType.Remove,
+                    Rows = e.Old
+                };
+            }
+
+            TableData<ScenarioMetaData> td = null;
+
+            switch (eventArgs.Type)
+            {
+                case ScenariosChangedType.Create:
+                    td = Create(eventArgs);
+                    break;
+                case ScenariosChangedType.Delete:
+                    td = Delete(eventArgs);
+                    break;
+                case ScenariosChangedType.Rename:
+                    td = new TableData<ScenarioMetaData>()
+                    {
+                        Type = TableDataType.Compound,
+                        TableDatas = new[]
+                        {
+                            Delete(eventArgs),
+                            Create(eventArgs)
+                        }
+                    };
+                    break;
+            }
+
+            _factorioControlHub.Clients.All.SendScenarios(td);
+        }
+
+        private void _factorioModManager_ModPackChanged(FactorioModManager sender, ModPackChangedEventArgs eventArgs)
+        {
+            TableData<ModPackMetaData> Create(ModPackChangedEventArgs e)
+            {
+                return new TableData<ModPackMetaData>
+                {
+                    Type = TableDataType.Update,
+                    Rows = new[] { e.NewOrUpdated }
+                };
+            }
+
+            TableData<ModPackMetaData> Delete(ModPackChangedEventArgs e)
+            {
+                return new TableData<ModPackMetaData>
+                {
+                    Type = TableDataType.Remove,
+                    Rows = new[] { e.Old }
+                };
+            }
+
+            TableData<ModPackMetaData> td = null;
+
+            switch (eventArgs.Type)
+            {
+                case ModPackChangedType.Create:
+                    td = Create(eventArgs);
+                    break;
+                case ModPackChangedType.Delete:
+                    td = Delete(eventArgs);
+                    break;
+                case ModPackChangedType.Rename:
+                    td = new TableData<ModPackMetaData>()
+                    {
+                        Type = TableDataType.Compound,
+                        TableDatas = new[]
+                        {
+                            Delete(eventArgs),
+                            Create(eventArgs)
+                        }
+                    };
+                    break;
+            }
+
+            _factorioControlHub.Clients.All.SendModPacks(td);
+        }
+
+        private void _factorioBanManager_BanAdded(FactorioBanManager sender, FactorioBanAddedEventArgs eventArgs)
+        {
+            if (!eventArgs.SynchronizeWithServers)
+            {
+                return;
+            }
+
+            var ban = eventArgs.Ban;
+
+            // /ban doesn't support names with spaces.
+            if (ban.Username.Contains(' '))
+            {
+                return;
+            }
+
+            var command = $"/ban {ban.Username} {ban.Reason}";
+
+            if (command.EndsWith('.'))
+            {
+                command.Substring(0, command.Length - 1);
+            }
+
+            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+        }
+
+        private void _factorioBanManager_BanRemoved(FactorioBanManager sender, FactorioBanRemovedEventArgs eventArgs)
+        {
+            if (!eventArgs.SynchronizeWithServers)
+            {
+                return;
+            }
+
+            var username = eventArgs.Username;
+
+            // /ban doesn't support names with spaces.
+            if (username.Contains(' '))
+            {
+                return;
+            }
+
+            var command = $"/unban {username}";
+
+            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+        }
+
+        private void _scenarioDataManger_EntryChanged(ScenarioDataManager sender, ScenarioDataEntryChangedEventArgs eventArgs)
+        {
+            _ = Task.Run(async () =>
+             {
+                 var sourceId = eventArgs.Source;
+                 var data = eventArgs.ScenarioDataEntry;
+
+                 var dataSet = data.DataSet;
+
+                 var cb = FactorioCommandBuilder
+                     .ServerCommand("raise_data_set")
+                     .Add("{data_set=")
+                     .AddQuotedString(data.DataSet)
+                     .Add(",key=")
+                     .AddQuotedString(data.Key);
+
+                 if (data.Value != null)
+                 {
+                     cb.Add(",value=").Add(data.Value);
+                 }
+
+                 var command = cb.Add("}").Build();
+
+                 var clients = _factorioProcessHub.Clients;
+                 foreach (var entry in servers)
+                 {
+                     var id = entry.Key;
+                     var server = entry.Value;
+                     if (id != sourceId && server.Status == FactorioServerStatus.Running)
+                     {
+                         try
+                         {
+                             await server.ServerLock.WaitAsync();
+                             if (server.TrackingDataSets.Contains(dataSet))
+                             {
+                                 _ = clients.Group(id).SendToFactorio(command);
+                             }
+                         }
+                         finally
+                         {
+                             server.ServerLock.Release();
+                         }
+                     }
+                 }
+             });
         }
 
         private Task SendControlMessageNonLocking(FactorioServerData serverData, MessageData message)
@@ -114,7 +404,7 @@ namespace FactorioWebInterface.Models
                 message = new MessageData()
                 {
                     ServerId = serverData.ServerId,
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS] Change from {oldStatusString} to {newStatusString}"
                 };
             }
@@ -123,7 +413,7 @@ namespace FactorioWebInterface.Models
                 message = new MessageData()
                 {
                     ServerId = serverData.ServerId,
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS] Change from {oldStatusString} to {newStatusString} by user {byUser}"
                 };
             }
@@ -172,7 +462,7 @@ namespace FactorioWebInterface.Models
             var messageData = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Discord,
+                MessageType = Models.MessageType.Discord,
                 Message = $"[Discord] {eventArgs.User.Username}: {eventArgs.Message}"
             };
 
@@ -381,7 +671,7 @@ namespace FactorioWebInterface.Models
                 return;
             }
 
-            var a = await GetAdminsAsync();
+            var a = await _factorioAdminManager.GetAdmins();
             var admins = a.Select(x => x.Name).ToList();
 
             serverData.ServerAdminList = admins;
@@ -465,6 +755,8 @@ namespace FactorioWebInterface.Models
 
             serverData.OnlinePlayers.Clear();
             serverData.OnlinePlayerCount = 0;
+
+            serverData.LastTempFilesChecked = DateTime.UtcNow;
 
             string modDirPath = PrepareModDirectory(serverData);
 
@@ -563,7 +855,7 @@ namespace FactorioWebInterface.Models
                         var message = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = $"Server resumed by user: {userName}"
                         };
 
@@ -594,7 +886,7 @@ namespace FactorioWebInterface.Models
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            var saveFile = GetSaveFile(directoryName, fileName);
+            var saveFile = _factorioFileManager.GetSaveFile(serverId, directoryName, fileName);
             if (saveFile == null)
             {
                 return Result.Failure(Constants.MissingFileErrorKey, $"File {Path.Combine(directoryName, fileName)} not found.");
@@ -618,6 +910,21 @@ namespace FactorioWebInterface.Models
                             case Constants.LocalSavesDirectoryName:
                                 string copyToPath = Path.Combine(serverData.TempSavesDirectoryPath, saveFile.Name);
                                 saveFile.CopyTo(copyToPath, true);
+
+                                var fi = new FileInfo(copyToPath);
+                                fi.LastWriteTimeUtc = DateTime.UtcNow;
+
+                                var data = new FileMetaData()
+                                {
+                                    Name = fi.Name,
+                                    CreatedTime = fi.CreationTimeUtc,
+                                    LastModifiedTime = fi.LastWriteTimeUtc,
+                                    Size = fi.Length,
+                                    Directory = Constants.TempSavesDirectoryName
+                                };
+                                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, new[] { data });
+
+                                _factorioFileManager.RaiseTempFilesChanged(ev);
                                 break;
                             case Constants.TempSavesDirectoryName:
                                 break;
@@ -683,7 +990,7 @@ namespace FactorioWebInterface.Models
                         var message = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = $"Server load file: {saveFile.Name} by user: {userName}"
                         };
 
@@ -798,7 +1105,7 @@ namespace FactorioWebInterface.Models
             var message = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Control,
+                MessageType = Models.MessageType.Control,
                 Message = $"Server load scenario: {scenarioName} by user: {userName}"
             };
 
@@ -896,7 +1203,7 @@ namespace FactorioWebInterface.Models
             var message = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Control,
+                MessageType = Models.MessageType.Control,
                 Message = $"Server stopped by user {userName}"
             };
 
@@ -974,7 +1281,7 @@ namespace FactorioWebInterface.Models
                         var message = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = $"Server killed by user {userName}"
                         };
 
@@ -1013,7 +1320,7 @@ namespace FactorioWebInterface.Models
             var message = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Control,
+                MessageType = Models.MessageType.Control,
                 Message = $"Server saved by user {userName}"
             };
             _ = SendToFactorioControl(serverId, message);
@@ -1054,7 +1361,7 @@ namespace FactorioWebInterface.Models
                         var messageData = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Status,
+                            MessageType = Models.MessageType.Status,
                             Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updated}"
                         };
 
@@ -1072,7 +1379,7 @@ namespace FactorioWebInterface.Models
                         var messageData = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Status,
+                            MessageType = Models.MessageType.Status,
                             Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Crashed}"
                         };
 
@@ -1082,7 +1389,7 @@ namespace FactorioWebInterface.Models
                         var messageData2 = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = MessageType.Control,
+                            MessageType = Models.MessageType.Control,
                             Message = result.ToString()
                         };
 
@@ -1139,7 +1446,7 @@ namespace FactorioWebInterface.Models
 
                 var messageData = new MessageData()
                 {
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updating} by user {userName}"
                 };
 
@@ -1229,22 +1536,8 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public async Task FactorioDataReceived(string serverId, string data, DateTime dateTime)
+        private async Task DoTags(string serverId, string data, DateTime dateTime)
         {
-            if (data == null)
-            {
-                return;
-            }
-
-            var messageData = new MessageData()
-            {
-                ServerId = serverId,
-                MessageType = MessageType.Output,
-                Message = data
-            };
-
-            _ = SendToFactorioControl(serverId, messageData);
-
             var match = tagRegex.Match(data);
             if (!match.Success || match.Index > 20)
             {
@@ -1424,6 +1717,51 @@ namespace FactorioWebInterface.Models
                 default:
                     break;
             }
+        }
+
+        private void DoCheckSave(string serverId, string data)
+        {
+            var match = outputRegex.Match(data);
+            if (!match.Success)
+            {
+                return;
+            }
+
+            string line = match.Groups[1].Value;
+            if (!line.EndsWith("Saving finished"))
+            {
+                return;
+            }
+
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
+
+            _factorioFileManager.RaiseRecentTempFiles(serverData);
+        }
+
+        public async Task FactorioDataReceived(string serverId, string data, DateTime dateTime)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            var messageData = new MessageData()
+            {
+                ServerId = serverId,
+                MessageType = Models.MessageType.Output,
+                Message = data
+            };
+
+            _ = SendToFactorioControl(serverId, messageData);
+
+            var t1 = DoTags(serverId, data, dateTime);
+            DoCheckSave(serverId, data);
+
+            await t1;
         }
 
         private static string BuildServerTopicFromOnlinePlayers(SortedList<string, int> onlinePlayers, int count)
@@ -1681,8 +2019,7 @@ namespace FactorioWebInterface.Models
 
             try
             {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                var entry = await db.ScenarioDataEntries.AsNoTracking().FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
+                var value = await _scenarioDataManger.GetValue(data.DataSet, data.Key);
 
                 var cb = FactorioCommandBuilder
                     .ServerCommand("raise_callback")
@@ -1691,9 +2028,9 @@ namespace FactorioWebInterface.Models
                     .Add("{data_set=").AddDoubleQuotedString(data.DataSet)
                     .Add(",key=").AddDoubleQuotedString(data.Key);
 
-                if (entry != null)
+                if (value != null)
                 {
-                    cb.Add(",value=").Add(entry.Value);
+                    cb.Add(",value=").Add(value);
                 }
 
                 var command = cb.Add("}").Build();
@@ -1741,8 +2078,7 @@ namespace FactorioWebInterface.Models
 
             try
             {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                var entries = await db.ScenarioDataEntries.AsNoTracking().Where(x => x.DataSet == data.DataSet).ToArrayAsync();
+                var entries = await _scenarioDataManger.GetAllEntries(data.DataSet);
 
                 var cb = FactorioCommandBuilder
                         .ServerCommand("raise_callback")
@@ -1775,117 +2111,7 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        private async Task SendDataToTrackingServers(string sourceId, ScenarioDataEntry data)
-        {
-            var dataSet = data.DataSet;
-
-            var cb = FactorioCommandBuilder
-                .ServerCommand("raise_data_set")
-                .Add("{data_set=")
-                .AddQuotedString(data.DataSet)
-                .Add(",key=")
-                .AddQuotedString(data.Key);
-
-            if (data.Value != null)
-            {
-                cb.Add(",value=").Add(data.Value);
-            }
-
-            var command = cb.Add("}").Build();
-
-            var clients = _factorioProcessHub.Clients;
-            foreach (var entry in servers)
-            {
-                var id = entry.Key;
-                var server = entry.Value;
-                if (id != sourceId && server.Status == FactorioServerStatus.Running)
-                {
-                    try
-                    {
-                        await server.ServerLock.WaitAsync();
-                        if (server.TrackingDataSets.Contains(dataSet))
-                        {
-                            _ = clients.Group(id).SendToFactorio(command);
-                        }
-                    }
-                    finally
-                    {
-                        server.ServerLock.Release();
-                    }
-                }
-            }
-        }
-
-        private async Task UpdateDataSetDb(ScenarioDataEntry data)
-        {
-            var db = _dbContextFactory.Create<ScenarioDbContext>();
-
-            int retryCount = 10;
-            while (retryCount >= 0)
-            {
-                var old = await db.ScenarioDataEntries.FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
-
-                try
-                {
-                    if (data.Value == null)
-                    {
-                        if (old != null)
-                        {
-                            db.Remove(old);
-                            await db.SaveChangesAsync();
-                        }
-                    }
-                    else
-                    {
-                        if (old != null)
-                        {
-                            db.Entry(old).Property(x => x.Value).CurrentValue = data.Value;
-                        }
-                        else
-                        {
-                            db.Add(data);
-                        }
-                        await db.SaveChangesAsync();
-                    }
-
-                    return;
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    // This exception is thrown if the old entry no longer exists in the database 
-                    // when trying to update it. The solution is to remove the old cached entry
-                    // and try again.
-                    if (old != null)
-                    {
-                        db.Entry(old).State = EntityState.Detached;
-                    }
-                    retryCount--;
-                }
-                catch (DbUpdateException)
-                {
-                    // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
-                    // Key pair already exists, when adding a new entry. The solution is to remove
-                    // the cached new entry so that the old entry is fetched from the database not
-                    // from the cache. Then the new entry can be properly compared and updated.
-                    db.Entry(data).State = EntityState.Detached;
-                    retryCount--;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, nameof(UpdateDataSetDb));
-                    return;
-                }
-            }
-
-            _logger.LogWarning("UpdateDataSetDb failed to update data. DataSet: {DataSet}, Key: {Key}, Value: {Value}", data.DataSet, data.Key, data.Value);
-        }
-
-        private Task SendDataToWeb(ScenarioDataEntry data)
-        {
-            return _scenariolHub.Clients.Group(data.DataSet).SendEntry(data);
-        }
-
-        public async Task DoSetData(string serverId, string content)
+        private async Task DoSetData(string serverId, string content)
         {
             ScenarioDataEntry data;
             try
@@ -1898,99 +2124,7 @@ namespace FactorioWebInterface.Models
                 return;
             }
 
-            var t1 = SendDataToTrackingServers(serverId, data);
-            var t2 = UpdateDataSetDb(data);
-
-            await t1;
-            await t2;
-
-            await SendDataToWeb(data);
-        }
-
-        public async Task<ScenarioDataEntry> GetScenarioData(string dataSet, string key)
-        {
-            if (dataSet == null || key == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.AsNoTracking().FirstOrDefaultAsync(x => x.DataSet == dataSet && x.Key == key);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetScenarioData));
-            }
-
-            return null;
-        }
-
-        public async Task<ScenarioDataEntry[]> GetScenarioData(string dataSet)
-        {
-            if (dataSet == null)
-            {
-                return new ScenarioDataEntry[0];
-            }
-
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.AsNoTracking().Where(x => x.DataSet == dataSet).ToArrayAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetScenarioData));
-            }
-
-            return new ScenarioDataEntry[0];
-        }
-
-        public async Task<ScenarioDataEntry[]> GetAllScenarioData()
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.AsNoTracking().ToArrayAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetAllScenarioData));
-            }
-
-            return new ScenarioDataEntry[0];
-        }
-
-        public async Task<string[]> GetAllScenarioDataSets()
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries.Select(x => x.DataSet).Distinct().ToArrayAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetAllScenarioData));
-            }
-
-            return new string[0];
-        }
-
-        public async Task UpdateScenarioDataFromWeb(ScenarioDataEntry data)
-        {
-            if (data.DataSet == null || data.Key == null)
-            {
-                return;
-            }
-
-            var t1 = SendDataToTrackingServers("", data);
-            var t2 = UpdateDataSetDb(data);
-
-            await t1;
-            await t2;
-
-            await SendDataToWeb(data);
+            await _scenarioDataManger.UpdateEntry(data, serverId);
         }
 
         public void DoPing(string serverId, string content)
@@ -2021,7 +2155,7 @@ namespace FactorioWebInterface.Models
             SendToFactorioProcess(serverId, command);
         }
 
-        public async Task FactorioControlDataReceived(string serverId, string data, string userName)
+        public async Task FactorioControlDataReceived(string serverId, string data, string actor)
         {
             if (string.IsNullOrWhiteSpace(data))
             {
@@ -2053,7 +2187,7 @@ namespace FactorioWebInterface.Models
                 {
                     Username = player,
                     Reason = reason,
-                    Admin = userName,
+                    Admin = actor,
                     DateTime = DateTime.UtcNow
                 };
 
@@ -2077,14 +2211,7 @@ namespace FactorioWebInterface.Models
                     return;
                 }
 
-                // /ban doesn't support names with spaces.
-                if (!player.Contains(' '))
-                {
-                    SendBanCommandToEachRunningServerExcept(command, serverId);
-                }
-
-                await AddBanToDatabase(ban);
-
+                await _factorioBanManager.AddBanFromGame(ban, serverId);
             }
             else if (data.StartsWith("/unban"))
             {
@@ -2114,13 +2241,7 @@ namespace FactorioWebInterface.Models
                     return;
                 }
 
-                // /unban doesn't support names with spaces.
-                if (!player.Contains(' '))
-                {
-                    SendBanCommandToEachRunningServerExcept(command, serverId);
-                }
-
-                await RemoveBanFromDatabase(player, userName);
+                await _factorioBanManager.RemoveBanFromGame(player, serverId, actor);
             }
             else if (data.StartsWith('/'))
             {
@@ -2137,8 +2258,8 @@ namespace FactorioWebInterface.Models
                 var messageData = new MessageData()
                 {
                     ServerId = serverId,
-                    Message = $"[Server] {userName}: {data}",
-                    MessageType = MessageType.Output
+                    Message = $"[Server] {actor}: {data}",
+                    MessageType = Models.MessageType.Output
                 };
 
                 try
@@ -2147,7 +2268,7 @@ namespace FactorioWebInterface.Models
                     if (sourceServerData.Status == FactorioServerStatus.Running)
                     {
                         string message = SanitizeDiscordChat(data);
-                        string command = $"/silent-command game.print('[Server] {userName}: {message}')";
+                        string command = $"/silent-command game.print('[Server] {actor}: {message}')";
                         _ = SendToFactorioProcess(serverId, command);
 
                         LogChat(serverId, messageData.Message, DateTime.UtcNow);
@@ -2162,153 +2283,6 @@ namespace FactorioWebInterface.Models
 
                 _ = _discordBotContext.SendToFactorioChannel(serverId, messageData.Message);
             }
-        }
-
-        public async Task<Result> BanPlayer(Ban ban, bool synchronizeWithServers)
-        {
-            List<Error> errors = new List<Error>();
-
-            if (string.IsNullOrWhiteSpace(ban.Username))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.Username)));
-            }
-            if (string.IsNullOrWhiteSpace(ban.Reason))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.Reason)));
-            }
-            if (string.IsNullOrWhiteSpace(ban.Admin))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.Admin)));
-            }
-            if (ban.DateTime == default)
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(ban.DateTime)));
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-
-            if (synchronizeWithServers)
-            {
-                // /ban doesn't support names with spaces.
-                if (!ban.Username.Contains(' '))
-                {
-                    var command = $"/ban {ban.Username} {ban.Reason}";
-                    command.Substring(0, command.Length - 1);
-
-                    SendBanCommandToEachRunningServer(command);
-                }
-            }
-
-            bool added = await AddBanToDatabase(ban);
-            if (added)
-            {
-                return Result.OK;
-            }
-            else
-            {
-                return Result.Failure(Constants.FailedToAddBanToDatabaseErrorKey);
-            }
-        }
-
-        public async Task<Result> UnBanPlayer(string username, string admin, bool synchronizeWithServers)
-        {
-            List<Error> errors = new List<Error>();
-
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(username)));
-            }
-            if (string.IsNullOrWhiteSpace(admin))
-            {
-                errors.Add(new Error(Constants.RequiredFieldErrorKey, nameof(admin)));
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-
-            if (synchronizeWithServers)
-            {
-                // /unban doesn't support names with spaces.
-                if (!username.Contains(' '))
-                {
-                    var command = $"/unban {username}";
-                    SendBanCommandToEachRunningServer(command);
-                }
-            }
-
-            await RemoveBanFromDatabase(username, admin);
-
-            return Result.OK;
-        }
-
-        private async Task<bool> AddBanToDatabase(Ban ban)
-        {
-            ban.Username = ban.Username.ToLowerInvariant();
-
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-            int retryCount = 10;
-            while (retryCount >= 0)
-            {
-                var old = await db.Bans.FirstOrDefaultAsync(b => b.Username == ban.Username);
-
-                try
-                {
-                    if (old == null)
-                    {
-                        db.Add(ban);
-                    }
-                    else
-                    {
-                        old.Admin = ban.Admin;
-                        old.DateTime = ban.DateTime;
-                        old.Reason = ban.Reason;
-                        db.Update(old);
-                    }
-
-
-                    await db.SaveChangesAsync();
-
-                    _ = _factorioBanHub.Clients.All.SendAddBan(ban);
-
-                    _logger.LogInformation("[BAN] {username} was banned by: {admin}. Reason: {reason}", ban.Username, ban.Admin, ban.Reason);
-
-                    return true;
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    // This exception is thrown if the old entry no longer exists in the database 
-                    // when trying to update it. The solution is to remove the old cached entry
-                    // and try again.
-                    if (old != null)
-                    {
-                        db.Entry(old).State = EntityState.Detached;
-                    }
-                    retryCount--;
-                }
-                catch (DbUpdateException)
-                {
-                    // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
-                    // Key pair already exists, when adding a new entry. The solution is to remove
-                    // the cached new entry so that the old entry is fetched from the database not
-                    // from the cache. Then the new entry can be properly compared and updated.
-                    db.Entry(ban).State = EntityState.Detached;
-                    retryCount--;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, nameof(AddBanToDatabase));
-                    return false;
-                }
-            }
-
-            _logger.LogWarning("AddBanToDatabase failed to add ban: {@Ban}", ban);
-            return false;
         }
 
         private async Task DoBan(string serverId, string content)
@@ -2383,15 +2357,6 @@ namespace FactorioWebInterface.Models
             reasonIndex += 1;
             string reason = string.Join(' ', words, reasonIndex, words.Length - reasonIndex);
 
-            // /ban doesn't support names with spaces.
-            if (!player.Contains(' '))
-            {
-                var command = $"/ban {player} {reason}";
-                command.Substring(0, command.Length - 1);
-
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
             if (reason.EndsWith(".."))
             {
                 reason = reason.Substring(0, reason.Length - 1);
@@ -2405,80 +2370,7 @@ namespace FactorioWebInterface.Models
                 DateTime = DateTime.UtcNow
             };
 
-            await AddBanToDatabase(ban);
-        }
-
-        private async Task DoSyncBan(string serverId, string content)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
-            }
-
-            if (!serverData.ExtraServerSettings.SyncBans)
-            {
-                return;
-            }
-
-            Ban ban;
-            try
-            {
-                ban = JsonConvert.DeserializeObject<Ban>(content);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(DoSyncBan) + " deserialization");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Username))
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Admin))
-            {
-                ban.Admin = "<script>";
-            }
-
-            ban.DateTime = DateTime.UtcNow;
-
-            // /ban doesn't support names with spaces.
-            if (!ban.Username.Contains(' '))
-            {
-                var command = $"/ban {ban.Username} {ban.Reason}";
-                command.Substring(0, command.Length - 1);
-
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
-            await AddBanToDatabase(ban);
-        }
-
-        private async Task RemoveBanFromDatabase(string username, string admin)
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-                var old = await db.Bans.SingleOrDefaultAsync(b => b.Username == username);
-                if (old == null)
-                {
-                    return;
-                }
-
-                db.Bans.Remove(old);
-                await db.SaveChangesAsync();
-
-                _ = _factorioBanHub.Clients.All.SendRemoveBan(username);
-
-                _logger.LogInformation("[UNBAN] {username} was unbanned by: {admin}", username, admin);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(DoBan));
-            }
+            await _factorioBanManager.AddBanFromGame(ban, serverId);
         }
 
         private async Task DoUnBan(string serverId, string content)
@@ -2509,58 +2401,7 @@ namespace FactorioWebInterface.Models
                 return;
             }
 
-            // /unban doesn't support names with spaces.
-            if (!player.Contains(' '))
-            {
-                var command = $"/unban {player}";
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
-            await RemoveBanFromDatabase(player, admin);
-        }
-
-        private async Task DoUnBannedSync(string serverId, string content)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
-            }
-
-            if (!serverData.ExtraServerSettings.SyncBans)
-            {
-                return;
-            }
-
-            Ban ban;
-            try
-            {
-                ban = JsonConvert.DeserializeObject<Ban>(content);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(DoUnBannedSync) + " deserialization");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Username))
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ban.Admin))
-            {
-                ban.Admin = "<script>";
-            }
-
-            // /unban doesn't support names with spaces.
-            if (!ban.Username.Contains(' '))
-            {
-                var command = $"/unban {ban.Username}";
-                SendBanCommandToEachRunningServerExcept(command, serverId);
-            }
-
-            await RemoveBanFromDatabase(ban.Username, ban.Admin);
+            await _factorioBanManager.RemoveBanFromGame(player, serverId, admin);
         }
 
         public void FactorioWrapperDataReceived(string serverId, string data, DateTime dateTime)
@@ -2568,7 +2409,7 @@ namespace FactorioWebInterface.Models
             var messageData = new MessageData()
             {
                 ServerId = serverId,
-                MessageType = MessageType.Wrapper,
+                MessageType = Models.MessageType.Wrapper,
                 Message = data
             };
 
@@ -2719,6 +2560,8 @@ namespace FactorioWebInterface.Models
                     serverData.ServerLock.Release();
                 }
 
+                await _factorioFileManager.RaiseRecentTempFiles(serverData);
+
                 await DoStoppedCallback(serverData);
             }
             else if (newStatus == FactorioServerStatus.Crashed && oldStatus != FactorioServerStatus.Crashed)
@@ -2761,7 +2604,7 @@ namespace FactorioWebInterface.Models
                 var messageData = new MessageData()
                 {
                     ServerId = serverId,
-                    MessageType = MessageType.Status,
+                    MessageType = Models.MessageType.Status,
                     Message = $"[STATUS]: Changed from {oldStatus} to {newStatus}"
                 };
 
@@ -2777,728 +2620,9 @@ namespace FactorioWebInterface.Models
                 await controlTask2;
         }
 
-        public async Task<List<Ban>> GetBansAsync()
-        {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Bans.AsNoTracking().ToListAsync();
-        }
-
-        public async Task<List<string>> GetBanUserNamesAsync()
-        {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Bans
-                .AsNoTracking()
-                .Select(x => x.Username)
-                .OrderBy(x => x.ToLowerInvariant())
-                .ToListAsync();
-        }
-
-        public async Task<List<Admin>> GetAdminsAsync()
-        {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Admins.ToListAsync();
-        }
-
-        public async Task AddAdminsFromStringAsync(string data)
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-                var admins = db.Admins;
-
-                var names = data.Split(',').Select(x => x.Trim());
-                foreach (var name in names)
-                {
-                    if (admins.Any(a => a.Name == name))
-                    {
-                        continue;
-                    }
-
-                    admins.Add(new Admin() { Name = name });
-                }
-
-                await db.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(AddAdminsFromStringAsync));
-            }
-        }
-
-        public async Task RemoveAdmin(string name)
-        {
-            try
-            {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-                var admins = db.Admins;
-
-                var admin = await admins.SingleOrDefaultAsync(a => a.Name == name);
-                if (admin != null)
-                {
-                    admins.Remove(admin);
-                    await db.SaveChangesAsync();
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(RemoveAdmin));
-            }
-        }
-
         public Task OnProcessRegistered(string serverId)
         {
             return _factorioProcessHub.Clients.Group(serverId).GetStatus();
-        }
-
-        private FileMetaData[] GetFilesMetaData(string path, string directory)
-        {
-            try
-            {
-                var di = new DirectoryInfo(path);
-                if (!di.Exists)
-                {
-                    di.Create();
-                }
-
-                var files = di.EnumerateFiles("*.zip")
-                    .Select(f => new FileMetaData()
-                    {
-                        Name = f.Name,
-                        Directory = directory,
-                        CreatedTime = f.CreationTimeUtc,
-                        LastModifiedTime = f.LastWriteTimeUtc,
-                        Size = f.Length
-                    })
-                    .ToArray();
-
-                return files;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.ToString());
-                return new FileMetaData[0];
-            }
-        }
-
-        public FileMetaData[] GetTempSaveFiles(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new FileMetaData[0];
-            }
-
-            var path = serverData.TempSavesDirectoryPath;
-            var dir = Path.Combine(serverId, Constants.TempSavesDirectoryName);
-
-            return GetFilesMetaData(path, dir);
-        }
-
-        public FileMetaData[] GetLocalSaveFiles(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new FileMetaData[0];
-            }
-
-            var path = serverData.LocalSavesDirectoroyPath;
-            var dir = Path.Combine(serverId, Constants.LocalSavesDirectoryName);
-
-            return GetFilesMetaData(path, dir);
-        }
-
-        public FileMetaData[] GetGlobalSaveFiles()
-        {
-            var path = FactorioServerData.GlobalSavesDirectoryPath;
-
-            return GetFilesMetaData(path, Constants.GlobalSavesDirectoryName);
-        }
-
-        public List<FileMetaData> GetLogs(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new List<FileMetaData>();
-            }
-
-            List<FileMetaData> logs = new List<FileMetaData>();
-
-            var currentLog = new FileInfo(serverData.CurrentLogPath);
-            if (currentLog.Exists)
-            {
-                logs.Add(new FileMetaData()
-                {
-                    Name = currentLog.Name,
-                    CreatedTime = currentLog.CreationTimeUtc,
-                    LastModifiedTime = currentLog.LastWriteTimeUtc,
-                    Directory = Path.Combine(serverId),
-                    Size = currentLog.Length
-                });
-            }
-
-            var logsDir = new DirectoryInfo(serverData.LogsDirectoryPath);
-            if (logsDir.Exists)
-            {
-                var logfiles = logsDir.EnumerateFiles("*.log")
-                    .Select(x => new FileMetaData()
-                    {
-                        Name = x.Name,
-                        CreatedTime = x.CreationTimeUtc,
-                        LastModifiedTime = x.LastWriteTimeUtc,
-                        Directory = Path.Combine(serverId, Constants.LogDirectoryName),
-                        Size = x.Length
-                    })
-                    .OrderByDescending(x => x.CreatedTime);
-
-                logs.AddRange(logfiles);
-            }
-
-            return logs;
-        }
-
-        public List<FileMetaData> GetChatLogs(string serverId)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return new List<FileMetaData>();
-            }
-
-            List<FileMetaData> logs = new List<FileMetaData>();
-
-            var logsDir = new DirectoryInfo(serverData.ChatLogsDirectoryPath);
-            if (logsDir.Exists)
-            {
-                var logfiles = logsDir.EnumerateFiles("*.log")
-                    .Select(x => new FileMetaData()
-                    {
-                        Name = x.Name,
-                        CreatedTime = x.CreationTimeUtc,
-                        LastModifiedTime = x.LastWriteTimeUtc,
-                        Directory = Path.Combine(serverId, Constants.ChatLogDirectoryName),
-                        Size = x.Length
-                    })
-                    .OrderByDescending(x => x.CreatedTime);
-
-                logs.AddRange(logfiles);
-            }
-
-            return logs;
-        }
-
-        public FileInfo GetLogFile(string directoryName, string fileName)
-        {
-            string safeFileName = Path.GetFileName(fileName);
-            string path = Path.Combine(FactorioServerData.baseDirectoryPath, directoryName, safeFileName);
-            path = Path.GetFullPath(path);
-
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
-            {
-                return null;
-            }
-
-            var file = new FileInfo(path);
-            if (!file.Exists)
-            {
-                return null;
-            }
-
-            if (file.Extension != ".log")
-            {
-                return null;
-            }
-
-            if (file.Directory.Name == Constants.LogDirectoryName)
-            {
-                return file;
-            }
-            else if (file.Name == Constants.CurrentLogFileName)
-            {
-                return file;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public FileInfo GetChatLogFile(string directoryName, string fileName)
-        {
-            string safeFileName = Path.GetFileName(fileName);
-            string path = Path.Combine(FactorioServerData.baseDirectoryPath, directoryName, safeFileName);
-            path = Path.GetFullPath(path);
-
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
-            {
-                return null;
-            }
-
-            var file = new FileInfo(path);
-            if (!file.Exists)
-            {
-                return null;
-            }
-
-            if (file.Extension != ".log")
-            {
-                return null;
-            }
-
-            if (file.Directory.Name == Constants.ChatLogDirectoryName)
-            {
-                return file;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private bool IsSaveDirectory(string dirName)
-        {
-            switch (dirName)
-            {
-                case Constants.GlobalSavesDirectoryName:
-                case Constants.LocalSavesDirectoryName:
-                case Constants.TempSavesDirectoryName:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        private DirectoryInfo GetSaveDirectory(string dirName)
-        {
-            try
-            {
-                if (FactorioServerData.ValidSaveDirectories.Contains(dirName))
-                {
-                    var dirPath = Path.Combine(FactorioServerData.baseDirectoryPath, dirName);
-                    dirPath = Path.GetFullPath(dirPath);
-
-                    if (!dirPath.StartsWith(FactorioServerData.baseDirectoryPath))
-                        return null;
-
-                    var dir = new DirectoryInfo(dirPath);
-                    if (!dir.Exists)
-                    {
-                        dir.Create();
-                    }
-
-                    return dir;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        private string SafeFilePath(string dirPath, string fileName)
-        {
-            fileName = Path.GetFileName(fileName);
-            string path = Path.Combine(dirPath, fileName);
-            path = Path.GetFullPath(path);
-
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
-            {
-                return null;
-            }
-
-            return path;
-        }
-
-        public FileInfo GetSaveFile(string directoryName, string fileName)
-        {
-            var directory = GetSaveDirectory(directoryName);
-
-            if (directory == null)
-            {
-                return null;
-            }
-
-            string path = SafeFilePath(directory.FullName, fileName);
-            if (path == null)
-            {
-                return null;
-            }
-
-            if (Path.GetExtension(fileName) != ".zip")
-            {
-                return null;
-            }
-
-            try
-            {
-                FileInfo fi = new FileInfo(path);
-                if (fi.Exists)
-                {
-                    return fi;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(GetSaveFile));
-                return null;
-            }
-        }
-
-        public async Task<Result> UploadFiles(string directoryName, IList<IFormFile> files)
-        {
-            var directory = GetSaveDirectory(directoryName);
-
-            if (directory == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, directoryName));
-            }
-
-            var errors = new List<Error>();
-
-            foreach (var file in files)
-            {
-                if (string.IsNullOrWhiteSpace(file.FileName))
-                {
-                    errors.Add(new Error(Constants.InvalidFileNameErrorKey, file.FileName ?? ""));
-                    continue;
-                }
-                if (file.FileName.Contains(" "))
-                {
-                    errors.Add(new Error(Constants.InvalidFileNameErrorKey, $"name {file.FileName} cannot contain spaces."));
-                    continue;
-                }
-
-                string path = SafeFilePath(directory.FullName, file.FileName);
-                if (path == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error uploading {file.FileName}."));
-                    continue;
-                }
-
-                try
-                {
-                    var fi = new FileInfo(path);
-
-                    if (fi.Exists)
-                    {
-                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, $"{file.FileName} already exists."));
-                        continue;
-                    }
-
-                    using (var writeStream = fi.OpenWrite())
-                    using (var readStream = file.OpenReadStream())
-                    {
-                        await readStream.CopyToAsync(writeStream);
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error Uploading file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error uploading {file.FileName}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public Result DeleteFiles(List<string> filePaths)
-        {
-            var errors = new List<Error>();
-
-            foreach (string filePath in filePaths)
-            {
-                var dirName = Path.GetDirectoryName(filePath);
-                var dir = GetSaveDirectory(dirName);
-
-                if (dir == null)
-                {
-                    errors.Add(new Error(Constants.InvalidDirectoryErrorKey, dirName));
-                    continue;
-                }
-
-                string path = SafeFilePath(dir.FullName, filePath);
-                if (path == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error deleting {filePath}."));
-                    continue;
-                }
-
-                try
-                {
-                    var fi = new FileInfo(path);
-
-                    if (!fi.Exists)
-                    {
-                        errors.Add(new Error(Constants.MissingFileErrorKey, $"{filePath} doesn't exists."));
-                        continue;
-                    }
-
-                    fi.Delete();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error Deleting file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error deleting {filePath}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public Result MoveFiles(string destination, List<string> filePaths)
-        {
-            string targetDirPath = Path.Combine(FactorioServerData.baseDirectoryPath, destination);
-
-            var targetDir = GetSaveDirectory(destination);
-            if (targetDir == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, destination));
-            }
-
-            var errors = new List<Error>();
-
-            foreach (var filePath in filePaths)
-            {
-                var sourceDirName = Path.GetDirectoryName(filePath);
-                var sourceDir = GetSaveDirectory(sourceDirName);
-
-                if (sourceDir == null)
-                {
-                    errors.Add(new Error(Constants.InvalidDirectoryErrorKey, sourceDirName));
-                    continue;
-                }
-
-                string sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
-                if (sourceFullPath == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error moveing {filePath}."));
-                    continue;
-                }
-
-                try
-                {
-                    var sourceFile = new FileInfo(sourceFullPath);
-
-                    if (!sourceFile.Exists)
-                    {
-                        errors.Add(new Error(Constants.MissingFileErrorKey, $"{filePath} doesn't exists."));
-                        continue;
-                    }
-
-                    string destinationFilePath = Path.Combine(targetDir.FullName, sourceFile.Name);
-
-                    var destinationFileInfo = new FileInfo(destinationFilePath);
-
-                    if (destinationFileInfo.Exists)
-                    {
-                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, $"{destination}/{filePath} already exists."));
-                        continue;
-                    }
-
-                    sourceFile.MoveTo(destinationFilePath);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error moveing file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error moveing {filePath}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public async Task<Result> CopyFiles(string destination, List<string> filePaths)
-        {
-            string targetDirPath = Path.Combine(FactorioServerData.baseDirectoryPath, destination);
-
-            var targetDir = GetSaveDirectory(destination);
-            if (targetDir == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, destination));
-            }
-
-            var errors = new List<Error>();
-
-            foreach (var filePath in filePaths)
-            {
-                var sourceDirName = Path.GetDirectoryName(filePath);
-                var sourceDir = GetSaveDirectory(sourceDirName);
-
-                if (sourceDir == null)
-                {
-                    errors.Add(new Error(Constants.InvalidDirectoryErrorKey, sourceDirName));
-                    continue;
-                }
-
-                string sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
-                if (sourceFullPath == null)
-                {
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error coppying {filePath}."));
-                    continue;
-                }
-
-                try
-                {
-                    var sourceFile = new FileInfo(sourceFullPath);
-
-                    if (!sourceFile.Exists)
-                    {
-                        errors.Add(new Error(Constants.MissingFileErrorKey, $"{filePath} doesn't exists."));
-                        continue;
-                    }
-
-                    string destinationFilePath = Path.Combine(targetDir.FullName, sourceFile.Name);
-
-                    var destinationFileInfo = new FileInfo(destinationFilePath);
-
-                    if (destinationFileInfo.Exists)
-                    {
-                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, $"{destination}/{filePath} already exists."));
-                        continue;
-                    }
-
-
-                    await sourceFile.CopyToAsync(destinationFileInfo);
-                    destinationFileInfo.LastWriteTimeUtc = sourceFile.LastWriteTimeUtc;
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError("Error copying file.", e);
-                    errors.Add(new Error(Constants.FileErrorKey, $"Error coppying {filePath}."));
-                }
-            }
-
-            if (errors.Count != 0)
-            {
-                return Result.Failure(errors);
-            }
-            else
-            {
-                return Result.OK;
-            }
-        }
-
-        public ScenarioMetaData[] GetScenarios()
-        {
-            try
-            {
-                var dir = new DirectoryInfo(FactorioServerData.ScenarioDirectoryPath);
-                if (!dir.Exists)
-                {
-                    dir.Create();
-                }
-
-                return dir.EnumerateDirectories().Select(d =>
-                    new ScenarioMetaData()
-                    {
-                        Name = d.Name,
-                        CreatedTime = d.CreationTimeUtc,
-                        LastModifiedTime = d.LastWriteTimeUtc
-                    }
-                ).ToArray();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.ToString());
-                return new ScenarioMetaData[0];
-            }
-        }
-
-        public Result RenameFile(string directoryPath, string fileName, string newFileName = "")
-        {
-            if (string.IsNullOrWhiteSpace(newFileName))
-            {
-                return Result.Failure(Constants.InvalidFileNameErrorKey, newFileName);
-            }
-            if (newFileName.Contains(" "))
-            {
-                return Result.Failure(Constants.InvalidFileNameErrorKey, $"name { newFileName} cannot contain spaces.");
-            }
-
-            var directory = GetSaveDirectory(directoryPath);
-
-            if (directory == null)
-            {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, directoryPath));
-            }
-
-            try
-            {
-                string actualFileName = Path.GetFileName(fileName);
-
-                if (actualFileName != fileName)
-                {
-                    return Result.Failure(Constants.FileErrorKey, $"Invalid file name {fileName}");
-                }
-
-                string actualNewFileName = Path.GetFileName(newFileName);
-
-                if (actualNewFileName != newFileName)
-                {
-                    return Result.Failure(Constants.FileErrorKey, $"Invalid file name {newFileName}");
-                }
-
-
-                string filePath = Path.Combine(directory.FullName, fileName);
-                var fileInfo = new FileInfo(filePath);
-
-                if (!fileInfo.Exists)
-                {
-                    return Result.Failure(Constants.MissingFileErrorKey, $"File {fileName} doesn't exist.");
-                }
-
-                string newFilePath = Path.Combine(directory.FullName, newFileName);
-                if (Path.GetExtension(newFilePath) != ".zip")
-                {
-                    newFilePath += ".zip";
-                }
-
-                var newFileInfo = new FileInfo(newFilePath);
-
-                if (newFileInfo.Exists)
-                {
-                    return Result.Failure(Constants.FileAlreadyExistsErrorKey, $"File {fileName} already exists.");
-                }
-
-                fileInfo.MoveTo(newFilePath);
-
-                return Result.OK;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError("Error renaming file.", e);
-                return Result.Failure(Constants.FileErrorKey, $"Error renaming files");
-            }
         }
 
         private async Task<FactorioServerSettings> GetServerSettings(FactorioServerData serverData)
@@ -3548,7 +2672,7 @@ namespace FactorioWebInterface.Models
                 return adminList;
             }
 
-            var a = await GetAdminsAsync();
+            var a = await _factorioAdminManager.GetAdmins();
             adminList = a.Select(x => x.Name).ToList();
 
             serverData.ServerAdminList = adminList;
@@ -3645,7 +2769,7 @@ namespace FactorioWebInterface.Models
                 }
                 else
                 {
-                    var a = await GetAdminsAsync();
+                    var a = await _factorioAdminManager.GetAdmins();
                     admins = a.Select(x => x.Name).ToList();
                 }
 
@@ -3719,13 +2843,13 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public Result DeflateSave(string connectionId, string directoryPath, string fileName, string newFileName = "")
+        public Result DeflateSave(string connectionId, string serverId, string directoryName, string fileName, string newFileName = "")
         {
-            var directory = GetSaveDirectory(directoryPath);
+            var directory = _factorioFileManager.GetSaveDirectory(serverId, directoryName);
 
             if (directory == null)
             {
-                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, directoryPath));
+                return Result.Failure(new Error(Constants.InvalidDirectoryErrorKey, Path.Combine(serverId, directoryName)));
             }
 
             try
@@ -3785,6 +2909,39 @@ namespace FactorioWebInterface.Models
                         deflater.Deflate(newFilePath);
 
                         _factorioControlHub.Clients.Clients(connectionId).DeflateFinished(Result.OK);
+
+                        newFileInfo.Refresh();
+
+                        string dirName = directory.Name;
+
+                        var data = new[]
+                        {
+                            new FileMetaData()
+                            {
+                                Name = newFileInfo.Name,
+                                CreatedTime = newFileInfo.CreationTimeUtc,
+                                LastModifiedTime = newFileInfo.LastWriteTimeUtc,
+                                Directory = dirName,
+                                Size = newFileInfo.Length
+                            }
+                        };
+
+                        var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, data, null);
+
+                        switch (dirName)
+                        {
+                            case Constants.TempSavesDirectoryName:
+                                _factorioFileManager.RaiseTempFilesChanged(ev);
+                                break;
+                            case Constants.LocalSavesDirectoryName:
+                                _factorioFileManager.RaiseLocalFilesChanged(ev);
+                                break;
+                            case Constants.GlobalSavesDirectoryName:
+                                _factorioFileManager.RaiseGlobalFilesChanged(ev);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     catch (Exception e)
                     {
@@ -3867,7 +3024,7 @@ namespace FactorioWebInterface.Models
             });
         }
 
-        public async Task<string> GetModPack(string serverId)
+        public async Task<string> GetSelectedModPack(string serverId)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
@@ -3887,23 +3044,83 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public async Task SetModPack(string serverId, string modPack)
+        public Task SetSelectedModPack(string serverId, string modPack)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
                 _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return Task.CompletedTask;
             }
 
-            try
+            return Task.Run(async () =>
             {
-                await serverData.ServerLock.WaitAsync();
+                try
+                {
+                    await serverData.ServerLock.WaitAsync();
 
-                serverData.ModPack = modPack;
-            }
-            finally
+                    serverData.ModPack = modPack;
+
+                    _ = _factorioControlHub.Clients.Group(serverId).SendSelectedModPack(modPack);
+                }
+                finally
+                {
+                    serverData.ServerLock.Release();
+                }
+            });
+        }
+
+        public FileMetaData[] GetTempSaveFiles(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
             {
-                serverData.ServerLock.Release();
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return Array.Empty<FileMetaData>();
             }
+
+            return _factorioFileManager.GetTempSaveFiles(serverData);
+        }
+
+        public FileMetaData[] GetLocalSaveFiles(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return Array.Empty<FileMetaData>();
+            }
+
+            return _factorioFileManager.GetLocalSaveFiles(serverData);
+        }
+
+        public FileMetaData[] GetGlobalSaveFiles()
+        {
+            return _factorioFileManager.GetGlobalSaveFiles();
+        }
+
+        public ScenarioMetaData[] GetScenarios()
+        {
+            return _factorioFileManager.GetScenarios();
+        }
+
+        public List<FileMetaData> GetLogs(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return new List<FileMetaData>(0);
+            }
+
+            return _factorioFileManager.GetLogs(serverData);
+        }
+
+        public List<FileMetaData> GetChatLogs(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return new List<FileMetaData>(0);
+            }
+
+            return _factorioFileManager.GetChatLogs(serverData);
         }
     }
 }

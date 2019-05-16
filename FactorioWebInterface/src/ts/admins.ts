@@ -1,38 +1,107 @@
-﻿!function () {
-    const table: HTMLTableElement = document.getElementById('adminsTable') as HTMLTableElement;
+﻿import * as signalR from "@aspnet/signalr";
+import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
+import * as Table from "./table";
+import { Result } from "./utils";
 
-    let body = table.tBodies[0];
-    let rows = body.rows;
-    let sortProperty = 'name';
+!function () {
 
-    let rowsCopy: HTMLTableRowElement[] = []
-    for (let i = 0; i < rows.length; i++) {
-        let r = rows[i];
-        rowsCopy.push(r);
-    }
+    const textArea = document.getElementById('textArea') as HTMLTextAreaElement;
+    const addButton = document.getElementById('addButton') as HTMLButtonElement;
 
-    let cells = table.tHead.rows[0].cells;
+    const tableElement = document.getElementById('adminsTable') as HTMLTableElement;
 
-    let nameClick = () => { sortTable('name', r => r.children[0].textContent.toLowerCase()); };
+    let table: Table.Table;
 
-    cells[0].onclick = nameClick;
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/factorioAdminHub")
+        .withHubProtocol(new MessagePackHubProtocol())
+        .build();
 
-    nameClick();
-
-    function sortTable(property: string, keySelector: (r: HTMLTableRowElement) => string) {
-        if (sortProperty === property) {
-            sortProperty = "";
-            rowsCopy.sort((a, b) => { return keySelector(a) > keySelector(b) ? 1 : -1; });
-        } else {
-            sortProperty = property;
-            rowsCopy.sort((a, b) => { return keySelector(a) < keySelector(b) ? 1 : -1; });
+    function buildTable() {
+        function buildTextCell(cell: HTMLTableCellElement, data: any) {
+            cell.innerText = data;
         }
 
-        body.innerHTML = "";
+        function buildRemoveCell(cell: HTMLTableCellElement, data: any) {
+            let button = document.createElement('button');
+            button.innerText = 'Remove';
+            button.onclick = onRemoveClick;
+            button.classList.add('button', 'is-danger');
 
-        for (let i = 0; i < rowsCopy.length; i++) {
-            let r = rowsCopy[i];
-            body.appendChild(r);
+            cell.appendChild(button);
+        }
+
+        function sortTextCell(cell: HTMLTableCellElement) {
+            return cell.textContent.toLowerCase();
+        }
+
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                Property: "Name",
+                CellBuilder: buildTextCell,
+                SortKeySelector: sortTextCell,
+                IsKey: true
+            },
+            {
+                Property: "Name",
+                CellBuilder: buildRemoveCell
+            }
+        ];
+
+        table = new Table.Table(tableElement, cellBuilders);
+        table.sortBy(0, true);
+    }
+
+    async function onRemoveClick(this: HTMLButtonElement, ev: MouseEvent) {
+        ev.stopPropagation();
+
+        let row = this.parentElement.parentElement;
+        let child = row.firstElementChild as HTMLElement;
+        let name = child.textContent;
+
+        let result = await connection.invoke('RemoveAdmin', name) as Result;
+
+        if (!result.Success) {
+            alert(JSON.stringify(result.Errors));
         }
     }
+
+    addButton.onclick = async () => {
+        let data = textArea.value.trim();
+        if (data === "") {
+            alert('Enter names for admins');
+            return;
+        }
+
+        let result = await connection.invoke('AddAdmins', data) as Result;
+
+        if (!result.Success) {
+            alert(JSON.stringify(result.Errors));
+        }
+    };
+
+    function updatePage() {
+        connection.send('RequestAdmins');
+    }
+
+    async function startConnection() {
+        try {
+            await connection.start();
+            updatePage();
+        } catch (ex) {
+            console.log(ex.message);
+            setTimeout(() => startConnection(), 2000);
+        }
+    }
+
+    connection.on('SendAdmins', (data: Table.TableData) => {
+        table.update(data);
+    });
+
+    function onPageLoad() {
+        buildTable();
+        startConnection();
+    }
+
+    onPageLoad();
 }();

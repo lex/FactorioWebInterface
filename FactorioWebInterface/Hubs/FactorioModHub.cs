@@ -1,4 +1,5 @@
 ﻿using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
@@ -9,77 +10,73 @@ namespace FactorioWebInterface.Hubs
     public class FactorioModHub : Hub<IFactorioModClientMethods>
     {
         private readonly FactorioModManager _factorioModManager;
-        private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
 
-        public FactorioModHub(FactorioModManager factorioModManager,
-            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub)
+        public FactorioModHub(FactorioModManager factorioModManager)
         {
             _factorioModManager = factorioModManager;
-            _factorioControlHub = factorioControlHub;
         }
 
-        public Task<ModPackMetaData[]> GetModPacks()
+        public Task RequestModPacks()
         {
-            return Task.FromResult(_factorioModManager.GetModPacks());
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(() =>
+            {
+                var data = _factorioModManager.GetModPacks();
+
+                var tableData = new TableData<ModPackMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendModPacks(tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
         public Task<Result> CreateModPack(string name)
         {
             var result = _factorioModManager.CreateModPack(name);
-
-            if (result.Success)
-            {
-                var modPacks = _factorioModManager.GetModPacks();
-                Clients.All.SendModPacks(modPacks);
-                _factorioControlHub.Clients.All.SendModPacks(modPacks);
-            }
-
             return Task.FromResult(result);
         }
 
         public Task<Result> DeleteModPack(string name)
         {
             var result = _factorioModManager.DeleteModPack(name);
-
-            if (result.Success)
-            {
-                var modPacks = _factorioModManager.GetModPacks();
-                Clients.All.SendModPacks(modPacks);
-                _factorioControlHub.Clients.All.SendModPacks(modPacks);
-            }
-
             return Task.FromResult(result);
         }
 
         public Task<Result> RenameModPack(string name, string newName)
         {
             var result = _factorioModManager.RenameModPack(name, newName);
-
-            if (result.Success)
-            {
-                var modPacks = _factorioModManager.GetModPacks();
-                Clients.All.SendModPacks(modPacks);
-                _factorioControlHub.Clients.All.SendModPacks(modPacks);
-            }
-
             return Task.FromResult(result);
         }
 
-        public Task<ModPackFileMetaData[]> GetModPackFiles(string name)
+        public Task RequestModPackFiles(string name)
         {
-            return Task.FromResult(_factorioModManager.GetModPackFiles(name));
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(() =>
+            {
+                var data = _factorioModManager.GetModPackFiles(name);
+
+                var tableData = new TableData<ModPackFileMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendModPackFiles(name, tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
         public Task<Result> DeleteModPackFiles(string modPack, string[] files)
         {
             var result = _factorioModManager.DeleteModPackFiles(modPack, files);
-
-            Clients.All.SendModPackFiles(modPack, _factorioModManager.GetModPackFiles(modPack));
-
-            var modPacks = _factorioModManager.GetModPacks();
-            Clients.All.SendModPacks(modPacks);
-            _factorioControlHub.Clients.All.SendModPacks(modPacks);
-
             return Task.FromResult(result);
         }
     }

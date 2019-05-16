@@ -16,14 +16,18 @@
         <form method="post" class="box">
             <h3 class="title is-3">Add Admins</h3>
             <hr />
+
             <div class="field">
-                <label asp-for="Input.Admins" class="label">Add in game admins (comma seperated list): </label>
+                <label class="label">Add in game admins (comma seperated list): </label>
                 <div class="control">
-                    <textarea asp-for="Input.Admins" class="textarea"></textarea>
+                    <textarea id="textArea" class="textarea"></textarea>
                 </div>
             </div>
+
             <div class="field">
-                <button type="submit" class="button is-link">Add</button>
+                <div class="control">
+                    <button id="addButton" type="button" class="button is-link">Add</button>
+                </div>
             </div>
         </form>
     </section>
@@ -37,20 +41,7 @@
                     <th>Remove</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach (var a in Model.Admins)
-                {
-                    <tr>
-                        <td>@a.Name</td>
-                        <td>
-                            <form method="post">
-                                <input hidden name="name" value="@a.Name" />
-                                <button type="submit" asp-page-handler="RemoveAdmin" class="button is-danger">Remove</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
+            <tbody></tbody>
         </table>
     </section>
 

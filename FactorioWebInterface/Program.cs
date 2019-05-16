@@ -1,5 +1,6 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;

@@ -1,4 +1,5 @@
 ﻿using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -11,12 +12,14 @@ namespace FactorioWebInterface.Hubs
     [Authorize]
     public class FactorioControlHub : Hub<IFactorioControlClientMethods>, IFactorioControlServerMethods
     {
-        private IFactorioServerManager _factorioServerManager;
-        private FactorioModManager _factorioModManager;
+        private readonly IFactorioServerManager _factorioServerManager;
+        private readonly FactorioFileManager _factorioFileManager;
+        private readonly FactorioModManager _factorioModManager;
 
-        public FactorioControlHub(IFactorioServerManager factorioServerManager, FactorioModManager factorioModManager)
+        public FactorioControlHub(IFactorioServerManager factorioServerManager, FactorioFileManager factorioFileManager, FactorioModManager factorioModManager)
         {
             _factorioServerManager = factorioServerManager;
+            _factorioFileManager = factorioFileManager;
             _factorioModManager = factorioModManager;
         }
 
@@ -24,8 +27,7 @@ namespace FactorioWebInterface.Hubs
         {
             string connectionId = Context.ConnectionId;
 
-            string oldServerId = Context.GetDataOrDefault<string>();
-            if (oldServerId != null)
+            if (Context.TryGetData(out string oldServerId))
             {
                 await Groups.RemoveFromGroupAsync(connectionId, oldServerId);
             }
@@ -54,7 +56,7 @@ namespace FactorioWebInterface.Hubs
 
         public Task<Result> ForceStop()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
             string name = Context.User.Identity.Name;
 
             return _factorioServerManager.ForceStop(serverId, name);
@@ -62,14 +64,14 @@ namespace FactorioWebInterface.Hubs
 
         public Task GetStatus()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
 
             return _factorioServerManager.RequestStatus(serverId);
         }
 
         public Task<Result> Load(string directoryName, string fileName)
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
             string userName = Context.User.Identity.Name;
 
             return _factorioServerManager.Load(serverId, directoryName, fileName, userName);
@@ -77,15 +79,15 @@ namespace FactorioWebInterface.Hubs
 
         public Task SendToFactorio(string data)
         {
-            string serverId = Context.GetDataOrDefault<string>();
-            string userName = Context.User.Identity.Name;
+            string serverId = Context.GetDataOrDefault("");
+            string actor = Context.User.Identity.Name;
 
-            return _factorioServerManager.FactorioControlDataReceived(serverId, data, userName);
+            return _factorioServerManager.FactorioControlDataReceived(serverId, data, actor);
         }
 
         public Task<Result> Resume()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
             string name = Context.User.Identity.Name;
 
             return _factorioServerManager.Resume(serverId, name);
@@ -93,7 +95,7 @@ namespace FactorioWebInterface.Hubs
 
         public Task<Result> StartScenario(string scenarioName)
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
             string name = Context.User.Identity.Name;
 
             return _factorioServerManager.StartScenario(serverId, scenarioName, name);
@@ -101,7 +103,7 @@ namespace FactorioWebInterface.Hubs
 
         public Task<Result> Stop()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
             string name = Context.User.Identity.Name;
 
             return _factorioServerManager.Stop(serverId, name);
@@ -109,46 +111,153 @@ namespace FactorioWebInterface.Hubs
 
         public Task<MessageData[]> GetMesssages()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
 
             return _factorioServerManager.GetFactorioControlMessagesAsync(serverId);
         }
 
-        public Task<FileMetaData[]> GetTempSaveFiles()
+        public Task RequestTempSaveFiles()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
 
-            var files = _factorioServerManager.GetTempSaveFiles(serverId);
-            return Task.FromResult(files);
+            _ = Task.Run(() =>
+            {
+                var data = _factorioServerManager.GetTempSaveFiles(serverId);
+
+                var tableData = new TableData<FileMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendTempSavesFiles(serverId, tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
-        public Task<FileMetaData[]> GetLocalSaveFiles()
+        public Task RequestLocalSaveFiles()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
 
-            var files = _factorioServerManager.GetLocalSaveFiles(serverId);
-            return Task.FromResult(files);
+            _ = Task.Run(() =>
+            {
+                var data = _factorioServerManager.GetLocalSaveFiles(serverId);
+
+                var tableData = new TableData<FileMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendLocalSaveFiles(serverId, tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
-        public Task<FileMetaData[]> GetGlobalSaveFiles()
+        public Task RequestGlobalSaveFiles()
         {
-            return Task.FromResult(_factorioServerManager.GetGlobalSaveFiles());
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(() =>
+            {
+                var data = _factorioServerManager.GetGlobalSaveFiles();
+
+                var tableData = new TableData<FileMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendGlobalSaveFiles(tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
-        public Task<List<FileMetaData>> GetLogFiles()
+        public Task RequestScenarios()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            var client = Clients.Client(Context.ConnectionId);
 
-            var files = _factorioServerManager.GetLogs(serverId);
-            return Task.FromResult(files);
+            _ = Task.Run(() =>
+            {
+                var data = _factorioServerManager.GetScenarios();
+
+                var tableData = new TableData<ScenarioMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendScenarios(tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
-        public Task<List<FileMetaData>> GetChatLogFiles()
+        public Task RequestModPacks()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            var client = Clients.Client(Context.ConnectionId);
 
-            var files = _factorioServerManager.GetChatLogs(serverId);
-            return Task.FromResult(files);
+            _ = Task.Run(() =>
+            {
+                var data = _factorioModManager.GetModPacks();
+
+                var tableData = new TableData<ModPackMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendModPacks(tableData);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public Task RequestLogFiles()
+        {
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(() =>
+            {
+                var data = _factorioServerManager.GetLogs(serverId);
+
+                var tableData = new TableData<FileMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendLogFiles(serverId, tableData);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public Task RequestChatLogFiles()
+        {
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(() =>
+            {
+                var data = _factorioServerManager.GetChatLogs(serverId);
+
+                var tableData = new TableData<FileMetaData>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = data
+                };
+
+                _ = client.SendChatLogFiles(serverId, tableData);
+            });
+
+            return Task.CompletedTask;
         }
 
         public Task<Result> DeleteFiles(List<string> filePaths)
@@ -158,7 +267,9 @@ namespace FactorioWebInterface.Hubs
                 return Task.FromResult(Result.Failure(Constants.MissingFileErrorKey, "No file."));
             }
 
-            return Task.FromResult(_factorioServerManager.DeleteFiles(filePaths));
+            string serverId = Context.GetDataOrDefault("");
+
+            return Task.FromResult(_factorioFileManager.DeleteFiles(serverId, filePaths));
         }
 
         public Task<Result> MoveFiles(string destination, List<string> filePaths)
@@ -173,7 +284,9 @@ namespace FactorioWebInterface.Hubs
                 return Task.FromResult(Result.Failure(Constants.MissingFileErrorKey, "No file."));
             }
 
-            return Task.FromResult(_factorioServerManager.MoveFiles(destination, filePaths));
+            string serverId = Context.GetDataOrDefault("");
+
+            return Task.FromResult(_factorioFileManager.MoveFiles(serverId, destination, filePaths));
         }
 
         public Task<Result> CopyFiles(string destination, List<string> filePaths)
@@ -188,7 +301,9 @@ namespace FactorioWebInterface.Hubs
                 return Task.FromResult(Result.Failure(Constants.MissingFileErrorKey, "No file."));
             }
 
-            return _factorioServerManager.CopyFiles(destination, filePaths);
+            string serverId = Context.GetDataOrDefault("");
+
+            return Task.FromResult(_factorioFileManager.CopyFiles(serverId, destination, filePaths));
         }
 
         public Task<Result> RenameFile(string directoryPath, string fileName, string newFileName)
@@ -198,64 +313,63 @@ namespace FactorioWebInterface.Hubs
                 return Task.FromResult(Result.Failure(Constants.FileErrorKey, "Invalid file."));
             }
 
-            return Task.FromResult(_factorioServerManager.RenameFile(directoryPath, fileName, newFileName));
+            string serverId = Context.GetDataOrDefault("");
+
+            return Task.FromResult(_factorioFileManager.RenameFile(serverId, directoryPath, fileName, newFileName));
         }
 
         public Task<FactorioServerSettingsWebEditable> GetServerSettings()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
 
             return _factorioServerManager.GetEditableServerSettings(serverId);
         }
 
         public async Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings)
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
 
             return await _factorioServerManager.SaveEditableServerSettings(serverId, settings);
         }
 
         public Task<FactorioServerExtraSettings> GetServerExtraSettings()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
 
             return _factorioServerManager.GetExtraServerSettings(serverId);
         }
 
         public async Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings)
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
 
             return await _factorioServerManager.SaveExtraServerSettings(serverId, settings);
         }
 
         public Task<Result> Save()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
             string name = Context.User.Identity.Name;
 
             return _factorioServerManager.Save(serverId, name, "currently-running.zip");
         }
 
-        public Task<ScenarioMetaData[]> GetScenarios()
-        {
-            return Task.FromResult(_factorioServerManager.GetScenarios());
-        }
-
         public Task<Result> DeflateSave(string directoryPath, string fileName, string newFileName)
         {
-            return Task.FromResult(_factorioServerManager.DeflateSave(Context.ConnectionId, directoryPath, fileName, newFileName));
+            string serverId = Context.GetDataOrDefault("");
+
+            return Task.FromResult(_factorioServerManager.DeflateSave(Context.ConnectionId, serverId, directoryPath, fileName, newFileName));
         }
 
         public async Task<Result> Update(string version = "latest")
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
             string name = Context.User.Identity.Name;
 
             return await _factorioServerManager.Install(serverId, name, version);
         }
 
-        public Task RequestGetDownloadableVersions()
+        public Task RequestDownloadableVersions()
         {
             var client = Clients.Client(Context.ConnectionId);
 
@@ -268,58 +382,74 @@ namespace FactorioWebInterface.Hubs
             return Task.FromResult(0);
         }
 
-        public Task RequestGetCachedVersions()
+        public Task RequestCachedVersions()
         {
             var client = Clients.Client(Context.ConnectionId);
 
             _ = Task.Run(async () =>
             {
-                var result = await _factorioServerManager.GetCachedVersions();
-                _ = client.SendCachedVersions(result);
+                var versions = await _factorioServerManager.GetCachedVersions();
+                var td = new TableData<string>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = versions
+                };
+
+                _ = client.SendCachedVersions(td);
             });
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task DeleteCachedVersion(string version)
         {
-            var client = Clients.Client(Context.ConnectionId);
+            var client = Clients.All;
 
             _ = Task.Run(async () =>
             {
                 _ = _factorioServerManager.DeleteCachedVersion(version);
 
-                var result = await _factorioServerManager.GetCachedVersions();
-                _ = client.SendCachedVersions(result);
+                var versions = await _factorioServerManager.GetCachedVersions();
+                var td = new TableData<string>()
+                {
+                    Type = TableDataType.Reset,
+                    Rows = versions
+                };
+
+                _ = client.SendCachedVersions(td);
             });
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task<string> GetVersion()
         {
-            string serverId = Context.GetDataOrDefault<string>();
+            string serverId = Context.GetDataOrDefault("");
 
             return Task.FromResult(_factorioServerManager.GetVersion(serverId));
         }
 
-        public Task<ModPackMetaData[]> GetModPacks()
+        public Task RequestSelectedModPack()
         {
-            return Task.FromResult(_factorioModManager.GetModPacks());
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(async () =>
+            {
+                var data = await _factorioServerManager.GetSelectedModPack(serverId);
+                _ = client.SendSelectedModPack(data);
+            });
+
+            return Task.CompletedTask;
         }
 
-        public Task<string> GetModPack()
+        public Task SetSelectedModPack(string modPack)
         {
-            string serverId = Context.GetDataOrDefault<string>();
-            return _factorioServerManager.GetModPack(serverId);
-        }
+            string serverId = Context.GetDataOrDefault("");
 
-        public async Task SetModPack(string modPack)
-        {
-            string serverId = Context.GetDataOrDefault<string>();
-            await _factorioServerManager.SetModPack(serverId, modPack);
+            _ = _factorioServerManager.SetSelectedModPack(serverId, modPack);
 
-            _ = Clients.Group(serverId).SendSelectedModPack(modPack);
+            return Task.CompletedTask;
         }
     }
 }

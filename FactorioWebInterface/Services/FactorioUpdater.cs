@@ -1,4 +1,5 @@
-﻿using FactorioWebInterface.Utils;
+﻿using FactorioWebInterface.Models;
+using FactorioWebInterface.Utils;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,7 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Models
+namespace FactorioWebInterface.Services
 {
     public class FactorioUpdater
     {

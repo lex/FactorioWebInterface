@@ -1,6 +1,7 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
-import * as $ from "jquery";
+import * as Table from "./table";
+import { Result, Utils } from "./utils";
 
 !function () {
     interface Ban {
@@ -10,17 +11,7 @@ import * as $ from "jquery";
         DateTime: Date;
     }
 
-    interface Error {
-        Key: string;
-        Description: string;
-    }
-
-    interface Result {
-        Success: boolean;
-        Errors: Error[];
-    }
-
-    const table = document.getElementById('bansTable') as HTMLTableElement;
+    const tableElement = document.getElementById('bansTable') as HTMLTableElement;
 
     const addBanForm = document.getElementById('addBanForm') as HTMLFormElement;
     const usernameInput = document.getElementById('usernameInput') as HTMLInputElement;
@@ -31,121 +22,95 @@ import * as $ from "jquery";
     const synchronizeWithServersCheckbox = document.getElementById('synchronizeWithServersCheckbox') as HTMLInputElement;
     const banCount = document.getElementById('banCount') as HTMLSpanElement;
 
-    const propertySorters = {
-        username: r => r.children[0].textContent.toLowerCase(),
-        reason: r => r.children[1].textContent.toLowerCase(),
-        admin: r => r.children[2].textContent.toLowerCase(),
-        datetime: r => r.children[3].textContent
-    }
-
-    let dataMap = new Map<string, HTMLTableRowElement>();
-
-    let body = table.tBodies[0];
-    let rows = body.rows;
-    let ascending = true;
-    let sortProperty = "datetime";
-
-    let rowsCopy: HTMLTableRowElement[] = []
-    for (let i = 0; i < rows.length; i++) {
-        let r = rows[i];
-        let cells = r.cells
-
-        rowsCopy.push(r);
-        dataMap.set(cells[0].textContent, r);
-
-        r.onclick = onRowClicked;
-
-        let button = cells[4].children[0] as HTMLButtonElement;
-        button.onclick = removeBanClick;
-    }
-
-    let cells = table.tHead.rows[0].cells;
-
-    cells[0].onclick = () => sortTable('username');
-    cells[1].onclick = () => sortTable('reason');
-    cells[2].onclick = () => sortTable('admin');
-    cells[3].onclick = () => sortTable('datetime');
-
-    updateBanCount();
-    sortTable(sortProperty);
-
-    addBanForm.onsubmit = addBanClick;
+    let table: Table.Table;
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/factorioBanHub")
         .withHubProtocol(new MessagePackHubProtocol())
         .build();
 
-    async function start() {
-        try {
-            await connection.start();
-        } catch (ex) {
-            console.log(ex.message);
-            setTimeout(() => start(), 2000);
+    function buildTable() {
+        function buildCell(cell: HTMLTableCellElement, data: any) {
+            cell.innerText = data;
         }
+        function buildDateCell(cell: HTMLTableCellElement, data: any) {
+            cell.innerText = Utils.formatDate(data);
+        }
+
+        function buildRemoveCell(cell: HTMLTableCellElement, data: any) {
+            let button = document.createElement('button') as HTMLButtonElement
+            button.innerText = 'Remove';
+            button.classList.add('button', 'is-danger');
+            button.onclick = removeBanClick;
+            cell.appendChild(button);
+        }
+
+        function sortTextCell(cell: HTMLTableCellElement) {
+            return cell.textContent.toLowerCase();
+        }
+
+        function sortDateCell(cell: HTMLTableCellElement) {
+            return cell.textContent;
+        }
+
+        function onRowClicked(this: HTMLTableRowElement) {
+            setform(this);
+        }
+
+        async function removeBanClick(this: HTMLElement, event: MouseEvent) {
+            event.stopPropagation();
+
+            let parent = this.parentElement.parentElement as HTMLTableRowElement;
+            setform(parent);
+
+            let cells = parent.cells
+
+            let username = cells[0].textContent;
+
+            let result = await connection.invoke('RemoveBan', username, synchronizeWithServersCheckbox.checked) as Result;
+
+            if (!result.Success) {
+                alert(JSON.stringify(result.Errors));
+            }
+        }
+
+        let cellBuilders: Table.CellBuilder[] = [
+            {
+                Property: 'Username',
+                CellBuilder: buildCell,
+                SortKeySelector: sortTextCell,
+                IsKey: true
+            },
+            {
+                Property: 'Reason',
+                CellBuilder: buildCell,
+                SortKeySelector: sortTextCell
+            },
+            {
+                Property: 'Admin',
+                CellBuilder: buildCell,
+                SortKeySelector: sortTextCell
+            },
+            {
+                Property: 'DateTime',
+                CellBuilder: buildDateCell,
+                SortKeySelector: sortDateCell
+            },
+            {
+                Property: 'Remove',
+                CellBuilder: buildRemoveCell,
+            }
+        ];
+
+        table = new Table.Table(tableElement, cellBuilders, onRowClicked);
+        table.sortBy(3, false);
     }
-
-    connection.onclose(async () => {
-        await start();
-    });
-
-    connection.on('SendAddBan', async (ban: Ban) => {
-        let username = ban.Username;
-        let dateString = formatDate(ban.DateTime);
-
-        if (dataMap.has(username)) {
-            let oldRow = dataMap.get(username);
-
-            oldRow.remove();
-            dataMap.delete(username);
-            rowsCopy = rowsCopy.filter((e) => e.cells[0].textContent != username);
-        }
-
-        let row = document.createElement('tr');
-        createCell(row, username);
-        createCell(row, ban.Reason);
-        createCell(row, ban.Admin);
-        createCell(row, dateString);
-
-        let cell4 = document.createElement('td');
-        let button = document.createElement('button') as HTMLButtonElement
-        button.innerText = 'Remove';
-        button.classList.add('button', 'is-danger');
-        button.onclick = removeBanClick;
-        cell4.appendChild(button);
-        row.appendChild(cell4);
-
-        row.onclick = onRowClicked;
-
-        dataMap.set(username, row);
-        rowsCopy.push(row);
-
-        updateBanCount();
-
-        ascending = !ascending;
-        sortTable(sortProperty);
-    });
-
-    connection.on('SendRemoveBan', async (username: string) => {
-        if (dataMap.has(username)) {
-            let oldRow = dataMap.get(username);
-
-            oldRow.remove();
-            dataMap.delete(username);
-            rowsCopy = rowsCopy.filter((e) => e.cells[0].textContent != username);
-        }
-
-        updateBanCount();
-
-        ascending = !ascending;
-        sortTable(sortProperty);
-    });
 
     async function addBanClick(this: HTMLElement, event: MouseEvent) {
         event.preventDefault();
         event.stopPropagation();
 
-        let date = new Date(dateInput.value + 'T' + timeInput.value);
+        let date = new Date(dateInput.value + 'T' + timeInput.value + '+00:00');
 
         let ban: Ban = {
             Username: usernameInput.value,
@@ -172,97 +137,36 @@ import * as $ from "jquery";
         timeInput.value = dateTime[1];
     }
 
-    async function removeBanClick(this: HTMLElement, event: MouseEvent) {
-        event.stopPropagation();
-
-        let parent = this.parentElement.parentElement as HTMLTableRowElement;
-        setform(parent);
-
-        let cells = parent.cells
-
-        let username = cells[0].textContent;
-
-        let result = await connection.invoke('RemoveBan', username, synchronizeWithServersCheckbox.checked) as Result;
-
-        if (!result.Success) {
-            alert(JSON.stringify(result.Errors));
-        }
-    }
-
-    function onRowClicked(this: HTMLTableRowElement) {
-        setform(this);
-    }
-
-    function createCell(row: HTMLTableRowElement, value: string) {
-        let cell = document.createElement('td');
-        cell.innerText = value;
-        row.appendChild(cell);
-    }
-
-    function pad(number) {
-        return number < 10 ? '0' + number : number;
-    }
-
-    function formatDate(date: Date): string {
-        let year = pad(date.getUTCFullYear());
-        let month = pad(date.getUTCMonth() + 1);
-        let day = pad(date.getUTCDate());
-        let hour = pad(date.getUTCHours());
-        let min = pad(date.getUTCMinutes());
-        let sec = pad(date.getUTCSeconds());
-        return year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec;
-    }
-
     function updateBanCount() {
-        let length = rowsCopy.length;
-
+        let length = table.rowsCount();
         banCount.textContent = '(' + length + ')';
     }
 
-    function sortTable(property: string) {
-        let keySelector: (r: HTMLTableRowElement) => any = propertySorters[property];
-
-        if (sortProperty === property) {
-            ascending = !ascending;
-        } else {
-            sortProperty = property;
-            ascending = true;
-        }
-
-        if (ascending) {
-            rowsCopy.sort((a, b) => {
-                let left = keySelector(a);
-                let right = keySelector(b);
-                if (left === right) {
-                    return 0;
-                } else if (left > right) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            });
-        } else {
-            rowsCopy.sort((a, b) => {
-                let left = keySelector(a);
-                let right = keySelector(b);
-                if (left === right) {
-                    return 0;
-                } else if (left > right) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
-        }
-
-        let body = table.tBodies[0];
-        body.innerHTML = "";
-
-        for (let i = 0; i < rowsCopy.length; i++) {
-            let r = rowsCopy[i];
-            body.appendChild(r);
+    async function startConnection() {
+        try {
+            await connection.start();
+            connection.send('RequestAllBans');
+        } catch (ex) {
+            console.log(ex.message);
+            setTimeout(() => startConnection(), 2000);
         }
     }
 
-    start();
+    connection.onclose(async () => {
+        await startConnection();
+    });
+
+    connection.on('SendBans', (data: Table.TableData) => {
+        table.update(data);
+        updateBanCount();
+    });
+
+    function onPageLoad() {
+        addBanForm.onsubmit = addBanClick;
+        buildTable();
+        updateBanCount();
+        startConnection();
+    }
+
+    onPageLoad();
 }();

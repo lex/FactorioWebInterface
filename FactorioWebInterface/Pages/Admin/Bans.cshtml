@@ -125,24 +125,11 @@
                             <th>Username</th>
                             <th>Reason</th>
                             <th>Admin</th>
-                            <th>DateTime</th>
+                            <th style="width: 8rem">DateTime</th>
                             <th>Remove</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach (var b in Model.Bans)
-                        {
-                            <tr>
-                                <td>@b.Username</td>
-                                <td>@b.Reason</td>
-                                <td>@b.Admin</td>
-                                <td style="width: 7rem">@b.DateTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                <td>
-                                    <button class="button is-danger">Remove</button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>

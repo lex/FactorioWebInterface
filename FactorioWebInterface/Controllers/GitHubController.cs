@@ -1,10 +1,13 @@
 ﻿using FactorioWebInterface.Data.GitHub;
+using FactorioWebInterface.Models;
+using FactorioWebInterface.Services;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebHooks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Controllers
 {
@@ -12,8 +15,12 @@ namespace FactorioWebInterface.Controllers
     {
         private readonly string filePath;
 
-        public GitHubController(IConfiguration config)
+        private readonly FactorioFileManager _factorioFileManager;
+
+        public GitHubController(FactorioFileManager factorioFileManager, IConfiguration config)
         {
+            _factorioFileManager = factorioFileManager;
+
             filePath = config[Constants.GitHubCallbackFilePathKey];
         }
 
@@ -43,7 +50,13 @@ namespace FactorioWebInterface.Controllers
                 string branch = push.Ref.Substring(11);
 
                 var timeout = TimeSpan.FromSeconds(300);
-                _ = ProcessHelper.RunProcessToEndAsync(filePath, $"\"{branch}\"", timeout);
+
+                Task.Run(async () =>
+                {
+                    await ProcessHelper.RunProcessToEndAsync(filePath, $"\"{branch}\"", timeout);
+
+                    _factorioFileManager.NotifyScenariosChanged();
+                });
             }
 
             return Ok();
