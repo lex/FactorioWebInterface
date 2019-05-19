@@ -29,6 +29,9 @@ import { TableData } from "./table";
     const fileProgress = document.getElementById('fileProgress') as HTMLProgressElement;
     const fileProgressContiner = document.getElementById('fileProgressContiner') as HTMLSpanElement;
     const deleteFileButton = document.getElementById('deleteFileButton') as HTMLButtonElement;
+    const copyFileButton = document.getElementById('copyFileButton') as HTMLButtonElement;
+    const moveFileButton = document.getElementById('moveFileButton') as HTMLButtonElement;
+    const destinationSelect = document.getElementById('destinationSelect') as HTMLSelectElement;
 
     const newModPackModal = document.getElementById('newModPackModal') as HTMLDivElement;
     const newModPackModalBackground = document.getElementById('newModPackModalBackground') as HTMLDivElement;
@@ -88,17 +91,35 @@ import { TableData } from "./table";
             selectModPack(modPack);
         }
 
-        function buildRenameCell(cell: HTMLTableCellElement, data: any) {
+        function createIconButton(text: string, iconCss: string) {
             let button = document.createElement('button');
-            button.innerText = 'Rename';
+
+            let icon = document.createElement('span');
+            icon.classList.add('icon');
+            button.appendChild(icon);
+
+            let iconInner = document.createElement('i');
+            iconInner.classList.add('fas', iconCss);
+            icon.appendChild(iconInner);
+
+            let buttonText = document.createElement('span');
+            buttonText.innerText = text;
+            button.appendChild(buttonText);
+
+            return button;
+        }
+
+        function buildRenameCell(cell: HTMLTableCellElement, data: any) {
+            let button = createIconButton('Rename', 'fa-edit')
+
             button.onclick = renameModPack;
             button.classList.add('button', 'is-link');
             cell.appendChild(button);
         }
 
         function buildDeleteCell(cell: HTMLTableCellElement, data: any) {
-            let button = document.createElement('button');
-            button.innerText = 'Delete';
+            let button = createIconButton('Delete', 'fa-trash')
+
             button.onclick = showConfirmDeleteModPackModal;
             button.classList.add('button', 'is-danger');
             cell.appendChild(button);
@@ -397,6 +418,78 @@ import { TableData } from "./table";
         }
     }
 
+    copyFileButton.onclick = async () => {
+        let checkboxes = fileTableElement.tBodies[0].querySelectorAll('input[type=checkbox]:checked');
+
+        if (checkboxes.length == 0) {
+            alert('Please select files to copy.');
+            return;
+        }
+
+        let files = [];
+
+        for (let checkbox of checkboxes) {
+            let name = checkbox.getAttribute('data-name');
+            if (name !== null) {
+                files.push(name);
+            }
+        }
+
+        let targetModPack = destinationSelect.value;
+
+        if (targetModPack === '') {
+            alert('Please select a destination to copy files to.');
+            return;
+        }
+
+        if (targetModPack === currentModPack) {
+            alert('Destination mod pack must be different to source mod pack.');
+            return;
+        }
+
+        let result: Result = await connection.invoke('CopyModPackFiles', currentModPack, targetModPack, files);
+
+        if (!result.Success) {
+            alert(JSON.stringify(result.Errors));
+        }
+    }
+
+    moveFileButton.onclick = async () => {
+        let checkboxes = fileTableElement.tBodies[0].querySelectorAll('input[type=checkbox]:checked');
+
+        if (checkboxes.length == 0) {
+            alert('Please select files to move.');
+            return;
+        }
+
+        let files = [];
+
+        for (let checkbox of checkboxes) {
+            let name = checkbox.getAttribute('data-name');
+            if (name !== null) {
+                files.push(name);
+            }
+        }
+
+        let targetModPack = destinationSelect.value;
+
+        if (targetModPack === '') {
+            alert('Please select a destination to move files to.');
+            return;
+        }
+
+        if (targetModPack === currentModPack) {
+            alert('Destination mod pack must be different to source mod pack.');
+            return;
+        }
+
+        let result: Result = await connection.invoke('MoveModPackFiles', currentModPack, targetModPack, files);
+
+        if (!result.Success) {
+            alert(JSON.stringify(result.Errors));
+        }
+    }
+
     function updatePage() {
         connection.invoke('RequestModPacks');
 
@@ -422,6 +515,24 @@ import { TableData } from "./table";
 
     connection.on("SendModPacks", (data: TableData<ModPackMetaData>) => {
         modPacksTable.update(data);
+
+        let selectedDestination = destinationSelect.value;
+
+        destinationSelect.innerHTML = '';
+        for (let row of modPacksTable.rows()) {
+            let name = row.cells[0].textContent;
+
+            let option = document.createElement('option');
+            option.textContent = name;
+            destinationSelect.appendChild(option);
+        }
+
+        if (selectedDestination !== '') {
+            destinationSelect.value = selectedDestination;
+        }
+        if (destinationSelect.selectedIndex === -1) {
+            destinationSelect.selectedIndex = 0;
+        }
 
         let currentModPackAvailable = false;
         for (let row of modPacksTable.rows()) {

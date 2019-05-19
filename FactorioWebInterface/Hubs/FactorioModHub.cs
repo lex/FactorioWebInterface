@@ -79,5 +79,17 @@ namespace FactorioWebInterface.Hubs
             var result = _factorioModManager.DeleteModPackFiles(modPack, files);
             return Task.FromResult(result);
         }
+
+        public Task<Result> CopyModPackFiles(string sourceModPack, string targetModPack, string[] files)
+        {
+            var result = _factorioModManager.CopyModPackFiles(sourceModPack, targetModPack, files);
+            return Task.FromResult(result);
+        }
+
+        public Task<Result> MoveModPackFiles(string sourceModPack, string targetModPack, string[] files)
+        {
+            var result = _factorioModManager.MoveModPackFiles(sourceModPack, targetModPack, files);
+            return Task.FromResult(result);
+        }
     }
 }
