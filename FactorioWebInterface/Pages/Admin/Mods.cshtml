@@ -41,14 +41,40 @@
         <h2 id="currentModPackTitle" class="title is-3"></h2>
         <input id="uploadfileInput" type="file" multiple style="display:none" />
         <div class="field is-grouped">
-            <button id="uploadFileButton" class="button is-link">
-                <span class="icon"><i class="fas fa-upload"></i></span>
-                <span>Upload Files</span>
-            </button>
-            <button id="deleteFileButton" class="button is-danger">
-                <span class="icon"><i class="fas fa-trash"></i></span>
-                <span>Delete Files</span>
-            </button>
+            <div class="control">
+                <button id="uploadFileButton" class="button is-link">
+                    <span class="icon"><i class="fas fa-upload"></i></span>
+                    <span>Upload Files</span>
+                </button>
+            </div>
+            <div class="control">
+                <button id="deleteFileButton" class="button is-danger">
+                    <span class="icon"><i class="fas fa-trash"></i></span>
+                    <span>Delete Files</span>
+                </button>
+            </div>
+            <div class="control">
+                <button id="copyFileButton" class="button is-link">
+                    <span class="icon"><i class="fas fa-clone"></i></span>
+                    <span>Copy Files</span>
+                </button>
+            </div>
+            <div class="control">
+                <button id="moveFileButton" class="button is-link">
+                    <span class="icon"><i class="fas fa-share-square"></i></span>
+                    <span>Move Files</span>
+                </button>
+            </div>
+            <div class="control">
+                <div class=" field-label is-normal">
+                    <label class="label">Destination</label>
+                </div>
+            </div>
+            <div class="control">
+                <div class="select">
+                    <select id="destinationSelect"></select>
+                </div>
+            </div>
             <div class="control">
                 <span id="fileProgressContiner" hidden>
                     Uploading<progress id="fileProgress" class="progress is-info" max="1"></progress>
@@ -170,12 +196,12 @@
     </div>
 
     @section Scripts{
-        <environment include="Development">
-            <script type="text/javascript" src="~/js/mods.js" asp-append-version="true"></script>
-        </environment>
-        <environment exclude="Development">
-            <script type="text/javascript" src="~/js/mods.js"></script>
-        </environment>
+    <environment include="Development">
+        <script type="text/javascript" src="~/js/mods.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script type="text/javascript" src="~/js/mods.js"></script>
+    </environment>
     }
 </div>
 

@@ -633,5 +633,295 @@ namespace FactorioWebInterface.Services
                 return null;
             }
         }
+
+        public Result CopyModPackFiles(string sourceModPack, string targetModPack, string[] files)
+        {
+            if (sourceModPack == targetModPack)
+            {
+                return Result.Failure(Constants.FileAlreadyExistsErrorKey, "Cannot copy files to the same mod pack.");
+            }
+
+            try
+            {
+                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
+                }
+
+                string safeSoureModPackName = Path.GetFileName(sourceModPack);
+                string sourceModPackPath = Path.Combine(dir.FullName, safeSoureModPackName);
+                var sourceModPackDir = new DirectoryInfo(sourceModPackPath);
+
+                if (!sourceModPackDir.Exists)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
+                }
+                if (sourceModPackDir.Parent.FullName != dir.FullName)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
+                }
+
+                string safeTargetModPackName = Path.GetFileName(targetModPack);
+                string targetModPackPath = Path.Combine(dir.FullName, safeTargetModPackName);
+                var targetModPackDir = new DirectoryInfo(targetModPackPath);
+
+                if (!sourceModPackDir.Exists)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {targetModPack} does not exist.");
+                }
+                if (sourceModPackDir.Parent.FullName != dir.FullName)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {targetModPack} does not exist.");
+                }
+
+                var errors = new List<Error>();
+                var changedFiles = new List<ModPackFileMetaData>();
+
+                foreach (var file in files)
+                {
+                    if (string.IsNullOrWhiteSpace(file))
+                    {
+                        errors.Add(new Error(Constants.InvalidFileNameErrorKey, file ?? ""));
+                        continue;
+                    }
+
+                    string safeSourceName = Path.GetFileName(file);
+                    string sourceFilePath = Path.Combine(sourceModPackDir.FullName, safeSourceName);
+                    var sourceFileInfo = new FileInfo(sourceFilePath);
+
+                    if (!sourceFileInfo.Exists)
+                    {
+                        errors.Add(new Error(Constants.MissingFileErrorKey, file));
+                        continue;
+                    }
+                    if (sourceFileInfo.Directory.FullName != sourceModPackDir.FullName)
+                    {
+                        errors.Add(new Error(Constants.MissingFileErrorKey, file));
+                        continue;
+                    }
+
+                    string safeTargetName = Path.GetFileName(file);
+                    string targetFilePath = Path.Combine(targetModPackDir.FullName, safeTargetName);
+                    var targetFileInfo = new FileInfo(targetFilePath);
+
+                    if (targetFileInfo.Exists)
+                    {
+                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, file));
+                        continue;
+                    }
+                    if (targetFileInfo.Directory.FullName != targetModPackDir.FullName)
+                    {
+                        errors.Add(new Error(Constants.FileErrorKey, file));
+                        continue;
+                    }
+
+                    sourceFileInfo.CopyTo(targetFilePath);
+                    targetFileInfo.Refresh();
+
+                    var fileMetaData = new ModPackFileMetaData()
+                    {
+                        Name = targetFileInfo.Name,
+                        CreatedTime = targetFileInfo.CreationTimeUtc,
+                        LastModifiedTime = targetFileInfo.LastWriteTimeUtc,
+                        Size = targetFileInfo.Length
+                    };
+
+                    changedFiles.Add(fileMetaData);
+                }
+
+                if (changedFiles.Count > 0)
+                {
+                    targetModPackDir.Refresh();
+                    var data = new ModPackMetaData()
+                    {
+                        Name = targetModPack,
+                        CreatedTime = targetModPackDir.CreationTimeUtc,
+                        LastModifiedTime = targetModPackDir.LastWriteTimeUtc
+                    };
+
+                    var packEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, data);
+                    var filesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, targetModPack, changedFiles);
+
+                    Task.Run(() =>
+                    {
+                        ModPackChanged?.Invoke(this, packEventArgs);
+                        ModPackFilesChanged?.Invoke(this, filesEventArgs);
+                    });
+                }
+
+                if (errors.Count != 0)
+                {
+                    return Result.Failure(errors);
+                }
+                else
+                {
+                    return Result.OK;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(CopyModPackFiles));
+                return Result.Failure(Constants.FileErrorKey, $"Error copying mod pack files.");
+            }
+        }
+
+        public Result MoveModPackFiles(string sourceModPack, string targetModPack, string[] files)
+        {
+            if (sourceModPack == targetModPack)
+            {
+                return Result.Failure(Constants.FileAlreadyExistsErrorKey, "Cannot move files to the same mod pack.");
+            }
+
+            try
+            {
+                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
+                }
+
+                string safeSoureModPackName = Path.GetFileName(sourceModPack);
+                string sourceModPackPath = Path.Combine(dir.FullName, safeSoureModPackName);
+                var sourceModPackDir = new DirectoryInfo(sourceModPackPath);
+
+                if (!sourceModPackDir.Exists)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
+                }
+                if (sourceModPackDir.Parent.FullName != dir.FullName)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
+                }
+
+                string safeTargetModPackName = Path.GetFileName(targetModPack);
+                string targetModPackPath = Path.Combine(dir.FullName, safeTargetModPackName);
+                var targetModPackDir = new DirectoryInfo(targetModPackPath);
+
+                if (!sourceModPackDir.Exists)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {targetModPack} does not exist.");
+                }
+                if (sourceModPackDir.Parent.FullName != dir.FullName)
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {targetModPack} does not exist.");
+                }
+
+                var errors = new List<Error>();
+                var oldFiles = new List<ModPackFileMetaData>();
+                var newFiles = new List<ModPackFileMetaData>();
+
+                foreach (var file in files)
+                {
+                    if (string.IsNullOrWhiteSpace(file))
+                    {
+                        errors.Add(new Error(Constants.InvalidFileNameErrorKey, file ?? ""));
+                        continue;
+                    }
+
+                    string safeSourceName = Path.GetFileName(file);
+                    string sourceFilePath = Path.Combine(sourceModPackDir.FullName, safeSourceName);
+                    var sourceFileInfo = new FileInfo(sourceFilePath);
+
+                    if (!sourceFileInfo.Exists)
+                    {
+                        errors.Add(new Error(Constants.MissingFileErrorKey, file));
+                        continue;
+                    }
+                    if (sourceFileInfo.Directory.FullName != sourceModPackDir.FullName)
+                    {
+                        errors.Add(new Error(Constants.MissingFileErrorKey, file));
+                        continue;
+                    }
+
+                    string safeTargetName = Path.GetFileName(file);
+                    string targetFilePath = Path.Combine(targetModPackDir.FullName, safeTargetName);
+                    var targetFileInfo = new FileInfo(targetFilePath);
+
+                    if (targetFileInfo.Exists)
+                    {
+                        errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, file));
+                        continue;
+                    }
+                    if (targetFileInfo.Directory.FullName != targetModPackDir.FullName)
+                    {
+                        errors.Add(new Error(Constants.FileErrorKey, file));
+                        continue;
+                    }
+
+                    var oldFileMetaData = new ModPackFileMetaData()
+                    {
+                        Name = sourceFileInfo.Name,
+                        CreatedTime = sourceFileInfo.CreationTimeUtc,
+                        LastModifiedTime = sourceFileInfo.LastAccessTimeUtc,
+                        Size = sourceFileInfo.Length
+                    };
+
+                    sourceFileInfo.MoveTo(targetFilePath);
+                    targetFileInfo.Refresh();
+
+                    var newFileMetaData = new ModPackFileMetaData()
+                    {
+                        Name = targetFileInfo.Name,
+                        CreatedTime = targetFileInfo.CreationTimeUtc,
+                        LastModifiedTime = targetFileInfo.LastWriteTimeUtc,
+                        Size = targetFileInfo.Length
+                    };
+
+                    oldFiles.Add(oldFileMetaData);
+                    newFiles.Add(newFileMetaData);
+                }
+
+                if (newFiles.Count > 0)
+                {
+                    sourceModPackDir.Refresh();
+                    var oldPackData = new ModPackMetaData()
+                    {
+                        Name = sourceModPack,
+                        CreatedTime = sourceModPackDir.CreationTimeUtc,
+                        LastModifiedTime = sourceModPackDir.LastWriteTimeUtc
+                    };
+
+                    targetModPackDir.Refresh();
+                    var newPackData = new ModPackMetaData()
+                    {
+                        Name = targetModPack,
+                        CreatedTime = targetModPackDir.CreationTimeUtc,
+                        LastModifiedTime = targetModPackDir.LastWriteTimeUtc
+                    };
+
+                    var oldPackEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, oldPackData);
+                    var newPackEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, newPackData);
+                    var oldFilesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Delete, sourceModPack, oldFiles);
+                    var newFilesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, targetModPack, newFiles);
+
+                    Task.Run(() =>
+                    {
+                        ModPackChanged?.Invoke(this, oldPackEventArgs);
+                        ModPackFilesChanged?.Invoke(this, oldFilesEventArgs);
+                        ModPackChanged?.Invoke(this, newPackEventArgs);
+                        ModPackFilesChanged?.Invoke(this, newFilesEventArgs);
+                    });
+                }
+
+                if (errors.Count != 0)
+                {
+                    return Result.Failure(errors);
+                }
+                else
+                {
+                    return Result.OK;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(MoveModPackFiles));
+                return Result.Failure(Constants.FileErrorKey, $"Error moving mod pack files.");
+            }
+        }
     }
 }
