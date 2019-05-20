@@ -798,6 +798,12 @@ namespace FactorioWebInterface.Services
                             return Result.Failure(Constants.MissingFileErrorKey, "No file to resume server from.");
                         }
 
+                        var scenarioDir = new DirectoryInfo(serverData.LocalScenarioDirectoryPath);
+                        if (scenarioDir.Exists)
+                        {
+                            scenarioDir.Delete(true);
+                        }
+
                         string modDirPath = await PrepareServer(serverData);
 
                         string basePath = serverData.BaseDirectoryPath;
@@ -930,6 +936,12 @@ namespace FactorioWebInterface.Services
                                 break;
                             default:
                                 return Result.Failure(Constants.UnexpctedErrorKey, $"File {saveFile.FullName}.");
+                        }
+
+                        var scenarioDir = new DirectoryInfo(serverData.LocalScenarioDirectoryPath);
+                        if (scenarioDir.Exists)
+                        {
+                            scenarioDir.Delete(true);
                         }
 
                         string modDirPath = await PrepareServer(serverData);
