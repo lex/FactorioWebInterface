@@ -9,6 +9,19 @@ export interface Result<T = void> {
     Value: T;
 }
 
+export enum CollectionChangeType {
+    Reset = "Reset",
+    Remove = "Remove",
+    Add = "Add",
+    AddAndRemove = "AddAndRemove"
+}
+
+export interface CollectionChangedData<T = any> {
+    Type: CollectionChangeType;
+    NewItems: T[];
+    OldItems: T[];
+}
+
 export class Utils {
     private static pad(number) {
         return number < 10 ? '0' + number : number;

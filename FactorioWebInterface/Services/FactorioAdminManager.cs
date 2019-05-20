@@ -17,8 +17,7 @@ namespace FactorioWebInterface.Services
         private readonly IHubContext<FactorioAdminHub, IFactorioAdminClientMethods> _adminHub;
         private readonly ILogger<FactorioAdminManager> _logger;
 
-        public event EventHandler<FactorioAdminManager, FactorioAdminsAddedEventArgs> AdminsAdded;
-        public event EventHandler<FactorioAdminManager, FactorioAdminRemovedEventArgs> AdminRemoved;
+        public event EventHandler<FactorioAdminManager, CollectionChangedData<Admin>> AdminsChanged;
 
         public FactorioAdminManager(DbContextFactory dbContextFactory,
             IHubContext<FactorioAdminHub, IFactorioAdminClientMethods> adminHub,
@@ -28,28 +27,12 @@ namespace FactorioWebInterface.Services
             _adminHub = adminHub;
             _logger = logger;
 
-            AdminsAdded += FactorioAdminManager_AdminsAdded;
-            AdminRemoved += FactorioAdminManager_AdminRemoved;
+            AdminsChanged += FactorioAdminManager_AdminsChanged;
         }
 
-        private void FactorioAdminManager_AdminsAdded(FactorioAdminManager sender, FactorioAdminsAddedEventArgs eventArgs)
+        private void FactorioAdminManager_AdminsChanged(FactorioAdminManager sender, CollectionChangedData<Admin> eventArgs)
         {
-            var td = new TableData<Admin>()
-            {
-                Type = TableDataType.Update,
-                Rows = eventArgs.Admins
-            };
-            _adminHub.Clients.All.SendAdmins(td);
-        }
-
-        private void FactorioAdminManager_AdminRemoved(FactorioAdminManager sender, FactorioAdminRemovedEventArgs eventArgs)
-        {
-            var td = new TableData<Admin>()
-            {
-                Type = TableDataType.Remove,
-                Rows = new[] { eventArgs.Admin }
-            };
-            _adminHub.Clients.All.SendAdmins(td);
+            _adminHub.Clients.All.SendAdmins(eventArgs);
         }
 
         public async Task<Admin[]> GetAdmins()
@@ -105,7 +88,7 @@ namespace FactorioWebInterface.Services
 
                     await db.SaveChangesAsync();
 
-                    _ = Task.Run(() => AdminsAdded?.Invoke(this, new FactorioAdminsAddedEventArgs(newAdmins)));
+                    _ = Task.Run(() => AdminsChanged?.Invoke(this, CollectionChangedData.Add(newAdmins)));
 
                     return true;
                 }
@@ -147,7 +130,8 @@ namespace FactorioWebInterface.Services
                         admins.Remove(admin);
                         await db.SaveChangesAsync();
 
-                        _ = Task.Run(() => AdminRemoved?.Invoke(this, new FactorioAdminRemovedEventArgs(admin)));
+                        var ev = CollectionChangedData.Remove(new[] { admin });
+                        _ = Task.Run(() => AdminsChanged?.Invoke(this, ev));
 
                         return true;
                     }

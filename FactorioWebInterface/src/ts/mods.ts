@@ -1,8 +1,7 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack";
-import { Result, Utils } from "./utils";
+import { Result, Utils, CollectionChangedData } from "./utils";
 import * as Table from "./table";
-import { TableData } from "./table";
 
 !function () {
     interface ModPackMetaData {
@@ -513,7 +512,7 @@ import { TableData } from "./table";
         await startConnection();
     });
 
-    connection.on("SendModPacks", (data: TableData<ModPackMetaData>) => {
+    connection.on("SendModPacks", (data: CollectionChangedData<ModPackMetaData>) => {
         modPacksTable.update(data);
 
         let selectedDestination = destinationSelect.value;
@@ -548,7 +547,7 @@ import { TableData } from "./table";
         }
     });
 
-    connection.on("SendModPackFiles", (modPack: string, data: TableData<ModPackFileMetaData>) => {
+    connection.on("SendModPackFiles", (modPack: string, data: CollectionChangedData<ModPackFileMetaData>) => {
         if (currentModPack === modPack) {
             fileTable.update(data);
         }

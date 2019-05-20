@@ -1,23 +1,11 @@
-﻿export interface CellBuilder {
+﻿import { CollectionChangedData, CollectionChangeType } from "./utils";
+
+export interface CellBuilder {
     Property?: string | undefined;
     CellBuilder: (cell: HTMLTableCellElement, data: any, oldCell?: HTMLTableCellElement) => void;
     SortKeySelector?: (r: HTMLTableCellElement) => any;
     HeaderBuilder?: (cell: HTMLTableHeaderCellElement, symbol: string) => void;
     IsKey?: boolean;
-}
-
-export enum TableDataType {
-    Reset = "Reset",
-    Remove = "Remove",
-    Add = "Add",
-    Update = "Update",
-    Compound = "Compound"
-}
-
-export interface TableData<T = any> {
-    Type: TableDataType;
-    Rows: T[];
-    TableDatas: TableData<T>[];
 }
 
 export class Table<T = any> {
@@ -207,32 +195,37 @@ export class Table<T = any> {
         return true;
     }
 
-    private innerUpdate(tableUpdate: TableData): boolean {
-        let type = tableUpdate.Type;
-        let rows = tableUpdate.Rows;
+    update(collectionChangedData: CollectionChangedData): void {
+        let dirty;
 
-        switch (type) {
-            case TableDataType.Reset:
-                return this.doReset(rows)
-            case TableDataType.Add:
-                return this.doAdd(rows);
-            case TableDataType.Remove:
-                return this.doRemove(rows);
-            case TableDataType.Update:
-                return this.doUpdate(rows);
-            case TableDataType.Compound:
-                let dirty = false;
-                for (let td of tableUpdate.TableDatas) {
-                    dirty = dirty || this.innerUpdate(td);
+        switch (collectionChangedData.Type) {
+            case CollectionChangeType.Reset:
+                dirty = this.doReset(collectionChangedData.NewItems);
+                break;
+            case CollectionChangeType.Add:
+                if (this.keySelector) {
+                    dirty = this.doUpdate(collectionChangedData.NewItems);
+                } else {
+                    dirty = this.doAdd(collectionChangedData.NewItems);
                 }
-                return dirty;
+                break;
+            case CollectionChangeType.Remove:
+                dirty = this.doRemove(collectionChangedData.OldItems);
+                break;
+            case CollectionChangeType.AddAndRemove:
+                dirty = this.doRemove(collectionChangedData.OldItems);
+                if (this.keySelector) {
+                    dirty = dirty || this.doUpdate(collectionChangedData.NewItems);
+                } else {
+                    dirty = dirty || this.doAdd(collectionChangedData.NewItems);
+                }
+                break;
             default:
-                return false;
+                dirty = false;
+                break;
         }
-    }
 
-    update(tableUpdate: TableData): void {
-        if (this.innerUpdate(tableUpdate)) {
+        if (dirty) {
             this.reBuild();
         }
     }

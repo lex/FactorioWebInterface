@@ -1,7 +1,7 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
 import * as Table from "./table";
-import { Result } from "./utils";
+import { Result, CollectionChangedData } from "./utils";
 
 !function () {
 
@@ -94,7 +94,7 @@ import { Result } from "./utils";
         }
     }
 
-    connection.on('SendAdmins', (data: Table.TableData) => {
+    connection.on('SendAdmins', (data: CollectionChangedData) => {
         table.update(data);
     });
 

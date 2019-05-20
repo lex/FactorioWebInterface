@@ -34,22 +34,19 @@ namespace FactorioWebInterface.Services
         {
             var entry = eventArgs.ScenarioDataEntry;
             var value = entry.Value;
+            var keyValue = new[] { new ScenarioDataKeyValue() { Key = entry.Key, Value = value } };
 
-            var tableData = new TableData<ScenarioDataKeyValue>()
-            {
-                Rows = new[] { new ScenarioDataKeyValue() { Key = entry.Key, Value = value } }
-            };
-
+            CollectionChangedData<ScenarioDataKeyValue> changeData;
             if (value == null)
             {
-                tableData.Type = TableDataType.Remove;
+                changeData = CollectionChangedData.Remove(keyValue);
             }
             else
             {
-                tableData.Type = TableDataType.Update;
+                changeData = CollectionChangedData.Add(keyValue);
             }
 
-            _scenariolHub.Clients.Group(entry.DataSet).SendEntries(entry.DataSet, tableData);
+            _scenariolHub.Clients.Group(entry.DataSet).SendEntries(entry.DataSet, changeData);
         }
 
         public async Task<string[]> GetAllDataSets()

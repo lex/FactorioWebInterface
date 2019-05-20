@@ -23,15 +23,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(async () =>
             {
-                var data = await _factorioAdminManager.GetAdmins();
+                var admins = await _factorioAdminManager.GetAdmins();
+                var data = CollectionChangedData.Reset(admins);
 
-                var tableData = new TableData<Admin>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendAdmins(tableData);
+                _ = client.SendAdmins(data);
             });
 
             return Task.CompletedTask;

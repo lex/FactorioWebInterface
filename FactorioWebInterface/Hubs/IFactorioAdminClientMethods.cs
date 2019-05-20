@@ -6,6 +6,6 @@ namespace FactorioWebInterface.Hubs
 {
     public interface IFactorioAdminClientMethods
     {
-        Task SendAdmins(TableData<Admin> data);
+        Task SendAdmins(CollectionChangedData<Admin> data);
     }
 }

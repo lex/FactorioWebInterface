@@ -22,15 +22,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioModManager.GetModPacks();
+                var packs = _factorioModManager.GetModPacks();
+                var data = CollectionChangedData.Reset(packs);
 
-                var tableData = new TableData<ModPackMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendModPacks(tableData);
+                _ = client.SendModPacks(data);
             });
 
             return Task.CompletedTask;
@@ -60,15 +55,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioModManager.GetModPackFiles(name);
+                var files = _factorioModManager.GetModPackFiles(name);
+                var data = CollectionChangedData.Reset(files);
 
-                var tableData = new TableData<ModPackFileMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendModPackFiles(name, tableData);
+                _ = client.SendModPackFiles(name, data);
             });
 
             return Task.CompletedTask;

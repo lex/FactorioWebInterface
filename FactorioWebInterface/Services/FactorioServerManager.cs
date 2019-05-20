@@ -101,8 +101,7 @@ namespace FactorioWebInterface.Services
 
             _discordBotContext.FactorioDiscordDataReceived += FactorioDiscordDataReceived;
             _scenarioDataManger.EntryChanged += _scenarioDataManger_EntryChanged;
-            _factorioBanManager.BanAdded += _factorioBanManager_BanAdded;
-            _factorioBanManager.BanRemoved += _factorioBanManager_BanRemoved;
+            _factorioBanManager.BanChanged += _factorioBanManager_BanChanged;
             _factorioFileManager.TempSaveFilesChanged += _factorioFileManager_TempSaveFilesChanged;
             _factorioFileManager.LocalSaveFilesChanged += _factorioFileManager_LocalSaveFilesChanged;
             _factorioFileManager.GlobalSaveFilesChanged += _factorioFileManager_GlobalSaveFilesChanged;
@@ -112,26 +111,8 @@ namespace FactorioWebInterface.Services
             _factorioModManager.ModPackChanged += _factorioModManager_ModPackChanged;
         }
 
-        private void DoFileChange(FilesChangedEventArgs eventArgs, Func<IFactorioControlClientMethods, string, TableData<FileMetaData>, Task> method)
+        private void DoFileChange(FilesChangedEventArgs eventArgs, Func<IFactorioControlClientMethods, string, CollectionChangedData<FileMetaData>, Task> method)
         {
-            TableData<FileMetaData> Create(FilesChangedEventArgs e)
-            {
-                return new TableData<FileMetaData>
-                {
-                    Type = TableDataType.Update,
-                    Rows = e.NewOrUpdated
-                };
-            }
-
-            TableData<FileMetaData> Delete(FilesChangedEventArgs e)
-            {
-                return new TableData<FileMetaData>
-                {
-                    Type = TableDataType.Remove,
-                    Rows = e.Old
-                };
-            }
-
             var serverId = eventArgs.ServerId;
 
             IFactorioControlClientMethods clients;
@@ -144,35 +125,7 @@ namespace FactorioWebInterface.Services
                 clients = _factorioControlHub.Clients.Group(eventArgs.ServerId);
             }
 
-            switch (eventArgs.Type)
-            {
-                case FilesChangedType.Create:
-                    {
-                        var td = Create(eventArgs);
-                        method(clients, serverId, td);
-                        break;
-                    }
-                case FilesChangedType.Delete:
-                    {
-                        var td = Delete(eventArgs);
-                        method(clients, serverId, td);
-                        break;
-                    }
-                case FilesChangedType.Rename:
-                    {
-                        var td = new TableData<FileMetaData>()
-                        {
-                            Type = TableDataType.Compound,
-                            TableDatas = new[]
-                            {
-                                Delete(eventArgs),
-                                Create(eventArgs)
-                            }
-                        };
-                        method(clients, serverId, td);
-                        break;
-                    }
-            }
+            method(clients, serverId, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_TempSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
@@ -200,141 +153,85 @@ namespace FactorioWebInterface.Services
             DoFileChange(eventArgs, (c, id, td) => c.SendChatLogFiles(id, td));
         }
 
-        private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, ScenariosChangedEventArgs eventArgs)
+        private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, CollectionChangedData<ScenarioMetaData> eventArgs)
         {
-            TableData<ScenarioMetaData> Create(ScenariosChangedEventArgs e)
+            _factorioControlHub.Clients.All.SendScenarios(eventArgs);
+        }
+
+        private void _factorioModManager_ModPackChanged(FactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
+        {
+            _factorioControlHub.Clients.All.SendModPacks(eventArgs);
+        }
+        private void _factorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
+        {
+            var changeData = eventArgs.ChangeData;
+
+            void BanAdded()
             {
-                return new TableData<ScenarioMetaData>
+                if (!eventArgs.SynchronizeWithServers)
                 {
-                    Type = TableDataType.Update,
-                    Rows = e.NewOrUpdated
-                };
-            }
+                    return;
+                }
 
-            TableData<ScenarioMetaData> Delete(ScenariosChangedEventArgs e)
-            {
-                return new TableData<ScenarioMetaData>
+                foreach (var ban in changeData.NewItems)
                 {
-                    Type = TableDataType.Remove,
-                    Rows = e.Old
-                };
-            }
-
-            TableData<ScenarioMetaData> td = null;
-
-            switch (eventArgs.Type)
-            {
-                case ScenariosChangedType.Create:
-                    td = Create(eventArgs);
-                    break;
-                case ScenariosChangedType.Delete:
-                    td = Delete(eventArgs);
-                    break;
-                case ScenariosChangedType.Rename:
-                    td = new TableData<ScenarioMetaData>()
+                    // /ban doesn't support names with spaces.
+                    if (ban.Username.Contains(' '))
                     {
-                        Type = TableDataType.Compound,
-                        TableDatas = new[]
-                        {
-                            Delete(eventArgs),
-                            Create(eventArgs)
-                        }
-                    };
-                    break;
-            }
+                        return;
+                    }
 
-            _factorioControlHub.Clients.All.SendScenarios(td);
-        }
+                    var command = $"/ban {ban.Username} {ban.Reason}";
 
-        private void _factorioModManager_ModPackChanged(FactorioModManager sender, ModPackChangedEventArgs eventArgs)
-        {
-            TableData<ModPackMetaData> Create(ModPackChangedEventArgs e)
-            {
-                return new TableData<ModPackMetaData>
-                {
-                    Type = TableDataType.Update,
-                    Rows = new[] { e.NewOrUpdated }
-                };
-            }
-
-            TableData<ModPackMetaData> Delete(ModPackChangedEventArgs e)
-            {
-                return new TableData<ModPackMetaData>
-                {
-                    Type = TableDataType.Remove,
-                    Rows = new[] { e.Old }
-                };
-            }
-
-            TableData<ModPackMetaData> td = null;
-
-            switch (eventArgs.Type)
-            {
-                case ModPackChangedType.Create:
-                    td = Create(eventArgs);
-                    break;
-                case ModPackChangedType.Delete:
-                    td = Delete(eventArgs);
-                    break;
-                case ModPackChangedType.Rename:
-                    td = new TableData<ModPackMetaData>()
+                    if (command.EndsWith('.'))
                     {
-                        Type = TableDataType.Compound,
-                        TableDatas = new[]
-                        {
-                            Delete(eventArgs),
-                            Create(eventArgs)
-                        }
-                    };
+                        command.Substring(0, command.Length - 1);
+                    }
+
+                    SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+                }
+            }
+
+            void BanRemoved()
+            {
+                if (!eventArgs.SynchronizeWithServers)
+                {
+                    return;
+                }
+
+                foreach (var ban in changeData.OldItems)
+                {
+                    var username = ban.Username;
+
+                    // /ban doesn't support names with spaces.
+                    if (username.Contains(' '))
+                    {
+                        return;
+                    }
+
+                    var command = $"/unban {username}";
+
+                    SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+                }
+            }
+
+            switch (changeData.Type)
+            {
+                case CollectionChangeType.Reset:
+                    break;
+                case CollectionChangeType.Remove:
+                    BanRemoved();
+                    break;
+                case CollectionChangeType.Add:
+                    BanAdded();
+                    break;
+                case CollectionChangeType.AddAndRemove:
+                    BanRemoved();
+                    BanAdded();
+                    break;
+                default:
                     break;
             }
-
-            _factorioControlHub.Clients.All.SendModPacks(td);
-        }
-
-        private void _factorioBanManager_BanAdded(FactorioBanManager sender, FactorioBanAddedEventArgs eventArgs)
-        {
-            if (!eventArgs.SynchronizeWithServers)
-            {
-                return;
-            }
-
-            var ban = eventArgs.Ban;
-
-            // /ban doesn't support names with spaces.
-            if (ban.Username.Contains(' '))
-            {
-                return;
-            }
-
-            var command = $"/ban {ban.Username} {ban.Reason}";
-
-            if (command.EndsWith('.'))
-            {
-                command.Substring(0, command.Length - 1);
-            }
-
-            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
-        }
-
-        private void _factorioBanManager_BanRemoved(FactorioBanManager sender, FactorioBanRemovedEventArgs eventArgs)
-        {
-            if (!eventArgs.SynchronizeWithServers)
-            {
-                return;
-            }
-
-            var username = eventArgs.Username;
-
-            // /ban doesn't support names with spaces.
-            if (username.Contains(' '))
-            {
-                return;
-            }
-
-            var command = $"/unban {username}";
-
-            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
         }
 
         private void _scenarioDataManger_EntryChanged(ScenarioDataManager sender, ScenarioDataEntryChangedEventArgs eventArgs)
@@ -928,7 +825,8 @@ namespace FactorioWebInterface.Services
                                     Size = fi.Length,
                                     Directory = Constants.TempSavesDirectoryName
                                 };
-                                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, new[] { data });
+                                var changeData = CollectionChangedData.Add(new[] { data });
+                                var ev = new FilesChangedEventArgs(serverId, changeData);
 
                                 _factorioFileManager.RaiseTempFilesChanged(ev);
                                 break;
@@ -2926,19 +2824,16 @@ namespace FactorioWebInterface.Services
 
                         string dirName = directory.Name;
 
-                        var data = new[]
+                        var data = new FileMetaData()
                         {
-                            new FileMetaData()
-                            {
-                                Name = newFileInfo.Name,
-                                CreatedTime = newFileInfo.CreationTimeUtc,
-                                LastModifiedTime = newFileInfo.LastWriteTimeUtc,
-                                Directory = dirName,
-                                Size = newFileInfo.Length
-                            }
+                            Name = newFileInfo.Name,
+                            CreatedTime = newFileInfo.CreationTimeUtc,
+                            LastModifiedTime = newFileInfo.LastWriteTimeUtc,
+                            Directory = dirName,
+                            Size = newFileInfo.Length
                         };
-
-                        var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, data, null);
+                        var changeData = CollectionChangedData.Add(new[] { data });
+                        var ev = new FilesChangedEventArgs(serverId, changeData);
 
                         switch (dirName)
                         {

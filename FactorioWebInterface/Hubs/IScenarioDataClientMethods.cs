@@ -7,6 +7,6 @@ namespace FactorioWebInterface.Hubs
     public interface IScenarioDataClientMethods
     {
         Task SendDataSets(string[] dataSets);
-        Task SendEntries(string dataSet, TableData<ScenarioDataKeyValue> data);
+        Task SendEntries(string dataSet, CollectionChangedData<ScenarioDataKeyValue> data);
     }
 }

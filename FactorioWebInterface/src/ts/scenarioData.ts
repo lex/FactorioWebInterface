@@ -1,5 +1,6 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
+import { CollectionChangedData } from "./utils";
 import * as Table from "./table";
 
 !function () {
@@ -141,7 +142,7 @@ import * as Table from "./table";
         }
     });
 
-    connection.on('SendEntries', (dataSet: string, data: Table.TableData) => {
+    connection.on('SendEntries', (dataSet: string, data: CollectionChangedData) => {
         if (currentDataSet !== dataSet) {
             return;
         }

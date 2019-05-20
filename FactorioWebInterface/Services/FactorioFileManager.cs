@@ -19,7 +19,7 @@ namespace FactorioWebInterface.Services
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> GlobalSaveFilesChanged;
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> LogFilesChanged;
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
-        public event EventHandler<FactorioFileManager, ScenariosChangedEventArgs> ScenariosChanged;
+        public event EventHandler<FactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
 
         public FactorioFileManager(ILogger<FactorioFileManager> logger)
         {
@@ -434,7 +434,9 @@ namespace FactorioWebInterface.Services
 
             if (changedFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, changedFiles);
+                var changeData = CollectionChangedData.Add(changedFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => LocalSaveFilesChanged?.Invoke(this, ev));
             }
 
@@ -518,19 +520,25 @@ namespace FactorioWebInterface.Services
 
             if (changedTempFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, changedTempFiles);
+                var changeData = CollectionChangedData.Remove(changedTempFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => TempSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (changedLocalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, changedLocalFiles);
+                var changeData = CollectionChangedData.Remove(changedLocalFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => LocalSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (changedGlobalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs("", FilesChangedType.Delete, null, changedGlobalFiles);
+                var changeData = CollectionChangedData.Remove(changedGlobalFiles);
+                var ev = new FilesChangedEventArgs("", changeData);
+
                 _ = Task.Run(() => GlobalSaveFilesChanged?.Invoke(this, ev));
             }
 
@@ -666,25 +674,32 @@ namespace FactorioWebInterface.Services
 
             if (oldTempFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, oldTempFiles);
+                var changeData = CollectionChangedData.Remove(oldTempFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => TempSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (oldLocalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, oldLocalFiles);
+                var changeData = CollectionChangedData.Remove(oldLocalFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => LocalSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (oldGlobalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs("", FilesChangedType.Delete, null, oldGlobalFiles);
+                var changeData = CollectionChangedData.Remove(oldGlobalFiles);
+                var ev = new FilesChangedEventArgs("", changeData);
+
                 _ = Task.Run(() => GlobalSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (trackDestination && newFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(destinationId, FilesChangedType.Create, newFiles);
+                var changeData = CollectionChangedData.Add(newFiles);
+                var ev = new FilesChangedEventArgs(destinationId, changeData);
 
                 switch (targetDir.Name)
                 {
@@ -801,7 +816,8 @@ namespace FactorioWebInterface.Services
 
             if (trackDestination && newFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(destinationId, FilesChangedType.Create, newFiles);
+                var changeData = CollectionChangedData.Add(newFiles);
+                var ev = new FilesChangedEventArgs(destinationId, changeData);
 
                 switch (targetDir.Name)
                 {
@@ -912,7 +928,8 @@ namespace FactorioWebInterface.Services
                     serverId = "";
                 }
 
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Rename, new[] { newFileMetaData }, new[] { oldFileMetaDdata });
+                var changeData = CollectionChangedData.AddAndRemove(new[] { newFileMetaData }, new[] { oldFileMetaDdata });
+                var ev = new FilesChangedEventArgs(serverId, changeData);
 
                 switch (dirName)
                 {
@@ -981,7 +998,7 @@ namespace FactorioWebInterface.Services
                         return;
                     }
 
-                    var data = dir.EnumerateFiles()
+                    var files = dir.EnumerateFiles()
                         .Where(f => f.LastWriteTimeUtc >= lastChecked)
                         .Select(f => new FileMetaData()
                         {
@@ -993,7 +1010,8 @@ namespace FactorioWebInterface.Services
                         })
                         .ToArray();
 
-                    var ev = new FilesChangedEventArgs(serverData.ServerId, FilesChangedType.Create, data);
+                    var changeData = CollectionChangedData.Add(files);
+                    var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
 
                     TempSaveFilesChanged?.Invoke(this, ev);
                 }
@@ -1009,7 +1027,8 @@ namespace FactorioWebInterface.Services
             Task.Run(() =>
             {
                 var files = GetTempSaveFiles(serverData);
-                var ev = new FilesChangedEventArgs(serverData.ServerId, FilesChangedType.Create, files);
+                var changeData = CollectionChangedData.Add(files);
+                var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
 
                 TempSaveFilesChanged?.Invoke(this, ev);
             });
@@ -1018,7 +1037,7 @@ namespace FactorioWebInterface.Services
         public void NotifyScenariosChanged()
         {
             var scenarios = GetScenarios();
-            var ev = new ScenariosChangedEventArgs(ScenariosChangedType.Create, scenarios);
+            var ev = CollectionChangedData.Add(scenarios);
 
             ScenariosChanged?.Invoke(this, ev);
         }

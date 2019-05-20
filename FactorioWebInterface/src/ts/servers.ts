@@ -1,8 +1,7 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack";
 import * as Table from "./table";
-import { TableData, TableDataType } from "./table";
-import { Error, Result, Utils } from "./utils";
+import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } from "./utils";
 
 !function () {
 
@@ -1105,7 +1104,7 @@ import { Error, Result, Utils } from "./utils";
         noMods.checked = true;
     }
 
-    connection.on('SendTempSavesFiles', (serverId: string, data: TableData) => {
+    connection.on('SendTempSavesFiles', (serverId: string, data: CollectionChangedData) => {
         if (serverId !== serverSelect.value) {
             return;
         }
@@ -1113,7 +1112,7 @@ import { Error, Result, Utils } from "./utils";
         tempSaveFilesTable.update(data);
     });
 
-    connection.on('SendLocalSaveFiles', (serverId: string, data: TableData) => {
+    connection.on('SendLocalSaveFiles', (serverId: string, data: CollectionChangedData) => {
         if (serverId !== serverSelect.value) {
             return;
         }
@@ -1121,18 +1120,18 @@ import { Error, Result, Utils } from "./utils";
         localSaveFilesTable.update(data);
     });
 
-    connection.on('SendGlobalSaveFiles', (data: TableData) => {
+    connection.on('SendGlobalSaveFiles', (data: CollectionChangedData) => {
         globalSaveFilesTable.update(data);
     });
 
-    connection.on('SendScenarios', (data: TableData) => {
+    connection.on('SendScenarios', (data: CollectionChangedData) => {
         scenarioTable.update(data);
     });
 
-    connection.on('SendModPacks', (data: TableData) => {
-        if (data.Type === TableDataType.Reset) {
+    connection.on('SendModPacks', (data: CollectionChangedData) => {
+        if (data.Type === CollectionChangeType.Reset) {
             let noMods: ModPackMetaData = { Name: "", CreatedTime: "", LastModifiedTime: "" };
-            data.Rows.push(noMods);
+            data.NewItems.push(noMods);
         }
 
         modPackTable.update(data);
@@ -1140,7 +1139,7 @@ import { Error, Result, Utils } from "./utils";
         ensureModPackSelected();
     });
 
-    connection.on('SendLogFiles', (serverId: string, data: TableData) => {
+    connection.on('SendLogFiles', (serverId: string, data: CollectionChangedData) => {
         if (serverId !== serverSelect.value) {
             return;
         }
@@ -1148,7 +1147,7 @@ import { Error, Result, Utils } from "./utils";
         logsFileTable.update(data);
     });
 
-    connection.on('SendChatLogFiles', (serverId: string, data: TableData) => {
+    connection.on('SendChatLogFiles', (serverId: string, data: CollectionChangedData) => {
         if (serverId !== serverSelect.value) {
             return;
         }
@@ -1161,7 +1160,7 @@ import { Error, Result, Utils } from "./utils";
         ensureModPackSelected();
     });
 
-    connection.on('SendCachedVersions', (data: TableData<string>) => {
+    connection.on('SendCachedVersions', (data: CollectionChangedData<string>) => {
         cachedVersionsTable.update(data);
     });
 

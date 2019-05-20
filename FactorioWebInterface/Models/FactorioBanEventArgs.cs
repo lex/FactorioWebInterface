@@ -2,31 +2,17 @@
 
 namespace FactorioWebInterface.Models
 {
-    public class FactorioBanAddedEventArgs
+    public class FactorioBanEventArgs
     {
-        public Ban Ban { get; }
         public bool SynchronizeWithServers { get; }
         public string Source { get; }
+        public CollectionChangedData<Ban> ChangeData { get; }
 
-        public FactorioBanAddedEventArgs(Ban ban, bool synchronizeWithServers, string source)
+        public FactorioBanEventArgs(bool synchronizeWithServers, string source, CollectionChangedData<Ban> changeData)
         {
-            Ban = ban;
             SynchronizeWithServers = synchronizeWithServers;
             Source = source;
-        }
-    }
-
-    public class FactorioBanRemovedEventArgs
-    {
-        public string Username { get; }
-        public bool SynchronizeWithServers { get; }
-        public string Source { get; }
-
-        public FactorioBanRemovedEventArgs(string username, bool synchronizeWithServers, string source)
-        {
-            Username = username;
-            SynchronizeWithServers = synchronizeWithServers;
-            Source = source;
+            ChangeData = changeData;
         }
     }
 }
