@@ -65,6 +65,7 @@ export class Table<T = any> {
             if (cb.SortKeySelector !== undefined) {
                 let cell = this.tableHeaders[i];
                 cell.onclick = () => this.onHeaderClick(i);
+                cell.style.cursor = 'pointer';
             }
         }
     }
