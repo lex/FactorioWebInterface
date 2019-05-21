@@ -1095,13 +1095,11 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
             }
         }
 
-        let noMods = radios[0] as HTMLInputElement;
+        let noMods = modPackTableElement.querySelectorAll('input[type="radio"][value=""]')[0] as HTMLInputElement;
 
-        if (noMods === undefined) {
-            return;
+        if (noMods) {
+            noMods.checked = true;
         }
-
-        noMods.checked = true;
     }
 
     connection.on('SendTempSavesFiles', (serverId: string, data: CollectionChangedData) => {
