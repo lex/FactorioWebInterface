@@ -112,8 +112,6 @@ export class Table<T = any> {
                 this.tableMap.set(key, rowElement);
             }
         }
-
-        return true;
     }
 
     private doReset(rows: T[]) {
@@ -121,8 +119,6 @@ export class Table<T = any> {
         this.tableMap.clear();
 
         this.doAdd(rows);
-
-        return true;
     }
 
     private doRemove(rows: T[]) {
@@ -151,17 +147,10 @@ export class Table<T = any> {
                 oldRow.remove();
             }
         }
-
-        return false;
     }
 
     private doUpdate(rows: T[]) {
         let keySelector = this.keySelector;
-
-        if (keySelector === undefined) {
-            console.error('Table keySelector must be set to support update.');
-            return false;
-        }
 
         let tableMap = this.tableMap;
         let tableRows = this.tableRows;
@@ -192,42 +181,39 @@ export class Table<T = any> {
                 }
             }
         }
-
-        return true;
     }
 
     update(collectionChangedData: CollectionChangedData): void {
-        let dirty;
-
         switch (collectionChangedData.Type) {
             case CollectionChangeType.Reset:
-                dirty = this.doReset(collectionChangedData.NewItems);
+                this.doReset(collectionChangedData.NewItems);
+                this.reBuild();
                 break;
             case CollectionChangeType.Add:
                 if (this.keySelector) {
-                    dirty = this.doUpdate(collectionChangedData.NewItems);
+                    this.doUpdate(collectionChangedData.NewItems);
                 } else {
-                    dirty = this.doAdd(collectionChangedData.NewItems);
+                    this.doAdd(collectionChangedData.NewItems);
                 }
+
+                this.reBuild();
                 break;
             case CollectionChangeType.Remove:
-                dirty = this.doRemove(collectionChangedData.OldItems);
+                this.doRemove(collectionChangedData.OldItems);
                 break;
             case CollectionChangeType.AddAndRemove:
-                dirty = this.doRemove(collectionChangedData.OldItems);
+                this.doRemove(collectionChangedData.OldItems);
+
                 if (this.keySelector) {
-                    dirty = dirty || this.doUpdate(collectionChangedData.NewItems);
+                    this.doUpdate(collectionChangedData.NewItems);
                 } else {
-                    dirty = dirty || this.doAdd(collectionChangedData.NewItems);
+                    this.doAdd(collectionChangedData.NewItems);
                 }
+
+                this.reBuild();
                 break;
             default:
-                dirty = false;
                 break;
-        }
-
-        if (dirty) {
-            this.reBuild();
         }
     }
 
