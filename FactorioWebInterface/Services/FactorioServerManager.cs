@@ -111,46 +111,33 @@ namespace FactorioWebInterface.Services
             _factorioModManager.ModPackChanged += _factorioModManager_ModPackChanged;
         }
 
-        private void DoFileChange(FilesChangedEventArgs eventArgs, Func<IFactorioControlClientMethods, string, CollectionChangedData<FileMetaData>, Task> method)
-        {
-            var serverId = eventArgs.ServerId;
-
-            IFactorioControlClientMethods clients;
-            if (string.IsNullOrEmpty(serverId))
-            {
-                clients = _factorioControlHub.Clients.All;
-            }
-            else
-            {
-                clients = _factorioControlHub.Clients.Group(eventArgs.ServerId);
-            }
-
-            method(clients, serverId, eventArgs.ChangedData);
-        }
-
         private void _factorioFileManager_TempSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendTempSavesFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendTempSavesFiles(id, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_LocalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendLocalSaveFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendLocalSaveFiles(id, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_GlobalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendGlobalSaveFiles(td));
+            _factorioControlHub.Clients.All.SendGlobalSaveFiles(eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_LogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendLogFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendLogFiles(id, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_ChatLogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendChatLogFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendChatLogFiles(id, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, CollectionChangedData<ScenarioMetaData> eventArgs)
@@ -162,6 +149,7 @@ namespace FactorioWebInterface.Services
         {
             _factorioControlHub.Clients.All.SendModPacks(eventArgs);
         }
+
         private void _factorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
         {
             var changeData = eventArgs.ChangeData;
@@ -366,165 +354,12 @@ namespace FactorioWebInterface.Services
             _ = SendToFactorioControl(eventArgs.ServerId, messageData);
         }
 
-        private static string MakeLogFilePath(FactorioServerData serverData, FileInfo file, DirectoryInfo logDirectory)
-        {
-            string timeStamp = file.CreationTimeUtc.ToString("yyyyMMddHHmmss");
-            string logName = Path.GetFileNameWithoutExtension(file.Name);
-
-            return Path.Combine(logDirectory.FullName, $"{logName}{timeStamp}.log");
-        }
-
-        private void RotateFactorioLogs(FactorioServerData serverData)
-        {
-            try
-            {
-                var dir = new DirectoryInfo(serverData.LogsDirectoryPath);
-                if (!dir.Exists)
-                {
-                    dir.Create();
-                }
-
-                var currentLog = new FileInfo(serverData.CurrentLogPath);
-                if (!currentLog.Exists)
-                {
-                    using (_ = currentLog.Create()) { }
-                    currentLog.CreationTimeUtc = DateTime.UtcNow;
-                    return;
-                }
-
-                if (currentLog.Length == 0)
-                {
-                    currentLog.CreationTimeUtc = DateTime.UtcNow;
-                    return;
-                }
-
-                string path = MakeLogFilePath(serverData, currentLog, dir);
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-
-                currentLog.MoveTo(path);
-
-                var newFile = new FileInfo(serverData.CurrentLogPath);
-                using (_ = newFile.Create()) { }
-                newFile.CreationTimeUtc = DateTime.UtcNow;
-
-                var logs = dir.GetFiles("*.log");
-
-                int removeCount = logs.Length - FactorioServerData.maxLogFiles + 1;
-                if (removeCount <= 0)
-                {
-                    return;
-                }
-
-                var archiveDir = new DirectoryInfo(serverData.ArchiveLogsDirectoryPath);
-                if (!archiveDir.Exists)
-                {
-                    archiveDir.Create();
-                }
-
-                // sort oldest first.
-                Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
-
-                for (int i = 0; i < removeCount && i < logs.Length; i++)
-                {
-                    var log = logs[i];
-
-                    var archivePath = Path.Combine(archiveDir.FullName, log.Name);
-
-                    log.MoveTo(archivePath);
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(RotateFactorioLogs));
-            }
-        }
-
-        private void RotateChatLogs(FactorioServerData serverData)
-        {
-            void BuildLogger(FileInfo file)
-            {
-                file.CreationTimeUtc = DateTime.UtcNow;
-                serverData.BuildChatLogger();
-            }
-
-            try
-            {
-                var dir = new DirectoryInfo(serverData.ChatLogsDirectoryPath);
-                if (!dir.Exists)
-                {
-                    dir.Create();
-                }
-
-                serverData.ChatLogger?.Dispose();
-                serverData.ChatLogger = null;
-
-                var currentLog = new FileInfo(serverData.ChatLogCurrentPath);
-                if (!currentLog.Exists)
-                {
-                    using (_ = currentLog.Create()) { }
-                    BuildLogger(currentLog);
-                    return;
-                }
-
-                if (currentLog.Length == 0)
-                {
-                    BuildLogger(currentLog);
-                    return;
-                }
-
-                string path = MakeLogFilePath(serverData, currentLog, dir);
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-
-                currentLog.MoveTo(path);
-
-                var newFile = new FileInfo(serverData.ChatLogCurrentPath);
-                using (_ = newFile.Create()) { }
-                BuildLogger(newFile);
-
-                var logs = dir.GetFiles("*.log");
-
-                int removeCount = logs.Length - FactorioServerData.maxLogFiles;
-                if (removeCount <= 0)
-                {
-                    return;
-                }
-
-                var archiveDir = new DirectoryInfo(serverData.ChatLogsArchiveDirectoryPath);
-                if (!archiveDir.Exists)
-                {
-                    archiveDir.Create();
-                }
-
-                // sort oldest first.
-                Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
-
-                for (int i = 0; i < removeCount && i < logs.Length; i++)
-                {
-                    var log = logs[i];
-
-                    var archivePath = Path.Combine(archiveDir.FullName, log.Name);
-
-                    log.MoveTo(archivePath);
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(RotateChatLogs));
-            }
-        }
-
         private Task RotateLogs(FactorioServerData serverData)
         {
             return Task.Run(() =>
             {
-                RotateFactorioLogs(serverData);
-                RotateChatLogs(serverData);
+                _factorioFileManager.RotateFactorioLogs(serverData);
+                _factorioFileManager.RotateChatLogs(serverData);
             });
         }
 
