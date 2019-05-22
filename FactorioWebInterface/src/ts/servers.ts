@@ -126,6 +126,8 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
     const configAdminUseDefault = document.getElementById('configAdminUseDefault') as HTMLInputElement;
     const configAdminInput = document.getElementById('configAdminInput') as HTMLTextAreaElement;
     const configSaveButton = document.getElementById('configSaveButton') as HTMLButtonElement;
+    const copySettingsButton = document.getElementById('copySettingsButton') as HTMLButtonElement;
+    const pasteSettingsTextInput = document.getElementById('pasteSettingsTextInput') as HTMLInputElement;
     const configAutoSaveIntervalInput = document.getElementById('configAutoSaveIntervalInput') as HTMLInputElement;
     const configAutoSaveSlotsInput = document.getElementById('configAutoSaveSlotsInput') as HTMLInputElement;
     const configNonBlockingSavingInput = document.getElementById('configNonBlockingSavingInput') as HTMLInputElement;
@@ -134,6 +136,8 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
     const configBuildBansFromDb = document.getElementById('configBuildBansFromDb') as HTMLInputElement;
     const configSetDiscordChannelName = document.getElementById('configSetDiscordChannelName') as HTMLInputElement;
     const configExtraSaveButton = document.getElementById('configExtraSaveButton') as HTMLButtonElement;
+    const copyExtraSettingsButton = document.getElementById('copyExtraSettingsButton') as HTMLButtonElement;
+    const pasteExtraSettingsTextInput = document.getElementById('pasteExtraSettingsTextInput') as HTMLInputElement;
     const configSetGameChatToDiscord = document.getElementById('configSetGameChatToDiscord') as HTMLInputElement;
     const configSetGameShoutToDiscord = document.getElementById('configSetGameShoutToDiscord') as HTMLInputElement;
     const configSetDiscordToGameChat = document.getElementById('configSetDiscordToGameChat') as HTMLInputElement;
@@ -171,43 +175,92 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         connection.send('RequestChatLogFiles');
     }
 
-    async function getSettings() {
-        let settings = await connection.invoke('GetServerSettings') as FactorioServerSettings;
-
+    function processSettingsAndApplyToForm(settings: FactorioServerSettings) {
+        settings.Name = settings.Name || "";
         configNameInput.value = settings.Name;
+
+        settings.Description = settings.Description || "";
         configDescriptionInput.value = settings.Description;
 
+        settings.Tags = settings.Tags || [];
         let text = '';
         for (let item of settings.Tags) {
             text += (item + '\n');
         }
         configTagsInput.value = text;
 
+        settings.MaxPlayers = settings.MaxPlayers || 0;
         configMaxPlayersInput.value = settings.MaxPlayers + "";
+
+        settings.GamePassword = settings.GamePassword || "";
         configPasswordInput.value = settings.GamePassword;
+
+        settings.MaxUploadSlots = settings.MaxUploadSlots || 0;
         configMaxUploadSlots.value = settings.MaxUploadSlots + "";
+
+        if (settings.AutoPause === undefined)
+            settings.AutoPause = true;
         configPauseInput.checked = settings.AutoPause;
+
+        if (settings.UseDefaultAdmins === undefined) {
+            settings.UseDefaultAdmins = false;
+        }
         configAdminUseDefault.checked = settings.UseDefaultAdmins;
+
+        settings.Admins = settings.Admins || [];
         configAdminInput.value = settings.Admins.join(', ');
+
+        settings.AutosaveInterval = settings.AutosaveInterval || 0;
         configAutoSaveIntervalInput.value = settings.AutosaveInterval + "";
+
+        settings.AutosaveSlots = settings.AutosaveSlots || 0;
         configAutoSaveSlotsInput.value = settings.AutosaveSlots + "";
+
+        if (settings.NonBlockingSaving === undefined) {
+            settings.NonBlockingSaving = true;
+        }
         configNonBlockingSavingInput.checked = settings.NonBlockingSaving;
+
+        if (settings.PublicVisible === undefined) {
+            settings.PublicVisible = true;
+        }
         configPublicVisibleInput.checked = settings.PublicVisible;
 
         configAdminInput.disabled = settings.UseDefaultAdmins;
+    }
+
+    async function getSettings() {
+        let settings = await connection.invoke('GetServerSettings') as FactorioServerSettings;
+
+        processSettingsAndApplyToForm(settings);
 
         serverName.innerText = settings.Name;
+    }
+
+    function processExtraSettingsAndApplyToForm(settings: FactorioServerExtraSettings) {
+        settings.SyncBans = settings.SyncBans || true;
+        configSyncBans.checked = settings.SyncBans;
+
+        settings.BuildBansFromDatabaseOnStart = settings.BuildBansFromDatabaseOnStart || true;
+        configBuildBansFromDb.checked = settings.BuildBansFromDatabaseOnStart;
+
+        settings.SetDiscordChannelName = settings.SetDiscordChannelName || true;
+        configSetDiscordChannelName.checked = settings.SetDiscordChannelName;
+
+        settings.GameChatToDiscord = settings.GameChatToDiscord || true;
+        configSetGameChatToDiscord.checked = settings.GameChatToDiscord;
+
+        settings.GameShoutToDiscord = settings.GameShoutToDiscord || true;
+        configSetGameShoutToDiscord.checked = settings.GameShoutToDiscord;
+
+        settings.DiscordToGameChat = settings.DiscordToGameChat || true;
+        configSetDiscordToGameChat.checked = settings.DiscordToGameChat;
     }
 
     async function getExtraSettings() {
         let settings = await connection.invoke('GetServerExtraSettings') as FactorioServerExtraSettings;
 
-        configSyncBans.checked = settings.SyncBans;
-        configBuildBansFromDb.checked = settings.BuildBansFromDatabaseOnStart;
-        configSetDiscordChannelName.checked = settings.SetDiscordChannelName;
-        configSetGameChatToDiscord.checked = settings.GameChatToDiscord;
-        configSetGameShoutToDiscord.checked = settings.GameShoutToDiscord;
-        configSetDiscordToGameChat.checked = settings.DiscordToGameChat;
+        processExtraSettingsAndApplyToForm(settings);
     }
 
     async function getVersion() {
@@ -1016,7 +1069,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         }
     });
 
-    configSaveButton.onclick = async () => {
+    function buildSettings(): FactorioServerSettings {
         let text = configTagsInput.value;
         let tags = text.trim().split('\n');
 
@@ -1056,6 +1109,12 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
             PublicVisible: configPublicVisibleInput.checked
         };
 
+        return settings;
+    }
+
+    configSaveButton.onclick = async () => {
+        let settings = buildSettings();
+
         let result: Result = await connection.invoke('SaveServerSettings', settings);
 
         if (!result.Success) {
@@ -1065,7 +1124,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         await getSettings();
     };
 
-    configExtraSaveButton.onclick = async () => {
+    function buildExtraSettings(): FactorioServerExtraSettings {
         let settings: FactorioServerExtraSettings = {
             SyncBans: configSyncBans.checked,
             BuildBansFromDatabaseOnStart: configBuildBansFromDb.checked,
@@ -1075,6 +1134,12 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
             DiscordToGameChat: configSetDiscordToGameChat.checked,
         }
 
+        return settings;
+    }
+
+    configExtraSaveButton.onclick = async () => {
+        let settings = buildExtraSettings();
+
         let result: Result = await connection.invoke('SaveServerExtraSettings', settings);
 
         if (!result.Success) {
@@ -1083,6 +1148,86 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
 
         await getExtraSettings();
     };
+
+    copySettingsButton.onclick = () => {
+        let settings = buildSettings();
+        let text = JSON.stringify(settings);
+
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+    }
+
+    pasteSettingsTextInput.onclick = () => {
+        pasteSettingsTextInput.value = "";
+    }
+
+    pasteSettingsTextInput.onpaste = (event: ClipboardEvent) => {
+        event.preventDefault();
+
+        let text = event.clipboardData.getData('text/plain');
+        let data;
+
+        try {
+            data = JSON.parse(text);
+        }
+        catch (ex) {
+            pasteSettingsTextInput.value = 'Invalid settings';
+            return;
+        }
+
+        if (data) {
+            processSettingsAndApplyToForm(data);
+            pasteSettingsTextInput.value = 'Settings applied';
+        }
+    }
+
+    copyExtraSettingsButton.onclick = () => {
+        let settings = buildExtraSettings();
+        let text = JSON.stringify(settings);
+
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+    }
+
+    pasteExtraSettingsTextInput.onclick = () => {
+        pasteExtraSettingsTextInput.value = "";
+    }
+
+    pasteExtraSettingsTextInput.onpaste = (event: ClipboardEvent) => {
+        event.preventDefault();
+
+        let text = event.clipboardData.getData('text/plain');
+        let data;
+
+        try {
+            data = JSON.parse(text);
+        }
+        catch (ex) {
+            pasteExtraSettingsTextInput.value = 'Invalid settings';
+            return;
+        }
+
+        if (data) {
+            processExtraSettingsAndApplyToForm(data);
+            pasteExtraSettingsTextInput.value = 'Settings applied';
+        }
+    }
 
     function ensureModPackSelected() {
         let radios = modPackTableElement.querySelectorAll('input[type="radio"]');
