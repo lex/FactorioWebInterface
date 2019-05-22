@@ -36,6 +36,8 @@ namespace FactorioWebInterface.Hubs
         Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings);
         Task<FactorioServerExtraSettings> GetServerExtraSettings();
         Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings);
+        Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data);
+        Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data);
         Task<Result> DeflateSave(string directoryPath, string fileName, string newFileName);
         Task RequestDownloadableVersions();
         Task RequestCachedVersions();
@@ -63,5 +65,9 @@ namespace FactorioWebInterface.Hubs
         Task SendCachedVersions(CollectionChangedData<string> data);
         Task SendVersion(string version);
         Task SendSelectedModPack(string modPack);
+        Task SendServerSettings(FactorioServerSettingsWebEditable settings);
+        Task SendServerSettingsUpdate(KeyValueCollectionChangedData<string, object> data);
+        Task SendServerExtraSettings(FactorioServerExtraSettings settings);
+        Task SendServerExtraSettingsUpdate(KeyValueCollectionChangedData<string, object> data);
     }
 }

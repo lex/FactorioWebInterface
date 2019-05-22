@@ -408,5 +408,15 @@ namespace FactorioWebInterface.Hubs
 
             return Task.CompletedTask;
         }
+
+        public Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
