@@ -32,12 +32,14 @@ namespace FactorioWebInterface.Hubs
         Task<Result> MoveFiles(string destination, List<string> filePaths);
         Task<Result> CopyFiles(string destination, List<string> filePaths);
         Task<Result> RenameFile(string directoryPath, string fileName, string newFileName);
-        Task<FactorioServerSettingsWebEditable> GetServerSettings();
+        Task RequestServerSettings();
+        Task RequestServerExtraSettings();
         Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings);
-        Task<FactorioServerExtraSettings> GetServerExtraSettings();
         Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings);
         Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data);
         Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data);
+        Task UndoServerSettings();
+        Task UndoServerExtraSettings();
         Task<Result> DeflateSave(string directoryPath, string fileName, string newFileName);
         Task RequestDownloadableVersions();
         Task RequestCachedVersions();
@@ -65,9 +67,9 @@ namespace FactorioWebInterface.Hubs
         Task SendCachedVersions(CollectionChangedData<string> data);
         Task SendVersion(string version);
         Task SendSelectedModPack(string modPack);
-        Task SendServerSettings(FactorioServerSettingsWebEditable settings);
-        Task SendServerSettingsUpdate(KeyValueCollectionChangedData<string, object> data);
-        Task SendServerExtraSettings(FactorioServerExtraSettings settings);
-        Task SendServerExtraSettingsUpdate(KeyValueCollectionChangedData<string, object> data);
+        Task SendServerSettings(FactorioServerSettingsWebEditable settings, bool isSaved);
+        Task SendServerSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved);
+        Task SendServerExtraSettings(FactorioServerExtraSettings settings, bool isSaved);
+        Task SendServerExtraSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved);
     }
 }

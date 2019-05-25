@@ -14,7 +14,7 @@ namespace FactorioWebInterface.Models
         public string Description { get; set; }
 
         [JsonProperty(PropertyName = "tags")]
-        public List<string> Tags { get; set; }
+        public string[] Tags { get; set; }
 
         [JsonProperty(PropertyName = "max_players")]
         public int MaxPlayers { get; set; }
@@ -79,7 +79,7 @@ namespace FactorioWebInterface.Models
         {
             Name = "The server's name.",
             Description = "The server's description.",
-            Tags = new List<string>() { "The", "Server's", "Tags" },
+            Tags = new string[] { "The", "Server's", "Tags" },
             MaxPlayers = 0,
             Visibility = new FactorioServerSettingsConfigVisibility() { Public = true, Lan = true },
             Username = configuration[Constants.ServerSettingsUsernameKey],

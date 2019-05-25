@@ -1,7 +1,7 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack";
 import * as Table from "./table";
-import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } from "./utils";
+import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyValueCollectionChangedData } from "./utils";
 
 !function () {
 
@@ -60,6 +60,8 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         PublicVisible: boolean;
     }
 
+    type FactorioServerSettingsType = keyof FactorioServerSettings;
+
     interface FactorioServerExtraSettings {
         SyncBans: boolean;
         BuildBansFromDatabaseOnStart: boolean;
@@ -68,6 +70,8 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         GameShoutToDiscord: boolean;
         DiscordToGameChat: boolean;
     }
+
+    type FactorioServerExtraSettingsType = keyof FactorioServerExtraSettings;
 
     const divMessages: HTMLDivElement = document.querySelector("#divMessages");
     const tbMessage: HTMLInputElement = document.querySelector("#tbMessage");
@@ -116,6 +120,8 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
     const fileProgressContiner = document.getElementById('fileProgressContiner') as HTMLSpanElement;
     const deflateProgress = document.getElementById('deflateProgress') as HTMLSpanElement;
 
+    const settingsBox = document.getElementById('settingsBox') as HTMLDivElement;
+    const settingsUnsavedLabel = document.getElementById('settingsUnsavedLabel') as HTMLLabelElement;
     const configNameInput = document.getElementById('configNameInput') as HTMLInputElement;
     const configDescriptionInput = document.getElementById('configDescriptionInput') as HTMLInputElement;
     const configTagsInput = document.getElementById('configTagsInput') as HTMLTextAreaElement;
@@ -125,9 +131,6 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
     const configPauseInput = document.getElementById('configPauseInput') as HTMLInputElement;
     const configAdminUseDefault = document.getElementById('configAdminUseDefault') as HTMLInputElement;
     const configAdminInput = document.getElementById('configAdminInput') as HTMLTextAreaElement;
-    const configSaveButton = document.getElementById('configSaveButton') as HTMLButtonElement;
-    const copySettingsButton = document.getElementById('copySettingsButton') as HTMLButtonElement;
-    const pasteSettingsTextInput = document.getElementById('pasteSettingsTextInput') as HTMLInputElement;
     const configAutoSaveIntervalInput = document.getElementById('configAutoSaveIntervalInput') as HTMLInputElement;
     const configAutoSaveSlotsInput = document.getElementById('configAutoSaveSlotsInput') as HTMLInputElement;
     const configNonBlockingSavingInput = document.getElementById('configNonBlockingSavingInput') as HTMLInputElement;
@@ -135,12 +138,20 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
     const configSyncBans = document.getElementById('configSyncBans') as HTMLInputElement;
     const configBuildBansFromDb = document.getElementById('configBuildBansFromDb') as HTMLInputElement;
     const configSetDiscordChannelName = document.getElementById('configSetDiscordChannelName') as HTMLInputElement;
-    const configExtraSaveButton = document.getElementById('configExtraSaveButton') as HTMLButtonElement;
-    const copyExtraSettingsButton = document.getElementById('copyExtraSettingsButton') as HTMLButtonElement;
-    const pasteExtraSettingsTextInput = document.getElementById('pasteExtraSettingsTextInput') as HTMLInputElement;
+    const configSaveButton = document.getElementById('configSaveButton') as HTMLButtonElement;
+    const undoSettingsButton = document.getElementById('undoSettingsButton') as HTMLButtonElement;
+    const copySettingsButton = document.getElementById('copySettingsButton') as HTMLButtonElement;
+    const pasteSettingsTextInput = document.getElementById('pasteSettingsTextInput') as HTMLInputElement;
+
+    const extraSettingsBox = document.getElementById('extraSettingsBox') as HTMLDivElement;
+    const extraSettingsUnsavedLabel = document.getElementById('extraSettingsUnsavedLabel') as HTMLLabelElement;
     const configSetGameChatToDiscord = document.getElementById('configSetGameChatToDiscord') as HTMLInputElement;
     const configSetGameShoutToDiscord = document.getElementById('configSetGameShoutToDiscord') as HTMLInputElement;
     const configSetDiscordToGameChat = document.getElementById('configSetDiscordToGameChat') as HTMLInputElement;
+    const configExtraSaveButton = document.getElementById('configExtraSaveButton') as HTMLButtonElement;
+    const undoExtraSettingsButton = document.getElementById('undoExtraSettingsButton') as HTMLButtonElement;
+    const copyExtraSettingsButton = document.getElementById('copyExtraSettingsButton') as HTMLButtonElement;
+    const pasteExtraSettingsTextInput = document.getElementById('pasteExtraSettingsTextInput') as HTMLInputElement;
 
     let tempSaveFilesTable: Table.Table;
     let localSaveFilesTable: Table.Table;
@@ -164,10 +175,6 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         .withHubProtocol(new MessagePackHubProtocol())
         .build();
 
-    configAdminUseDefault.onchange = () => {
-        configAdminInput.disabled = configAdminUseDefault.checked;
-    }
-
     function getFiles() {
         connection.send('RequestTempSaveFiles');
         connection.send('RequestLocalSaveFiles');
@@ -175,92 +182,9 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         connection.send('RequestChatLogFiles');
     }
 
-    function processSettingsAndApplyToForm(settings: FactorioServerSettings) {
-        settings.Name = settings.Name || "";
-        configNameInput.value = settings.Name;
-
-        settings.Description = settings.Description || "";
-        configDescriptionInput.value = settings.Description;
-
-        settings.Tags = settings.Tags || [];
-        let text = '';
-        for (let item of settings.Tags) {
-            text += (item + '\n');
-        }
-        configTagsInput.value = text;
-
-        settings.MaxPlayers = settings.MaxPlayers || 0;
-        configMaxPlayersInput.value = settings.MaxPlayers + "";
-
-        settings.GamePassword = settings.GamePassword || "";
-        configPasswordInput.value = settings.GamePassword;
-
-        settings.MaxUploadSlots = settings.MaxUploadSlots || 0;
-        configMaxUploadSlots.value = settings.MaxUploadSlots + "";
-
-        if (settings.AutoPause === undefined)
-            settings.AutoPause = true;
-        configPauseInput.checked = settings.AutoPause;
-
-        if (settings.UseDefaultAdmins === undefined) {
-            settings.UseDefaultAdmins = false;
-        }
-        configAdminUseDefault.checked = settings.UseDefaultAdmins;
-
-        settings.Admins = settings.Admins || [];
-        configAdminInput.value = settings.Admins.join(', ');
-
-        settings.AutosaveInterval = settings.AutosaveInterval || 0;
-        configAutoSaveIntervalInput.value = settings.AutosaveInterval + "";
-
-        settings.AutosaveSlots = settings.AutosaveSlots || 0;
-        configAutoSaveSlotsInput.value = settings.AutosaveSlots + "";
-
-        if (settings.NonBlockingSaving === undefined) {
-            settings.NonBlockingSaving = true;
-        }
-        configNonBlockingSavingInput.checked = settings.NonBlockingSaving;
-
-        if (settings.PublicVisible === undefined) {
-            settings.PublicVisible = true;
-        }
-        configPublicVisibleInput.checked = settings.PublicVisible;
-
-        configAdminInput.disabled = settings.UseDefaultAdmins;
-    }
-
-    async function getSettings() {
-        let settings = await connection.invoke('GetServerSettings') as FactorioServerSettings;
-
-        processSettingsAndApplyToForm(settings);
-
-        serverName.innerText = settings.Name;
-    }
-
-    function processExtraSettingsAndApplyToForm(settings: FactorioServerExtraSettings) {
-        settings.SyncBans = settings.SyncBans || true;
-        configSyncBans.checked = settings.SyncBans;
-
-        settings.BuildBansFromDatabaseOnStart = settings.BuildBansFromDatabaseOnStart || true;
-        configBuildBansFromDb.checked = settings.BuildBansFromDatabaseOnStart;
-
-        settings.SetDiscordChannelName = settings.SetDiscordChannelName || true;
-        configSetDiscordChannelName.checked = settings.SetDiscordChannelName;
-
-        settings.GameChatToDiscord = settings.GameChatToDiscord || true;
-        configSetGameChatToDiscord.checked = settings.GameChatToDiscord;
-
-        settings.GameShoutToDiscord = settings.GameShoutToDiscord || true;
-        configSetGameShoutToDiscord.checked = settings.GameShoutToDiscord;
-
-        settings.DiscordToGameChat = settings.DiscordToGameChat || true;
-        configSetDiscordToGameChat.checked = settings.DiscordToGameChat;
-    }
-
-    async function getExtraSettings() {
-        let settings = await connection.invoke('GetServerExtraSettings') as FactorioServerExtraSettings;
-
-        processExtraSettingsAndApplyToForm(settings);
+    function getSettings() {
+        connection.send('RequestServerSettings');
+        connection.send('RequestServerExtraSettings');
     }
 
     async function getVersion() {
@@ -279,7 +203,6 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
 
         getFiles();
         getSettings();
-        getExtraSettings();
         getVersion();
         getSelectedModPack();
 
@@ -322,7 +245,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
 
     onpopstate = function (e) {
         let state = e.state;
-        console.log(state);
+
         if (state) {
             serverSelect.value = state.value;
             updateLocalPageData();
@@ -1069,6 +992,141 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         }
     });
 
+    let settingsSaved = true;
+    function markSettingsSaved() {
+        if (settingsSaved) {
+            return;
+        }
+
+        settingsSaved = true;
+
+        settingsBox.classList.remove('box-danger');
+        settingsUnsavedLabel.classList.add('is-hidden');
+        configSaveButton.setAttribute('disabled', '');
+        undoSettingsButton.setAttribute('disabled', '');
+    }
+
+    function markSettingsUnsaved() {
+        if (!settingsSaved) {
+            return;
+        }
+
+        settingsSaved = false;
+
+        settingsBox.classList.add('box-danger');
+        settingsUnsavedLabel.classList.remove('is-hidden');
+        configSaveButton.removeAttribute('disabled');
+        undoSettingsButton.removeAttribute('disabled');
+    }
+
+    let extraSettingsSaved = true;
+    function markExtraSettingsSaved() {
+        if (extraSettingsSaved) {
+            return;
+        }
+
+        extraSettingsSaved = true;
+
+        extraSettingsBox.classList.remove('box-danger');
+        extraSettingsUnsavedLabel.classList.add('is-hidden');
+        configExtraSaveButton.setAttribute('disabled', '');
+        undoExtraSettingsButton.setAttribute('disabled', '');
+    }
+
+    function markExtraSettingsUnsaved() {
+        if (!extraSettingsSaved) {
+            return;
+        }
+
+        extraSettingsSaved = false;
+
+        extraSettingsBox.classList.add('box-danger');
+        extraSettingsUnsavedLabel.classList.remove('is-hidden');
+        configExtraSaveButton.removeAttribute('disabled');
+        undoExtraSettingsButton.removeAttribute('disabled');
+    }
+
+    function processSettingsAndApplyToForm(settings: FactorioServerSettings) {
+        settings.Name = settings.Name || "";
+        configNameInput.value = settings.Name;
+
+        settings.Description = settings.Description || "";
+        configDescriptionInput.value = settings.Description;
+
+        settings.Tags = settings.Tags || [];
+        let text = '';
+        for (let item of settings.Tags) {
+            text += (item + '\n');
+        }
+        configTagsInput.value = text;
+
+        settings.MaxPlayers = settings.MaxPlayers || 0;
+        configMaxPlayersInput.value = settings.MaxPlayers + "";
+
+        settings.GamePassword = settings.GamePassword || "";
+        configPasswordInput.value = settings.GamePassword;
+
+        settings.MaxUploadSlots = settings.MaxUploadSlots || 0;
+        configMaxUploadSlots.value = settings.MaxUploadSlots + "";
+
+        if (settings.AutoPause === undefined)
+            settings.AutoPause = true;
+        configPauseInput.checked = settings.AutoPause;
+
+        if (settings.UseDefaultAdmins === undefined) {
+            settings.UseDefaultAdmins = false;
+        }
+        configAdminUseDefault.checked = settings.UseDefaultAdmins;
+
+        settings.Admins = settings.Admins || [];
+        settings.Admins = settings.Admins.map(s => s.trim());
+        configAdminInput.value = settings.Admins.join(', ');
+
+        settings.AutosaveInterval = settings.AutosaveInterval || 0;
+        configAutoSaveIntervalInput.value = settings.AutosaveInterval + "";
+
+        settings.AutosaveSlots = settings.AutosaveSlots || 0;
+        configAutoSaveSlotsInput.value = settings.AutosaveSlots + "";
+
+        if (settings.NonBlockingSaving === undefined) {
+            settings.NonBlockingSaving = true;
+        }
+        configNonBlockingSavingInput.checked = settings.NonBlockingSaving;
+
+        if (settings.PublicVisible === undefined) {
+            settings.PublicVisible = true;
+        }
+        configPublicVisibleInput.checked = settings.PublicVisible;
+
+        configAdminInput.disabled = settings.UseDefaultAdmins;
+    }
+
+    function processExtraSettingsAndApplyToForm(settings: FactorioServerExtraSettings) {
+        if (settings.SyncBans === undefined)
+            settings.SyncBans = true;
+        configSyncBans.checked = settings.SyncBans;
+
+        if (settings.BuildBansFromDatabaseOnStart === undefined)
+            settings.BuildBansFromDatabaseOnStart = true;
+        configBuildBansFromDb.checked = settings.BuildBansFromDatabaseOnStart;
+
+        if (settings.SetDiscordChannelName === undefined)
+            settings.SetDiscordChannelName = true;
+        configSetDiscordChannelName.checked = settings.SetDiscordChannelName;
+
+        if (settings.GameChatToDiscord === undefined)
+            settings.GameChatToDiscord = true;
+        configSetGameChatToDiscord.checked = settings.GameChatToDiscord;
+
+        if (settings.GameShoutToDiscord === undefined)
+            settings.GameShoutToDiscord = true;
+        configSetGameShoutToDiscord.checked = settings.GameShoutToDiscord;
+
+        if (settings.DiscordToGameChat === undefined)
+            settings.DiscordToGameChat = true;
+        configSetDiscordToGameChat.checked = settings.DiscordToGameChat;
+    }
+
     function buildSettings(): FactorioServerSettings {
         let text = configTagsInput.value;
         let tags = text.trim().split('\n');
@@ -1112,6 +1170,160 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         return settings;
     }
 
+    configNameInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { Name: configNameInput.value }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configDescriptionInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { Description: configDescriptionInput.value }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configTagsInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let tags = configTagsInput.value.trim().split('\n');
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { Tags: tags }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configMaxPlayersInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let max_players = parseInt(configMaxPlayersInput.value);
+        if (isNaN(max_players)) {
+            max_players = 0;
+        }
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { MaxPlayers: max_players }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configPasswordInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { GamePassword: configPasswordInput.value }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configMaxUploadSlots.onchange = () => {
+        markSettingsUnsaved();
+
+        let maxUploadSlots = parseInt(configMaxUploadSlots.value);
+        if (isNaN(maxUploadSlots)) {
+            maxUploadSlots = 32;
+        }
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { MaxUploadSlots: maxUploadSlots }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configPauseInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { AutoPause: configPauseInput.checked }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configAdminUseDefault.onchange = () => {
+        markSettingsUnsaved();
+
+        configAdminInput.disabled = configAdminUseDefault.checked;
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { UseDefaultAdmins: configAdminUseDefault.checked }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configAdminInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { Admins: configAdminInput.value.split(',') }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configAutoSaveIntervalInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let interval = parseInt(configAutoSaveIntervalInput.value);
+        if (isNaN(interval)) {
+            interval = 5;
+        }
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { AutosaveInterval: interval }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configAutoSaveSlotsInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let slots = parseInt(configAutoSaveSlotsInput.value);
+        if (isNaN(slots)) {
+            slots = 20;
+        }
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { AutosaveSlots: slots }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configNonBlockingSavingInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { NonBlockingSaving: configNonBlockingSavingInput.checked }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
+    configPublicVisibleInput.onchange = () => {
+        markSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { PublicVisible: configPublicVisibleInput.checked }
+        };
+        connection.send('UpdateServerSettings', data);
+    }
+
     configSaveButton.onclick = async () => {
         let settings = buildSettings();
 
@@ -1120,8 +1332,10 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         if (!result.Success) {
             alert(JSON.stringify(result.Errors));
         }
+    };
 
-        await getSettings();
+    undoSettingsButton.onclick = () => {
+        connection.send('UndoServerSettings');
     };
 
     function buildExtraSettings(): FactorioServerExtraSettings {
@@ -1137,6 +1351,66 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         return settings;
     }
 
+    configSyncBans.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { SyncBans: configSyncBans.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
+    configBuildBansFromDb.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { BuildBansFromDatabaseOnStart: configBuildBansFromDb.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
+    configSetDiscordChannelName.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { SetDiscordChannelName: configSetDiscordChannelName.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
+    configSetGameChatToDiscord.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { GameChatToDiscord: configSetGameChatToDiscord.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
+    configSetGameShoutToDiscord.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { GameShoutToDiscord: configSetGameShoutToDiscord.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
+    configSetDiscordToGameChat.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { DiscordToGameChat: configSetDiscordToGameChat.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
     configExtraSaveButton.onclick = async () => {
         let settings = buildExtraSettings();
 
@@ -1145,8 +1419,10 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         if (!result.Success) {
             alert(JSON.stringify(result.Errors));
         }
+    };
 
-        await getExtraSettings();
+    undoExtraSettingsButton.onclick = () => {
+        connection.send('UndoServerExtraSettings');
     };
 
     copySettingsButton.onclick = () => {
@@ -1165,7 +1441,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         textarea.remove();
     }
 
-    pasteSettingsTextInput.onclick = () => {
+    pasteSettingsTextInput.onmousedown = () => {
         pasteSettingsTextInput.value = "";
     }
 
@@ -1173,19 +1449,30 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         event.preventDefault();
 
         let text = event.clipboardData.getData('text/plain');
-        let data;
+        let settings;
 
         try {
-            data = JSON.parse(text);
+            settings = JSON.parse(text);
         }
         catch (ex) {
             pasteSettingsTextInput.value = 'Invalid settings';
             return;
         }
 
-        if (data) {
-            processSettingsAndApplyToForm(data);
+        if (Utils.isObject(settings)) {
+            markSettingsUnsaved();
+
+            processSettingsAndApplyToForm(settings);
             pasteSettingsTextInput.value = 'Settings applied';
+
+            let data: KeyValueCollectionChangedData = {
+                Type: CollectionChangeType.Add,
+                NewItems: settings
+            };
+            connection.send('UpdateServerSettings', data);
+
+        } else {
+            pasteSettingsTextInput.value = 'Invalid settings';
         }
     }
 
@@ -1205,7 +1492,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         textarea.remove();
     }
 
-    pasteExtraSettingsTextInput.onclick = () => {
+    pasteExtraSettingsTextInput.onmousedown = () => {
         pasteExtraSettingsTextInput.value = "";
     }
 
@@ -1213,19 +1500,29 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
         event.preventDefault();
 
         let text = event.clipboardData.getData('text/plain');
-        let data;
+        let settings;
 
         try {
-            data = JSON.parse(text);
+            settings = JSON.parse(text);
         }
         catch (ex) {
             pasteExtraSettingsTextInput.value = 'Invalid settings';
             return;
         }
 
-        if (data) {
-            processExtraSettingsAndApplyToForm(data);
+        if (Utils.isObject(settings)) {
+            markExtraSettingsUnsaved();
+
+            processExtraSettingsAndApplyToForm(settings);
             pasteExtraSettingsTextInput.value = 'Settings applied';
+
+            let data: KeyValueCollectionChangedData = {
+                Type: CollectionChangeType.Add,
+                NewItems: settings
+            };
+            connection.send('UpdateServerExtraSettings', data);
+        } else {
+            pasteExtraSettingsTextInput.value = 'Invalid settings';
         }
     }
 
@@ -1305,6 +1602,164 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType } fro
 
     connection.on('SendCachedVersions', (data: CollectionChangedData<string>) => {
         cachedVersionsTable.update(data);
+    });
+
+    connection.on('SendServerSettings', (settings: FactorioServerSettings, saved: boolean) => {
+        processSettingsAndApplyToForm(settings);
+        serverName.innerText = settings.Name;
+
+        if (saved) {
+            markSettingsSaved();
+        } else {
+            markSettingsUnsaved();
+        }
+    });
+
+    connection.on('SendServerExtraSettings', (settings: FactorioServerExtraSettings, saved: boolean) => {
+        processExtraSettingsAndApplyToForm(settings);
+
+        markExtraSettingsSaved();
+
+        if (saved) {
+            markExtraSettingsSaved();
+        } else {
+            markExtraSettingsUnsaved();
+        }
+    });
+
+    connection.on('SendServerSettingsUpdate', (data: KeyValueCollectionChangedData, markUnsaved: boolean) => {
+        if (data.Type != CollectionChangeType.Add) {
+            return;
+        }
+
+        if (markUnsaved) {
+            markSettingsUnsaved();
+        }
+
+        let settings = data.NewItems as FactorioServerSettings;
+
+        for (let key in settings) {
+            let k = key as FactorioServerSettingsType;
+            let value = settings[key];
+
+            switch (k) {
+                case "Name":
+                    value = value || "";
+                    configNameInput.value = value;
+                    break;
+                case "Description":
+                    value = value || "";
+                    configDescriptionInput.value = value;
+                    break;
+                case "Tags":
+                    value = value || [];
+                    let text = '';
+                    for (let item of value) {
+                        text += (item + '\n');
+                    }
+                    configTagsInput.value = text;
+                    break;
+                case "MaxPlayers":
+                    value = value || 0;
+                    configMaxPlayersInput.value = value;
+                    break;
+                case "GamePassword":
+                    value = value || "";
+                    configPasswordInput.value = value;
+                    break;
+                case "MaxUploadSlots":
+                    value = value || 0;
+                    configMaxUploadSlots.value = value;
+                    break;
+                case "AutoPause":
+                    if (value === undefined)
+                        value = true;
+                    configPauseInput.checked = value;
+                    break;
+                case "UseDefaultAdmins":
+                    if (value === undefined)
+                        value = true;
+                    configAdminUseDefault.checked = value;
+                    configAdminInput.disabled = value;
+                    break;
+                case "Admins":
+                    value = value || [];
+                    configAdminInput.value = value.join(', ');
+                    break;
+                case "AutosaveInterval":
+                    value = value || 0;
+                    configAutoSaveIntervalInput.value = value;
+                    break;
+                case "AutosaveSlots":
+                    value = value || 0;
+                    configAutoSaveSlotsInput.value = value;
+                    break;
+                case "NonBlockingSaving":
+                    if (value === undefined)
+                        value = true;
+                    configNonBlockingSavingInput.checked = value;
+                    break;
+                case "PublicVisible":
+                    if (value === undefined)
+                        value = true;
+                    configPublicVisibleInput.checked = value;
+                    break;
+                default:
+                    break;
+            }
+        }
+    });
+
+    connection.on('SendServerExtraSettingsUpdate', (data: KeyValueCollectionChangedData, markUnsaved: boolean) => {
+        if (data.Type != CollectionChangeType.Add) {
+            return;
+        }
+
+        if (markUnsaved) {
+            markExtraSettingsUnsaved();
+        }
+
+        let settings = data.NewItems as FactorioServerSettings;
+
+        for (let key in settings) {
+            let k = key as FactorioServerExtraSettingsType;
+            let value = settings[key];
+
+            switch (k) {
+                case "SyncBans":
+                    if (value === undefined)
+                        value = true;
+                    configSyncBans.checked = value;
+                    break;
+                case "BuildBansFromDatabaseOnStart":
+                    if (value === undefined)
+                        value = true;
+                    configBuildBansFromDb.checked = value;
+                    break;
+                case "SetDiscordChannelName":
+                    if (value === undefined)
+                        value = true;
+                    configSetDiscordChannelName.checked = value;
+                    break;
+                case "GameChatToDiscord":
+                    if (value === undefined)
+                        value = true;
+                    configSetGameChatToDiscord.checked = value;
+                    break;
+                case "GameShoutToDiscord":
+                    if (value === undefined)
+                        value = true;
+                    configSetGameShoutToDiscord.checked = value;
+                    break;
+                case "DiscordToGameChat":
+                    if (value === undefined)
+                        value = true;
+                    configSetDiscordToGameChat.checked = value;
+                    break;
+                default:
+                    break;
+            }
+        }
     });
 
     function onPageLoad() {

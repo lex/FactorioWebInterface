@@ -29,7 +29,7 @@ namespace FactorioWebInterface.Models
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool DiscordToGameChat { get; set; }
 
-        public static FactorioServerExtraSettings Default()
+        public static FactorioServerExtraSettings MakeDefault()
         {
             return new FactorioServerExtraSettings()
             {

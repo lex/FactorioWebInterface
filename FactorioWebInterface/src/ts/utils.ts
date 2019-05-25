@@ -18,8 +18,14 @@ export enum CollectionChangeType {
 
 export interface CollectionChangedData<T = any> {
     Type: CollectionChangeType;
-    NewItems: T[];
-    OldItems: T[];
+    NewItems?: T[];
+    OldItems?: T[];
+}
+
+export interface KeyValueCollectionChangedData<V=any> {
+    Type: CollectionChangeType;
+    NewItems?: object;
+    OldItems?: object;
 }
 
 export class Utils {
@@ -49,4 +55,9 @@ export class Utils {
         else
             return `${(bytes / (1024 ** i)).toFixed(1)} ${this.sizes[i]}`;
     }
+
+    static isObject(obj) {
+        var type = typeof obj;
+        return type === 'function' || type === 'object' && !!obj && !Array.isArray(obj);
+    };
 }

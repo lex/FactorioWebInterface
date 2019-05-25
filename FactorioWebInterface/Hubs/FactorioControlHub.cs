@@ -283,34 +283,6 @@ namespace FactorioWebInterface.Hubs
             return Task.FromResult(_factorioFileManager.RenameFile(serverId, directoryPath, fileName, newFileName));
         }
 
-        public Task<FactorioServerSettingsWebEditable> GetServerSettings()
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return _factorioServerManager.GetEditableServerSettings(serverId);
-        }
-
-        public async Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings)
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return await _factorioServerManager.SaveEditableServerSettings(serverId, settings);
-        }
-
-        public Task<FactorioServerExtraSettings> GetServerExtraSettings()
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return _factorioServerManager.GetExtraServerSettings(serverId);
-        }
-
-        public async Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings)
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return await _factorioServerManager.SaveExtraServerSettings(serverId, settings);
-        }
-
         public Task<Result> Save()
         {
             string serverId = Context.GetDataOrDefault("");
@@ -409,14 +381,84 @@ namespace FactorioWebInterface.Hubs
             return Task.CompletedTask;
         }
 
+        public Task RequestServerSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(async () =>
+            {
+                (var settings, bool saved) = await _factorioServerManager.GetEditableServerSettings(serverId);
+                _ = client.SendServerSettings(settings, saved);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public Task RequestServerExtraSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(async () =>
+            {
+                (var settings, bool saved) = await _factorioServerManager.GetEditableServerExtraSettings(serverId);
+                _ = client.SendServerExtraSettings(settings, saved);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings)
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            return await _factorioServerManager.SaveEditableServerSettings(serverId, settings);
+        }
+
+        public async Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings)
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            return await _factorioServerManager.SaveEditableExtraServerSettings(serverId, settings);
+        }
+
         public Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data)
         {
-            throw new NotImplementedException();
+            string serverId = Context.GetDataOrDefault("");
+            string connectionId = Context.ConnectionId;
+
+            _factorioServerManager.UpdateServerSettings(data, serverId, connectionId);
+
+            return Task.CompletedTask;
         }
 
         public Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data)
         {
-            throw new NotImplementedException();
+            string serverId = Context.GetDataOrDefault("");
+            string connectionId = Context.ConnectionId;
+
+            _factorioServerManager.UpdateServerExtraSettings(data, serverId, connectionId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UndoServerSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            _factorioServerManager.UndoServerSettings(serverId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UndoServerExtraSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            _factorioServerManager.UndoServerExtraSettings(serverId);
+
+            return Task.CompletedTask;
         }
     }
 }

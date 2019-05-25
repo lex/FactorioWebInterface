@@ -30,10 +30,14 @@ namespace FactorioWebInterface.Services
         ScenarioMetaData[] GetScenarios();
         List<FileMetaData> GetLogs(string serverId);
         List<FileMetaData> GetChatLogs(string serverId);
-        Task<FactorioServerSettingsWebEditable> GetEditableServerSettings(string serverId);
+        Task<(FactorioServerSettingsWebEditable settings, bool saved)> GetEditableServerSettings(string serverId);
         Task<Result> SaveEditableServerSettings(string serverId, FactorioServerSettingsWebEditable settings);
-        Task<FactorioServerExtraSettings> GetExtraServerSettings(string serverId);
-        Task<Result> SaveExtraServerSettings(string serverId, FactorioServerExtraSettings settings);
+        Task<(FactorioServerExtraSettings settings, bool saved)> GetEditableServerExtraSettings(string serverId);
+        Task<Result> SaveEditableExtraServerSettings(string serverId, FactorioServerExtraSettings settings);
+        Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId);
+        Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId);
+        Task UndoServerSettings(string serverId);
+        Task UndoServerExtraSettings(string serverId);
         Task<Result> Install(string id, string userName, string version);
         Task<Result> Save(string id, string userName, string saveName);
         Result DeflateSave(string connectionId, string serverId, string directoryPath, string fileName, string newFileName);
