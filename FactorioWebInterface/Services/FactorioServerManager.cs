@@ -45,7 +45,6 @@ namespace FactorioWebInterface.Services
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly FactorioAdminManager _factorioAdminManager;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
@@ -66,7 +65,6 @@ namespace FactorioWebInterface.Services
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
             DbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
-            IHttpClientFactory httpClientFactory,
             FactorioAdminManager factorioAdminManager,
             FactorioUpdater factorioUpdater,
             FactorioModManager factorioModManager,
@@ -81,7 +79,6 @@ namespace FactorioWebInterface.Services
             _factorioControlHub = factorioControlHub;
             _dbContextFactory = dbContextFactory;
             _logger = logger;
-            _httpClientFactory = httpClientFactory;
             _factorioAdminManager = factorioAdminManager;
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
@@ -109,6 +106,7 @@ namespace FactorioWebInterface.Services
             _factorioFileManager.ChatLogFilesChanged += _factorioFileManager_ChatLogFilesChanged;
             _factorioFileManager.ScenariosChanged += _factorioFileManager_ScenariosChanged;
             _factorioModManager.ModPackChanged += _factorioModManager_ModPackChanged;
+            _factorioUpdater.CachedVersionsChanged += _factorioUpdater_CachedVersionsChanged;
         }
 
         private void _factorioFileManager_TempSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
@@ -267,6 +265,11 @@ namespace FactorioWebInterface.Services
                      }
                  }
              });
+        }
+
+        private void _factorioUpdater_CachedVersionsChanged(FactorioUpdater sender, CollectionChangedData<string> eventArgs)
+        {
+            _factorioControlHub.Clients.All.SendCachedVersions(eventArgs);
         }
 
         private Task SendControlMessageNonLocking(FactorioServerData serverData, MessageData message)
@@ -1122,7 +1125,16 @@ namespace FactorioWebInterface.Services
                         serverData.ControlMessageBuffer.Add(messageData);
                         _ = group.SendMessage(messageData);
 
-                        _logger.LogInformation("Updated server.");
+                        var embed = new DiscordEmbedBuilder()
+                        {
+                            Title = "Status:",
+                            Description = $"Server has **updated** to version {version}",
+                            Color = DiscordBot.updateColor,
+                            Timestamp = DateTimeOffset.UtcNow
+                        };
+                        _ = _discordBotContext.SendEmbedToFactorioChannel(serverId, embed);
+
+                        _logger.LogInformation("Updated server to version: {version}.", version);
                     }
                     else
                     {
@@ -1143,7 +1155,7 @@ namespace FactorioWebInterface.Services
                         var messageData2 = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = Models.MessageType.Control,
+                            MessageType = Models.MessageType.Output,
                             Message = result.ToString()
                         };
 
@@ -1196,16 +1208,26 @@ namespace FactorioWebInterface.Services
                 serverData.Status = FactorioServerStatus.Updating;
 
                 var group = _factorioControlHub.Clients.Group(serverId);
-                await group.FactorioStatusChanged(FactorioServerStatus.Updating.ToString(), oldStatus.ToString());
 
-                var messageData = new MessageData()
+                var controlMessage = new MessageData()
                 {
+                    ServerId = serverId,
+                    MessageType = Models.MessageType.Control,
+                    Message = $"Server updating to version: {version} by user: {userName}"
+                };
+                serverData.ControlMessageBuffer.Add(controlMessage);
+                _ = group.SendMessage(controlMessage);
+
+                _ = group.FactorioStatusChanged(FactorioServerStatus.Updating.ToString(), oldStatus.ToString());
+
+                var statusMessage = new MessageData()
+                {
+                    ServerId = serverId,
                     MessageType = Models.MessageType.Status,
                     Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updating} by user {userName}"
                 };
-
-                serverData.ControlMessageBuffer.Add(messageData);
-                await group.SendMessage(messageData);
+                serverData.ControlMessageBuffer.Add(statusMessage);
+                _ = group.SendMessage(statusMessage);
 
                 InstallInner(serverId, serverData, version);
             }
@@ -3015,7 +3037,7 @@ namespace FactorioWebInterface.Services
             return _factorioUpdater.GetDownloadableVersions();
         }
 
-        public Task<List<string>> GetCachedVersions()
+        public Task<string[]> GetCachedVersions()
         {
             return Task.FromResult(_factorioUpdater.GetCachedVersions());
         }

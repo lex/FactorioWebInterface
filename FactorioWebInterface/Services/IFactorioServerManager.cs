@@ -42,7 +42,7 @@ namespace FactorioWebInterface.Services
         Task<Result> Save(string id, string userName, string saveName);
         Result DeflateSave(string connectionId, string serverId, string directoryPath, string fileName, string newFileName);
         Task<List<string>> GetDownloadableVersions();
-        Task<List<string>> GetCachedVersions();
+        Task<string[]> GetCachedVersions();
         bool DeleteCachedVersion(string version);
         string GetVersion(string serverId);
         Task<string> GetSelectedModPack(string serverId);

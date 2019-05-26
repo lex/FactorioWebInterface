@@ -336,17 +336,7 @@ namespace FactorioWebInterface.Hubs
 
         public Task DeleteCachedVersion(string version)
         {
-            var client = Clients.All;
-
-            _ = Task.Run(async () =>
-            {
-                _ = _factorioServerManager.DeleteCachedVersion(version);
-
-                var versions = await _factorioServerManager.GetCachedVersions();
-                var data = CollectionChangedData.Reset(versions);
-
-                _ = client.SendCachedVersions(data);
-            });
+            _ = _factorioServerManager.DeleteCachedVersion(version);
 
             return Task.CompletedTask;
         }
