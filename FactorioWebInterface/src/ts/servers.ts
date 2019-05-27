@@ -252,17 +252,6 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         }
     };
 
-    connection.on("SendMessage", writeMessage)
-
-    connection.on('FactorioStatusChanged', (newStatus: string, oldStatus: string) => {
-        console.log(`new: ${newStatus}, old: ${oldStatus}`);
-        statusText.innerText = newStatus;
-    });
-
-    connection.on('SendVersion', (version: string) => {
-        versionText.textContent = version;
-    });
-
     function mod(n: number, m: number) {
         return ((n % m) + m) % m;
     }
@@ -401,24 +390,6 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         install(updateSelect.value);
         closeModal();
     };
-
-    connection.on('SendDownloadableVersions', (versions: string[]) => {
-        updateSelect.innerHTML = "";
-
-        for (let version of versions) {
-            let option = document.createElement('option');
-            option.innerText = version;
-            updateSelect.appendChild(option);
-        }
-
-        let option = document.createElement('option');
-        option.innerText = 'latest';
-        updateSelect.appendChild(option);
-
-        updateSelect.parentElement.classList.remove('is-loading');
-    });
-
-
 
     forceStopButton.onclick = () => {
         connection.invoke("ForceStop")
@@ -1543,6 +1514,32 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
             noMods.checked = true;
         }
     }
+
+    connection.on("SendMessage", writeMessage)
+
+    connection.on('FactorioStatusChanged', (newStatus: string, oldStatus: string) => {
+        statusText.innerText = newStatus;
+    });
+
+    connection.on('SendVersion', (version: string) => {
+        versionText.textContent = version;
+    });
+
+    connection.on('SendDownloadableVersions', (versions: string[]) => {
+        updateSelect.innerHTML = "";
+
+        for (let version of versions) {
+            let option = document.createElement('option');
+            option.innerText = version;
+            updateSelect.appendChild(option);
+        }
+
+        let option = document.createElement('option');
+        option.innerText = 'latest';
+        updateSelect.appendChild(option);
+
+        updateSelect.parentElement.classList.remove('is-loading');
+    });
 
     connection.on('SendTempSavesFiles', (serverId: string, data: CollectionChangedData) => {
         if (serverId !== serverSelect.value) {
