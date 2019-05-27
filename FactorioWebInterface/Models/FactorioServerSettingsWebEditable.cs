@@ -12,7 +12,7 @@ namespace FactorioWebInterface.Models
         public string Description { get; set; }
 
         [JsonProperty(PropertyName = "tags")]
-        public List<string> Tags { get; set; }
+        public string[] Tags { get; set; }
 
         [JsonProperty(PropertyName = "max_players")]
         public int MaxPlayers { get; set; }
@@ -30,7 +30,7 @@ namespace FactorioWebInterface.Models
         public bool UseDefaultAdmins { get; set; }
 
         [JsonProperty(PropertyName = "admins")]
-        public List<string> Admins { get; set; }
+        public string[] Admins { get; set; }
 
         [JsonProperty(PropertyName = "autosave_interval")]
         public int AutosaveInterval { get; set; }

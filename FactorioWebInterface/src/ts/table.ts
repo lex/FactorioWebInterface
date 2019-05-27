@@ -1,23 +1,11 @@
-﻿export interface CellBuilder {
+﻿import { CollectionChangedData, CollectionChangeType } from "./utils";
+
+export interface CellBuilder {
     Property?: string | undefined;
     CellBuilder: (cell: HTMLTableCellElement, data: any, oldCell?: HTMLTableCellElement) => void;
     SortKeySelector?: (r: HTMLTableCellElement) => any;
     HeaderBuilder?: (cell: HTMLTableHeaderCellElement, symbol: string) => void;
     IsKey?: boolean;
-}
-
-export enum TableDataType {
-    Reset = "Reset",
-    Remove = "Remove",
-    Add = "Add",
-    Update = "Update",
-    Compound = "Compound"
-}
-
-export interface TableData<T = any> {
-    Type: TableDataType;
-    Rows: T[];
-    TableDatas: TableData<T>[];
 }
 
 export class Table<T = any> {
@@ -77,6 +65,7 @@ export class Table<T = any> {
             if (cb.SortKeySelector !== undefined) {
                 let cell = this.tableHeaders[i];
                 cell.onclick = () => this.onHeaderClick(i);
+                cell.style.cursor = 'pointer';
             }
         }
     }
@@ -123,8 +112,6 @@ export class Table<T = any> {
                 this.tableMap.set(key, rowElement);
             }
         }
-
-        return true;
     }
 
     private doReset(rows: T[]) {
@@ -132,8 +119,6 @@ export class Table<T = any> {
         this.tableMap.clear();
 
         this.doAdd(rows);
-
-        return true;
     }
 
     private doRemove(rows: T[]) {
@@ -162,17 +147,10 @@ export class Table<T = any> {
                 oldRow.remove();
             }
         }
-
-        return false;
     }
 
     private doUpdate(rows: T[]) {
         let keySelector = this.keySelector;
-
-        if (keySelector === undefined) {
-            console.error('Table keySelector must be set to support update.');
-            return false;
-        }
 
         let tableMap = this.tableMap;
         let tableRows = this.tableRows;
@@ -203,37 +181,39 @@ export class Table<T = any> {
                 }
             }
         }
-
-        return true;
     }
 
-    private innerUpdate(tableUpdate: TableData): boolean {
-        let type = tableUpdate.Type;
-        let rows = tableUpdate.Rows;
-
-        switch (type) {
-            case TableDataType.Reset:
-                return this.doReset(rows)
-            case TableDataType.Add:
-                return this.doAdd(rows);
-            case TableDataType.Remove:
-                return this.doRemove(rows);
-            case TableDataType.Update:
-                return this.doUpdate(rows);
-            case TableDataType.Compound:
-                let dirty = false;
-                for (let td of tableUpdate.TableDatas) {
-                    dirty = dirty || this.innerUpdate(td);
+    update(collectionChangedData: CollectionChangedData): void {
+        switch (collectionChangedData.Type) {
+            case CollectionChangeType.Reset:
+                this.doReset(collectionChangedData.NewItems);
+                this.reBuild();
+                break;
+            case CollectionChangeType.Add:
+                if (this.keySelector) {
+                    this.doUpdate(collectionChangedData.NewItems);
+                } else {
+                    this.doAdd(collectionChangedData.NewItems);
                 }
-                return dirty;
-            default:
-                return false;
-        }
-    }
 
-    update(tableUpdate: TableData): void {
-        if (this.innerUpdate(tableUpdate)) {
-            this.reBuild();
+                this.reBuild();
+                break;
+            case CollectionChangeType.Remove:
+                this.doRemove(collectionChangedData.OldItems);
+                break;
+            case CollectionChangeType.AddAndRemove:
+                this.doRemove(collectionChangedData.OldItems);
+
+                if (this.keySelector) {
+                    this.doUpdate(collectionChangedData.NewItems);
+                } else {
+                    this.doAdd(collectionChangedData.NewItems);
+                }
+
+                this.reBuild();
+                break;
+            default:
+                break;
         }
     }
 

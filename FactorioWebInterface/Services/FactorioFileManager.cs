@@ -19,7 +19,7 @@ namespace FactorioWebInterface.Services
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> GlobalSaveFilesChanged;
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> LogFilesChanged;
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
-        public event EventHandler<FactorioFileManager, ScenariosChangedEventArgs> ScenariosChanged;
+        public event EventHandler<FactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
 
         public FactorioFileManager(ILogger<FactorioFileManager> logger)
         {
@@ -434,7 +434,9 @@ namespace FactorioWebInterface.Services
 
             if (changedFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, changedFiles);
+                var changeData = CollectionChangedData.Add(changedFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => LocalSaveFilesChanged?.Invoke(this, ev));
             }
 
@@ -518,19 +520,25 @@ namespace FactorioWebInterface.Services
 
             if (changedTempFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, changedTempFiles);
+                var changeData = CollectionChangedData.Remove(changedTempFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => TempSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (changedLocalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, changedLocalFiles);
+                var changeData = CollectionChangedData.Remove(changedLocalFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => LocalSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (changedGlobalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs("", FilesChangedType.Delete, null, changedGlobalFiles);
+                var changeData = CollectionChangedData.Remove(changedGlobalFiles);
+                var ev = new FilesChangedEventArgs("", changeData);
+
                 _ = Task.Run(() => GlobalSaveFilesChanged?.Invoke(this, ev));
             }
 
@@ -666,25 +674,32 @@ namespace FactorioWebInterface.Services
 
             if (oldTempFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, oldTempFiles);
+                var changeData = CollectionChangedData.Remove(oldTempFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => TempSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (oldLocalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Delete, null, oldLocalFiles);
+                var changeData = CollectionChangedData.Remove(oldLocalFiles);
+                var ev = new FilesChangedEventArgs(serverId, changeData);
+
                 _ = Task.Run(() => LocalSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (oldGlobalFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs("", FilesChangedType.Delete, null, oldGlobalFiles);
+                var changeData = CollectionChangedData.Remove(oldGlobalFiles);
+                var ev = new FilesChangedEventArgs("", changeData);
+
                 _ = Task.Run(() => GlobalSaveFilesChanged?.Invoke(this, ev));
             }
 
             if (trackDestination && newFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(destinationId, FilesChangedType.Create, newFiles);
+                var changeData = CollectionChangedData.Add(newFiles);
+                var ev = new FilesChangedEventArgs(destinationId, changeData);
 
                 switch (targetDir.Name)
                 {
@@ -801,7 +816,8 @@ namespace FactorioWebInterface.Services
 
             if (trackDestination && newFiles.Count > 0)
             {
-                var ev = new FilesChangedEventArgs(destinationId, FilesChangedType.Create, newFiles);
+                var changeData = CollectionChangedData.Add(newFiles);
+                var ev = new FilesChangedEventArgs(destinationId, changeData);
 
                 switch (targetDir.Name)
                 {
@@ -912,7 +928,8 @@ namespace FactorioWebInterface.Services
                     serverId = "";
                 }
 
-                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Rename, new[] { newFileMetaData }, new[] { oldFileMetaDdata });
+                var changeData = CollectionChangedData.AddAndRemove(new[] { newFileMetaData }, new[] { oldFileMetaDdata });
+                var ev = new FilesChangedEventArgs(serverId, changeData);
 
                 switch (dirName)
                 {
@@ -936,6 +953,241 @@ namespace FactorioWebInterface.Services
                 _logger.LogError("Error renaming file.", e);
                 return Result.Failure(Constants.FileErrorKey, $"Error renaming files");
             }
+        }
+        private static string MakeLogFilePath(FileInfo file, DirectoryInfo logDirectory)
+        {
+            string timeStamp = file.CreationTimeUtc.ToString("yyyyMMddHHmmss");
+            string logName = Path.GetFileNameWithoutExtension(file.Name);
+
+            return Path.Combine(logDirectory.FullName, $"{logName}{timeStamp}.log");
+        }
+
+        private struct FilesChanged
+        {
+            public static FilesChanged empty = new FilesChanged();
+
+            public IReadOnlyList<FileInfo> newFiles;
+            public IReadOnlyList<FileInfo> oldFiles;
+            public FilesChanged(IReadOnlyList<FileInfo> newFiles, IReadOnlyList<FileInfo> oldFiles = null)
+            {
+                this.newFiles = newFiles;
+                this.oldFiles = oldFiles;
+            }
+
+            public CollectionChangedData<FileMetaData> BuildCollectionChangedData()
+            {
+                FileMetaData[] Build(IReadOnlyList<FileInfo> files)
+                {
+                    return files
+                        .Select(x => new FileMetaData()
+                        {
+                            Name = x.Name,
+                            Directory = x.Directory.Name,
+                            CreatedTime = x.CreationTimeUtc,
+                            LastModifiedTime = x.LastWriteTimeUtc,
+                            Size = x.Length
+                        })
+                        .ToArray();
+                }
+
+                if (newFiles != null && oldFiles != null)
+                {
+                    var oldData = Build(oldFiles);
+                    var newData = Build(newFiles);
+                    return CollectionChangedData.AddAndRemove(newData, oldData);
+                }
+                else if (newFiles != null)
+                {
+                    var newData = Build(newFiles);
+                    return CollectionChangedData.Add(newData);
+                }
+                else
+                {
+                    var oldData = Build(oldFiles);
+                    return CollectionChangedData.Add(oldData);
+                }
+            }
+        }
+
+        private FilesChanged RotateFactorioLogsInner(FactorioServerData serverData)
+        {
+            try
+            {
+                var dir = new DirectoryInfo(serverData.LogsDirectoryPath);
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                }
+
+                var currentLog = new FileInfo(serverData.CurrentLogPath);
+                if (!currentLog.Exists)
+                {
+                    using (_ = currentLog.Create()) { }
+                    currentLog.CreationTimeUtc = DateTime.UtcNow;
+
+                    return new FilesChanged(new[] { currentLog });
+                }
+
+                if (currentLog.Length == 0)
+                {
+                    currentLog.CreationTimeUtc = DateTime.UtcNow;
+
+                    return new FilesChanged(new[] { currentLog });
+                }
+
+                string path = MakeLogFilePath(currentLog, dir);
+                var targetLog = new FileInfo(path);
+                if (targetLog.Exists)
+                {
+                    targetLog.Delete();
+                }
+
+                currentLog.MoveTo(path);
+                targetLog.Refresh();
+
+                var newFile = new FileInfo(serverData.CurrentLogPath);
+                using (_ = newFile.Create()) { }
+                newFile.CreationTimeUtc = DateTime.UtcNow;
+
+                var logs = dir.GetFiles("*.log");
+
+                int removeCount = logs.Length - FactorioServerData.maxLogFiles + 1;
+                if (removeCount <= 0)
+                {
+                    return new FilesChanged(new[] { newFile, targetLog });
+                }
+
+                var archiveDir = new DirectoryInfo(serverData.ArchiveLogsDirectoryPath);
+                if (!archiveDir.Exists)
+                {
+                    archiveDir.Create();
+                }
+
+                // sort oldest first.
+                Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
+                var oldLogs = new List<FileInfo>();
+
+                for (int i = 0; i < removeCount && i < logs.Length; i++)
+                {
+                    var log = logs[i];
+
+                    var archivePath = Path.Combine(archiveDir.FullName, log.Name);
+
+                    log.MoveTo(archivePath);
+                    oldLogs.Add(log);
+                }
+
+                return new FilesChanged(new[] { newFile, targetLog }, oldLogs);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, nameof(RotateFactorioLogs));
+                return FilesChanged.empty;
+            }
+        }
+
+        public void RotateFactorioLogs(FactorioServerData serverData)
+        {
+            var filesChanged = RotateFactorioLogsInner(serverData);
+            var changeData = filesChanged.BuildCollectionChangedData();
+            var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
+
+            Task.Run(() => LogFilesChanged?.Invoke(this, ev));
+        }
+
+        private FilesChanged RotateChatLogsInner(FactorioServerData serverData)
+        {
+            void BuildLogger(FileInfo file)
+            {
+                file.CreationTimeUtc = DateTime.UtcNow;
+                serverData.BuildChatLogger();
+            }
+
+            try
+            {
+                var dir = new DirectoryInfo(serverData.ChatLogsDirectoryPath);
+                if (!dir.Exists)
+                {
+                    dir.Create();
+                }
+
+                serverData.ChatLogger?.Dispose();
+                serverData.ChatLogger = null;
+
+                var currentLog = new FileInfo(serverData.ChatLogCurrentPath);
+                if (!currentLog.Exists)
+                {
+                    using (_ = currentLog.Create()) { }
+                    BuildLogger(currentLog);
+
+                    return new FilesChanged(new[] { currentLog });
+                }
+
+                if (currentLog.Length == 0)
+                {
+                    BuildLogger(currentLog);
+
+                    return new FilesChanged(new[] { currentLog });
+                }
+
+                string path = MakeLogFilePath(currentLog, dir);
+                var targetLog = new FileInfo(path);
+                if (targetLog.Exists)
+                {
+                    targetLog.Delete();
+                }
+
+                currentLog.MoveTo(path);
+                targetLog.Refresh();
+
+                var newFile = new FileInfo(serverData.ChatLogCurrentPath);
+                using (_ = newFile.Create()) { }
+                BuildLogger(newFile);
+
+                var logs = dir.GetFiles("*.log");
+
+                int removeCount = logs.Length - FactorioServerData.maxLogFiles;
+                if (removeCount <= 0)
+                {
+                    return new FilesChanged(new[] { newFile, targetLog });
+                }
+
+                var archiveDir = new DirectoryInfo(serverData.ChatLogsArchiveDirectoryPath);
+                if (!archiveDir.Exists)
+                {
+                    archiveDir.Create();
+                }
+
+                // sort oldest first.
+                Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
+                var oldLogs = new List<FileInfo>();
+
+                for (int i = 0; i < removeCount && i < logs.Length; i++)
+                {
+                    var log = logs[i];
+
+                    var archivePath = Path.Combine(archiveDir.FullName, log.Name);
+
+                    log.MoveTo(archivePath);
+                    oldLogs.Add(log);
+                }
+
+                return new FilesChanged(new[] { newFile, targetLog }, oldLogs);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, nameof(RotateChatLogs));
+                return FilesChanged.empty;
+            }
+        }
+
+        public void RotateChatLogs(FactorioServerData serverData)
+        {
+            var filesChanged = RotateChatLogsInner(serverData);
+            var changeData = filesChanged.BuildCollectionChangedData();
+            var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
+
+            Task.Run(() => ChatLogFilesChanged?.Invoke(this, ev));
         }
 
         public void RaiseTempFilesChanged(FilesChangedEventArgs ev)
@@ -981,7 +1233,7 @@ namespace FactorioWebInterface.Services
                         return;
                     }
 
-                    var data = dir.EnumerateFiles()
+                    var files = dir.EnumerateFiles()
                         .Where(f => f.LastWriteTimeUtc >= lastChecked)
                         .Select(f => new FileMetaData()
                         {
@@ -993,7 +1245,8 @@ namespace FactorioWebInterface.Services
                         })
                         .ToArray();
 
-                    var ev = new FilesChangedEventArgs(serverData.ServerId, FilesChangedType.Create, data);
+                    var changeData = CollectionChangedData.Add(files);
+                    var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
 
                     TempSaveFilesChanged?.Invoke(this, ev);
                 }
@@ -1009,7 +1262,8 @@ namespace FactorioWebInterface.Services
             Task.Run(() =>
             {
                 var files = GetTempSaveFiles(serverData);
-                var ev = new FilesChangedEventArgs(serverData.ServerId, FilesChangedType.Create, files);
+                var changeData = CollectionChangedData.Add(files);
+                var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
 
                 TempSaveFilesChanged?.Invoke(this, ev);
             });
@@ -1018,7 +1272,7 @@ namespace FactorioWebInterface.Services
         public void NotifyScenariosChanged()
         {
             var scenarios = GetScenarios();
-            var ev = new ScenariosChangedEventArgs(ScenariosChangedType.Create, scenarios);
+            var ev = CollectionChangedData.Add(scenarios);
 
             ScenariosChanged?.Invoke(this, ev);
         }

@@ -24,6 +24,8 @@ namespace FactorioWebInterface.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<FactorioUpdater> _logger;
 
+        public event EventHandler<FactorioUpdater, CollectionChangedData<string>> CachedVersionsChanged;
+
         public FactorioUpdater(IHttpClientFactory httpClientFactory, ILogger<FactorioUpdater> logger)
         {
             _httpClientFactory = httpClientFactory;
@@ -42,7 +44,7 @@ namespace FactorioWebInterface.Services
             {
                 return fileName;
             }
-        }       
+        }
 
         private FileInfo GetCachedFile(string version)
         {
@@ -96,6 +98,9 @@ namespace FactorioWebInterface.Services
                 }
 
                 file.Delete();
+
+                Task.Run(() => CachedVersionsChanged?.Invoke(this, CollectionChangedData.Remove(new[] { version })));
+
                 return true;
             }
             catch (Exception e)
@@ -105,9 +110,9 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public List<string> GetCachedVersions()
+        public string[] GetCachedVersions()
         {
-            List<string> result = new List<string>();
+            string[] result = Array.Empty<string>();
 
             try
             {
@@ -117,7 +122,7 @@ namespace FactorioWebInterface.Services
                     return result;
                 }
 
-                return dir.GetFiles().Select(x => x.Name).ToList();
+                return dir.GetFiles().Select(x => x.Name).ToArray();
             }
             catch (Exception e)
             {
@@ -198,6 +203,8 @@ namespace FactorioWebInterface.Services
                 {
                     await download.Content.CopyToAsync(fs);
                 }
+
+                _ = Task.Run(() => CachedVersionsChanged?.Invoke(this, CollectionChangedData.Add(new[] { version })));
 
                 return binaries;
             }

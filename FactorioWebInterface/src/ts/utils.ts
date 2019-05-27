@@ -9,6 +9,25 @@ export interface Result<T = void> {
     Value: T;
 }
 
+export enum CollectionChangeType {
+    Reset = "Reset",
+    Remove = "Remove",
+    Add = "Add",
+    AddAndRemove = "AddAndRemove"
+}
+
+export interface CollectionChangedData<T = any> {
+    Type: CollectionChangeType;
+    NewItems?: T[];
+    OldItems?: T[];
+}
+
+export interface KeyValueCollectionChangedData<V=any> {
+    Type: CollectionChangeType;
+    NewItems?: object;
+    OldItems?: object;
+}
+
 export class Utils {
     private static pad(number) {
         return number < 10 ? '0' + number : number;
@@ -36,4 +55,9 @@ export class Utils {
         else
             return `${(bytes / (1024 ** i)).toFixed(1)} ${this.sizes[i]}`;
     }
+
+    static isObject(obj) {
+        var type = typeof obj;
+        return type === 'function' || type === 'object' && !!obj && !Array.isArray(obj);
+    };
 }

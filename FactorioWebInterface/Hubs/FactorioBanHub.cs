@@ -24,14 +24,9 @@ namespace FactorioWebInterface.Hubs
             _ = Task.Run(async () =>
             {
                 var bans = await _factorioBanManager.GetBansAsync();
+                var data = CollectionChangedData.Reset(bans);
 
-                var tableData = new TableData<Ban>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = bans
-                };
-
-                await client.SendBans(tableData);
+                await client.SendBans(data);
             });
 
             return Task.CompletedTask;

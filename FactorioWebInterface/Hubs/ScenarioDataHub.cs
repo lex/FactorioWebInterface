@@ -62,15 +62,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(async () =>
             {
-                var data = await _scenarioDataManger.GetAllEntries(dataSet);
+                var entries = await _scenarioDataManger.GetAllEntries(dataSet);
+                var data = CollectionChangedData.Reset(entries);
 
-                var tableData = new TableData<ScenarioDataKeyValue>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                await client.SendEntries(dataSet, tableData);
+                await client.SendEntries(dataSet, data);
             });
 
             return Task.FromResult(0);

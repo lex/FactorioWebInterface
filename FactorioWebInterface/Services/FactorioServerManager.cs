@@ -45,7 +45,6 @@ namespace FactorioWebInterface.Services
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly FactorioAdminManager _factorioAdminManager;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
@@ -66,7 +65,6 @@ namespace FactorioWebInterface.Services
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
             DbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
-            IHttpClientFactory httpClientFactory,
             FactorioAdminManager factorioAdminManager,
             FactorioUpdater factorioUpdater,
             FactorioModManager factorioModManager,
@@ -81,7 +79,6 @@ namespace FactorioWebInterface.Services
             _factorioControlHub = factorioControlHub;
             _dbContextFactory = dbContextFactory;
             _logger = logger;
-            _httpClientFactory = httpClientFactory;
             _factorioAdminManager = factorioAdminManager;
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
@@ -101,8 +98,7 @@ namespace FactorioWebInterface.Services
 
             _discordBotContext.FactorioDiscordDataReceived += FactorioDiscordDataReceived;
             _scenarioDataManger.EntryChanged += _scenarioDataManger_EntryChanged;
-            _factorioBanManager.BanAdded += _factorioBanManager_BanAdded;
-            _factorioBanManager.BanRemoved += _factorioBanManager_BanRemoved;
+            _factorioBanManager.BanChanged += _factorioBanManager_BanChanged;
             _factorioFileManager.TempSaveFilesChanged += _factorioFileManager_TempSaveFilesChanged;
             _factorioFileManager.LocalSaveFilesChanged += _factorioFileManager_LocalSaveFilesChanged;
             _factorioFileManager.GlobalSaveFilesChanged += _factorioFileManager_GlobalSaveFilesChanged;
@@ -110,231 +106,118 @@ namespace FactorioWebInterface.Services
             _factorioFileManager.ChatLogFilesChanged += _factorioFileManager_ChatLogFilesChanged;
             _factorioFileManager.ScenariosChanged += _factorioFileManager_ScenariosChanged;
             _factorioModManager.ModPackChanged += _factorioModManager_ModPackChanged;
-        }
-
-        private void DoFileChange(FilesChangedEventArgs eventArgs, Func<IFactorioControlClientMethods, string, TableData<FileMetaData>, Task> method)
-        {
-            TableData<FileMetaData> Create(FilesChangedEventArgs e)
-            {
-                return new TableData<FileMetaData>
-                {
-                    Type = TableDataType.Update,
-                    Rows = e.NewOrUpdated
-                };
-            }
-
-            TableData<FileMetaData> Delete(FilesChangedEventArgs e)
-            {
-                return new TableData<FileMetaData>
-                {
-                    Type = TableDataType.Remove,
-                    Rows = e.Old
-                };
-            }
-
-            var serverId = eventArgs.ServerId;
-
-            IFactorioControlClientMethods clients;
-            if (string.IsNullOrEmpty(serverId))
-            {
-                clients = _factorioControlHub.Clients.All;
-            }
-            else
-            {
-                clients = _factorioControlHub.Clients.Group(eventArgs.ServerId);
-            }
-
-            switch (eventArgs.Type)
-            {
-                case FilesChangedType.Create:
-                    {
-                        var td = Create(eventArgs);
-                        method(clients, serverId, td);
-                        break;
-                    }
-                case FilesChangedType.Delete:
-                    {
-                        var td = Delete(eventArgs);
-                        method(clients, serverId, td);
-                        break;
-                    }
-                case FilesChangedType.Rename:
-                    {
-                        var td = new TableData<FileMetaData>()
-                        {
-                            Type = TableDataType.Compound,
-                            TableDatas = new[]
-                            {
-                                Delete(eventArgs),
-                                Create(eventArgs)
-                            }
-                        };
-                        method(clients, serverId, td);
-                        break;
-                    }
-            }
+            _factorioUpdater.CachedVersionsChanged += _factorioUpdater_CachedVersionsChanged;
         }
 
         private void _factorioFileManager_TempSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendTempSavesFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendTempSavesFiles(id, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_LocalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendLocalSaveFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendLocalSaveFiles(id, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_GlobalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendGlobalSaveFiles(td));
+            _factorioControlHub.Clients.All.SendGlobalSaveFiles(eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_LogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendLogFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendLogFiles(id, eventArgs.ChangedData);
         }
 
         private void _factorioFileManager_ChatLogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
-            DoFileChange(eventArgs, (c, id, td) => c.SendChatLogFiles(id, td));
+            var id = eventArgs.ServerId;
+            _factorioControlHub.Clients.Group(id).SendChatLogFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, ScenariosChangedEventArgs eventArgs)
+        private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, CollectionChangedData<ScenarioMetaData> eventArgs)
         {
-            TableData<ScenarioMetaData> Create(ScenariosChangedEventArgs e)
+            _factorioControlHub.Clients.All.SendScenarios(eventArgs);
+        }
+
+        private void _factorioModManager_ModPackChanged(FactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
+        {
+            _factorioControlHub.Clients.All.SendModPacks(eventArgs);
+        }
+
+        private void _factorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
+        {
+            var changeData = eventArgs.ChangeData;
+
+            void BanAdded()
             {
-                return new TableData<ScenarioMetaData>
+                if (!eventArgs.SynchronizeWithServers)
                 {
-                    Type = TableDataType.Update,
-                    Rows = e.NewOrUpdated
-                };
-            }
+                    return;
+                }
 
-            TableData<ScenarioMetaData> Delete(ScenariosChangedEventArgs e)
-            {
-                return new TableData<ScenarioMetaData>
+                foreach (var ban in changeData.NewItems)
                 {
-                    Type = TableDataType.Remove,
-                    Rows = e.Old
-                };
-            }
-
-            TableData<ScenarioMetaData> td = null;
-
-            switch (eventArgs.Type)
-            {
-                case ScenariosChangedType.Create:
-                    td = Create(eventArgs);
-                    break;
-                case ScenariosChangedType.Delete:
-                    td = Delete(eventArgs);
-                    break;
-                case ScenariosChangedType.Rename:
-                    td = new TableData<ScenarioMetaData>()
+                    // /ban doesn't support names with spaces.
+                    if (ban.Username.Contains(' '))
                     {
-                        Type = TableDataType.Compound,
-                        TableDatas = new[]
-                        {
-                            Delete(eventArgs),
-                            Create(eventArgs)
-                        }
-                    };
-                    break;
-            }
+                        return;
+                    }
 
-            _factorioControlHub.Clients.All.SendScenarios(td);
-        }
+                    var command = $"/ban {ban.Username} {ban.Reason}";
 
-        private void _factorioModManager_ModPackChanged(FactorioModManager sender, ModPackChangedEventArgs eventArgs)
-        {
-            TableData<ModPackMetaData> Create(ModPackChangedEventArgs e)
-            {
-                return new TableData<ModPackMetaData>
-                {
-                    Type = TableDataType.Update,
-                    Rows = new[] { e.NewOrUpdated }
-                };
-            }
-
-            TableData<ModPackMetaData> Delete(ModPackChangedEventArgs e)
-            {
-                return new TableData<ModPackMetaData>
-                {
-                    Type = TableDataType.Remove,
-                    Rows = new[] { e.Old }
-                };
-            }
-
-            TableData<ModPackMetaData> td = null;
-
-            switch (eventArgs.Type)
-            {
-                case ModPackChangedType.Create:
-                    td = Create(eventArgs);
-                    break;
-                case ModPackChangedType.Delete:
-                    td = Delete(eventArgs);
-                    break;
-                case ModPackChangedType.Rename:
-                    td = new TableData<ModPackMetaData>()
+                    if (command.EndsWith('.'))
                     {
-                        Type = TableDataType.Compound,
-                        TableDatas = new[]
-                        {
-                            Delete(eventArgs),
-                            Create(eventArgs)
-                        }
-                    };
+                        command.Substring(0, command.Length - 1);
+                    }
+
+                    SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+                }
+            }
+
+            void BanRemoved()
+            {
+                if (!eventArgs.SynchronizeWithServers)
+                {
+                    return;
+                }
+
+                foreach (var ban in changeData.OldItems)
+                {
+                    var username = ban.Username;
+
+                    // /ban doesn't support names with spaces.
+                    if (username.Contains(' '))
+                    {
+                        return;
+                    }
+
+                    var command = $"/unban {username}";
+
+                    SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
+                }
+            }
+
+            switch (changeData.Type)
+            {
+                case CollectionChangeType.Reset:
+                    break;
+                case CollectionChangeType.Remove:
+                    BanRemoved();
+                    break;
+                case CollectionChangeType.Add:
+                    BanAdded();
+                    break;
+                case CollectionChangeType.AddAndRemove:
+                    BanRemoved();
+                    BanAdded();
+                    break;
+                default:
                     break;
             }
-
-            _factorioControlHub.Clients.All.SendModPacks(td);
-        }
-
-        private void _factorioBanManager_BanAdded(FactorioBanManager sender, FactorioBanAddedEventArgs eventArgs)
-        {
-            if (!eventArgs.SynchronizeWithServers)
-            {
-                return;
-            }
-
-            var ban = eventArgs.Ban;
-
-            // /ban doesn't support names with spaces.
-            if (ban.Username.Contains(' '))
-            {
-                return;
-            }
-
-            var command = $"/ban {ban.Username} {ban.Reason}";
-
-            if (command.EndsWith('.'))
-            {
-                command.Substring(0, command.Length - 1);
-            }
-
-            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
-        }
-
-        private void _factorioBanManager_BanRemoved(FactorioBanManager sender, FactorioBanRemovedEventArgs eventArgs)
-        {
-            if (!eventArgs.SynchronizeWithServers)
-            {
-                return;
-            }
-
-            var username = eventArgs.Username;
-
-            // /ban doesn't support names with spaces.
-            if (username.Contains(' '))
-            {
-                return;
-            }
-
-            var command = $"/unban {username}";
-
-            SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
         }
 
         private void _scenarioDataManger_EntryChanged(ScenarioDataManager sender, ScenarioDataEntryChangedEventArgs eventArgs)
@@ -382,6 +265,11 @@ namespace FactorioWebInterface.Services
                      }
                  }
              });
+        }
+
+        private void _factorioUpdater_CachedVersionsChanged(FactorioUpdater sender, CollectionChangedData<string> eventArgs)
+        {
+            _factorioControlHub.Clients.All.SendCachedVersions(eventArgs);
         }
 
         private Task SendControlMessageNonLocking(FactorioServerData serverData, MessageData message)
@@ -448,7 +336,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (serverData.ExtraServerSettings.DiscordToGameChat)
+            if (serverData.ServerExtraSettings.DiscordToGameChat)
             {
                 var name = SanitizeDiscordChat(eventArgs.User.Username);
                 var message = SanitizeDiscordChat(eventArgs.Message);
@@ -469,171 +357,18 @@ namespace FactorioWebInterface.Services
             _ = SendToFactorioControl(eventArgs.ServerId, messageData);
         }
 
-        private static string MakeLogFilePath(FactorioServerData serverData, FileInfo file, DirectoryInfo logDirectory)
-        {
-            string timeStamp = file.CreationTimeUtc.ToString("yyyyMMddHHmmss");
-            string logName = Path.GetFileNameWithoutExtension(file.Name);
-
-            return Path.Combine(logDirectory.FullName, $"{logName}{timeStamp}.log");
-        }
-
-        private void RotateFactorioLogs(FactorioServerData serverData)
-        {
-            try
-            {
-                var dir = new DirectoryInfo(serverData.LogsDirectoryPath);
-                if (!dir.Exists)
-                {
-                    dir.Create();
-                }
-
-                var currentLog = new FileInfo(serverData.CurrentLogPath);
-                if (!currentLog.Exists)
-                {
-                    using (_ = currentLog.Create()) { }
-                    currentLog.CreationTimeUtc = DateTime.UtcNow;
-                    return;
-                }
-
-                if (currentLog.Length == 0)
-                {
-                    currentLog.CreationTimeUtc = DateTime.UtcNow;
-                    return;
-                }
-
-                string path = MakeLogFilePath(serverData, currentLog, dir);
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-
-                currentLog.MoveTo(path);
-
-                var newFile = new FileInfo(serverData.CurrentLogPath);
-                using (_ = newFile.Create()) { }
-                newFile.CreationTimeUtc = DateTime.UtcNow;
-
-                var logs = dir.GetFiles("*.log");
-
-                int removeCount = logs.Length - FactorioServerData.maxLogFiles + 1;
-                if (removeCount <= 0)
-                {
-                    return;
-                }
-
-                var archiveDir = new DirectoryInfo(serverData.ArchiveLogsDirectoryPath);
-                if (!archiveDir.Exists)
-                {
-                    archiveDir.Create();
-                }
-
-                // sort oldest first.
-                Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
-
-                for (int i = 0; i < removeCount && i < logs.Length; i++)
-                {
-                    var log = logs[i];
-
-                    var archivePath = Path.Combine(archiveDir.FullName, log.Name);
-
-                    log.MoveTo(archivePath);
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(RotateFactorioLogs));
-            }
-        }
-
-        private void RotateChatLogs(FactorioServerData serverData)
-        {
-            void BuildLogger(FileInfo file)
-            {
-                file.CreationTimeUtc = DateTime.UtcNow;
-                serverData.BuildChatLogger();
-            }
-
-            try
-            {
-                var dir = new DirectoryInfo(serverData.ChatLogsDirectoryPath);
-                if (!dir.Exists)
-                {
-                    dir.Create();
-                }
-
-                serverData.ChatLogger?.Dispose();
-                serverData.ChatLogger = null;
-
-                var currentLog = new FileInfo(serverData.ChatLogCurrentPath);
-                if (!currentLog.Exists)
-                {
-                    using (_ = currentLog.Create()) { }
-                    BuildLogger(currentLog);
-                    return;
-                }
-
-                if (currentLog.Length == 0)
-                {
-                    BuildLogger(currentLog);
-                    return;
-                }
-
-                string path = MakeLogFilePath(serverData, currentLog, dir);
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                }
-
-                currentLog.MoveTo(path);
-
-                var newFile = new FileInfo(serverData.ChatLogCurrentPath);
-                using (_ = newFile.Create()) { }
-                BuildLogger(newFile);
-
-                var logs = dir.GetFiles("*.log");
-
-                int removeCount = logs.Length - FactorioServerData.maxLogFiles;
-                if (removeCount <= 0)
-                {
-                    return;
-                }
-
-                var archiveDir = new DirectoryInfo(serverData.ChatLogsArchiveDirectoryPath);
-                if (!archiveDir.Exists)
-                {
-                    archiveDir.Create();
-                }
-
-                // sort oldest first.
-                Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
-
-                for (int i = 0; i < removeCount && i < logs.Length; i++)
-                {
-                    var log = logs[i];
-
-                    var archivePath = Path.Combine(archiveDir.FullName, log.Name);
-
-                    log.MoveTo(archivePath);
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(RotateChatLogs));
-            }
-        }
-
         private Task RotateLogs(FactorioServerData serverData)
         {
             return Task.Run(() =>
             {
-                RotateFactorioLogs(serverData);
-                RotateChatLogs(serverData);
+                _factorioFileManager.RotateFactorioLogs(serverData);
+                _factorioFileManager.RotateChatLogs(serverData);
             });
         }
 
         private async Task BuildBanList(FactorioServerData serverData)
         {
-            if (!serverData.ExtraServerSettings.BuildBansFromDatabaseOnStart)
+            if (!serverData.ServerExtraSettings.BuildBansFromDatabaseOnStart)
             {
                 // If we don't want the database bans, the assumption is we should leave the
                 // server banlist alone with whatever bans are in there.
@@ -672,13 +407,22 @@ namespace FactorioWebInterface.Services
             }
 
             var a = await _factorioAdminManager.GetAdmins();
-            var admins = a.Select(x => x.Name).ToList();
-
-            serverData.ServerAdminList = admins;
+            var admins = a.Select(x => x.Name).ToArray();
 
             var adminData = JsonConvert.SerializeObject(admins, Formatting.Indented);
+            var writeTask = File.WriteAllTextAsync(serverData.ServerAdminListPath, adminData);
 
-            await File.WriteAllTextAsync(serverData.ServerAdminListPath, adminData);
+            serverData.ServerAdminList = admins;
+            serverData.ServerWebEditableSettings.Admins = admins;
+
+            var items = new Dictionary<string, object>
+            {
+                { nameof(FactorioServerSettingsWebEditable.Admins), admins }
+            };
+            var data = KeyValueCollectionChangedData.Add(items);
+            _ = _factorioControlHub.Clients.Group(serverData.ServerId).SendServerSettingsUpdate(data, false);
+
+            await writeTask;
         }
 
         private void SendToEachRunningServer(string data)
@@ -699,7 +443,7 @@ namespace FactorioWebInterface.Services
             foreach (var server in servers)
             {
                 var serverData = server.Value;
-                if (serverData.Status == FactorioServerStatus.Running && serverData.ExtraServerSettings.SyncBans)
+                if (serverData.Status == FactorioServerStatus.Running && serverData.ServerExtraSettings.SyncBans)
                 {
                     clients.Group(server.Key).SendToFactorio(data);
                 }
@@ -712,7 +456,7 @@ namespace FactorioWebInterface.Services
             foreach (var server in servers)
             {
                 var serverData = server.Value;
-                if (server.Key != exceptId && serverData.Status == FactorioServerStatus.Running && serverData.ExtraServerSettings.SyncBans)
+                if (server.Key != exceptId && serverData.Status == FactorioServerStatus.Running && serverData.ServerExtraSettings.SyncBans)
                 {
                     clients.Group(server.Key).SendToFactorio(data);
                 }
@@ -928,7 +672,8 @@ namespace FactorioWebInterface.Services
                                     Size = fi.Length,
                                     Directory = Constants.TempSavesDirectoryName
                                 };
-                                var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, new[] { data });
+                                var changeData = CollectionChangedData.Add(new[] { data });
+                                var ev = new FilesChangedEventArgs(serverId, changeData);
 
                                 _factorioFileManager.RaiseTempFilesChanged(ev);
                                 break;
@@ -1380,7 +1125,16 @@ namespace FactorioWebInterface.Services
                         serverData.ControlMessageBuffer.Add(messageData);
                         _ = group.SendMessage(messageData);
 
-                        _logger.LogInformation("Updated server.");
+                        var embed = new DiscordEmbedBuilder()
+                        {
+                            Title = "Status:",
+                            Description = $"Server has **updated** to version {version}",
+                            Color = DiscordBot.updateColor,
+                            Timestamp = DateTimeOffset.UtcNow
+                        };
+                        _ = _discordBotContext.SendEmbedToFactorioChannel(serverId, embed);
+
+                        _logger.LogInformation("Updated server to version: {version}.", version);
                     }
                     else
                     {
@@ -1401,7 +1155,7 @@ namespace FactorioWebInterface.Services
                         var messageData2 = new MessageData()
                         {
                             ServerId = serverId,
-                            MessageType = Models.MessageType.Control,
+                            MessageType = Models.MessageType.Output,
                             Message = result.ToString()
                         };
 
@@ -1454,16 +1208,26 @@ namespace FactorioWebInterface.Services
                 serverData.Status = FactorioServerStatus.Updating;
 
                 var group = _factorioControlHub.Clients.Group(serverId);
-                await group.FactorioStatusChanged(FactorioServerStatus.Updating.ToString(), oldStatus.ToString());
 
-                var messageData = new MessageData()
+                var controlMessage = new MessageData()
                 {
+                    ServerId = serverId,
+                    MessageType = Models.MessageType.Control,
+                    Message = $"Server updating to version: {version} by user: {userName}"
+                };
+                serverData.ControlMessageBuffer.Add(controlMessage);
+                _ = group.SendMessage(controlMessage);
+
+                _ = group.FactorioStatusChanged(FactorioServerStatus.Updating.ToString(), oldStatus.ToString());
+
+                var statusMessage = new MessageData()
+                {
+                    ServerId = serverId,
                     MessageType = Models.MessageType.Status,
                     Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updating} by user {userName}"
                 };
-
-                serverData.ControlMessageBuffer.Add(messageData);
-                await group.SendMessage(messageData);
+                serverData.ControlMessageBuffer.Add(statusMessage);
+                _ = group.SendMessage(statusMessage);
 
                 InstallInner(serverId, serverData, version);
             }
@@ -1570,7 +1334,7 @@ namespace FactorioWebInterface.Services
                             break;
                         }
 
-                        if (serverData.ExtraServerSettings.GameChatToDiscord)
+                        if (serverData.ServerExtraSettings.GameChatToDiscord)
                         {
                             _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
                         }
@@ -1586,7 +1350,7 @@ namespace FactorioWebInterface.Services
                             break;
                         }
 
-                        if (serverData.ExtraServerSettings.GameShoutToDiscord)
+                        if (serverData.ServerExtraSettings.GameShoutToDiscord)
                         {
                             _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
                         }
@@ -2218,7 +1982,7 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                if (!sourceServerData.ExtraServerSettings.SyncBans)
+                if (!sourceServerData.ServerExtraSettings.SyncBans)
                 {
                     return;
                 }
@@ -2248,7 +2012,7 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                if (!sourceServerData.ExtraServerSettings.SyncBans)
+                if (!sourceServerData.ServerExtraSettings.SyncBans)
                 {
                     return;
                 }
@@ -2305,7 +2069,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (!serverData.ExtraServerSettings.SyncBans)
+            if (!serverData.ServerExtraSettings.SyncBans)
             {
                 return;
             }
@@ -2393,7 +2157,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (!serverData.ExtraServerSettings.SyncBans)
+            if (!serverData.ServerExtraSettings.SyncBans)
             {
                 return;
             }
@@ -2444,7 +2208,7 @@ namespace FactorioWebInterface.Services
             var t2 = _discordBotContext.SendEmbedToFactorioChannel(serverId, embed);
 
             string name = null;
-            if (serverData.ExtraServerSettings.SetDiscordChannelName)
+            if (serverData.ServerExtraSettings.SetDiscordChannelName)
             {
                 string cleanServerName = serverTagRegex.Replace(serverData.ServerSettings.Name, "");
                 string cleanVersion = serverData.Version.Replace('.', '_');
@@ -2497,7 +2261,7 @@ namespace FactorioWebInterface.Services
             string serverId = serverData.ServerId;
 
             string name = null;
-            if (serverData.ExtraServerSettings.SetDiscordChannelName)
+            if (serverData.ServerExtraSettings.SetDiscordChannelName)
             {
                 name = $"s{serverId}-offline";
             }
@@ -2639,22 +2403,20 @@ namespace FactorioWebInterface.Services
 
         private async Task<FactorioServerSettings> GetServerSettings(FactorioServerData serverData)
         {
-            var serverSettings = serverData.ServerSettings;
+            var settings = serverData.ServerSettings;
 
-            if (serverSettings != null)
+            if (settings != null)
             {
-                return serverSettings;
+                return settings;
             }
 
             var fi = new FileInfo(serverData.ServerSettingsPath);
 
             if (!fi.Exists)
             {
-                serverSettings = FactorioServerSettings.MakeDefault(_configuration);
+                settings = FactorioServerSettings.MakeDefault(_configuration);
 
-                serverData.ServerSettings = serverSettings;
-
-                var data = JsonConvert.SerializeObject(serverSettings, Formatting.Indented);
+                var data = JsonConvert.SerializeObject(settings, Formatting.Indented);
                 using (var fs = fi.CreateText())
                 {
                     await fs.WriteAsync(data);
@@ -2666,16 +2428,16 @@ namespace FactorioWebInterface.Services
                 using (var s = fi.OpenText())
                 {
                     string output = await s.ReadToEndAsync();
-                    serverSettings = JsonConvert.DeserializeObject<FactorioServerSettings>(output);
+                    settings = JsonConvert.DeserializeObject<FactorioServerSettings>(output);
                 }
-
-                serverData.ServerSettings = serverSettings;
             }
 
-            return serverSettings;
+            serverData.ServerSettings = settings;
+
+            return settings;
         }
 
-        private async Task<List<string>> GetServerAdminList(FactorioServerData serverData)
+        private async Task<string[]> GetServerAdminList(FactorioServerData serverData)
         {
             var adminList = serverData.ServerAdminList;
 
@@ -2684,15 +2446,13 @@ namespace FactorioWebInterface.Services
                 return adminList;
             }
 
-            var a = await _factorioAdminManager.GetAdmins();
-            adminList = a.Select(x => x.Name).ToList();
-
-            serverData.ServerAdminList = adminList;
-
             var fi = new FileInfo(serverData.ServerAdminListPath);
 
             if (!fi.Exists)
             {
+                var a = await _factorioAdminManager.GetAdmins();
+                adminList = a.Select(x => x.Name).ToArray();
+
                 var data = JsonConvert.SerializeObject(adminList, Formatting.Indented);
                 using (var fs = fi.CreateText())
                 {
@@ -2700,43 +2460,66 @@ namespace FactorioWebInterface.Services
                     await fs.FlushAsync();
                 }
             }
+            else
+            {
+                using (var s = fi.OpenText())
+                {
+                    string output = await s.ReadToEndAsync();
+                    adminList = JsonConvert.DeserializeObject<string[]>(output);
+                }
+            }
+
+            serverData.ServerAdminList = adminList;
 
             return adminList;
         }
 
-        public async Task<FactorioServerSettingsWebEditable> GetEditableServerSettings(string serverId)
+        private FactorioServerSettingsWebEditable MakeEditableSettingsFromSettings(FactorioServerSettings settings, string[] adminList)
+        {
+            return new FactorioServerSettingsWebEditable()
+            {
+                Name = settings.Name,
+                Description = settings.Description,
+                Tags = settings.Tags,
+                MaxPlayers = settings.MaxPlayers,
+                GamePassword = settings.GamePassword,
+                MaxUploadSlots = settings.MaxUploadSlots,
+                AutoPause = settings.AutoPause,
+                UseDefaultAdmins = settings.UseDefaultAdmins,
+                Admins = adminList,
+                AutosaveInterval = settings.AutosaveInterval,
+                AutosaveSlots = settings.AutosaveSlots,
+                NonBlockingSaving = settings.NonBlockingSaving,
+                PublicVisible = settings.Visibility.Public
+            };
+        }
+
+        public async Task<(FactorioServerSettingsWebEditable settings, bool saved)> GetEditableServerSettings(string serverId)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
                 _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return null;
+                return (null, false);
             }
 
             try
             {
                 await serverData.ServerLock.WaitAsync();
 
+                var editableSettings = serverData.ServerWebEditableSettings;
+                if (editableSettings != null)
+                {
+                    return (editableSettings, serverData.ServerSettingsSaved);
+                }
+
                 var serverSettings = await GetServerSettings(serverData);
                 var adminList = await GetServerAdminList(serverData);
 
-                var editableSettings = new FactorioServerSettingsWebEditable()
-                {
-                    Name = serverSettings.Name,
-                    Description = serverSettings.Description,
-                    Tags = serverSettings.Tags,
-                    MaxPlayers = serverSettings.MaxPlayers,
-                    GamePassword = serverSettings.GamePassword,
-                    MaxUploadSlots = serverSettings.MaxUploadSlots,
-                    AutoPause = serverSettings.AutoPause,
-                    UseDefaultAdmins = serverSettings.UseDefaultAdmins,
-                    Admins = adminList,
-                    AutosaveInterval = serverSettings.AutosaveInterval,
-                    AutosaveSlots = serverSettings.AutosaveSlots,
-                    NonBlockingSaving = serverSettings.NonBlockingSaving,
-                    PublicVisible = serverSettings.Visibility.Public
-                };
+                editableSettings = MakeEditableSettingsFromSettings(serverSettings, adminList);
 
-                return editableSettings;
+                serverData.ServerWebEditableSettings = editableSettings;
+
+                return (editableSettings, serverData.ServerSettingsSaved);
             }
             finally
             {
@@ -2752,6 +2535,14 @@ namespace FactorioWebInterface.Services
                 return null;
             }
 
+            settings.Tags = settings.Tags.Select(x => x.Replace(' ', '\u00a0')).ToArray(); // \u00a0 is &nbsp;. Factorio splits tags on space, but not on &nbsp;.
+            settings.MaxPlayers = settings.MaxPlayers < 0 ? 0 : settings.MaxPlayers;
+            settings.MaxUploadSlots = settings.MaxUploadSlots < 0 ? 0 : settings.MaxUploadSlots;
+            settings.AutosaveSlots = settings.AutosaveSlots < 0 ? 0 : settings.AutosaveSlots;
+            settings.AutosaveInterval = settings.AutosaveInterval < 1 ? 1 : settings.AutosaveInterval;
+
+            Result result;
+
             try
             {
                 await serverData.ServerLock.WaitAsync();
@@ -2760,32 +2551,37 @@ namespace FactorioWebInterface.Services
 
                 serverSettigns.Name = settings.Name;
                 serverSettigns.Description = settings.Description;
-                serverSettigns.Tags = settings.Tags.Select(x => x.Replace(' ', '\u00a0')).ToList(); // \u00a0 is &nbsp;. Factorio splits tags on space, but not on &nbsp;.
-                serverSettigns.MaxPlayers = settings.MaxPlayers < 0 ? 0 : settings.MaxPlayers;
+                serverSettigns.Tags = settings.Tags;
+                serverSettigns.MaxPlayers = settings.MaxPlayers;
                 serverSettigns.GamePassword = settings.GamePassword;
-                serverSettigns.MaxUploadSlots = settings.MaxUploadSlots < 0 ? 0 : settings.MaxUploadSlots;
+                serverSettigns.MaxUploadSlots = settings.MaxUploadSlots;
                 serverSettigns.AutoPause = settings.AutoPause;
                 serverSettigns.UseDefaultAdmins = settings.UseDefaultAdmins;
-                serverSettigns.AutosaveSlots = settings.AutosaveSlots < 0 ? 0 : settings.AutosaveSlots;
-                serverSettigns.AutosaveInterval = settings.AutosaveInterval < 1 ? 1 : settings.AutosaveInterval;
+                serverSettigns.AutosaveSlots = settings.AutosaveSlots;
+                serverSettigns.AutosaveInterval = settings.AutosaveInterval;
                 serverSettigns.NonBlockingSaving = settings.NonBlockingSaving;
                 serverSettigns.Visibility.Public = settings.PublicVisible;
 
-                List<string> admins;
+                string[] admins;
 
                 if (!settings.UseDefaultAdmins)
                 {
                     admins = settings.Admins.Select(x => x.Trim())
                         .Where(x => !string.IsNullOrWhiteSpace(x))
-                        .ToList();
+                        .ToArray();
                 }
                 else
                 {
                     var a = await _factorioAdminManager.GetAdmins();
-                    admins = a.Select(x => x.Name).ToList();
+                    admins = a.Select(x => x.Name).ToArray();
                 }
 
+                settings.Admins = admins;
+
+                serverData.ServerSettings = serverSettigns;
                 serverData.ServerAdminList = admins;
+                serverData.ServerWebEditableSettings = settings;
+                serverData.ServerSettingsSaved = true;
 
                 var settingsData = JsonConvert.SerializeObject(serverSettigns, Formatting.Indented);
                 var adminData = JsonConvert.SerializeObject(admins, Formatting.Indented);
@@ -2793,12 +2589,80 @@ namespace FactorioWebInterface.Services
                 await File.WriteAllTextAsync(serverData.ServerSettingsPath, settingsData);
                 await File.WriteAllTextAsync(serverData.ServerAdminListPath, adminData);
 
-                return Result.OK;
+                result = Result.OK;
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Exception saving server settings.");
-                return Result.Failure(Constants.UnexpctedErrorKey);
+                result = Result.Failure(Constants.UnexpctedErrorKey);
+            }
+            finally
+            {
+                serverData.ServerLock.Release();
+            }
+
+            if (result.Success)
+            {
+                _ = _factorioControlHub.Clients.Group(serverId).SendServerSettings(settings, true);
+            }
+
+            return result;
+        }
+
+        private async Task<FactorioServerExtraSettings> GetServerExtraSettings(FactorioServerData serverData)
+        {
+            var settings = serverData.ServerExtraSettings;
+
+            var fi = new FileInfo(serverData.ServerExtraSettingsPath);
+
+            if (!fi.Exists)
+            {
+                settings = FactorioServerExtraSettings.MakeDefault();
+
+                var data = JsonConvert.SerializeObject(settings, Formatting.Indented);
+                using (var fs = fi.CreateText())
+                {
+                    await fs.WriteAsync(data);
+                    await fs.FlushAsync();
+                }
+            }
+            else
+            {
+                using (var s = fi.OpenText())
+                {
+                    string output = await s.ReadToEndAsync();
+                    settings = JsonConvert.DeserializeObject<FactorioServerExtraSettings>(output);
+                }
+            }
+
+            serverData.ServerExtraWebEditableSettings = settings;
+
+            return settings;
+        }
+
+        public async Task<(FactorioServerExtraSettings settings, bool saved)> GetEditableServerExtraSettings(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return (null, false);
+            }
+
+            try
+            {
+                await serverData.ServerLock.WaitAsync();
+
+                var settings = serverData.ServerExtraWebEditableSettings;
+                if (settings != null)
+                {
+                    return (settings, serverData.ServerExtraSettingsSaved);
+                }
+
+                settings = await GetServerExtraSettings(serverData);
+                var copy = settings.Copy();
+
+                serverData.ServerExtraWebEditableSettings = copy;
+                return (copy, serverData.ServerExtraSettingsSaved);
             }
             finally
             {
@@ -2806,7 +2670,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public async Task<FactorioServerExtraSettings> GetExtraServerSettings(string serverId)
+        public async Task<Result> SaveEditableExtraServerSettings(string serverId, FactorioServerExtraSettings settings)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
@@ -2814,45 +2678,245 @@ namespace FactorioWebInterface.Services
                 return null;
             }
 
-            try
-            {
-                await serverData.ServerLock.WaitAsync();
-
-                return serverData.ExtraServerSettings.Copy();
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
-        }
-
-        public async Task<Result> SaveExtraServerSettings(string serverId, FactorioServerExtraSettings settings)
-        {
-            if (!servers.TryGetValue(serverId, out var serverData))
-            {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return null;
-            }
+            Result result;
 
             try
             {
                 await serverData.ServerLock.WaitAsync();
-                serverData.ExtraServerSettings = settings;
+
+                serverData.ServerExtraSettings = settings;
+                serverData.ServerExtraWebEditableSettings = settings.Copy();
+                serverData.ServerExtraSettingsSaved = true;
 
                 string data = JsonConvert.SerializeObject(settings, Formatting.Indented);
                 await File.WriteAllTextAsync(serverData.ServerExtraSettingsPath, data);
 
-                return Result.OK;
+                result = Result.OK;
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Exception saving server extra settings.");
-                return Result.Failure(Constants.UnexpctedErrorKey);
+                result = Result.Failure(Constants.UnexpctedErrorKey);
             }
             finally
             {
                 serverData.ServerLock.Release();
             }
+
+            if (result.Success)
+            {
+                _ = _factorioControlHub.Clients.Group(serverId).SendServerExtraSettings(settings, true);
+            }
+
+            return result;
+        }
+
+        public async Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
+
+            if (data.Type != CollectionChangeType.Add)
+            {
+                return;
+            }
+
+            try
+            {
+                await serverData.ServerLock.WaitAsync();
+
+                serverData.ServerSettingsSaved = false;
+
+                var settings = serverData.ServerWebEditableSettings;
+
+                if (settings == null)
+                {
+                    return;
+                }
+
+                foreach (var keyValuePair in data.NewItems)
+                {
+                    var value = keyValuePair.Value;
+                    switch (keyValuePair.Key)
+                    {
+                        case nameof(FactorioServerSettingsWebEditable.Name):
+                            settings.Name = value as string ?? "";
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.Description):
+                            settings.Description = value as string ?? "";
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.Tags):
+                            {
+                                var input = value as object[] ?? Array.Empty<object>();
+                                settings.Tags = Array.ConvertAll(input, x => x as string ?? "");
+                                break;
+                            }
+                        case nameof(FactorioServerSettingsWebEditable.MaxPlayers):
+                            settings.MaxPlayers = value as int? ?? 0;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.GamePassword):
+                            settings.GamePassword = value as string ?? "";
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.MaxUploadSlots):
+                            settings.MaxUploadSlots = value as int? ?? 32;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.AutoPause):
+                            settings.AutoPause = value as bool? ?? true;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.UseDefaultAdmins):
+                            settings.UseDefaultAdmins = value as bool? ?? true;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.Admins):
+                            {
+                                var input = value as object[] ?? Array.Empty<object>();
+                                settings.Admins = Array.ConvertAll(input, x => x as string ?? "");
+                                break;
+                            }
+                        case nameof(FactorioServerSettingsWebEditable.AutosaveInterval):
+                            settings.AutosaveInterval = value as int? ?? 5;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.AutosaveSlots):
+                            settings.AutosaveSlots = value as int? ?? 20;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.NonBlockingSaving):
+                            settings.NonBlockingSaving = value as bool? ?? false;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.PublicVisible):
+                            settings.PublicVisible = value as bool? ?? true;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            finally
+            {
+                serverData.ServerLock.Release();
+            }
+
+            _ = _factorioControlHub.Clients.GroupExcept(serverId, connectionId).SendServerSettingsUpdate(data, true);
+        }
+
+        public async Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
+
+            if (data.Type != CollectionChangeType.Add)
+            {
+                return;
+            }
+
+            try
+            {
+                await serverData.ServerLock.WaitAsync();
+
+                serverData.ServerExtraSettingsSaved = false;
+
+                var settings = serverData.ServerExtraWebEditableSettings;
+
+                if (settings == null)
+                {
+                    return;
+                }
+
+                foreach (var keyValuePair in data.NewItems)
+                {
+                    var value = keyValuePair.Value as bool? ?? true;
+                    switch (keyValuePair.Key)
+                    {
+                        case nameof(FactorioServerExtraSettings.SyncBans):
+                            settings.SyncBans = value;
+                            break;
+                        case nameof(FactorioServerExtraSettings.BuildBansFromDatabaseOnStart):
+                            settings.BuildBansFromDatabaseOnStart = value;
+                            break;
+                        case nameof(FactorioServerExtraSettings.SetDiscordChannelName):
+                            settings.SetDiscordChannelName = value;
+                            break;
+                        case nameof(FactorioServerExtraSettings.GameChatToDiscord):
+                            settings.GameChatToDiscord = value;
+                            break;
+                        case nameof(FactorioServerExtraSettings.GameShoutToDiscord):
+                            settings.GameShoutToDiscord = value;
+                            break;
+                        case nameof(FactorioServerExtraSettings.DiscordToGameChat):
+                            settings.DiscordToGameChat = value;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            finally
+            {
+                serverData.ServerLock.Release();
+            }
+
+            _ = _factorioControlHub.Clients.GroupExcept(serverId, connectionId).SendServerExtraSettingsUpdate(data, true);
+        }
+
+        public async Task UndoServerSettings(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
+
+            FactorioServerSettingsWebEditable settings;
+
+            try
+            {
+                await serverData.ServerLock.WaitAsync();
+
+                var serverSettings = await GetServerSettings(serverData);
+                var adminList = await GetServerAdminList(serverData);
+
+                settings = MakeEditableSettingsFromSettings(serverSettings, adminList);
+
+                serverData.ServerWebEditableSettings = settings;
+                serverData.ServerSettingsSaved = true;
+            }
+            finally
+            {
+                serverData.ServerLock.Release();
+            }
+
+            _ = _factorioControlHub.Clients.Group(serverId).SendServerSettings(settings, true);
+        }
+
+        public async Task UndoServerExtraSettings(string serverId)
+        {
+            if (!servers.TryGetValue(serverId, out var serverData))
+            {
+                _logger.LogError("Unknown serverId: {serverId}", serverId);
+                return;
+            }
+
+            FactorioServerExtraSettings settings;
+
+            try
+            {
+                await serverData.ServerLock.WaitAsync();
+
+                settings = serverData.ServerExtraSettings.Copy();
+
+                serverData.ServerExtraWebEditableSettings = settings;
+                serverData.ServerExtraSettingsSaved = true;
+            }
+            finally
+            {
+                serverData.ServerLock.Release();
+            }
+
+            _ = _factorioControlHub.Clients.Group(serverId).SendServerExtraSettings(settings, true);
         }
 
         public Result DeflateSave(string connectionId, string serverId, string directoryName, string fileName, string newFileName = "")
@@ -2926,19 +2990,16 @@ namespace FactorioWebInterface.Services
 
                         string dirName = directory.Name;
 
-                        var data = new[]
+                        var data = new FileMetaData()
                         {
-                            new FileMetaData()
-                            {
-                                Name = newFileInfo.Name,
-                                CreatedTime = newFileInfo.CreationTimeUtc,
-                                LastModifiedTime = newFileInfo.LastWriteTimeUtc,
-                                Directory = dirName,
-                                Size = newFileInfo.Length
-                            }
+                            Name = newFileInfo.Name,
+                            CreatedTime = newFileInfo.CreationTimeUtc,
+                            LastModifiedTime = newFileInfo.LastWriteTimeUtc,
+                            Directory = dirName,
+                            Size = newFileInfo.Length
                         };
-
-                        var ev = new FilesChangedEventArgs(serverId, FilesChangedType.Create, data, null);
+                        var changeData = CollectionChangedData.Add(new[] { data });
+                        var ev = new FilesChangedEventArgs(serverId, changeData);
 
                         switch (dirName)
                         {
@@ -2976,7 +3037,7 @@ namespace FactorioWebInterface.Services
             return _factorioUpdater.GetDownloadableVersions();
         }
 
-        public Task<List<string>> GetCachedVersions()
+        public Task<string[]> GetCachedVersions()
         {
             return Task.FromResult(_factorioUpdater.GetCachedVersions());
         }

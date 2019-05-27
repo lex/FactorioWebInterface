@@ -17,6 +17,14 @@
     </environment>
 }
 
+<style>
+    .box-danger {
+        border-style: solid;
+        border-width: 1px;
+        border-color: hsl(348, 100%, 61%);
+    }
+</style>
+
 <div style="padding: 0rem 1rem;">
     <div class="column">
         <h2 class="title is-2">Servers</h2>
@@ -110,32 +118,6 @@
                             </div>
                         </div>
 
-
-                        @*<div class="field is-horizontal">
-                                <div class="field-label is-normal">
-                                    <label class="label">Status:</label>
-                                </div>
-                                <div class="field-label is-normal">
-                                    <label id="statusText" class="label"></label>
-                                </div>
-
-                                <div class="field-label is-normal">
-                                    <label class="label">Version:</label>
-                                </div>
-                                <div class="field-body">
-                                    <div class="field-label is-normal">
-                                        <label id="versionText" class="label"></label>
-                                    </div>
-                                </div>
-
-                                <div class="field-body">
-                                    <button id="getStatusButton" class="button is-info">
-                                        <span class="icon"><i class="fas fa-info-circle"></i></span>
-                                        <span>Get Status</span>
-                                    </button>
-                                </div>
-                            </div>*@
-
                     </div>
                 </div>
 
@@ -163,8 +145,12 @@
 
             <section>
 
-                <div class="box">
-                    <h3 class="title is-3">Server Settings</h3>
+                <div id="settingsBox" class="box">
+                    <h3 class="title is-3" style="display:inline">Server Settings</h3>
+                    <label id="settingsUnsavedLabel" class="label is-hidden" style="display:inline; float:right;">
+                        <span class="icon has-text-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                        <span class="has-text-danger">There are unsaved changes.</span>
+                    </label>
                     <hr />
 
                     <div class="field is-horizontal">
@@ -341,9 +327,21 @@
                             <!-- Left empty for spacing -->
                         </div>
                         <div class="field-body">
-                            <div class="field">
+                            <div class="field is-grouped">
                                 <div class="control">
-                                    <button id="configSaveButton" class="button is-link">Save Changes</button>
+                                    <button id="configSaveButton" class="button is-success" disabled>Save Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="undoSettingsButton" class="button is-danger" disabled>Undo Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="copySettingsButton" class="button is-link">Copy Settings</button>
+                                </div>
+
+                                <div class="control">
+                                    <input id="pasteSettingsTextInput" class="input" type="text" placeholder="Paste settings here" />
                                 </div>
                             </div>
                         </div>
@@ -351,8 +349,12 @@
 
                 </div>
 
-                <div class="box">
-                    <h3 class="title is-3">Server Extra Settings</h3>
+                <div id="extraSettingsBox" class="box">
+                    <h3 class="title is-3" style="display:inline">Server Extra Settings</h3>
+                    <label id="extraSettingsUnsavedLabel" class="label is-hidden" style="display:inline; float:right;">
+                        <span class="icon has-text-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                        <span class="has-text-danger">There are unsaved changes.</span>
+                    </label>
                     <hr />
 
                     <div class="field is-horizontal">
@@ -438,9 +440,21 @@
                             <!-- Left empty for spacing -->
                         </div>
                         <div class="field-body">
-                            <div class="field">
+                            <div class="field is-grouped">
                                 <div class="control">
-                                    <button id="configExtraSaveButton" class="button is-link">Save Changes</button>
+                                    <button id="configExtraSaveButton" class="button is-success" disabled>Save Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="undoExtraSettingsButton" class="button is-danger" disabled>Undo Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="copyExtraSettingsButton" class="button is-link">Copy Settings</button>
+                                </div>
+
+                                <div class="control">
+                                    <input id="pasteExtraSettingsTextInput" class="input" type="text" placeholder="Paste settings here" />
                                 </div>
                             </div>
                         </div>

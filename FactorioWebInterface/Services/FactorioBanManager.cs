@@ -18,11 +18,7 @@ namespace FactorioWebInterface.Services
         private readonly ILogger<FactorioBanManager> _logger;
         private readonly IHubContext<FactorioBanHub, IFactorioBanClientMethods> _banHub;
 
-        // Decoding the default DateTime causes errors.
-        private static DateTime dummyDate = new DateTime(1970, 1, 1);
-
-        public event EventHandler<FactorioBanManager, FactorioBanAddedEventArgs> BanAdded;
-        public event EventHandler<FactorioBanManager, FactorioBanRemovedEventArgs> BanRemoved;
+        public event EventHandler<FactorioBanManager, FactorioBanEventArgs> BanChanged;
 
         public FactorioBanManager(DbContextFactory dbContextFactory,
             ILogger<FactorioBanManager> logger,
@@ -32,28 +28,12 @@ namespace FactorioWebInterface.Services
             _logger = logger;
             _banHub = banHub;
 
-            BanAdded += FactorioBanManager_BanAdded;
-            BanRemoved += FactorioBanManager_BanRemoved;
+            BanChanged += FactorioBanManager_BanChanged; ;
         }
 
-        private void FactorioBanManager_BanAdded(FactorioBanManager sender, FactorioBanAddedEventArgs eventArgs)
+        private void FactorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
         {
-            var data = new TableData<Ban>()
-            {
-                Type = TableDataType.Update,
-                Rows = new Ban[] { eventArgs.Ban }
-            };
-            _ = _banHub.Clients.All.SendBans(data);
-        }
-
-        private void FactorioBanManager_BanRemoved(FactorioBanManager sender, FactorioBanRemovedEventArgs eventArgs)
-        {
-            var data = new TableData<Ban>()
-            {
-                Type = TableDataType.Remove,
-                Rows = new Ban[] { new Ban() { Username = eventArgs.Username, DateTime = dummyDate } }
-            };
-            _ = _banHub.Clients.All.SendBans(data);
+            _ = _banHub.Clients.All.SendBans(eventArgs.ChangeData);
         }
 
         public async Task<Ban[]> GetBansAsync()
@@ -101,7 +81,11 @@ namespace FactorioWebInterface.Services
             bool added = await AddBanToDatabase(ban, actor);
             if (added)
             {
-                _ = Task.Run(() => BanAdded?.Invoke(this, new FactorioBanAddedEventArgs(ban, synchronizeWithServers, "")));
+                var changedData = CollectionChangedData.Add(new[] { ban });
+                var ev = new FactorioBanEventArgs(synchronizeWithServers, "", changedData);
+
+                _ = Task.Run(() => BanChanged?.Invoke(this, ev));
+
                 return Result.OK;
             }
             else
@@ -115,7 +99,10 @@ namespace FactorioWebInterface.Services
             bool added = await AddBanToDatabase(ban, ban.Admin);
             if (added)
             {
-                _ = Task.Run(() => BanAdded?.Invoke(this, new FactorioBanAddedEventArgs(ban, true, serverId)));
+                var changedData = CollectionChangedData.Add(new[] { ban });
+                var ev = new FactorioBanEventArgs(true, serverId, changedData);
+
+                _ = Task.Run(() => BanChanged?.Invoke(this, ev));
             }
         }
 
@@ -202,7 +189,11 @@ namespace FactorioWebInterface.Services
             bool removed = await RemoveBanFromDatabase(username, actor);
             if (removed)
             {
-                _ = Task.Run(() => BanRemoved?.Invoke(this, new FactorioBanRemovedEventArgs(username, synchronizeWithServers, "")));
+                var changedData = CollectionChangedData.Remove(new[] { new Ban { Username = username } });
+                var ev = new FactorioBanEventArgs(synchronizeWithServers, "", changedData);
+
+                _ = Task.Run(() => BanChanged?.Invoke(this, ev));
+
                 return Result.OK;
             }
             else
@@ -216,7 +207,10 @@ namespace FactorioWebInterface.Services
             bool removed = await RemoveBanFromDatabase(username, actor);
             if (removed)
             {
-                _ = Task.Run(() => BanRemoved?.Invoke(this, new FactorioBanRemovedEventArgs(username, true, serverId)));
+                var changedData = CollectionChangedData.Remove(new[] { new Ban { Username = username } });
+                var ev = new FactorioBanEventArgs(true, serverId, changedData);
+
+                _ = Task.Run(() => BanChanged?.Invoke(this, ev));
             }
         }
 

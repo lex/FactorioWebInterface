@@ -123,15 +123,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioServerManager.GetTempSaveFiles(serverId);
+                var files = _factorioServerManager.GetTempSaveFiles(serverId);
+                var data = CollectionChangedData.Reset(files);
 
-                var tableData = new TableData<FileMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendTempSavesFiles(serverId, tableData);
+                _ = client.SendTempSavesFiles(serverId, data);
             });
 
             return Task.CompletedTask;
@@ -144,15 +139,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioServerManager.GetLocalSaveFiles(serverId);
+                var files = _factorioServerManager.GetLocalSaveFiles(serverId);
+                var data = CollectionChangedData.Reset(files);
 
-                var tableData = new TableData<FileMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendLocalSaveFiles(serverId, tableData);
+                _ = client.SendLocalSaveFiles(serverId, data);
             });
 
             return Task.CompletedTask;
@@ -164,15 +154,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioServerManager.GetGlobalSaveFiles();
+                var files = _factorioServerManager.GetGlobalSaveFiles();
+                var data = CollectionChangedData.Reset(files);
 
-                var tableData = new TableData<FileMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendGlobalSaveFiles(tableData);
+                _ = client.SendGlobalSaveFiles(data);
             });
 
             return Task.CompletedTask;
@@ -184,15 +169,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioServerManager.GetScenarios();
+                var scenarios = _factorioServerManager.GetScenarios();
+                var data = CollectionChangedData.Reset(scenarios);
 
-                var tableData = new TableData<ScenarioMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendScenarios(tableData);
+                _ = client.SendScenarios(data);
             });
 
             return Task.CompletedTask;
@@ -204,15 +184,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioModManager.GetModPacks();
+                var modPacks = _factorioModManager.GetModPacks();
+                var data = CollectionChangedData.Reset(modPacks);
 
-                var tableData = new TableData<ModPackMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendModPacks(tableData);
+                _ = client.SendModPacks(data);
             });
 
             return Task.CompletedTask;
@@ -225,15 +200,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioServerManager.GetLogs(serverId);
+                var logs = _factorioServerManager.GetLogs(serverId);
+                var data = CollectionChangedData.Reset(logs);
 
-                var tableData = new TableData<FileMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendLogFiles(serverId, tableData);
+                _ = client.SendLogFiles(serverId, data);
             });
 
             return Task.CompletedTask;
@@ -246,15 +216,10 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(() =>
             {
-                var data = _factorioServerManager.GetChatLogs(serverId);
+                var logs = _factorioServerManager.GetChatLogs(serverId);
+                var data = CollectionChangedData.Reset(logs);
 
-                var tableData = new TableData<FileMetaData>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = data
-                };
-
-                _ = client.SendChatLogFiles(serverId, tableData);
+                _ = client.SendChatLogFiles(serverId, data);
             });
 
             return Task.CompletedTask;
@@ -318,34 +283,6 @@ namespace FactorioWebInterface.Hubs
             return Task.FromResult(_factorioFileManager.RenameFile(serverId, directoryPath, fileName, newFileName));
         }
 
-        public Task<FactorioServerSettingsWebEditable> GetServerSettings()
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return _factorioServerManager.GetEditableServerSettings(serverId);
-        }
-
-        public async Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings)
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return await _factorioServerManager.SaveEditableServerSettings(serverId, settings);
-        }
-
-        public Task<FactorioServerExtraSettings> GetServerExtraSettings()
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return _factorioServerManager.GetExtraServerSettings(serverId);
-        }
-
-        public async Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings)
-        {
-            string serverId = Context.GetDataOrDefault("");
-
-            return await _factorioServerManager.SaveExtraServerSettings(serverId, settings);
-        }
-
         public Task<Result> Save()
         {
             string serverId = Context.GetDataOrDefault("");
@@ -389,13 +326,9 @@ namespace FactorioWebInterface.Hubs
             _ = Task.Run(async () =>
             {
                 var versions = await _factorioServerManager.GetCachedVersions();
-                var td = new TableData<string>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = versions
-                };
+                var data = CollectionChangedData.Reset(versions);
 
-                _ = client.SendCachedVersions(td);
+                _ = client.SendCachedVersions(data);
             });
 
             return Task.CompletedTask;
@@ -403,21 +336,7 @@ namespace FactorioWebInterface.Hubs
 
         public Task DeleteCachedVersion(string version)
         {
-            var client = Clients.All;
-
-            _ = Task.Run(async () =>
-            {
-                _ = _factorioServerManager.DeleteCachedVersion(version);
-
-                var versions = await _factorioServerManager.GetCachedVersions();
-                var td = new TableData<string>()
-                {
-                    Type = TableDataType.Reset,
-                    Rows = versions
-                };
-
-                _ = client.SendCachedVersions(td);
-            });
+            _ = _factorioServerManager.DeleteCachedVersion(version);
 
             return Task.CompletedTask;
         }
@@ -448,6 +367,86 @@ namespace FactorioWebInterface.Hubs
             string serverId = Context.GetDataOrDefault("");
 
             _ = _factorioServerManager.SetSelectedModPack(serverId, modPack);
+
+            return Task.CompletedTask;
+        }
+
+        public Task RequestServerSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(async () =>
+            {
+                (var settings, bool saved) = await _factorioServerManager.GetEditableServerSettings(serverId);
+                _ = client.SendServerSettings(settings, saved);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public Task RequestServerExtraSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(async () =>
+            {
+                (var settings, bool saved) = await _factorioServerManager.GetEditableServerExtraSettings(serverId);
+                _ = client.SendServerExtraSettings(settings, saved);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings)
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            return await _factorioServerManager.SaveEditableServerSettings(serverId, settings);
+        }
+
+        public async Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings)
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            return await _factorioServerManager.SaveEditableExtraServerSettings(serverId, settings);
+        }
+
+        public Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data)
+        {
+            string serverId = Context.GetDataOrDefault("");
+            string connectionId = Context.ConnectionId;
+
+            _factorioServerManager.UpdateServerSettings(data, serverId, connectionId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data)
+        {
+            string serverId = Context.GetDataOrDefault("");
+            string connectionId = Context.ConnectionId;
+
+            _factorioServerManager.UpdateServerExtraSettings(data, serverId, connectionId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UndoServerSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            _factorioServerManager.UndoServerSettings(serverId);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UndoServerExtraSettings()
+        {
+            string serverId = Context.GetDataOrDefault("");
+
+            _factorioServerManager.UndoServerExtraSettings(serverId);
 
             return Task.CompletedTask;
         }

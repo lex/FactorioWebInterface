@@ -18,7 +18,7 @@ namespace FactorioWebInterface.Services
         private readonly IHubContext<FactorioModHub, IFactorioModClientMethods> _factorioModHub;
         private readonly ILogger<FactorioModManager> _logger;
 
-        public event EventHandler<FactorioModManager, ModPackChangedEventArgs> ModPackChanged;
+        public event EventHandler<FactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
         public event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
 
         public FactorioModManager(IHubContext<FactorioModHub, IFactorioModClientMethods> factorioModHub,
@@ -31,63 +31,14 @@ namespace FactorioWebInterface.Services
             ModPackFilesChanged += FactorioModManager_ModPackFilesChanged;
         }
 
-        private void FactorioModManager_ModPackChanged(FactorioModManager sender, ModPackChangedEventArgs eventArgs)
+        private void FactorioModManager_ModPackChanged(FactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
         {
-            TableData<ModPackMetaData> Create(ModPackChangedEventArgs e)
-            {
-                return new TableData<ModPackMetaData>
-                {
-                    Type = TableDataType.Update,
-                    Rows = new[] { e.NewOrUpdated }
-                };
-            }
-
-            TableData<ModPackMetaData> Delete(ModPackChangedEventArgs e)
-            {
-                return new TableData<ModPackMetaData>
-                {
-                    Type = TableDataType.Remove,
-                    Rows = new[] { e.Old }
-                };
-            }
-
-            var clients = _factorioModHub.Clients.All;
-
-            switch (eventArgs.Type)
-            {
-                case ModPackChangedType.Create:
-                    clients.SendModPacks(Create(eventArgs));
-                    break;
-                case ModPackChangedType.Delete:
-                    clients.SendModPacks(Delete(eventArgs));
-                    break;
-                case ModPackChangedType.Rename:
-                    var td = new TableData<ModPackMetaData>()
-                    {
-                        Type = TableDataType.Compound,
-                        TableDatas = new[]
-                        {
-                            Delete(eventArgs),
-                            Create(eventArgs)
-                        }
-                    };
-                    clients.SendModPacks(td);
-                    break;
-                default:
-                    break;
-            }
+            _factorioModHub.Clients.All.SendModPacks(eventArgs);
         }
 
         private void FactorioModManager_ModPackFilesChanged(FactorioModManager sender, ModPackFilesChangedEventArgs eventArgs)
         {
-            var clients = _factorioModHub.Clients.All;
-            var tableData = new TableData<ModPackFileMetaData>
-            {
-                Rows = eventArgs.Files,
-                Type = eventArgs.Type == ModPackFilesChangedType.Create ? TableDataType.Update : TableDataType.Remove
-            };
-
-            clients.SendModPackFiles(eventArgs.ModPack, tableData);
+            _factorioModHub.Clients.All.SendModPackFiles(eventArgs.ModPack, eventArgs.ChangedData);
         }
 
         public ModPackMetaData[] GetModPacks()
@@ -194,7 +145,7 @@ namespace FactorioWebInterface.Services
                     LastModifiedTime = modPackDir.LastWriteTimeUtc
                 };
 
-                var ev = new ModPackChangedEventArgs(ModPackChangedType.Create, modPack);
+                var ev = CollectionChangedData.Add(new[] { modPack });
                 Task.Run(() => ModPackChanged?.Invoke(this, ev));
 
                 return Result.OK;
@@ -240,7 +191,7 @@ namespace FactorioWebInterface.Services
 
                 modPackDir.Delete(true);
 
-                var ev = new ModPackChangedEventArgs(ModPackChangedType.Delete, null, modPack);
+                var ev = CollectionChangedData.Remove(new[] { modPack });
                 Task.Run(() => ModPackChanged?.Invoke(this, ev));
 
                 return Result.OK;
@@ -316,7 +267,7 @@ namespace FactorioWebInterface.Services
                     LastModifiedTime = modPackNewDir.LastWriteTimeUtc
                 };
 
-                var ev = new ModPackChangedEventArgs(ModPackChangedType.Rename, newModpack, oldModPack);
+                var ev = CollectionChangedData.AddAndRemove(new[] { newModpack }, new[] { oldModPack });
                 Task.Run(() => ModPackChanged?.Invoke(this, ev));
 
                 return Result.OK;
@@ -445,8 +396,9 @@ namespace FactorioWebInterface.Services
                         LastModifiedTime = modPackDir.LastWriteTimeUtc
                     };
 
-                    var packEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, data);
-                    var filesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Delete, modPack, changedFiles);
+                    var packEventArgs = CollectionChangedData.Add(new[] { data });
+                    var filesChangedData = CollectionChangedData.Remove(changedFiles);
+                    var filesEventArgs = new ModPackFilesChangedEventArgs(modPack, filesChangedData);
 
                     Task.Run(() =>
                     {
@@ -556,8 +508,9 @@ namespace FactorioWebInterface.Services
                         LastModifiedTime = modPackDir.LastWriteTimeUtc
                     };
 
-                    var packEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, data);
-                    var filesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, modPack, changedFiles);
+                    var packEventArgs = CollectionChangedData.Add(new[] { data });
+                    var filesChangedData = CollectionChangedData.Add(changedFiles);
+                    var filesEventArgs = new ModPackFilesChangedEventArgs(modPack, filesChangedData);
 
                     _ = Task.Run(() =>
                     {
@@ -742,8 +695,9 @@ namespace FactorioWebInterface.Services
                         LastModifiedTime = targetModPackDir.LastWriteTimeUtc
                     };
 
-                    var packEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, data);
-                    var filesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, targetModPack, changedFiles);
+                    var packEventArgs = CollectionChangedData.Add(new[] { data });
+                    var filesChangedData = CollectionChangedData.Add(changedFiles);
+                    var filesEventArgs = new ModPackFilesChangedEventArgs(targetModPack, filesChangedData);
 
                     Task.Run(() =>
                     {
@@ -894,10 +848,12 @@ namespace FactorioWebInterface.Services
                         LastModifiedTime = targetModPackDir.LastWriteTimeUtc
                     };
 
-                    var oldPackEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, oldPackData);
-                    var newPackEventArgs = new ModPackChangedEventArgs(ModPackChangedType.Create, newPackData);
-                    var oldFilesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Delete, sourceModPack, oldFiles);
-                    var newFilesEventArgs = new ModPackFilesChangedEventArgs(ModPackFilesChangedType.Create, targetModPack, newFiles);
+                    var oldPackEventArgs = CollectionChangedData.Add(new[] { oldPackData });
+                    var newPackEventArgs = CollectionChangedData.Add(new[] { newPackData });
+                    var oldFilesChangedData = CollectionChangedData.Remove(oldFiles);
+                    var newFilesChangedData = CollectionChangedData.Remove(newFiles);
+                    var oldFilesEventArgs = new ModPackFilesChangedEventArgs(sourceModPack, oldFilesChangedData);
+                    var newFilesEventArgs = new ModPackFilesChangedEventArgs(targetModPack, newFilesChangedData);
 
                     Task.Run(() =>
                     {

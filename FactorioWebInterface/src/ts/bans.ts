@@ -1,7 +1,7 @@
 ﻿import * as signalR from "@aspnet/signalr";
 import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
 import * as Table from "./table";
-import { Result, Utils } from "./utils";
+import { Result, Utils, CollectionChangedData } from "./utils";
 
 !function () {
     interface Ban {
@@ -156,7 +156,7 @@ import { Result, Utils } from "./utils";
         await startConnection();
     });
 
-    connection.on('SendBans', (data: Table.TableData) => {
+    connection.on('SendBans', (data: CollectionChangedData) => {
         table.update(data);
         updateBanCount();
     });

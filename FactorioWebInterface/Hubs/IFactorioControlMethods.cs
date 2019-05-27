@@ -32,10 +32,14 @@ namespace FactorioWebInterface.Hubs
         Task<Result> MoveFiles(string destination, List<string> filePaths);
         Task<Result> CopyFiles(string destination, List<string> filePaths);
         Task<Result> RenameFile(string directoryPath, string fileName, string newFileName);
-        Task<FactorioServerSettingsWebEditable> GetServerSettings();
+        Task RequestServerSettings();
+        Task RequestServerExtraSettings();
         Task<Result> SaveServerSettings(FactorioServerSettingsWebEditable settings);
-        Task<FactorioServerExtraSettings> GetServerExtraSettings();
         Task<Result> SaveServerExtraSettings(FactorioServerExtraSettings settings);
+        Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data);
+        Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data);
+        Task UndoServerSettings();
+        Task UndoServerExtraSettings();
         Task<Result> DeflateSave(string directoryPath, string fileName, string newFileName);
         Task RequestDownloadableVersions();
         Task RequestCachedVersions();
@@ -51,17 +55,21 @@ namespace FactorioWebInterface.Hubs
         //Task FactorioWebInterfaceData(string data);
         Task SendMessage(MessageData message);
         Task FactorioStatusChanged(string newStatus, string oldStatus);
-        Task SendTempSavesFiles(string serverId, TableData<FileMetaData> data);
-        Task SendLocalSaveFiles(string serverId, TableData<FileMetaData> data);
-        Task SendGlobalSaveFiles(TableData<FileMetaData> data);
-        Task SendScenarios(TableData<ScenarioMetaData> data);
-        Task SendModPacks(TableData<ModPackMetaData> data);
-        Task SendLogFiles(string serverId, TableData<FileMetaData> data);
-        Task SendChatLogFiles(string serverId, TableData<FileMetaData> data);
+        Task SendTempSavesFiles(string serverId, CollectionChangedData<FileMetaData> data);
+        Task SendLocalSaveFiles(string serverId, CollectionChangedData<FileMetaData> data);
+        Task SendGlobalSaveFiles(CollectionChangedData<FileMetaData> data);
+        Task SendScenarios(CollectionChangedData<ScenarioMetaData> data);
+        Task SendModPacks(CollectionChangedData<ModPackMetaData> data);
+        Task SendLogFiles(string serverId, CollectionChangedData<FileMetaData> data);
+        Task SendChatLogFiles(string serverId, CollectionChangedData<FileMetaData> data);
         Task DeflateFinished(Result result);
         Task SendDownloadableVersions(List<string> versions);
-        Task SendCachedVersions(TableData<string> data);
+        Task SendCachedVersions(CollectionChangedData<string> data);
         Task SendVersion(string version);
         Task SendSelectedModPack(string modPack);
+        Task SendServerSettings(FactorioServerSettingsWebEditable settings, bool isSaved);
+        Task SendServerSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved);
+        Task SendServerExtraSettings(FactorioServerExtraSettings settings, bool isSaved);
+        Task SendServerExtraSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved);
     }
 }

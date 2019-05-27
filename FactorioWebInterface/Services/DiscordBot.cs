@@ -9,6 +9,7 @@ namespace FactorioWebInterface.Services
         public static readonly DiscordColor infoColor = new DiscordColor(0, 127, 255);
         public static readonly DiscordColor successColor = DiscordColor.Green;
         public static readonly DiscordColor failureColor = DiscordColor.Red;
+        public static readonly DiscordColor updateColor = DiscordColor.Yellow;
 
         public DiscordBot(DiscordBotContext discordBotContext, IFactorioServerManager factorioServerManager)
         {

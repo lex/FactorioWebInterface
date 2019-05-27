@@ -49,8 +49,12 @@ namespace FactorioWebInterface.Models
         public SemaphoreSlim ServerLock { get; set; }
         public RingBuffer<MessageData> ControlMessageBuffer { get; set; }
         public FactorioServerSettings ServerSettings { get; set; }
-        public FactorioServerExtraSettings ExtraServerSettings { get; set; }
-        public List<string> ServerAdminList { get; set; }
+        public string[] ServerAdminList { get; set; }
+        public FactorioServerSettingsWebEditable ServerWebEditableSettings { get; set; }
+        public bool ServerSettingsSaved { get; set; } = true;
+        public FactorioServerExtraSettings ServerExtraSettings { get; set; }
+        public FactorioServerExtraSettings ServerExtraWebEditableSettings { get; set; }
+        public bool ServerExtraSettingsSaved { get; set; } = true;
         public string ChatLogsDirectoryPath { get; set; }
         public string ChatLogsArchiveDirectoryPath { get; set; }
         public string ChatLogCurrentPath { get; set; }
@@ -110,7 +114,7 @@ namespace FactorioWebInterface.Models
                     ServerLock = new SemaphoreSlim(1, 1),
                     ControlMessageBuffer = new RingBuffer<MessageData>(bufferSize),
                     IsRemote = false,
-                    ExtraServerSettings = FactorioServerExtraSettings.Default(),
+                    ServerExtraSettings = FactorioServerExtraSettings.MakeDefault(),
                     OnlinePlayers = new SortedList<string, int>(),
                     OnlinePlayerCount = 0
                 };
@@ -127,7 +131,7 @@ namespace FactorioWebInterface.Models
                         {
                             continue;
                         }
-                        serverData.ExtraServerSettings = extraSettings;
+                        serverData.ServerExtraSettings = extraSettings;
                     }
                 }
                 catch (Exception)
