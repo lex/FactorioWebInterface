@@ -189,7 +189,7 @@ namespace FactorioWebInterface.Services
             bool removed = await RemoveBanFromDatabase(username, actor);
             if (removed)
             {
-                var changedData = CollectionChangedData.Add(new[] { new Ban { Username = username } });
+                var changedData = CollectionChangedData.Remove(new[] { new Ban { Username = username } });
                 var ev = new FactorioBanEventArgs(synchronizeWithServers, "", changedData);
 
                 _ = Task.Run(() => BanChanged?.Invoke(this, ev));
@@ -207,7 +207,7 @@ namespace FactorioWebInterface.Services
             bool removed = await RemoveBanFromDatabase(username, actor);
             if (removed)
             {
-                var changedData = CollectionChangedData.Add(new[] { new Ban { Username = username } });
+                var changedData = CollectionChangedData.Remove(new[] { new Ban { Username = username } });
                 var ev = new FactorioBanEventArgs(true, serverId, changedData);
 
                 _ = Task.Run(() => BanChanged?.Invoke(this, ev));
