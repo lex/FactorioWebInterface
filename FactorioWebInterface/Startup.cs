@@ -98,6 +98,7 @@ namespace FactorioWebInterface
             services.AddSingleton<FactorioBanManager, FactorioBanManager>();
             services.AddSingleton<FactorioFileManager, FactorioFileManager>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
+            services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
 

@@ -16,24 +16,13 @@ namespace FactorioWebInterface.Services
     {
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioBanManager> _logger;
-        private readonly IHubContext<FactorioBanHub, IFactorioBanClientMethods> _banHub;
 
         public event EventHandler<FactorioBanManager, FactorioBanEventArgs> BanChanged;
 
-        public FactorioBanManager(DbContextFactory dbContextFactory,
-            ILogger<FactorioBanManager> logger,
-            IHubContext<FactorioBanHub, IFactorioBanClientMethods> banHub)
+        public FactorioBanManager(DbContextFactory dbContextFactory, ILogger<FactorioBanManager> logger)
         {
             _dbContextFactory = dbContextFactory;
             _logger = logger;
-            _banHub = banHub;
-
-            BanChanged += FactorioBanManager_BanChanged; ;
-        }
-
-        private void FactorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
-        {
-            _ = _banHub.Clients.All.SendBans(eventArgs.ChangeData);
         }
 
         public async Task<Ban[]> GetBansAsync()
@@ -78,14 +67,9 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(errors);
             }
 
-            bool added = await AddBanToDatabase(ban, actor);
+            bool added = await AddBan(ban, "", synchronizeWithServers, actor);
             if (added)
             {
-                var changedData = CollectionChangedData.Add(new[] { ban });
-                var ev = new FactorioBanEventArgs(synchronizeWithServers, "", changedData);
-
-                _ = Task.Run(() => BanChanged?.Invoke(this, ev));
-
                 return Result.OK;
             }
             else
@@ -94,19 +78,39 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public async Task AddBanFromGame(Ban ban, string serverId)
+        public Task DoBanFromGameOutput(FactorioServerData serverData, string content)
         {
-            bool added = await AddBanToDatabase(ban, ban.Admin);
+            if (!serverData.ServerExtraSettings.SyncBans)
+            {
+                return Task.CompletedTask;
+            }
+
+            var ban = BanParser.FromGameOutput(content);
+            if (ban == null)
+            {
+                return Task.CompletedTask;
+            }
+
+            return AddBan(ban, serverData.ServerId, true, ban.Admin);
+        }
+
+        public async Task<bool> AddBan(Ban ban, string serverId, bool synchronizeWithServers, string actor)
+        {
+            bool added = await AddBanToDatabase(ban);
             if (added)
             {
                 var changedData = CollectionChangedData.Add(new[] { ban });
-                var ev = new FactorioBanEventArgs(true, serverId, changedData);
+                var ev = new FactorioBanEventArgs(synchronizeWithServers, serverId, changedData);
 
                 _ = Task.Run(() => BanChanged?.Invoke(this, ev));
+
+                LogBan(ban, actor);
             }
+
+            return added;
         }
 
-        private async Task<bool> AddBanToDatabase(Ban ban, string actor)
+        private async Task<bool> AddBanToDatabase(Ban ban)
         {
             ban.Username = ban.Username.ToLowerInvariant();
 
@@ -132,8 +136,6 @@ namespace FactorioWebInterface.Services
                     }
 
                     await db.SaveChangesAsync();
-
-                    _logger.LogInformation("[BAN] {username} was banned by {admin}. Reason: {reason} Actor: {actor}", ban.Username, ban.Admin, ban.Reason, actor);
 
                     return true;
                 }
@@ -166,6 +168,11 @@ namespace FactorioWebInterface.Services
 
             _logger.LogWarning("AddBanToDatabase failed to add ban: {@Ban}", ban);
             return false;
+        }
+
+        private void LogBan(Ban ban, string actor)
+        {
+            _logger.LogInformation("[BAN] {username} was banned by {admin}. Reason: {reason} Actor: {actor}", ban.Username, ban.Admin, ban.Reason, actor);
         }
 
         public async Task<Result> RemoveBanFromWeb(string username, bool synchronizeWithServers, string actor)

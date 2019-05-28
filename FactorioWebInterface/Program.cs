@@ -40,6 +40,7 @@ namespace FactorioWebInterface
                 // This makes sure the FactorioServerManger is started when the web interface starts.
                 host.Services.GetService<IFactorioServerManager>();
                 host.Services.GetService<DiscordBot>();
+                host.Services.GetServices<BanHubEventHandlerService>();
 
                 host.Run();
             }
