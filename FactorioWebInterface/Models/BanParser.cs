@@ -8,7 +8,7 @@ namespace FactorioWebInterface.Models
 {
     public static class BanParser
     {
-        public static Ban FromGameOutput(string content)
+        public static Ban FromBanGameOutput(string content)
         {
             int index = content.IndexOf(" was banned by ");
 
@@ -39,11 +39,6 @@ namespace FactorioWebInterface.Models
             }
 
             string admin = words[0];
-
-            if (admin == "<server>.")
-            {
-                return null;
-            }
 
             int reasonIndex = 1;
 
@@ -114,6 +109,30 @@ namespace FactorioWebInterface.Models
                 Reason = reason,
                 Admin = actor,
                 DateTime = DateTime.UtcNow
+            };
+        }
+
+        public static Ban FromUnBanGameOutput(string content)
+        {
+            int index = content.IndexOf(" was unbanned by ");
+
+            if (index < 0)
+            {
+                return null;
+            }
+
+            string player = content.Substring(0, index).Trim();
+            string admin = content.Substring(index + 17).Trim();
+
+            if (admin.EndsWith('.'))
+            {
+                admin = admin.Substring(0, admin.Length - 1);
+            }
+
+            return new Ban()
+            {
+                Username = player,
+                Admin = admin
             };
         }
 

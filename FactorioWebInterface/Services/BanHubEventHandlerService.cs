@@ -10,9 +10,9 @@ namespace FactorioWebInterface.Services
 {
     public class BanHubEventHandlerService
     {
-        private readonly FactorioBanManager _factorioBanManager;
+        private readonly IFactorioBanService _factorioBanManager;
         private readonly IHubContext<FactorioBanHub, IFactorioBanClientMethods> _banHub;
-        public BanHubEventHandlerService(FactorioBanManager factorioBanManager, IHubContext<FactorioBanHub, IFactorioBanClientMethods> banHub)
+        public BanHubEventHandlerService(IFactorioBanService factorioBanManager, IHubContext<FactorioBanHub, IFactorioBanClientMethods> banHub)
         {
             _factorioBanManager = factorioBanManager;
             _banHub = banHub;
@@ -20,7 +20,7 @@ namespace FactorioWebInterface.Services
             _factorioBanManager.BanChanged += FactorioBanManager_BanChanged;
         }
 
-        private void FactorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
+        private void FactorioBanManager_BanChanged(IFactorioBanService sender, FactorioBanEventArgs eventArgs)
         {
             _ = _banHub.Clients.All.SendBans(eventArgs.ChangeData);
         }

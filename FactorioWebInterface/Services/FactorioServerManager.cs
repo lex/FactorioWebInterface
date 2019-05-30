@@ -48,7 +48,7 @@ namespace FactorioWebInterface.Services
         private readonly FactorioAdminManager _factorioAdminManager;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
-        private readonly FactorioBanManager _factorioBanManager;
+        private readonly IFactorioBanService _factorioBanManager;
         private readonly FactorioFileManager _factorioFileManager;
         private readonly ScenarioDataManager _scenarioDataManger;
 
@@ -68,7 +68,7 @@ namespace FactorioWebInterface.Services
             FactorioAdminManager factorioAdminManager,
             FactorioUpdater factorioUpdater,
             FactorioModManager factorioModManager,
-            FactorioBanManager factorioBanManager,
+            IFactorioBanService factorioBanManager,
             FactorioFileManager factorioFileManager,
             ScenarioDataManager scenarioDataManger
         )
@@ -148,7 +148,7 @@ namespace FactorioWebInterface.Services
             _factorioControlHub.Clients.All.SendModPacks(eventArgs);
         }
 
-        private void _factorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
+        private void _factorioBanManager_BanChanged(IFactorioBanService sender, FactorioBanEventArgs eventArgs)
         {
             var changeData = eventArgs.ChangeData;
 
@@ -1938,7 +1938,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (data.StartsWith("/ban"))
+            if (data.StartsWith("/ban "))
             {
                 Ban ban = BanParser.FromBanCommand(data, actor);
                 if (ban == null)
@@ -1967,17 +1967,12 @@ namespace FactorioWebInterface.Services
 
                 await _factorioBanManager.AddBan(ban, serverId, true, actor);
             }
-            else if (data.StartsWith("/unban"))
+            else if (data.StartsWith("/unban "))
             {
                 Ban ban = BanParser.FromUnBanCommand(data, actor);
 
                 var command = $"/unban {ban.Username}";
-
-                // /unban doesn't support names with spaces.
-                if (!ban.Username.Contains(' '))
-                {
-                    _ = SendToFactorioProcess(serverId, command);
-                }
+                _ = SendToFactorioProcess(serverId, command);
 
                 if (!servers.TryGetValue(serverId, out var sourceServerData))
                 {
@@ -1990,7 +1985,7 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                await _factorioBanManager.RemoveBanFromGame(ban.Username, serverId, actor);
+                await _factorioBanManager.RemoveBan(ban.Username, serverId, true, actor);
             }
             else if (data.StartsWith('/'))
             {
@@ -2045,35 +2040,15 @@ namespace FactorioWebInterface.Services
             return _factorioBanManager.DoBanFromGameOutput(serverData, content);
         }
 
-        private async Task DoUnBan(string serverId, string content)
+        private Task DoUnBan(string serverId, string content)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
                 _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
+                return Task.CompletedTask;
             }
 
-            if (!serverData.ServerExtraSettings.SyncBans)
-            {
-                return;
-            }
-
-            int index = content.IndexOf(" was unbanned by ");
-
-            if (index < 0)
-            {
-                return;
-            }
-
-            string player = content.Substring(0, index).Trim();
-            string admin = content.Substring(index + 17).Trim();
-
-            if (admin == "<server>.")
-            {
-                return;
-            }
-
-            await _factorioBanManager.RemoveBanFromGame(player, serverId, admin);
+            return _factorioBanManager.DoUnBanFromGameOutput(serverData, content);
         }
 
         public void FactorioWrapperDataReceived(string serverId, string data, DateTime dateTime)

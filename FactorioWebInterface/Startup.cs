@@ -95,7 +95,7 @@ namespace FactorioWebInterface
             services.AddSingleton<FactorioAdminManager, FactorioAdminManager>();
             services.AddSingleton<FactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
-            services.AddSingleton<FactorioBanManager, FactorioBanManager>();
+            services.AddSingleton<IFactorioBanService, FactorioBanService>();
             services.AddSingleton<FactorioFileManager, FactorioFileManager>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
             services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();

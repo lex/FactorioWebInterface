@@ -8,9 +8,9 @@ namespace FactorioWebInterface.Pages
 {
     public class BansModel : PageModel
     {
-        private readonly FactorioBanManager _factorioBanManager;
+        private readonly IFactorioBanService _factorioBanManager;
 
-        public BansModel(FactorioBanManager factorioBanManager)
+        public BansModel(IFactorioBanService factorioBanManager)
         {
             _factorioBanManager = factorioBanManager;
         }

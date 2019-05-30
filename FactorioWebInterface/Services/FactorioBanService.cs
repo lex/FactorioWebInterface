@@ -12,14 +12,27 @@ using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Services
 {
-    public class FactorioBanManager
+    public interface IFactorioBanService
+    {
+        event EventHandler<IFactorioBanService, FactorioBanEventArgs> BanChanged;
+        Task<bool> AddBan(Ban ban, string serverId, bool synchronizeWithServers, string actor);
+        Task<Result> AddBanFromWeb(Ban ban, bool synchronizeWithServers, string actor);
+        Task DoBanFromGameOutput(FactorioServerData serverData, string content);
+        Task<Ban[]> GetBansAsync();
+        Task<string[]> GetBanUserNamesAsync();
+        Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string actor);
+        Task<Result> RemoveBanFromWeb(string username, bool synchronizeWithServers, string actor);
+        Task DoUnBanFromGameOutput(FactorioServerData serverData, string content);
+    }
+
+    public class FactorioBanService : IFactorioBanService
     {
         private readonly DbContextFactory _dbContextFactory;
-        private readonly ILogger<FactorioBanManager> _logger;
+        private readonly ILogger<IFactorioBanService> _logger;
 
-        public event EventHandler<FactorioBanManager, FactorioBanEventArgs> BanChanged;
+        public event EventHandler<IFactorioBanService, FactorioBanEventArgs> BanChanged;
 
-        public FactorioBanManager(DbContextFactory dbContextFactory, ILogger<FactorioBanManager> logger)
+        public FactorioBanService(DbContextFactory dbContextFactory, ILogger<IFactorioBanService> logger)
         {
             _dbContextFactory = dbContextFactory;
             _logger = logger;
@@ -85,8 +98,8 @@ namespace FactorioWebInterface.Services
                 return Task.CompletedTask;
             }
 
-            var ban = BanParser.FromGameOutput(content);
-            if (ban == null)
+            var ban = BanParser.FromBanGameOutput(content);
+            if (ban == null || ban.Admin == Constants.ServerPlayerName)
             {
                 return Task.CompletedTask;
             }
@@ -193,14 +206,9 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(errors);
             }
 
-            bool removed = await RemoveBanFromDatabase(username, actor);
+            bool removed = await RemoveBan(username, "", synchronizeWithServers, actor);
             if (removed)
             {
-                var changedData = CollectionChangedData.Remove(new[] { new Ban { Username = username } });
-                var ev = new FactorioBanEventArgs(synchronizeWithServers, "", changedData);
-
-                _ = Task.Run(() => BanChanged?.Invoke(this, ev));
-
                 return Result.OK;
             }
             else
@@ -209,19 +217,39 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public async Task RemoveBanFromGame(string username, string serverId, string actor)
+        public Task DoUnBanFromGameOutput(FactorioServerData serverData, string content)
         {
-            bool removed = await RemoveBanFromDatabase(username, actor);
+            if (!serverData.ServerExtraSettings.SyncBans)
+            {
+                return Task.CompletedTask;
+            }
+
+            var ban = BanParser.FromUnBanGameOutput(content);
+            if (ban == null || ban.Admin == Constants.ServerPlayerName)
+            {
+                return Task.CompletedTask;
+            }
+
+            return RemoveBan(ban.Username, serverData.ServerId, true, ban.Admin);
+        }
+
+        public async Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string actor)
+        {
+            bool removed = await RemoveBanFromDatabase(username);
             if (removed)
             {
                 var changedData = CollectionChangedData.Remove(new[] { new Ban { Username = username } });
-                var ev = new FactorioBanEventArgs(true, serverId, changedData);
+                var ev = new FactorioBanEventArgs(synchronizeWithServers, serverId, changedData);
 
                 _ = Task.Run(() => BanChanged?.Invoke(this, ev));
+
+                LogUnBan(username, actor);
             }
+
+            return removed;
         }
 
-        private async Task<bool> RemoveBanFromDatabase(string username, string actor)
+        private async Task<bool> RemoveBanFromDatabase(string username)
         {
             try
             {
@@ -236,8 +264,11 @@ namespace FactorioWebInterface.Services
                 db.Bans.Remove(old);
                 await db.SaveChangesAsync();
 
-                _logger.LogInformation("[UNBAN] {username} was unbanned by: {actor}", username, actor);
-
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // The ban has already been removed.
                 return true;
             }
             catch (Exception e)
@@ -245,6 +276,11 @@ namespace FactorioWebInterface.Services
                 _logger.LogError(e, nameof(RemoveBanFromDatabase));
                 return false;
             }
+        }
+
+        private void LogUnBan(string username, string actor)
+        {
+            _logger.LogInformation("[UNBAN] {username} was unbanned by: {actor}", username, actor);
         }
     }
 }
