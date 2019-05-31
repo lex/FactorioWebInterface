@@ -86,7 +86,6 @@ namespace FactorioWebInterface
 
             services.AddHttpClient();
 
-            services.AddSession();
             services.AddMemoryCache();
 
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
@@ -103,13 +102,16 @@ namespace FactorioWebInterface
             services.AddRouting(o => o.LowercaseUrls = true);
 
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddRazorPagesOptions(options =>
-            {
-                options.Conventions.AddPageRoute("/admin/servers", "/admin");
-                services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
-            })
-            .AddGitHubWebHooks();
+                {
+                    options.Conventions.AddPageRoute("/admin/servers", "/admin");
+                    services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
+                })
+                .AddSessionStateTempDataProvider()
+                .AddGitHubWebHooks();
+
+            services.AddSession();
 
             services.Configure<FormOptions>(o =>
             {
@@ -173,8 +175,9 @@ namespace FactorioWebInterface
             else
             {
                 app.UseExceptionHandler("/error");
-                app.UseHsts();
             }
+
+            app.UseHsts();
 
             app.UseHttpsRedirection();
             app.UseDefaultFiles();
