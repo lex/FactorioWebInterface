@@ -175,9 +175,8 @@ namespace FactorioWebInterface
             else
             {
                 app.UseExceptionHandler("/error");
-            }
-
-            app.UseHsts();
+                //app.UseHsts(); This prevented the GitHub hook from working.
+            }            
 
             app.UseHttpsRedirection();
             app.UseDefaultFiles();
