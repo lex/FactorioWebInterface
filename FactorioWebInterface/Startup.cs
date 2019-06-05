@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -113,6 +114,12 @@ namespace FactorioWebInterface
 
             services.AddSession();
 
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
+
             services.Configure<FormOptions>(o =>
             {
                 o.ValueLengthLimit = int.MaxValue;
@@ -166,6 +173,8 @@ namespace FactorioWebInterface
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseForwardedHeaders();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -176,9 +185,9 @@ namespace FactorioWebInterface
             {
                 app.UseExceptionHandler("/error");
                 //app.UseHsts(); This prevented the GitHub hook from working.
-            }            
+            }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection(); This isn't needed if behind a reverse proxy.
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
