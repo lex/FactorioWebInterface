@@ -58,6 +58,8 @@
         public const int discordTopicMaxLength = 1024;
         public const int discordMaxMessageLength = 2000;
 
+        public const string ServerPlayerName = "<server>";
+
         public const string ChatTag = "[CHAT]";
         public const string ShoutTag = "[SHOUT]";
         public const string DiscordTag = "[DISCORD]";

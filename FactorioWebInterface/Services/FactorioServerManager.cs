@@ -48,7 +48,7 @@ namespace FactorioWebInterface.Services
         private readonly FactorioAdminManager _factorioAdminManager;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly FactorioModManager _factorioModManager;
-        private readonly FactorioBanManager _factorioBanManager;
+        private readonly IFactorioBanService _factorioBanManager;
         private readonly FactorioFileManager _factorioFileManager;
         private readonly ScenarioDataManager _scenarioDataManger;
 
@@ -68,7 +68,7 @@ namespace FactorioWebInterface.Services
             FactorioAdminManager factorioAdminManager,
             FactorioUpdater factorioUpdater,
             FactorioModManager factorioModManager,
-            FactorioBanManager factorioBanManager,
+            IFactorioBanService factorioBanManager,
             FactorioFileManager factorioFileManager,
             ScenarioDataManager scenarioDataManger
         )
@@ -148,7 +148,7 @@ namespace FactorioWebInterface.Services
             _factorioControlHub.Clients.All.SendModPacks(eventArgs);
         }
 
-        private void _factorioBanManager_BanChanged(FactorioBanManager sender, FactorioBanEventArgs eventArgs)
+        private void _factorioBanManager_BanChanged(IFactorioBanService sender, FactorioBanEventArgs eventArgs)
         {
             var changeData = eventArgs.ChangeData;
 
@@ -1938,43 +1938,21 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (data.StartsWith("/ban"))
+            if (data.StartsWith("/ban "))
             {
-                string[] words = data.Split(' ');
-
-                if (words.Length < 2)
+                Ban ban = BanParser.FromBanCommand(data, actor);
+                if (ban == null)
                 {
                     return;
                 }
 
-                string player = words[1];
-
-                string reason;
-                if (words.Length > 2)
+                var command = $"/ban {ban.Username} {ban.Reason}";
+                if (command.EndsWith('.'))
                 {
-                    reason = string.Join(' ', words, 2, words.Length - 2);
-                }
-                else
-                {
-                    reason = "unspecified.";
+                    command = command.Substring(0, command.Length - 1);
                 }
 
-                Ban ban = new Ban()
-                {
-                    Username = player,
-                    Reason = reason,
-                    Admin = actor,
-                    DateTime = DateTime.UtcNow
-                };
-
-                var command = $"/ban {player} {reason}";
-                command.Substring(0, command.Length - 1);
-
-                // /ban doesn't support names with spaces.
-                if (!player.Contains(' '))
-                {
-                    _ = SendToFactorioProcess(serverId, command);
-                }
+                _ = SendToFactorioProcess(serverId, command);
 
                 if (!servers.TryGetValue(serverId, out var sourceServerData))
                 {
@@ -1987,24 +1965,14 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                await _factorioBanManager.AddBanFromGame(ban, serverId);
+                await _factorioBanManager.AddBan(ban, serverId, true, actor);
             }
-            else if (data.StartsWith("/unban"))
+            else if (data.StartsWith("/unban "))
             {
-                if (data.Length < 8)
-                {
-                    return;
-                }
+                Ban ban = BanParser.FromUnBanCommand(data, actor);
 
-                string player = data.Substring(6).Trim();
-
-                var command = $"/unban {player}";
-
-                // /unban doesn't support names with spaces.
-                if (!player.Contains(' '))
-                {
-                    _ = SendToFactorioProcess(serverId, command);
-                }
+                var command = $"/unban {ban.Username}";
+                _ = SendToFactorioProcess(serverId, command);
 
                 if (!servers.TryGetValue(serverId, out var sourceServerData))
                 {
@@ -2017,7 +1985,7 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                await _factorioBanManager.RemoveBanFromGame(player, serverId, actor);
+                await _factorioBanManager.RemoveBan(ban.Username, serverId, true, actor);
             }
             else if (data.StartsWith('/'))
             {
@@ -2061,123 +2029,26 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private async Task DoBan(string serverId, string content)
+        private Task DoBan(string serverId, string content)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
                 _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
+                return Task.CompletedTask;
             }
 
-            if (!serverData.ServerExtraSettings.SyncBans)
-            {
-                return;
-            }
-
-            int index = content.IndexOf(" was banned by ");
-
-            if (index < 0)
-            {
-                return;
-            }
-
-            string player = content.Substring(0, index).Trim();
-            if (player.EndsWith(" (not on map)"))
-            {
-                player = player.Substring(0, player.Length - 13);
-            }
-
-            index = index + 15;
-
-            if (index >= content.Length)
-            {
-                return;
-            }
-
-            string rest = content.Substring(index);
-
-            string[] words = rest.Split(' ');
-            if (words.Length < 2)
-            {
-                return;
-            }
-
-            string admin = words[0];
-
-            if (admin == "<server>.")
-            {
-                return;
-            }
-
-            int reasonIndex = 1;
-
-            // If the admin has a tag, that will appear after their name.
-            if (words[reasonIndex] == "Reason:")
-            {
-                // case no tag, remove '.' at end of name.
-                admin = admin.Substring(0, admin.Length - 1);
-            }
-            else
-            {
-                // case tag, keep going utill we find 'Reason:'
-                do
-                {
-                    reasonIndex++;
-                    if (reasonIndex >= words.Length)
-                    {
-                        return;
-                    }
-                } while (words[reasonIndex] != "Reason:");
-            }
-
-            reasonIndex += 1;
-            string reason = string.Join(' ', words, reasonIndex, words.Length - reasonIndex);
-
-            if (reason.EndsWith(".."))
-            {
-                reason = reason.Substring(0, reason.Length - 1);
-            }
-
-            var ban = new Ban()
-            {
-                Username = player,
-                Admin = admin,
-                Reason = reason,
-                DateTime = DateTime.UtcNow
-            };
-
-            await _factorioBanManager.AddBanFromGame(ban, serverId);
+            return _factorioBanManager.DoBanFromGameOutput(serverData, content);
         }
 
-        private async Task DoUnBan(string serverId, string content)
+        private Task DoUnBan(string serverId, string content)
         {
             if (!servers.TryGetValue(serverId, out var serverData))
             {
                 _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
+                return Task.CompletedTask;
             }
 
-            if (!serverData.ServerExtraSettings.SyncBans)
-            {
-                return;
-            }
-
-            int index = content.IndexOf(" was unbanned by ");
-
-            if (index < 0)
-            {
-                return;
-            }
-
-            string player = content.Substring(0, index).Trim();
-            string admin = content.Substring(index + 17).Trim();
-
-            if (admin == "<server>.")
-            {
-                return;
-            }
-
-            await _factorioBanManager.RemoveBanFromGame(player, serverId, admin);
+            return _factorioBanManager.DoUnBanFromGameOutput(serverData, content);
         }
 
         public void FactorioWrapperDataReceived(string serverId, string data, DateTime dateTime)

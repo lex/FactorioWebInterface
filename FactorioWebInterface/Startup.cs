@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -86,7 +87,6 @@ namespace FactorioWebInterface
 
             services.AddHttpClient();
 
-            services.AddSession();
             services.AddMemoryCache();
 
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
@@ -95,20 +95,30 @@ namespace FactorioWebInterface
             services.AddSingleton<FactorioAdminManager, FactorioAdminManager>();
             services.AddSingleton<FactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
-            services.AddSingleton<FactorioBanManager, FactorioBanManager>();
+            services.AddSingleton<IFactorioBanService, FactorioBanService>();
             services.AddSingleton<FactorioFileManager, FactorioFileManager>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
+            services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
 
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
                 .AddRazorPagesOptions(options =>
+                {
+                    options.Conventions.AddPageRoute("/admin/servers", "/admin");
+                    services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
+                })
+                .AddSessionStateTempDataProvider()
+                .AddGitHubWebHooks();
+
+            services.AddSession();
+
+            services.Configure<ForwardedHeadersOptions>(options =>
             {
-                options.Conventions.AddPageRoute("/admin/servers", "/admin");
-                services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
-            })
-            .AddGitHubWebHooks();
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
 
             services.Configure<FormOptions>(o =>
             {
@@ -163,6 +173,8 @@ namespace FactorioWebInterface
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseForwardedHeaders();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -172,10 +184,10 @@ namespace FactorioWebInterface
             else
             {
                 app.UseExceptionHandler("/error");
-                app.UseHsts();
+                //app.UseHsts(); This prevented the GitHub hook from working.
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection(); This isn't needed if behind a reverse proxy.
             app.UseDefaultFiles();
             app.UseStaticFiles();
 

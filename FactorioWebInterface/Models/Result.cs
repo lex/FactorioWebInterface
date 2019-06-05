@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace FactorioWebInterface.Models
 {
-    public class Error
+    public class Error : IEquatable<Error>
     {
         public string Key { get; }
         public string Description { get; }
@@ -14,9 +15,36 @@ namespace FactorioWebInterface.Models
             Key = key;
             Description = description;
         }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Error);
+        }
+
+        public bool Equals(Error other)
+        {
+            return other != null &&
+                   Key == other.Key &&
+                   Description == other.Description;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Key, Description);
+        }
+
+        public static bool operator ==(Error left, Error right)
+        {
+            return EqualityComparer<Error>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(Error left, Error right)
+        {
+            return !(left == right);
+        }
     }
 
-    public class Result
+    public class Result : IEquatable<Result>
     {
         public static Result OK { get; } = new Result(true, new Error[0]);
 
@@ -51,6 +79,33 @@ namespace FactorioWebInterface.Models
                 }
                 return sb.ToString();
             }
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Result);
+        }
+
+        public bool Equals(Result other)
+        {
+            return other != null &&
+                   Success == other.Success &&
+                   EqualityComparer<IReadOnlyList<Error>>.Default.Equals(Errors, other.Errors);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Success, Errors);
+        }
+
+        public static bool operator ==(Result left, Result right)
+        {
+            return EqualityComparer<Result>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(Result left, Result right)
+        {
+            return !(left == right);
         }
     }
 

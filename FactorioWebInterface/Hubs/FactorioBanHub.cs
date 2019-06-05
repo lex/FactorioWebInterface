@@ -10,9 +10,9 @@ namespace FactorioWebInterface.Hubs
     [Authorize]
     public class FactorioBanHub : Hub<IFactorioBanClientMethods>
     {
-        private readonly FactorioBanManager _factorioBanManager;
+        private readonly IFactorioBanService _factorioBanManager;
 
-        public FactorioBanHub(FactorioBanManager factorioBanManager)
+        public FactorioBanHub(IFactorioBanService factorioBanManager)
         {
             _factorioBanManager = factorioBanManager;
         }
