@@ -63,28 +63,14 @@ namespace FactorioWebInterface.Services
             var currentLog = new FileInfo(serverData.CurrentLogPath);
             if (currentLog.Exists)
             {
-                logs.Add(new FileMetaData()
-                {
-                    Name = currentLog.Name,
-                    CreatedTime = currentLog.CreationTimeUtc,
-                    LastModifiedTime = currentLog.LastWriteTimeUtc,
-                    Directory = Path.Combine(serverId),
-                    Size = currentLog.Length
-                });
+                logs.Add(BuildCurrentLogFileMetaData(currentLog, serverId));
             }
 
             var logsDir = new DirectoryInfo(serverData.LogsDirectoryPath);
             if (logsDir.Exists)
             {
                 var logfiles = logsDir.EnumerateFiles("*.log")
-                    .Select(x => new FileMetaData()
-                    {
-                        Name = x.Name,
-                        CreatedTime = x.CreationTimeUtc,
-                        LastModifiedTime = x.LastWriteTimeUtc,
-                        Directory = Path.Combine(serverId, Constants.LogDirectoryName),
-                        Size = x.Length
-                    })
+                    .Select(x => BuildLogFileMetaData(x, serverId))
                     .OrderByDescending(x => x.CreatedTime);
 
                 logs.AddRange(logfiles);
@@ -129,14 +115,7 @@ namespace FactorioWebInterface.Services
             if (logsDir.Exists)
             {
                 var logfiles = logsDir.EnumerateFiles("*.log")
-                    .Select(x => new FileMetaData()
-                    {
-                        Name = x.Name,
-                        CreatedTime = x.CreationTimeUtc,
-                        LastModifiedTime = x.LastWriteTimeUtc,
-                        Directory = Path.Combine(serverId, Constants.ChatLogDirectoryName),
-                        Size = x.Length
-                    })
+                    .Select(x => BuildLogFileMetaData(x, serverId))
                     .OrderByDescending(x => x.CreatedTime);
 
                 logs.AddRange(logfiles);
@@ -966,9 +945,9 @@ namespace FactorioWebInterface.Services
         {
             public static FilesChanged empty = new FilesChanged();
 
-            public IReadOnlyList<FileInfo> newFiles;
-            public IReadOnlyList<FileInfo> oldFiles;
-            public FilesChanged(IReadOnlyList<FileInfo> newFiles, IReadOnlyList<FileInfo> oldFiles = null)
+            public IReadOnlyList<FileMetaData> newFiles;
+            public IReadOnlyList<FileMetaData> oldFiles;
+            public FilesChanged(IReadOnlyList<FileMetaData> newFiles, IReadOnlyList<FileMetaData> oldFiles = null)
             {
                 this.newFiles = newFiles;
                 this.oldFiles = oldFiles;
@@ -976,41 +955,25 @@ namespace FactorioWebInterface.Services
 
             public CollectionChangedData<FileMetaData> BuildCollectionChangedData()
             {
-                FileMetaData[] Build(IReadOnlyList<FileInfo> files)
-                {
-                    return files
-                        .Select(x => new FileMetaData()
-                        {
-                            Name = x.Name,
-                            Directory = x.Directory.Name,
-                            CreatedTime = x.CreationTimeUtc,
-                            LastModifiedTime = x.LastWriteTimeUtc,
-                            Size = x.Length
-                        })
-                        .ToArray();
-                }
-
                 if (newFiles != null && oldFiles != null)
                 {
-                    var oldData = Build(oldFiles);
-                    var newData = Build(newFiles);
-                    return CollectionChangedData.AddAndRemove(newData, oldData);
+                    return CollectionChangedData.AddAndRemove(newFiles, oldFiles);
                 }
                 else if (newFiles != null)
                 {
-                    var newData = Build(newFiles);
-                    return CollectionChangedData.Add(newData);
+                    return CollectionChangedData.Add(newFiles);
                 }
                 else
                 {
-                    var oldData = Build(oldFiles);
-                    return CollectionChangedData.Add(oldData);
+                    return CollectionChangedData.Add(oldFiles);
                 }
             }
         }
 
         private FilesChanged RotateFactorioLogsInner(FactorioServerData serverData)
         {
+            string serverId = serverData.ServerId;
+
             try
             {
                 var dir = new DirectoryInfo(serverData.LogsDirectoryPath);
@@ -1025,14 +988,14 @@ namespace FactorioWebInterface.Services
                     using (_ = currentLog.Create()) { }
                     currentLog.CreationTimeUtc = DateTime.UtcNow;
 
-                    return new FilesChanged(new[] { currentLog });
+                    return new FilesChanged(new[] { BuildCurrentLogFileMetaData(currentLog, serverId) });
                 }
 
                 if (currentLog.Length == 0)
                 {
                     currentLog.CreationTimeUtc = DateTime.UtcNow;
 
-                    return new FilesChanged(new[] { currentLog });
+                    return new FilesChanged(new[] { BuildCurrentLogFileMetaData(currentLog, serverId) });
                 }
 
                 string path = MakeLogFilePath(currentLog, dir);
@@ -1054,7 +1017,11 @@ namespace FactorioWebInterface.Services
                 int removeCount = logs.Length - FactorioServerData.maxLogFiles + 1;
                 if (removeCount <= 0)
                 {
-                    return new FilesChanged(new[] { newFile, targetLog });
+                    return new FilesChanged(new[]
+                    {
+                        BuildCurrentLogFileMetaData(newFile, serverData.ServerId),
+                        BuildLogFileMetaData(targetLog, serverData.ServerId)
+                    });
                 }
 
                 var archiveDir = new DirectoryInfo(serverData.ArchiveLogsDirectoryPath);
@@ -1065,7 +1032,7 @@ namespace FactorioWebInterface.Services
 
                 // sort oldest first.
                 Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
-                var oldLogs = new List<FileInfo>();
+                var oldLogs = new List<FileMetaData>();
 
                 for (int i = 0; i < removeCount && i < logs.Length; i++)
                 {
@@ -1074,10 +1041,16 @@ namespace FactorioWebInterface.Services
                     var archivePath = Path.Combine(archiveDir.FullName, log.Name);
 
                     log.MoveTo(archivePath);
-                    oldLogs.Add(log);
+                    oldLogs.Add(BuildLogFileMetaData(log, serverId));
                 }
 
-                return new FilesChanged(new[] { newFile, targetLog }, oldLogs);
+                var newLogs = new[]
+                {
+                    BuildCurrentLogFileMetaData(newFile, serverData.ServerId),
+                    BuildLogFileMetaData(targetLog, serverData.ServerId)
+                };
+
+                return new FilesChanged(newLogs, oldLogs);
             }
             catch (Exception e)
             {
@@ -1103,6 +1076,8 @@ namespace FactorioWebInterface.Services
                 serverData.BuildChatLogger();
             }
 
+            string serverId = serverData.ServerId;
+
             try
             {
                 var dir = new DirectoryInfo(serverData.ChatLogsDirectoryPath);
@@ -1120,14 +1095,14 @@ namespace FactorioWebInterface.Services
                     using (_ = currentLog.Create()) { }
                     BuildLogger(currentLog);
 
-                    return new FilesChanged(new[] { currentLog });
+                    return new FilesChanged(new[] { BuildLogFileMetaData(currentLog, serverId) });
                 }
 
                 if (currentLog.Length == 0)
                 {
                     BuildLogger(currentLog);
 
-                    return new FilesChanged(new[] { currentLog });
+                    return new FilesChanged(new[] { BuildLogFileMetaData(currentLog, serverId) });
                 }
 
                 string path = MakeLogFilePath(currentLog, dir);
@@ -1149,7 +1124,11 @@ namespace FactorioWebInterface.Services
                 int removeCount = logs.Length - FactorioServerData.maxLogFiles;
                 if (removeCount <= 0)
                 {
-                    return new FilesChanged(new[] { newFile, targetLog });
+                    return new FilesChanged(new[]
+                    {
+                        BuildLogFileMetaData(newFile, serverData.ServerId),
+                        BuildLogFileMetaData(targetLog, serverData.ServerId)
+                    });
                 }
 
                 var archiveDir = new DirectoryInfo(serverData.ChatLogsArchiveDirectoryPath);
@@ -1160,7 +1139,7 @@ namespace FactorioWebInterface.Services
 
                 // sort oldest first.
                 Array.Sort(logs, (a, b) => a.CreationTimeUtc.CompareTo(b.CreationTimeUtc));
-                var oldLogs = new List<FileInfo>();
+                var oldLogs = new List<FileMetaData>();
 
                 for (int i = 0; i < removeCount && i < logs.Length; i++)
                 {
@@ -1169,10 +1148,16 @@ namespace FactorioWebInterface.Services
                     var archivePath = Path.Combine(archiveDir.FullName, log.Name);
 
                     log.MoveTo(archivePath);
-                    oldLogs.Add(log);
+                    oldLogs.Add(BuildLogFileMetaData(log, serverId));
                 }
 
-                return new FilesChanged(new[] { newFile, targetLog }, oldLogs);
+                var newLogs = new[]
+                {
+                    BuildLogFileMetaData(newFile, serverData.ServerId),
+                    BuildLogFileMetaData(targetLog, serverData.ServerId)
+                };
+
+                return new FilesChanged(newLogs, oldLogs);
             }
             catch (Exception e)
             {
@@ -1275,6 +1260,30 @@ namespace FactorioWebInterface.Services
             var ev = CollectionChangedData.Add(scenarios);
 
             ScenariosChanged?.Invoke(this, ev);
+        }
+
+        private FileMetaData BuildLogFileMetaData(FileInfo file, string serverId)
+        {
+            return new FileMetaData()
+            {
+                Name = file.Name,
+                Directory = Path.Combine(serverId, file.Directory.Name),
+                CreatedTime = file.CreationTimeUtc,
+                LastModifiedTime = file.LastWriteTimeUtc,
+                Size = file.Length
+            };
+        }
+
+        private FileMetaData BuildCurrentLogFileMetaData(FileInfo file, string serverId)
+        {
+            return new FileMetaData()
+            {
+                Name = file.Name,
+                Directory = serverId,
+                CreatedTime = file.CreationTimeUtc,
+                LastModifiedTime = file.LastWriteTimeUtc,
+                Size = file.Length
+            };
         }
     }
 }
