@@ -6,6 +6,7 @@ using Shared;
 using Shared.Utils;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -166,6 +167,26 @@ namespace FactorioWrapper
                 default:
                     Log.Error("Previous status {status} was unexpected when exiting wrapper.", status);
                     break;
+            }
+
+            // Sometimes when factorio crashes the process isn't shutdown correctly, so we kill it to be sure.
+            if (status == FactorioServerStatus.Crashed)
+            {
+                var processes = Process.GetProcessesByName("factorio");
+                foreach (var process in processes)
+                {
+                    try
+                    {
+                        if (process.MainModule.FileName == factorioFileName)
+                        {
+                            process.Kill();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warning(e, "Kill processes on crash.");
+                    }
+                }
             }
 
             SendWrapperData("Exiting wrapper");
