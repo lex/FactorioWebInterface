@@ -1055,6 +1055,7 @@ namespace FactorioWebInterface.Services
 
                         _ = ChangeStatusNonLocking(serverData, FactorioServerStatus.Killing);
 
+                        int count = 0;
                         var processes = Process.GetProcessesByName("factorio");
                         foreach (var process in processes)
                         {
@@ -1062,6 +1063,7 @@ namespace FactorioWebInterface.Services
                             {
                                 if (process.MainModule.FileName == serverData.ExecutablePath)
                                 {
+                                    count++;
                                     process.Kill();
                                 }
                             }
@@ -1070,6 +1072,14 @@ namespace FactorioWebInterface.Services
                                 _logger.LogWarning(e, "ForceStop Kill Processes");
                             }
                         }
+
+                        var killedMessage = new MessageData()
+                        {
+                            ServerId = serverId,
+                            MessageType = Models.MessageType.Control,
+                            Message = $"{count} processes killed"
+                        };
+                        _ = SendControlMessageNonLocking(serverData, killedMessage);
 
                         _ = ChangeStatusNonLocking(serverData, FactorioServerStatus.Killed);
 
