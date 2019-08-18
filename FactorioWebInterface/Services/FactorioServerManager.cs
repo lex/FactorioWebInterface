@@ -550,26 +550,27 @@ namespace FactorioWebInterface.Services
 
                         string modDirPath = await PrepareServer(serverData);
 
-                        string basePath = serverData.BaseDirectoryPath;
+                        string factorioFilePath = serverData.ExecutablePath;
+                        string serverSettingsPath = serverData.ServerSettingsPath;
 
                         string fullName;
                         string arguments;
 #if WINDOWS
                         fullName = "C:/Program Files/dotnet/dotnet.exe";
-                        arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio.exe --start-server-load-latest --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+                        arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath}--start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
 #elif WSL
                         fullName = "/usr/bin/dotnet";
-                        arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-latest --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+                        arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
 #else
                         if (serverData.IsRemote)
                         {
                             fullName = "ssh";
-                            arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-latest --server-settings {basePath}/server-settings.json --port {serverData.Port}'";
+                            arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}'";
                         }
                         else
                         {
                             fullName = "/usr/bin/dotnet";
-                            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-latest --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+                            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
                         }
 #endif
                         if (modDirPath != "")
@@ -691,26 +692,27 @@ namespace FactorioWebInterface.Services
 
                         string modDirPath = await PrepareServer(serverData);
 
-                        string basePath = serverData.BaseDirectoryPath;
+                        string factorioFilePath = serverData.ExecutablePath;
+                        string serverSettingsPath = serverData.ServerSettingsPath;
 
                         string fullName;
                         string arguments;
 #if WINDOWS
                         fullName = "C:/Program Files/dotnet/dotnet.exe";
-                        arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio.exe --start-server {saveFile.Name} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+                        arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
 #elif WSL
                         fullName = "/usr/bin/dotnet";
-                        arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server {saveFile.Name} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+                        arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
 #else
                         if (serverData.IsRemote)
                         {
                             fullName = "ssh";
-                            arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server {saveFile.Name} --server-settings {basePath}/server-settings.json --port {serverData.Port}'";
+                            arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}'";
                         }
                         else
                         {
                             fullName = "/usr/bin/dotnet";
-                            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server {saveFile.Name} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+                            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
                         }
 #endif
                         if (modDirPath != "")
@@ -791,7 +793,8 @@ namespace FactorioWebInterface.Services
 
         private async Task<Result> StartScenarioInner(FactorioServerData serverData, string scenarioName, string userName)
         {
-            string basePath = serverData.BaseDirectoryPath;
+            string factorioFilePath = serverData.ExecutablePath;
+            string serverSettingsPath = serverData.ServerSettingsPath;
             string serverId = serverData.ServerId;
             string localScenarioDirectoryPath = serverData.LocalScenarioDirectoryPath;
 
@@ -812,20 +815,20 @@ namespace FactorioWebInterface.Services
             string arguments;
 #if WINDOWS
             fullName = "C:/Program Files/dotnet/dotnet.exe";
-            arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio.exe --start-server-load-scenario {scenarioName} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+            arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}";
 #elif WSL
             fullName = "/usr/bin/dotnet";
-            arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-scenario {scenarioName} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+            arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}";
 #else
             if (serverData.IsRemote)
             {
                 fullName = "ssh";
-                arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-scenario {scenarioName} --server-settings {basePath}/server-settings.json --port {serverData.Port}'";
+                arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}'";
             }
             else
             {
                 fullName = "/usr/bin/dotnet";
-                arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {basePath}/bin/x64/factorio --start-server-load-scenario {scenarioName} --server-settings {basePath}/server-settings.json --port {serverData.Port}";
+                arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}";
             }
 #endif
             if (modDirPath != "")
@@ -1023,42 +1026,70 @@ namespace FactorioWebInterface.Services
             {
                 await serverData.ServerLock.WaitAsync();
 
+                serverData.StopCallback = null;
+
+                var message = new MessageData()
+                {
+                    ServerId = serverId,
+                    MessageType = Models.MessageType.Control,
+                    Message = $"Server killed by user {userName}"
+                };
+
+                _ = SendControlMessageNonLocking(serverData, message);
+
                 switch (serverData.Status)
                 {
                     case FactorioServerStatus.WrapperStarting:
-                        _ = ChangeStatusNonLocking(serverData, FactorioServerStatus.Killed, userName);
-                        break;
-                    case FactorioServerStatus.Unknown:
                     case FactorioServerStatus.WrapperStarted:
                     case FactorioServerStatus.Starting:
                     case FactorioServerStatus.Running:
                     case FactorioServerStatus.Stopping:
                     case FactorioServerStatus.Killing:
-                    case FactorioServerStatus.Updated:
-                        var message = new MessageData()
-                        {
-                            ServerId = serverId,
-                            MessageType = Models.MessageType.Control,
-                            Message = $"Server killed by user {userName}"
-                        };
+                        _ = _factorioProcessHub.Clients.Groups(serverId).ForceStop();
 
-                        _ = SendControlMessageNonLocking(serverData, message);
+                        _logger.LogInformation("Killing server via wrapper :serverId {serverId} user: {userName}", serverId, userName);
 
                         break;
                     default:
-                        return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot force stop server when in state {serverData.Status}");
-                }
+                        _logger.LogInformation("Killing server via process lookup :serverId {serverId} user: {userName}", serverId, userName);
 
-                serverData.StopCallback = null;
+                        _ = ChangeStatusNonLocking(serverData, FactorioServerStatus.Killing);
+
+                        int count = 0;
+                        var processes = Process.GetProcessesByName("factorio");
+                        foreach (var process in processes)
+                        {
+                            try
+                            {
+                                if (process.MainModule.FileName == serverData.ExecutablePath)
+                                {
+                                    count++;
+                                    process.Kill();
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.LogWarning(e, "ForceStop Kill Processes");
+                            }
+                        }
+
+                        var killedMessage = new MessageData()
+                        {
+                            ServerId = serverId,
+                            MessageType = Models.MessageType.Control,
+                            Message = $"{count} processes killed"
+                        };
+                        _ = SendControlMessageNonLocking(serverData, killedMessage);
+
+                        _ = ChangeStatusNonLocking(serverData, FactorioServerStatus.Killed);
+
+                        break;
+                }
             }
             finally
             {
                 serverData.ServerLock.Release();
             }
-
-            await _factorioProcessHub.Clients.Groups(serverId).ForceStop();
-
-            _logger.LogInformation("server killed :serverId {serverId} user: {userName}", serverId, userName);
 
             return Result.OK;
         }

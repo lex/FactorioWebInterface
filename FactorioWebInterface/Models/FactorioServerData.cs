@@ -106,7 +106,7 @@ namespace FactorioWebInterface.Models
                     ChatLogsArchiveDirectoryPath = Path.Combine(basePath, Constants.ChatLogDirectoryName, Constants.ArchiveDirectoryName),
                     ChatLogCurrentPath = Path.Combine(basePath, Constants.ChatLogDirectoryName, Constants.CurrentChatLogName),
 
-                    ExecutablePath = Path.Combine(basePath, Constants.ExecutablePath),
+                    ExecutablePath = Path.GetFullPath(Path.Combine(basePath, Constants.ExecutablePath)),
 
                     ServerBanListPath = Path.Combine(basePath, Constants.ServerBanListFileName),
                     ServerAdminListPath = Path.Combine(basePath, Constants.ServerAdminListFileName),
