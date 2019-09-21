@@ -5,9 +5,9 @@ using System.Text;
 
 namespace FactorioWebInterfaceTests.Utils
 {
-    public class TestLogger<T> : ILogger<T>, IDisposable
+    public sealed class TestLogger<T> : ILogger<T>, IDisposable
     {
-        private readonly Action<LogLevel, object> callback;
+        private Action<LogLevel, object> callback;
 
         public TestLogger(Action<LogLevel, object> callback)
         {
@@ -31,6 +31,7 @@ namespace FactorioWebInterfaceTests.Utils
 
         public void Dispose()
         {
+            callback = null;
         }
     }
 }

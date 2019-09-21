@@ -89,6 +89,8 @@ namespace FactorioWebInterface
 
             services.AddMemoryCache();
 
+            services.AddSingleton<FactorioServerDataConfiguration>();
+            services.AddSingleton<IFactorioServerDataService, FactorioServerDataService>();
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
             services.AddSingleton<DiscordBot, DiscordBot>();
             services.AddSingleton<FactorioUpdater, FactorioUpdater>();
@@ -96,6 +98,7 @@ namespace FactorioWebInterface
             services.AddSingleton<FactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
             services.AddSingleton<IFactorioBanService, FactorioBanService>();
+            services.AddSingleton<IPublicFactorioSaves, PublicFactorioSaves>();
             services.AddSingleton<FactorioFileManager, FactorioFileManager>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
             services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();

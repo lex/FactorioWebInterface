@@ -5,6 +5,7 @@ using FactorioWebInterfaceTests.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nito.AsyncEx;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -14,6 +15,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
     {
         private readonly DbContextFactory dbContextFactory;
         private readonly IFactorioBanService factorioBanService;
+
         public AddBan()
         {
             var serviceProvider = new ServiceCollection()
@@ -22,9 +24,9 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
                 {
                     options.UseInMemoryDatabase("InMemoryDbForTesting");
                 })
-            .AddSingleton<DbContextFactory, DbContextFactory>()
-            .AddSingleton<IFactorioBanService, FactorioBanService>()
-            .BuildServiceProvider();
+                .AddSingleton<DbContextFactory, DbContextFactory>()
+                .AddSingleton<IFactorioBanService, FactorioBanService>()
+                .BuildServiceProvider();
 
             var db = serviceProvider.GetService<ApplicationDbContext>();
             db.Database.EnsureCreated();
@@ -36,10 +38,13 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         [Fact]
         public async Task BanIsAddedToDatabase()
         {
+            // Arrange.
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason" };
 
+            // Act.
             var result = await factorioBanService.AddBan(ban, "", true, "");
 
+            // Assert.
             var db = dbContextFactory.Create<ApplicationDbContext>();
             var bans = await db.Bans.ToArrayAsync();
 
@@ -51,21 +56,26 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         [Fact]
         public async Task WhenBanIsAddedEventIsRaised()
         {
+            // Arrange.
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
             var serverId = "serverId";
             var sync = true;
 
+            var eventRaised = new AsyncManualResetEvent();
             FactorioBanEventArgs eventArgs = null;
             void FactorioBanService_BanChanged(IFactorioBanService sender, FactorioBanEventArgs ev)
             {
                 eventArgs = ev;
+                eventRaised.Set();
             }
 
             factorioBanService.BanChanged += FactorioBanService_BanChanged;
-            await factorioBanService.AddBan(ban, serverId, sync, "");
-            // event is raise on different thread, so we need to wait for it.
-            await Task.Delay(100);
 
+            // Act.
+            await factorioBanService.AddBan(ban, serverId, sync, "");
+            await eventRaised.WaitAsyncWithTimeout(1000);
+
+            // Assert.
             Assert.NotNull(eventArgs);
             Assert.Equal(serverId, eventArgs.Source);
             Assert.Equal(sync, eventArgs.SynchronizeWithServers);
@@ -80,6 +90,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         [Fact]
         public async Task WhenBanIsAddedLog()
         {
+            // Arrange.
             var actor = "actor";
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
             var parma = new object[] { ban.Username, ban.Admin, ban.Reason, actor };
@@ -89,16 +100,18 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             string message = null;
 
             void Callback(LogLevel l, object state)
-            {                
+            {
                 level = l;
                 message = state.ToString();
             }
 
             var logger = new TestLogger<IFactorioBanService>(Callback);
-
             var fbs = new FactorioBanService(dbContextFactory, logger);
+
+            //Act.
             await fbs.AddBan(ban, "", true, actor);
 
+            // Assert.
             Assert.Equal(LogLevel.Information, level);
             Assert.Equal(expected, message);
         }
@@ -106,14 +119,17 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         [Fact]
         public async Task DoesNotAddDuplicateBan()
         {
+            // Arrange.
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
 
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();
 
+            // Act.
             await factorioBanService.AddBan(ban, "", true, "");
 
+            // Assert.
             db = dbContextFactory.Create<ApplicationDbContext>();
             var bans = await db.Bans.ToArrayAsync();
 
@@ -123,6 +139,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         [Fact]
         public async Task OldBanIsUpdated()
         {
+            // Arrange.
             var oldBan = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
             var newBan = new Ban() { Username = "abc", Admin = "newAdmin", Reason = "new reason." };
 
@@ -130,8 +147,10 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             db.Add(oldBan);
             await db.SaveChangesAsync();
 
+            // Act.
             var result = await factorioBanService.AddBan(newBan, "", true, "");
 
+            // Assert.
             db = dbContextFactory.Create<ApplicationDbContext>();
             var bans = await db.Bans.ToArrayAsync();
 

@@ -2,6 +2,7 @@
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +14,7 @@ namespace FactorioWebInterface.Services
     public class FactorioFileManager
     {
         private readonly ILogger<FactorioFileManager> _logger;
+        private readonly IFactorioServerDataService _factorioServerDataService;
 
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> TempSaveFilesChanged;
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> LocalSaveFilesChanged;
@@ -21,9 +23,10 @@ namespace FactorioWebInterface.Services
         public event EventHandler<FactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
         public event EventHandler<FactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
 
-        public FactorioFileManager(ILogger<FactorioFileManager> logger)
+        public FactorioFileManager(ILogger<FactorioFileManager> logger, IFactorioServerDataService factorioServerDataService)
         {
             _logger = logger;
+            _factorioServerDataService = factorioServerDataService;
         }
 
         public FileMetaData[] GetTempSaveFiles(FactorioServerData serverData)
@@ -48,7 +51,7 @@ namespace FactorioWebInterface.Services
 
         public FileMetaData[] GetGlobalSaveFiles()
         {
-            var path = FactorioServerData.GlobalSavesDirectoryPath;
+            var path = _factorioServerDataService.GlobalSavesDirectoryPath;
             var dir = Constants.GlobalSavesDirectoryName;
 
             return GetFilesMetaData(path, dir);
@@ -83,7 +86,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ScenarioDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ScenarioDirectoryPath);
                 if (!dir.Exists)
                 {
                     dir.Create();
@@ -127,10 +130,10 @@ namespace FactorioWebInterface.Services
         public FileInfo GetLogFile(string directoryName, string fileName)
         {
             string safeFileName = Path.GetFileName(fileName);
-            string path = Path.Combine(FactorioServerData.baseDirectoryPath, directoryName, safeFileName);
+            string path = Path.Combine(_factorioServerDataService.BaseDirectoryPath, directoryName, safeFileName);
             path = Path.GetFullPath(path);
 
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
+            if (!path.StartsWith(_factorioServerDataService.BaseDirectoryPath))
             {
                 return null;
             }
@@ -163,10 +166,10 @@ namespace FactorioWebInterface.Services
         public FileInfo GetChatLogFile(string directoryName, string fileName)
         {
             string safeFileName = Path.GetFileName(fileName);
-            string path = Path.Combine(FactorioServerData.baseDirectoryPath, directoryName, safeFileName);
+            string path = Path.Combine(_factorioServerDataService.BaseDirectoryPath, directoryName, safeFileName);
             path = Path.GetFullPath(path);
 
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
+            if (!path.StartsWith(_factorioServerDataService.BaseDirectoryPath))
             {
                 return null;
             }
@@ -239,12 +242,12 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                if (FactorioServerData.ValidSaveDirectories.Contains(dirName))
+                if (_factorioServerDataService.IsValidSaveDirectory(dirName))
                 {
-                    var dirPath = Path.Combine(FactorioServerData.baseDirectoryPath, dirName);
+                    var dirPath = Path.Combine(_factorioServerDataService.BaseDirectoryPath, dirName);
                     dirPath = Path.GetFullPath(dirPath);
 
-                    if (!dirPath.StartsWith(FactorioServerData.baseDirectoryPath))
+                    if (!dirPath.StartsWith(_factorioServerDataService.BaseDirectoryPath))
                         return null;
 
                     var dir = new DirectoryInfo(dirPath);
@@ -295,7 +298,7 @@ namespace FactorioWebInterface.Services
             string path = Path.Combine(dirPath, fileName);
             path = Path.GetFullPath(path);
 
-            if (!path.StartsWith(FactorioServerData.baseDirectoryPath))
+            if (!path.StartsWith(_factorioServerDataService.BaseDirectoryPath))
             {
                 return null;
             }
@@ -540,7 +543,7 @@ namespace FactorioWebInterface.Services
 
         public Result MoveFiles(string serverId, string destination, List<string> filePaths)
         {
-            string targetDirPath = Path.Combine(FactorioServerData.baseDirectoryPath, destination);
+            string targetDirPath = Path.Combine(_factorioServerDataService.BaseDirectoryPath, destination);
 
             var targetDir = GetSaveDirectory(destination);
             if (targetDir == null)
@@ -708,7 +711,7 @@ namespace FactorioWebInterface.Services
 
         public Result CopyFiles(string serverId, string destination, List<string> filePaths)
         {
-            string targetDirPath = Path.Combine(FactorioServerData.baseDirectoryPath, destination);
+            string targetDirPath = Path.Combine(_factorioServerDataService.BaseDirectoryPath, destination);
 
             var targetDir = GetSaveDirectory(destination);
             if (targetDir == null)
@@ -970,7 +973,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private FilesChanged RotateFactorioLogsInner(FactorioServerData serverData)
+        private FilesChanged RotateFactorioLogsInner(FactorioServerMutableData serverData)
         {
             string serverId = serverData.ServerId;
 
@@ -1014,7 +1017,7 @@ namespace FactorioWebInterface.Services
 
                 var logs = dir.GetFiles("*.log");
 
-                int removeCount = logs.Length - FactorioServerData.maxLogFiles + 1;
+                int removeCount = logs.Length - _factorioServerDataService.MaxLogFiles + 1;
                 if (removeCount <= 0)
                 {
                     return new FilesChanged(new[]
@@ -1059,7 +1062,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public void RotateFactorioLogs(FactorioServerData serverData)
+        public void RotateFactorioLogs(FactorioServerMutableData serverData)
         {
             var filesChanged = RotateFactorioLogsInner(serverData);
             var changeData = filesChanged.BuildCollectionChangedData();
@@ -1068,12 +1071,18 @@ namespace FactorioWebInterface.Services
             Task.Run(() => LogFilesChanged?.Invoke(this, ev));
         }
 
-        private FilesChanged RotateChatLogsInner(FactorioServerData serverData)
+        private FilesChanged RotateChatLogsInner(FactorioServerMutableData serverData)
         {
             void BuildLogger(FileInfo file)
             {
                 file.CreationTimeUtc = DateTime.UtcNow;
-                serverData.BuildChatLogger();
+
+                serverData.ChatLogger?.Dispose();
+
+                serverData.ChatLogger = new LoggerConfiguration()
+                        .MinimumLevel.Information()
+                        .WriteTo.Async(a => a.File(serverData.ChatLogCurrentPath, outputTemplate: "{Message:l}{NewLine}"))
+                        .CreateLogger();
             }
 
             string serverId = serverData.ServerId;
@@ -1086,13 +1095,11 @@ namespace FactorioWebInterface.Services
                     dir.Create();
                 }
 
-                serverData.ChatLogger?.Dispose();
-                serverData.ChatLogger = null;
-
                 var currentLog = new FileInfo(serverData.ChatLogCurrentPath);
                 if (!currentLog.Exists)
                 {
                     using (_ = currentLog.Create()) { }
+
                     BuildLogger(currentLog);
 
                     return new FilesChanged(new[] { BuildLogFileMetaData(currentLog, serverId) });
@@ -1121,7 +1128,7 @@ namespace FactorioWebInterface.Services
 
                 var logs = dir.GetFiles("*.log");
 
-                int removeCount = logs.Length - FactorioServerData.maxLogFiles;
+                int removeCount = logs.Length - _factorioServerDataService.MaxLogFiles;
                 if (removeCount <= 0)
                 {
                     return new FilesChanged(new[]
@@ -1161,18 +1168,18 @@ namespace FactorioWebInterface.Services
             }
             catch (Exception e)
             {
-                _logger.LogError(e, nameof(RotateChatLogs));
+                _logger.LogError(e, nameof(RotateChatLogsInner));
                 return FilesChanged.empty;
             }
         }
 
-        public void RotateChatLogs(FactorioServerData serverData)
+        public void RotateChatLogs(FactorioServerMutableData serverData)
         {
             var filesChanged = RotateChatLogsInner(serverData);
             var changeData = filesChanged.BuildCollectionChangedData();
             var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
 
-            Task.Run(() => ChatLogFilesChanged?.Invoke(this, ev));
+            _ = Task.Run(() => ChatLogFilesChanged?.Invoke(this, ev));
         }
 
         public void RaiseTempFilesChanged(FilesChangedEventArgs ev)
@@ -1192,21 +1199,17 @@ namespace FactorioWebInterface.Services
 
         public Task RaiseRecentTempFiles(FactorioServerData serverData)
         {
-            return Task.Run(async () =>
+            DateTime ChangeLastTime(FactorioServerMutableData md)
             {
-                DateTime lastChecked;
+                DateTime lastChecked = md.LastTempFilesChecked;
+                md.LastTempFilesChecked = DateTime.UtcNow;
 
-                try
-                {
-                    await serverData.ServerLock.WaitAsync();
+                return lastChecked;
+            }
 
-                    lastChecked = serverData.LastTempFilesChecked;
-                    serverData.LastTempFilesChecked = DateTime.UtcNow;
-                }
-                finally
-                {
-                    serverData.ServerLock.Release();
-                }
+            async Task RaiseRecentTempFilesInner()
+            {
+                DateTime lastChecked = await serverData.LockAsync(ChangeLastTime);
 
                 try
                 {
@@ -1228,7 +1231,7 @@ namespace FactorioWebInterface.Services
                             Size = f.Length,
                             Directory = Constants.TempSavesDirectoryName
                         })
-                        .ToArray();
+                        .ToArray<FileMetaData>();
 
                     var changeData = CollectionChangedData.Add(files);
                     var ev = new FilesChangedEventArgs(serverData.ServerId, changeData);
@@ -1239,7 +1242,9 @@ namespace FactorioWebInterface.Services
                 {
                     _logger.LogError(nameof(RaiseRecentTempFiles), ex);
                 }
-            });
+            }
+
+            return Task.Run(RaiseRecentTempFilesInner);
         }
 
         public void NotifyTempFilesChanged(FactorioServerData serverData)

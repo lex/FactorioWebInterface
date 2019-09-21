@@ -6,9 +6,16 @@ namespace FactorioWebInterface.Pages
 {
     public class SavesModel : PageModel
     {
+        private readonly IPublicFactorioSaves _publicFactorioSaves;
+
         public PublicFileTableModel StartSaves { get; private set; }
         public PublicFileTableModel FinalSaves { get; private set; }
         public PublicFileTableModel OldSaves { get; private set; }
+
+        public SavesModel(IPublicFactorioSaves publicFactorioSaves)
+        {
+            _publicFactorioSaves = publicFactorioSaves;
+        }
 
         public IActionResult OnGet(string directory, string file)
         {
@@ -17,25 +24,25 @@ namespace FactorioWebInterface.Pages
                 StartSaves = new PublicFileTableModel()
                 {
                     Id = "startSavesTable",
-                    Saves = PublicFactorioSaves.GetFiles(Constants.PublicStartSavesDirectoryName) ?? new FileMetaData[0]
+                    Saves = _publicFactorioSaves.GetFiles(Constants.PublicStartSavesDirectoryName) ?? new FileMetaData[0]
                 };
 
                 FinalSaves = new PublicFileTableModel()
                 {
                     Id = "finalSavesTable",
-                    Saves = PublicFactorioSaves.GetFiles(Constants.PublicFinalSavesDirectoryName) ?? new FileMetaData[0]
+                    Saves = _publicFactorioSaves.GetFiles(Constants.PublicFinalSavesDirectoryName) ?? new FileMetaData[0]
                 };
 
                 OldSaves = new PublicFileTableModel()
                 {
                     Id = "oldSavesTable",
-                    Saves = PublicFactorioSaves.GetFiles(Constants.PublicOldSavesDirectoryName) ?? new FileMetaData[0]
+                    Saves = _publicFactorioSaves.GetFiles(Constants.PublicOldSavesDirectoryName) ?? new FileMetaData[0]
                 };
 
                 return Page();
             }
 
-            var fi = PublicFactorioSaves.GetFile(directory, file);
+            var fi = _publicFactorioSaves.GetFile(directory, file);
 
             if (fi == null)
             {

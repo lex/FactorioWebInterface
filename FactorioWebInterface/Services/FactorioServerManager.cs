@@ -51,9 +51,7 @@ namespace FactorioWebInterface.Services
         private readonly IFactorioBanService _factorioBanManager;
         private readonly FactorioFileManager _factorioFileManager;
         private readonly ScenarioDataManager _scenarioDataManger;
-
-        //private SemaphoreSlim serverLock = new SemaphoreSlim(1, 1);
-        private Dictionary<string, FactorioServerData> servers = FactorioServerData.Servers;
+        private readonly IFactorioServerDataService _factorioServerDataService;
 
         private readonly string factorioWrapperName;
 
@@ -70,7 +68,8 @@ namespace FactorioWebInterface.Services
             FactorioModManager factorioModManager,
             IFactorioBanService factorioBanManager,
             FactorioFileManager factorioFileManager,
-            ScenarioDataManager scenarioDataManger
+            ScenarioDataManager scenarioDataManger,
+            IFactorioServerDataService factorioServerDataService
         )
         {
             _configuration = configuration;
@@ -85,6 +84,7 @@ namespace FactorioWebInterface.Services
             _factorioBanManager = factorioBanManager;
             _factorioFileManager = factorioFileManager;
             _scenarioDataManger = scenarioDataManger;
+            _factorioServerDataService = factorioServerDataService;
 
             string name = _configuration[Constants.FactorioWrapperNameKey];
             if (string.IsNullOrWhiteSpace(name))
@@ -244,24 +244,19 @@ namespace FactorioWebInterface.Services
                  var command = cb.Add("}").Build();
 
                  var clients = _factorioProcessHub.Clients;
-                 foreach (var entry in servers)
+                 foreach (var entry in _factorioServerDataService.Servers)
                  {
                      var id = entry.Key;
                      var server = entry.Value;
                      if (id != sourceId && server.Status == FactorioServerStatus.Running)
                      {
-                         try
+                         await server.LockAsync(md =>
                          {
-                             await server.ServerLock.WaitAsync();
-                             if (server.TrackingDataSets.Contains(dataSet))
+                             if (md.TrackingDataSets.Contains(dataSet))
                              {
                                  _ = clients.Group(id).SendToFactorio(command);
                              }
-                         }
-                         finally
-                         {
-                             server.ServerLock.Release();
-                         }
+                         });
                      }
                  }
              });
@@ -272,16 +267,16 @@ namespace FactorioWebInterface.Services
             _factorioControlHub.Clients.All.SendCachedVersions(eventArgs);
         }
 
-        private Task SendControlMessageNonLocking(FactorioServerData serverData, MessageData message)
+        private Task SendControlMessageNonLocking(FactorioServerMutableData mutableData, MessageData message)
         {
-            serverData.ControlMessageBuffer.Add(message);
-            return _factorioControlHub.Clients.Groups(serverData.ServerId).SendMessage(message);
+            mutableData.ControlMessageBuffer.Add(message);
+            return _factorioControlHub.Clients.Groups(mutableData.ServerId).SendMessage(message);
         }
 
-        private Task ChangeStatusNonLocking(FactorioServerData serverData, FactorioServerStatus newStatus, string byUser = "")
+        private Task ChangeStatusNonLocking(FactorioServerMutableData mutableData, FactorioServerStatus newStatus, string byUser = "")
         {
-            var oldStatus = serverData.Status;
-            serverData.Status = newStatus;
+            var oldStatus = mutableData.Status;
+            mutableData.Status = newStatus;
 
             string oldStatusString = oldStatus.ToString();
             string newStatusString = newStatus.ToString();
@@ -291,7 +286,7 @@ namespace FactorioWebInterface.Services
             {
                 message = new MessageData()
                 {
-                    ServerId = serverData.ServerId,
+                    ServerId = mutableData.ServerId,
                     MessageType = Models.MessageType.Status,
                     Message = $"[STATUS] Change from {oldStatusString} to {newStatusString}"
                 };
@@ -300,20 +295,20 @@ namespace FactorioWebInterface.Services
             {
                 message = new MessageData()
                 {
-                    ServerId = serverData.ServerId,
+                    ServerId = mutableData.ServerId,
                     MessageType = Models.MessageType.Status,
                     Message = $"[STATUS] Change from {oldStatusString} to {newStatusString} by user {byUser}"
                 };
             }
 
-            var group = _factorioControlHub.Clients.Groups(serverData.ServerId);
+            var group = _factorioControlHub.Clients.Groups(mutableData.ServerId);
 
             return Task.WhenAll(group.FactorioStatusChanged(newStatusString, oldStatusString), group.SendMessage(message));
         }
 
         private string SanitizeGameChat(string message)
         {
-            return Formatter.Sanitize(message).Replace("@", "@\u200B");
+            return Formatter.Sanitize(message).Replace("@", "@\u200B"); // Prevent mentions from working.
         }
 
         private string SanitizeDiscordChat(string message)
@@ -330,22 +325,24 @@ namespace FactorioWebInterface.Services
         private void FactorioDiscordDataReceived(DiscordBotContext sender, ServerMessageEventArgs eventArgs)
         {
             var serverId = eventArgs.ServerId;
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return;
             }
 
-            if (serverData.ServerExtraSettings.DiscordToGameChat)
+            _ = serverData.LockAsync(md =>
             {
-                var name = SanitizeDiscordChat(eventArgs.User.Username);
-                var message = SanitizeDiscordChat(eventArgs.Message);
+                if (md.ServerExtraSettings.DiscordToGameChat)
+                {
+                    var name = SanitizeDiscordChat(eventArgs.User.Username);
+                    var message = SanitizeDiscordChat(eventArgs.Message);
 
-                string data = $"/silent-command game.print('[Discord] {name}: {message}')";
-                SendToFactorioProcess(eventArgs.ServerId, data);
+                    string data = $"/silent-command game.print('[Discord] {name}: {message}')";
+                    SendToFactorioProcess(eventArgs.ServerId, data);
 
-                LogChat(serverId, $"[Discord] {name}: {message}", DateTime.UtcNow);
-            }
+                    LogChat(serverId, $"[Discord] {name}: {message}", DateTime.UtcNow);
+                }
+            });
 
             var messageData = new MessageData()
             {
@@ -357,18 +354,18 @@ namespace FactorioWebInterface.Services
             _ = SendToFactorioControl(eventArgs.ServerId, messageData);
         }
 
-        private Task RotateLogs(FactorioServerData serverData)
+        private Task RotateLogs(FactorioServerMutableData mutableData)
         {
             return Task.Run(() =>
             {
-                _factorioFileManager.RotateFactorioLogs(serverData);
-                _factorioFileManager.RotateChatLogs(serverData);
+                _factorioFileManager.RotateFactorioLogs(mutableData);
+                _factorioFileManager.RotateChatLogs(mutableData);
             });
         }
 
-        private async Task BuildBanList(FactorioServerData serverData)
+        private async Task BuildBanList(FactorioServerMutableData mutableData)
         {
-            if (!serverData.ServerExtraSettings.BuildBansFromDatabaseOnStart)
+            if (!mutableData.ServerExtraSettings.BuildBansFromDatabaseOnStart)
             {
                 // If we don't want the database bans, the assumption is we should leave the
                 // server banlist alone with whatever bans are in there.
@@ -389,7 +386,7 @@ namespace FactorioWebInterface.Services
 
                 string data = JsonConvert.SerializeObject(bans, banListSerializerSettings);
 
-                await File.WriteAllTextAsync(serverData.ServerBanListPath, data);
+                await File.WriteAllTextAsync(mutableData.ServerBanListPath, data);
             }
             catch (Exception e)
             {
@@ -397,9 +394,9 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private async Task BuildAdminList(FactorioServerData serverData)
+        private async Task BuildAdminList(FactorioServerMutableData mutableData)
         {
-            var settings = serverData.ServerSettings;
+            var settings = mutableData.ServerSettings;
 
             if (!settings.UseDefaultAdmins)
             {
@@ -410,17 +407,17 @@ namespace FactorioWebInterface.Services
             var admins = a.Select(x => x.Name).ToArray();
 
             var adminData = JsonConvert.SerializeObject(admins, Formatting.Indented);
-            var writeTask = File.WriteAllTextAsync(serverData.ServerAdminListPath, adminData);
+            var writeTask = File.WriteAllTextAsync(mutableData.ServerAdminListPath, adminData);
 
-            serverData.ServerAdminList = admins;
-            serverData.ServerWebEditableSettings.Admins = admins;
+            mutableData.ServerAdminList = admins;
+            mutableData.ServerWebEditableSettings.Admins = admins;
 
             var items = new Dictionary<string, object>
             {
                 { nameof(FactorioServerSettingsWebEditable.Admins), admins }
             };
             var data = KeyValueCollectionChangedData.Add(items);
-            _ = _factorioControlHub.Clients.Group(serverData.ServerId).SendServerSettingsUpdate(data, false);
+            _ = _factorioControlHub.Clients.Group(mutableData.ServerId).SendServerSettingsUpdate(data, false);
 
             await writeTask;
         }
@@ -428,7 +425,7 @@ namespace FactorioWebInterface.Services
         private void SendToEachRunningServer(string data)
         {
             var clients = _factorioProcessHub.Clients;
-            foreach (var server in servers)
+            foreach (var server in _factorioServerDataService.Servers)
             {
                 if (server.Value.Status == FactorioServerStatus.Running)
                 {
@@ -440,33 +437,49 @@ namespace FactorioWebInterface.Services
         private void SendBanCommandToEachRunningServer(string data)
         {
             var clients = _factorioProcessHub.Clients;
-            foreach (var server in servers)
+            foreach (var server in _factorioServerDataService.Servers)
             {
                 var serverData = server.Value;
-                if (serverData.Status == FactorioServerStatus.Running && serverData.ServerExtraSettings.SyncBans)
+                if (serverData.Status != FactorioServerStatus.Running)
                 {
-                    clients.Group(server.Key).SendToFactorio(data);
+                    continue;
                 }
+
+                _ = serverData.LockAsync(md =>
+                {
+                    if (md.ServerExtraSettings.SyncBans)
+                    {
+                        clients.Group(md.ServerId).SendToFactorio(data);
+                    }
+                });
             }
         }
 
         private void SendBanCommandToEachRunningServerExcept(string data, string exceptId)
         {
             var clients = _factorioProcessHub.Clients;
-            foreach (var server in servers)
+            foreach (var server in _factorioServerDataService.Servers)
             {
                 var serverData = server.Value;
-                if (server.Key != exceptId && serverData.Status == FactorioServerStatus.Running && serverData.ServerExtraSettings.SyncBans)
+                if (server.Key == exceptId || serverData.Status != FactorioServerStatus.Running)
                 {
-                    clients.Group(server.Key).SendToFactorio(data);
+                    continue;
                 }
+
+                _ = serverData.LockAsync(md =>
+                {
+                    if (md.ServerExtraSettings.SyncBans)
+                    {
+                        clients.Group(md.ServerId).SendToFactorio(data);
+                    }
+                });
             }
         }
 
         private void SendToEachRunningServerExcept(string data, string exceptId)
         {
             var clients = _factorioProcessHub.Clients;
-            foreach (var server in servers)
+            foreach (var server in _factorioServerDataService.Servers)
             {
                 if (server.Key != exceptId && server.Value.Status == FactorioServerStatus.Running)
                 {
@@ -475,12 +488,12 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private string PrepareModDirectory(FactorioServerData serverData)
+        private string PrepareModDirectory(FactorioServerMutableData mutableData)
         {
-            var dir = _factorioModManager.GetModPackDirectoryInfo(serverData.ModPack);
+            var dir = _factorioModManager.GetModPackDirectoryInfo(mutableData.ModPack);
             if (dir == null)
             {
-                serverData.ModPack = "";
+                mutableData.ModPack = "";
                 return "";
             }
             else
@@ -489,20 +502,20 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private async Task<string> PrepareServer(FactorioServerData serverData)
+        private async Task<string> PrepareServer(FactorioServerMutableData mutableData)
         {
-            var banTask = BuildBanList(serverData);
-            var adminTask = BuildAdminList(serverData);
-            var logTask = RotateLogs(serverData);
+            var banTask = BuildBanList(mutableData);
+            var adminTask = BuildAdminList(mutableData);
+            var logTask = RotateLogs(mutableData);
 
-            serverData.TrackingDataSets.Clear();
+            mutableData.TrackingDataSets.Clear();
 
-            serverData.OnlinePlayers.Clear();
-            serverData.OnlinePlayerCount = 0;
+            mutableData.OnlinePlayers.Clear();
+            mutableData.OnlinePlayerCount = 0;
 
-            serverData.LastTempFilesChecked = DateTime.UtcNow;
+            mutableData.LastTempFilesChecked = DateTime.UtcNow;
 
-            string modDirPath = PrepareModDirectory(serverData);
+            string modDirPath = PrepareModDirectory(mutableData);
 
             await banTask;
             await adminTask;
@@ -513,127 +526,110 @@ namespace FactorioWebInterface.Services
 
         public bool IsValidServerId(string serverId)
         {
-            return servers.ContainsKey(serverId);
+            return _factorioServerDataService.IsValidServerId(serverId);
         }
 
         public async Task<Result> Resume(string serverId, string userName)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
+            }
+
+            async Task<Result> ResumeInner(FactorioServerMutableData mutableData)
+            {
+                if (!mutableData.Status.IsStartable())
+                {
+                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot resume server when in state {mutableData.Status}");
+                }
+
+                var tempSaves = new DirectoryInfo(mutableData.TempSavesDirectoryPath);
+                if (!tempSaves.EnumerateFiles("*.zip").Any())
+                {
+                    return Result.Failure(Constants.MissingFileErrorKey, "No file to resume server from.");
+                }
+
+                var scenarioDir = new DirectoryInfo(mutableData.LocalScenarioDirectoryPath);
+                if (scenarioDir.Exists)
+                {
+                    scenarioDir.Delete(true);
+                }
+
+                string modDirPath = await PrepareServer(mutableData);
+
+                string factorioFilePath = mutableData.ExecutablePath;
+                string serverSettingsPath = mutableData.ServerSettingsPath;
+
+                string fullName;
+                string arguments;
+#if WINDOWS
+                fullName = "C:/Program Files/dotnet/dotnet.exe";
+                arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath}--start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
+#elif WSL
+                fullName = "/usr/bin/dotnet";
+                arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
+#else
+                fullName = "/usr/bin/dotnet";
+                arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {mutableData.Port}";
+#endif
+                if (modDirPath != "")
+                {
+                    arguments += $" --mod-directory {modDirPath}";
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = fullName,
+                    Arguments = arguments,
+
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                try
+                {
+                    Process.Start(startInfo);
+                }
+                catch (Exception)
+                {
+                    _logger.LogError("Error resumeing serverId: {serverId}", serverId);
+                    return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
+                }
+
+                _logger.LogInformation("Server resumed serverId: {serverId} user: {userName}", serverId, userName);
+
+                var group = _factorioControlHub.Clients.Group(serverId);
+                await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), mutableData.Status.ToString());
+                mutableData.Status = FactorioServerStatus.WrapperStarting;
+
+                var message = new MessageData()
+                {
+                    ServerId = serverId,
+                    MessageType = Models.MessageType.Control,
+                    Message = $"Server resumed by user: {userName}"
+                };
+
+                mutableData.ControlMessageBuffer.Add(message);
+                await group.SendMessage(message);
+
+                return Result.OK;
             }
 
             try
             {
-                await serverData.ServerLock.WaitAsync();
-
-                switch (serverData.Status)
-                {
-                    case FactorioServerStatus.Unknown:
-                    case FactorioServerStatus.Stopped:
-                    case FactorioServerStatus.Killed:
-                    case FactorioServerStatus.Crashed:
-                    case FactorioServerStatus.Updated:
-
-                        var tempSaves = new DirectoryInfo(serverData.TempSavesDirectoryPath);
-                        if (!tempSaves.EnumerateFiles("*.zip").Any())
-                        {
-                            return Result.Failure(Constants.MissingFileErrorKey, "No file to resume server from.");
-                        }
-
-                        var scenarioDir = new DirectoryInfo(serverData.LocalScenarioDirectoryPath);
-                        if (scenarioDir.Exists)
-                        {
-                            scenarioDir.Delete(true);
-                        }
-
-                        string modDirPath = await PrepareServer(serverData);
-
-                        string factorioFilePath = serverData.ExecutablePath;
-                        string serverSettingsPath = serverData.ServerSettingsPath;
-
-                        string fullName;
-                        string arguments;
-#if WINDOWS
-                        fullName = "C:/Program Files/dotnet/dotnet.exe";
-                        arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath}--start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
-#elif WSL
-                        fullName = "/usr/bin/dotnet";
-                        arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
-#else
-                        if (serverData.IsRemote)
-                        {
-                            fullName = "ssh";
-                            arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}'";
-                        }
-                        else
-                        {
-                            fullName = "/usr/bin/dotnet";
-                            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
-                        }
-#endif
-                        if (modDirPath != "")
-                        {
-                            arguments += $" --mod-directory {modDirPath}";
-                        }
-
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = fullName,
-                            Arguments = arguments,
-
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        };
-
-                        try
-                        {
-                            Process.Start(startInfo);
-                        }
-                        catch (Exception)
-                        {
-                            _logger.LogError("Error resumeing serverId: {serverId}", serverId);
-                            return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
-                        }
-
-                        _logger.LogInformation("Server resumed serverId: {serverId} user: {userName}", serverId, userName);
-
-                        var group = _factorioControlHub.Clients.Group(serverId);
-                        await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), serverData.Status.ToString());
-                        serverData.Status = FactorioServerStatus.WrapperStarting;
-
-                        var message = new MessageData()
-                        {
-                            ServerId = serverId,
-                            MessageType = Models.MessageType.Control,
-                            Message = $"Server resumed by user: {userName}"
-                        };
-
-                        serverData.ControlMessageBuffer.Add(message);
-                        await group.SendMessage(message);
-
-                        return Result.OK;
-                    default:
-                        return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot resume server when in state {serverData.Status}");
-                }
+                return await serverData.LockAsync(ResumeInner);
             }
             catch (Exception e)
             {
                 _logger.LogError("Error loading", e);
                 return Result.Failure(Constants.UnexpctedErrorKey);
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
         }
 
         public async Task<Result> Load(string serverId, string directoryName, string fileName, string userName)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
@@ -643,141 +639,125 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.MissingFileErrorKey, $"File {Path.Combine(directoryName, fileName)} not found.");
             }
 
+            async Task<Result> LoadInner(FactorioServerMutableData mutableData)
+            {
+                if (!mutableData.Status.IsStartable())
+                {
+                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load server when in state {mutableData.Status}");
+                }
+
+                switch (saveFile.Directory.Name)
+                {
+                    case Constants.GlobalSavesDirectoryName:
+                    case Constants.LocalSavesDirectoryName:
+                        string copyToPath = Path.Combine(mutableData.TempSavesDirectoryPath, saveFile.Name);
+                        saveFile.CopyTo(copyToPath, true);
+
+                        var fi = new FileInfo(copyToPath);
+                        fi.LastWriteTimeUtc = DateTime.UtcNow;
+
+                        var data = new FileMetaData()
+                        {
+                            Name = fi.Name,
+                            CreatedTime = fi.CreationTimeUtc,
+                            LastModifiedTime = fi.LastWriteTimeUtc,
+                            Size = fi.Length,
+                            Directory = Constants.TempSavesDirectoryName
+                        };
+                        var changeData = CollectionChangedData.Add(new[] { data });
+                        var ev = new FilesChangedEventArgs(serverId, changeData);
+
+                        _factorioFileManager.RaiseTempFilesChanged(ev);
+                        break;
+                    case Constants.TempSavesDirectoryName:
+                        break;
+                    default:
+                        return Result.Failure(Constants.UnexpctedErrorKey, $"File {saveFile.FullName}.");
+                }
+
+                var scenarioDir = new DirectoryInfo(mutableData.LocalScenarioDirectoryPath);
+                if (scenarioDir.Exists)
+                {
+                    scenarioDir.Delete(true);
+                }
+
+                string modDirPath = await PrepareServer(mutableData);
+
+                string factorioFilePath = mutableData.ExecutablePath;
+                string serverSettingsPath = mutableData.ServerSettingsPath;
+
+                string fullName;
+                string arguments;
+#if WINDOWS
+                fullName = "C:/Program Files/dotnet/dotnet.exe";
+                arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
+#elif WSL
+                fullName = "/usr/bin/dotnet";
+                arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
+#else
+                fullName = "/usr/bin/dotnet";
+                arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {mutableData.Port}";
+#endif
+                if (modDirPath != "")
+                {
+                    arguments += $" --mod-directory {modDirPath}";
+                }
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = fullName,
+                    Arguments = arguments,
+
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                try
+                {
+                    Process.Start(startInfo);
+                }
+                catch (Exception)
+                {
+                    _logger.LogError("Error loading serverId: {serverId} file: {file}", serverId, saveFile.FullName);
+                    return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
+                }
+
+                _logger.LogInformation("Server load serverId: {serverId} file: {file} user: {userName}", serverId, saveFile.FullName, userName);
+
+                mutableData.Status = FactorioServerStatus.WrapperStarting;
+
+                var group = _factorioControlHub.Clients.Group(serverId);
+                await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), mutableData.Status.ToString());
+
+                var message = new MessageData()
+                {
+                    ServerId = serverId,
+                    MessageType = Models.MessageType.Control,
+                    Message = $"Server load file: {saveFile.Name} by user: {userName}"
+                };
+
+                mutableData.ControlMessageBuffer.Add(message);
+                await group.SendMessage(message);
+
+                return Result.OK;
+            }
+
             try
             {
-                await serverData.ServerLock.WaitAsync();
-
-                switch (serverData.Status)
-                {
-                    case FactorioServerStatus.Unknown:
-                    case FactorioServerStatus.Stopped:
-                    case FactorioServerStatus.Killed:
-                    case FactorioServerStatus.Crashed:
-                    case FactorioServerStatus.Updated:
-
-                        switch (saveFile.Directory.Name)
-                        {
-                            case Constants.GlobalSavesDirectoryName:
-                            case Constants.LocalSavesDirectoryName:
-                                string copyToPath = Path.Combine(serverData.TempSavesDirectoryPath, saveFile.Name);
-                                saveFile.CopyTo(copyToPath, true);
-
-                                var fi = new FileInfo(copyToPath);
-                                fi.LastWriteTimeUtc = DateTime.UtcNow;
-
-                                var data = new FileMetaData()
-                                {
-                                    Name = fi.Name,
-                                    CreatedTime = fi.CreationTimeUtc,
-                                    LastModifiedTime = fi.LastWriteTimeUtc,
-                                    Size = fi.Length,
-                                    Directory = Constants.TempSavesDirectoryName
-                                };
-                                var changeData = CollectionChangedData.Add(new[] { data });
-                                var ev = new FilesChangedEventArgs(serverId, changeData);
-
-                                _factorioFileManager.RaiseTempFilesChanged(ev);
-                                break;
-                            case Constants.TempSavesDirectoryName:
-                                break;
-                            default:
-                                return Result.Failure(Constants.UnexpctedErrorKey, $"File {saveFile.FullName}.");
-                        }
-
-                        var scenarioDir = new DirectoryInfo(serverData.LocalScenarioDirectoryPath);
-                        if (scenarioDir.Exists)
-                        {
-                            scenarioDir.Delete(true);
-                        }
-
-                        string modDirPath = await PrepareServer(serverData);
-
-                        string factorioFilePath = serverData.ExecutablePath;
-                        string serverSettingsPath = serverData.ServerSettingsPath;
-
-                        string fullName;
-                        string arguments;
-#if WINDOWS
-                        fullName = "C:/Program Files/dotnet/dotnet.exe";
-                        arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
-#elif WSL
-                        fullName = "/usr/bin/dotnet";
-                        arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
-#else
-                        if (serverData.IsRemote)
-                        {
-                            fullName = "ssh";
-                            arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}'";
-                        }
-                        else
-                        {
-                            fullName = "/usr/bin/dotnet";
-                            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
-                        }
-#endif
-                        if (modDirPath != "")
-                        {
-                            arguments += $" --mod-directory {modDirPath}";
-                        }
-
-                        var startInfo = new ProcessStartInfo
-                        {
-                            FileName = fullName,
-                            Arguments = arguments,
-
-                            UseShellExecute = false,
-                            CreateNoWindow = true
-                        };
-
-                        try
-                        {
-                            Process.Start(startInfo);
-                        }
-                        catch (Exception)
-                        {
-                            _logger.LogError("Error loading serverId: {serverId} file: {file}", serverId, saveFile.FullName);
-                            return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
-                        }
-
-                        _logger.LogInformation("Server load serverId: {serverId} file: {file} user: {userName}", serverId, saveFile.FullName, userName);
-
-                        serverData.Status = FactorioServerStatus.WrapperStarting;
-
-                        var group = _factorioControlHub.Clients.Group(serverId);
-                        await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), serverData.Status.ToString());
-
-                        var message = new MessageData()
-                        {
-                            ServerId = serverId,
-                            MessageType = Models.MessageType.Control,
-                            Message = $"Server load file: {saveFile.Name} by user: {userName}"
-                        };
-
-                        serverData.ControlMessageBuffer.Add(message);
-                        await group.SendMessage(message);
-
-                        return Result.OK;
-
-                    default:
-                        return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load server when in state {serverData.Status}");
-                }
+                return await serverData.LockAsync(LoadInner);
             }
             catch (Exception e)
             {
                 _logger.LogError("Error loading", e);
                 return Result.Failure(Constants.UnexpctedErrorKey);
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
         }
 
         private Result ValidateSceanrioName(string scenarioName)
         {
-            string scenarioPath = Path.Combine(FactorioServerData.ScenarioDirectoryPath, scenarioName);
+            string scenarioPath = Path.Combine(_factorioServerDataService.ScenarioDirectoryPath, scenarioName);
             scenarioPath = Path.GetFullPath(scenarioPath);
-            if (!scenarioPath.StartsWith(FactorioServerData.ScenarioDirectoryPath))
+            if (!scenarioPath.StartsWith(_factorioServerDataService.ScenarioDirectoryPath))
             {
                 return Result.Failure(Constants.MissingFileErrorKey, $"Scenario {scenarioName} not found.");
             }
@@ -791,45 +771,42 @@ namespace FactorioWebInterface.Services
             return Result.OK;
         }
 
-        private async Task<Result> StartScenarioInner(FactorioServerData serverData, string scenarioName, string userName)
+        private async Task<Result> StartScenarioInner(FactorioServerMutableData mutableData, string scenarioName, string userName)
         {
-            string factorioFilePath = serverData.ExecutablePath;
-            string serverSettingsPath = serverData.ServerSettingsPath;
-            string serverId = serverData.ServerId;
-            string localScenarioDirectoryPath = serverData.LocalScenarioDirectoryPath;
+            if (!mutableData.Status.IsStartable())
+            {
+                return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load scenario when server in state {mutableData.Status}");
+            }
+
+            string factorioFilePath = mutableData.ExecutablePath;
+            string serverSettingsPath = mutableData.ServerSettingsPath;
+            string serverId = mutableData.ServerId;
+            string localScenarioDirectoryPath = mutableData.LocalScenarioDirectoryPath;
 
             var dir = new DirectoryInfo(localScenarioDirectoryPath);
             if (!dir.Exists)
             {
-                FileHelpers.CreateDirectorySymlink(FactorioServerData.ScenarioDirectoryPath, localScenarioDirectoryPath);
+                FileHelpers.CreateDirectorySymlink(_factorioServerDataService.ScenarioDirectoryPath, localScenarioDirectoryPath);
             }
             else if (!FileHelpers.IsSymbolicLink(localScenarioDirectoryPath))
             {
                 dir.Delete(true);
-                FileHelpers.CreateDirectorySymlink(FactorioServerData.ScenarioDirectoryPath, localScenarioDirectoryPath);
+                FileHelpers.CreateDirectorySymlink(_factorioServerDataService.ScenarioDirectoryPath, localScenarioDirectoryPath);
             }
 
-            string modDirPath = await PrepareServer(serverData);
+            string modDirPath = await PrepareServer(mutableData);
 
             string fullName;
             string arguments;
 #if WINDOWS
             fullName = "C:/Program Files/dotnet/dotnet.exe";
-            arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}";
+            arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {mutableData.Port}";
 #elif WSL
             fullName = "/usr/bin/dotnet";
             arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}";
 #else
-            if (serverData.IsRemote)
-            {
-                fullName = "ssh";
-                arguments = $"{serverData.SshIdentity} '/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}'";
-            }
-            else
-            {
-                fullName = "/usr/bin/dotnet";
-                arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}";
-            }
+            fullName = "/usr/bin/dotnet";
+            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {mutableData.Port}";
 #endif
             if (modDirPath != "")
             {
@@ -855,12 +832,12 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
             }
 
-            _logger.LogInformation("Server load serverId: {serverId} scenario: {scenario} user: {userName}", serverData.ServerId, scenarioName, userName);
+            _logger.LogInformation("Server load serverId: {serverId} scenario: {scenario} user: {userName}", mutableData.ServerId, scenarioName, userName);
 
-            serverData.Status = FactorioServerStatus.WrapperStarting;
+            mutableData.Status = FactorioServerStatus.WrapperStarting;
 
-            var group = _factorioControlHub.Clients.Group(serverData.ServerId);
-            await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), serverData.Status.ToString());
+            var group = _factorioControlHub.Clients.Group(mutableData.ServerId);
+            await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), mutableData.Status.ToString());
 
             var message = new MessageData()
             {
@@ -869,7 +846,7 @@ namespace FactorioWebInterface.Services
                 Message = $"Server load scenario: {scenarioName} by user: {userName}"
             };
 
-            serverData.ControlMessageBuffer.Add(message);
+            mutableData.ControlMessageBuffer.Add(message);
             await group.SendMessage(message);
 
             return Result.OK;
@@ -877,9 +854,8 @@ namespace FactorioWebInterface.Services
 
         public async Task<Result> StartScenario(string serverId, string scenarioName, string userName)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
@@ -891,36 +867,19 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                await serverData.ServerLock.WaitAsync();
-
-                switch (serverData.Status)
-                {
-                    case FactorioServerStatus.Unknown:
-                    case FactorioServerStatus.Stopped:
-                    case FactorioServerStatus.Killed:
-                    case FactorioServerStatus.Crashed:
-                    case FactorioServerStatus.Updated:
-                        return await StartScenarioInner(serverData, scenarioName, userName);
-                    default:
-                        return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load scenario when server in state {serverData.Status}");
-                }
+                return await serverData.LockAsync(md => StartScenarioInner(md, scenarioName, userName));
             }
             catch (Exception e)
             {
                 _logger.LogError("Error loading scenario", e);
                 return Result.Failure(Constants.UnexpctedErrorKey);
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
         }
 
         public async Task<Result> ForceStartScenario(string serverId, string scenarioName, string userName)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
@@ -930,31 +889,34 @@ namespace FactorioWebInterface.Services
                 return result;
             }
 
-            try
+            async Task<Result> ForceStartScenarioInner(FactorioServerMutableData md)
             {
-                await serverData.ServerLock.WaitAsync();
-
-                switch (serverData.Status)
+                if (md.Status == FactorioServerStatus.Running)
                 {
-                    case FactorioServerStatus.Unknown:
-                    case FactorioServerStatus.Stopped:
-                    case FactorioServerStatus.Killed:
-                    case FactorioServerStatus.Crashed:
-                    case FactorioServerStatus.Updated:
-                        return await StartScenarioInner(serverData, scenarioName, userName);
-                    case FactorioServerStatus.Running:
-                        serverData.StopCallback = () => StartScenarioInner(serverData, scenarioName, userName);
+                    md.StopCallback = () => StartScenarioInner(md, scenarioName, userName);
 
-                        await StopInner(serverId, userName);
+                    await StopInner(serverId, userName);
 
-                        return Result.OK;
-                    default:
-                        return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot force start scenario when server in state {serverData.Status}");
+                    return Result.OK;
+                }
+                else if (md.Status.IsStartable())
+                {
+                    return await StartScenarioInner(md, scenarioName, userName);
+                }
+                else
+                {
+                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot force start scenario when server in state {md.Status}");
                 }
             }
-            finally
+
+            try
             {
-                serverData.ServerLock.Release();
+                return await serverData.LockAsync(ForceStartScenarioInner);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error force loading scenario", e);
+                return Result.Failure(Constants.UnexpctedErrorKey);
             }
         }
 
@@ -980,34 +942,17 @@ namespace FactorioWebInterface.Services
 #if WINDOWS
             return Result.Failure(Constants.NotSupportedErrorKey, "Stop is not supported on Windows.");
 #else
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            switch (serverData.Status)
+            if (!serverData.Status.IsStoppable())
             {
-                case FactorioServerStatus.Unknown:
-                case FactorioServerStatus.WrapperStarted:
-                case FactorioServerStatus.Starting:
-                case FactorioServerStatus.Running:
-                case FactorioServerStatus.Updated:
-                    break;
-                default:
-                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot stop server when in state {serverData.Status}");
+                return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot stop server when in state {serverData.Status}");
             }
 
-            try
-            {
-                await serverData.ServerLock.WaitAsync();
-                serverData.StopCallback = null;
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
-
+            await serverData.LockAsync(md => md.StopCallback = null);
             await StopInner(serverId, userName);
 
             return Result.OK;
@@ -1016,17 +961,14 @@ namespace FactorioWebInterface.Services
 
         public async Task<Result> ForceStop(string serverId, string userName)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            try
+            void ForceStopInner(FactorioServerMutableData mutableData)
             {
-                await serverData.ServerLock.WaitAsync();
-
-                serverData.StopCallback = null;
+                mutableData.StopCallback = null;
 
                 var message = new MessageData()
                 {
@@ -1035,70 +977,61 @@ namespace FactorioWebInterface.Services
                     Message = $"Server killed by user {userName}"
                 };
 
-                _ = SendControlMessageNonLocking(serverData, message);
+                _ = SendControlMessageNonLocking(mutableData, message);
 
-                switch (serverData.Status)
+                if (mutableData.Status.IsForceStoppable())
                 {
-                    case FactorioServerStatus.WrapperStarting:
-                    case FactorioServerStatus.WrapperStarted:
-                    case FactorioServerStatus.Starting:
-                    case FactorioServerStatus.Running:
-                    case FactorioServerStatus.Stopping:
-                    case FactorioServerStatus.Killing:
-                        _ = _factorioProcessHub.Clients.Groups(serverId).ForceStop();
+                    _ = _factorioProcessHub.Clients.Groups(serverId).ForceStop();
 
-                        _logger.LogInformation("Killing server via wrapper :serverId {serverId} user: {userName}", serverId, userName);
+                    _logger.LogInformation("Killing server via wrapper serverId: {serverId} user: {userName}", serverId, userName);
+                }
+                else
+                {
+                    _logger.LogInformation("Killing server via process lookup serverId: {serverId} user: {userName}", serverId, userName);
 
-                        break;
-                    default:
-                        _logger.LogInformation("Killing server via process lookup :serverId {serverId} user: {userName}", serverId, userName);
+                    _ = ChangeStatusNonLocking(mutableData, FactorioServerStatus.Killing);
 
-                        _ = ChangeStatusNonLocking(serverData, FactorioServerStatus.Killing);
-
-                        int count = 0;
-                        var processes = Process.GetProcessesByName("factorio");
-                        foreach (var process in processes)
+                    int foundCount = 0;
+                    int killedCount = 0;
+                    var processes = Process.GetProcessesByName("factorio");
+                    foreach (var process in processes)
+                    {
+                        try
                         {
-                            try
+                            if (process.MainModule.FileName == mutableData.ExecutablePath)
                             {
-                                if (process.MainModule.FileName == serverData.ExecutablePath)
-                                {
-                                    count++;
-                                    process.Kill();
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                _logger.LogWarning(e, "ForceStop Kill Processes");
+                                foundCount++;
+                                process.Kill();
+                                killedCount++;
                             }
                         }
-
-                        var killedMessage = new MessageData()
+                        catch (Exception e)
                         {
-                            ServerId = serverId,
-                            MessageType = Models.MessageType.Control,
-                            Message = $"{count} processes killed"
-                        };
-                        _ = SendControlMessageNonLocking(serverData, killedMessage);
+                            _logger.LogWarning(e, "ForceStop Kill Processes");
+                        }
+                    }
 
-                        _ = ChangeStatusNonLocking(serverData, FactorioServerStatus.Killed);
+                    var killedMessage = new MessageData()
+                    {
+                        ServerId = serverId,
+                        MessageType = Models.MessageType.Control,
+                        Message = $"{killedCount} out of {foundCount} processes killed"
+                    };
+                    _ = SendControlMessageNonLocking(mutableData, killedMessage);
 
-                        break;
+                    _ = ChangeStatusNonLocking(mutableData, FactorioServerStatus.Killed);
                 }
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+
+            await serverData.LockAsync(ForceStopInner);
 
             return Result.OK;
         }
 
         public async Task<Result> Save(string serverId, string userName, string saveName)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
@@ -1133,16 +1066,14 @@ namespace FactorioWebInterface.Services
             {
                 var result = await _factorioUpdater.DoUpdate(serverData, version);
 
-                try
+                var oldStatus = serverData.Status;
+                var group = _factorioControlHub.Clients.Group(serverId);
+
+                void ReportInstall(FactorioServerMutableData mutableData)
                 {
-                    await serverData.ServerLock.WaitAsync();
-
-                    var oldStatus = serverData.Status;
-                    var group = _factorioControlHub.Clients.Group(serverId);
-
                     if (result.Success)
                     {
-                        serverData.Status = FactorioServerStatus.Updated;
+                        mutableData.Status = FactorioServerStatus.Updated;
 
                         _ = group.FactorioStatusChanged(FactorioServerStatus.Updated.ToString(), oldStatus.ToString());
 
@@ -1153,7 +1084,7 @@ namespace FactorioWebInterface.Services
                             Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updated}"
                         };
 
-                        serverData.ControlMessageBuffer.Add(messageData);
+                        mutableData.ControlMessageBuffer.Add(messageData);
                         _ = group.SendMessage(messageData);
 
                         var embed = new DiscordEmbedBuilder()
@@ -1169,7 +1100,7 @@ namespace FactorioWebInterface.Services
                     }
                     else
                     {
-                        serverData.Status = FactorioServerStatus.Crashed;
+                        mutableData.Status = FactorioServerStatus.Crashed;
 
                         _ = group.FactorioStatusChanged(FactorioServerStatus.Crashed.ToString(), oldStatus.ToString());
 
@@ -1180,7 +1111,7 @@ namespace FactorioWebInterface.Services
                             Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Crashed}"
                         };
 
-                        serverData.ControlMessageBuffer.Add(messageData);
+                        mutableData.ControlMessageBuffer.Add(messageData);
                         _ = group.SendMessage(messageData);
 
                         var messageData2 = new MessageData()
@@ -1190,17 +1121,15 @@ namespace FactorioWebInterface.Services
                             Message = result.ToString()
                         };
 
-                        serverData.ControlMessageBuffer.Add(messageData2);
+                        mutableData.ControlMessageBuffer.Add(messageData2);
                         _ = group.SendMessage(messageData2);
                     }
 
-                    serverData.Version = FactorioVersionFinder.GetVersionString(serverData.ExecutablePath);
-                    _ = group.SendVersion(serverData.Version);
+                    mutableData.Version = FactorioVersionFinder.GetVersionString(mutableData.ExecutablePath);
+                    _ = group.SendVersion(mutableData.Version);
                 }
-                finally
-                {
-                    serverData.ServerLock.Release();
-                }
+
+                await serverData.LockAsync(ReportInstall);
             });
         }
 #pragma warning disable CS1998
@@ -1210,33 +1139,21 @@ namespace FactorioWebInterface.Services
 #if WINDOWS
             return Result.Failure(Constants.NotSupportedErrorKey, "Install is not supported on windows.");
 #else
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknow serverId: {serverId}", serverId);
                 return Result.Failure($"Unknow serverId: {serverId}");
             }
 
-            try
+            Result CheckCanUpdate(FactorioServerMutableData mutableData)
             {
-                await serverData.ServerLock.WaitAsync();
+                var oldStatus = mutableData.Status;
 
-                var oldStatus = serverData.Status;
-
-                switch (oldStatus)
+                if (!oldStatus.IsUpdatable())
                 {
-                    case FactorioServerStatus.WrapperStarting:
-                    case FactorioServerStatus.WrapperStarted:
-                    case FactorioServerStatus.Starting:
-                    case FactorioServerStatus.Running:
-                    case FactorioServerStatus.Stopping:
-                    case FactorioServerStatus.Killing:
-                    case FactorioServerStatus.Updating:
-                        return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot Update server when in state {oldStatus}");
-                    default:
-                        break;
+                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot Update server when in state {oldStatus}");
                 }
 
-                serverData.Status = FactorioServerStatus.Updating;
+                mutableData.Status = FactorioServerStatus.Updating;
 
                 var group = _factorioControlHub.Clients.Group(serverId);
 
@@ -1246,7 +1163,7 @@ namespace FactorioWebInterface.Services
                     MessageType = Models.MessageType.Control,
                     Message = $"Server updating to version: {version} by user: {userName}"
                 };
-                serverData.ControlMessageBuffer.Add(controlMessage);
+                mutableData.ControlMessageBuffer.Add(controlMessage);
                 _ = group.SendMessage(controlMessage);
 
                 _ = group.FactorioStatusChanged(FactorioServerStatus.Updating.ToString(), oldStatus.ToString());
@@ -1257,38 +1174,31 @@ namespace FactorioWebInterface.Services
                     MessageType = Models.MessageType.Status,
                     Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updating} by user {userName}"
                 };
-                serverData.ControlMessageBuffer.Add(statusMessage);
+                mutableData.ControlMessageBuffer.Add(statusMessage);
                 _ = group.SendMessage(statusMessage);
 
-                InstallInner(serverId, serverData, version);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
+                return Result.OK;
             }
 
-            return Result.OK;
+            var result = await serverData.LockAsync(CheckCanUpdate);
+
+            if (result.Success)
+            {
+                InstallInner(serverId, serverData, version);
+            }
+
+            return result;
 #endif
         }
 
-        public async Task<FactorioServerStatus> GetStatus(string serverId)
+        public Task<FactorioServerStatus> GetStatus(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return FactorioServerStatus.Unknown;
+                return Task.FromResult(FactorioServerStatus.Unknown);
             }
 
-            try
-            {
-                await serverData.ServerLock.WaitAsync();
-
-                return serverData.Status;
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+            return serverData.LockAsync(md => md.Status);
         }
 
         public Task RequestStatus(string serverId)
@@ -1303,44 +1213,23 @@ namespace FactorioWebInterface.Services
 
         public async Task SendToFactorioControl(string serverId, MessageData data)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknow serverId: {serverId}", serverId);
                 return;
             }
 
-            try
-            {
-                await serverData.ServerLock.WaitAsync();
-                serverData.ControlMessageBuffer.Add(data);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
-
+            await serverData.LockAsync(md => md.ControlMessageBuffer.Add(data));
             await _factorioControlHub.Clients.Group(serverId).SendMessage(data);
         }
 
-        public async Task<MessageData[]> GetFactorioControlMessagesAsync(string serverId)
+        public Task<MessageData[]> GetFactorioControlMessagesAsync(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknow serverId: {serverId}", serverId);
-                return new MessageData[0];
+                return Task.FromResult(new MessageData[0]);
             }
 
-            try
-            {
-                await serverData.ServerLock.WaitAsync();
-
-                var buffer = serverData.ControlMessageBuffer.TakeWhile(x => x != null).ToArray();
-                return buffer;
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+            return serverData.LockAsync(md => md.ControlMessageBuffer.TakeWhile(x => x != null).ToArray());
         }
 
         private async Task DoTags(string serverId, string data, DateTime dateTime)
@@ -1359,13 +1248,12 @@ namespace FactorioWebInterface.Services
             {
                 case Constants.ChatTag:
                     {
-                        if (!servers.TryGetValue(serverId, out var serverData))
+                        if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
                         {
-                            _logger.LogError("Unknown serverId: {serverId}", serverId);
                             break;
                         }
 
-                        if (serverData.ServerExtraSettings.GameChatToDiscord)
+                        if (await serverData.LockAsync(md => md.ServerExtraSettings.GameChatToDiscord))
                         {
                             _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
                         }
@@ -1375,13 +1263,12 @@ namespace FactorioWebInterface.Services
                     }
                 case Constants.ShoutTag:
                     {
-                        if (!servers.TryGetValue(serverId, out var serverData))
+                        if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
                         {
-                            _logger.LogError("Unknown serverId: {serverId}", serverId);
                             break;
                         }
 
-                        if (serverData.ServerExtraSettings.GameShoutToDiscord)
+                        if (await serverData.LockAsync(md => md.ServerExtraSettings.GameShoutToDiscord))
                         {
                             _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
                         }
@@ -1540,9 +1427,8 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return;
             }
 
@@ -1614,22 +1500,17 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknow serverId: {serverId}", serverId);
                 return;
             }
 
             string safeName = SanitizeGameChat(name);
             var t1 = _discordBotContext.SendToFactorioChannel(serverId, $"**{safeName} has joined the game**");
 
-            string topic;
-
-            try
+            string topic = await serverData.LockAsync(mutableData =>
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var op = serverData.OnlinePlayers;
+                var op = mutableData.OnlinePlayers;
                 if (op.TryGetValue(name, out int count))
                 {
                     op[name] = count + 1;
@@ -1639,14 +1520,10 @@ namespace FactorioWebInterface.Services
                     op.Add(name, 1);
                 }
 
-                int totalCount = serverData.OnlinePlayerCount + 1;
-                serverData.OnlinePlayerCount = totalCount;
-                topic = BuildServerTopicFromOnlinePlayers(op, totalCount);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+                int totalCount = mutableData.OnlinePlayerCount + 1;
+                mutableData.OnlinePlayerCount = totalCount;
+                return BuildServerTopicFromOnlinePlayers(op, totalCount);
+            });
 
             await _discordBotContext.SetChannelNameAndTopic(serverId, topic: topic);
             await t1;
@@ -1659,22 +1536,17 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknow serverId: {serverId}", serverId);
                 return;
             }
 
             string safeName = SanitizeGameChat(name);
             var t1 = _discordBotContext.SendToFactorioChannel(serverId, $"**{safeName} has left the game**");
 
-            string topic;
-
-            try
+            string topic = await serverData.LockAsync(md =>
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var op = serverData.OnlinePlayers;
+                var op = md.OnlinePlayers;
                 if (op.TryGetValue(name, out int count))
                 {
                     if (count == 1)
@@ -1689,16 +1561,17 @@ namespace FactorioWebInterface.Services
                 else
                 {
                     _ = SendToFactorioProcess(serverId, FactorioCommandBuilder.Static.query_online_players);
-                    return;
+                    return null;
                 }
 
-                int totalCount = serverData.OnlinePlayerCount - 1;
-                serverData.OnlinePlayerCount = totalCount;
-                topic = BuildServerTopicFromOnlinePlayers(op, totalCount);
-            }
-            finally
+                int totalCount = md.OnlinePlayerCount - 1;
+                md.OnlinePlayerCount = totalCount;
+                return BuildServerTopicFromOnlinePlayers(op, totalCount);
+            });
+
+            if (topic == null)
             {
-                serverData.ServerLock.Release();
+                return;
             }
 
             await _discordBotContext.SetChannelNameAndTopic(serverId, topic: topic);
@@ -1707,9 +1580,8 @@ namespace FactorioWebInterface.Services
 
         private async Task DoPlayerQuery(string serverId, string content)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknow serverId: {serverId}", serverId);
                 return;
             }
 
@@ -1724,12 +1596,9 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            string topic;
-            try
+            string topic = await serverData.LockAsync(mutableData =>
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var op = serverData.OnlinePlayers;
+                var op = mutableData.OnlinePlayers;
                 op.Clear();
 
                 foreach (var player in players)
@@ -1744,22 +1613,17 @@ namespace FactorioWebInterface.Services
                     }
                 }
 
-                serverData.OnlinePlayerCount = players.Length;
-                topic = BuildServerTopicFromOnlinePlayers(op, players.Length);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+                mutableData.OnlinePlayerCount = players.Length;
+                return BuildServerTopicFromOnlinePlayers(op, players.Length);
+            });
 
             await _discordBotContext.SetChannelNameAndTopic(serverId, topic: topic);
         }
 
         private async Task DoTrackedData(string serverId, string content)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("DoTrackedData Unknown serverId: {serverId}", serverId);
                 return;
             }
 
@@ -1774,21 +1638,15 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            try
+            await serverData.LockAsync(mutableData =>
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var td = serverData.TrackingDataSets;
+                var td = mutableData.TrackingDataSets;
                 td.Clear();
                 foreach (var item in dataSets)
                 {
                     td.Add(item);
                 }
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+            });
         }
 
         private async Task DoGetData(string serverId, string content)
@@ -1985,13 +1843,12 @@ namespace FactorioWebInterface.Services
 
                 _ = SendToFactorioProcess(serverId, command);
 
-                if (!servers.TryGetValue(serverId, out var sourceServerData))
+                if (!_factorioServerDataService.TryGetServerData(serverId, out var sourceServerData))
                 {
-                    _logger.LogError("Unknown serverId: {serverId}", serverId);
                     return;
                 }
 
-                if (!sourceServerData.ServerExtraSettings.SyncBans)
+                if (!await sourceServerData.LockAsync(md => md.ServerExtraSettings.SyncBans))
                 {
                     return;
                 }
@@ -2005,13 +1862,12 @@ namespace FactorioWebInterface.Services
                 var command = $"/unban {ban.Username}";
                 _ = SendToFactorioProcess(serverId, command);
 
-                if (!servers.TryGetValue(serverId, out var sourceServerData))
+                if (!_factorioServerDataService.TryGetServerData(serverId, out var sourceServerData))
                 {
-                    _logger.LogError("Unknown serverId: {serverId}", serverId);
                     return;
                 }
 
-                if (!sourceServerData.ServerExtraSettings.SyncBans)
+                if (!await sourceServerData.LockAsync(md => md.ServerExtraSettings.SyncBans))
                 {
                     return;
                 }
@@ -2024,9 +1880,8 @@ namespace FactorioWebInterface.Services
             }
             else
             {
-                if (!servers.TryGetValue(serverId, out var sourceServerData))
+                if (!_factorioServerDataService.TryGetServerData(serverId, out var sourceServerData))
                 {
-                    _logger.LogError("Unknown serverId: {serverId}", serverId);
                     return;
                 }
 
@@ -2037,10 +1892,9 @@ namespace FactorioWebInterface.Services
                     MessageType = Models.MessageType.Output
                 };
 
-                try
+                await sourceServerData.LockAsync(md =>
                 {
-                    await sourceServerData.ServerLock.WaitAsync();
-                    if (sourceServerData.Status == FactorioServerStatus.Running)
+                    if (md.Status == FactorioServerStatus.Running)
                     {
                         string message = SanitizeDiscordChat(data);
                         string command = $"/silent-command game.print('[Server] {actor}: {message}')";
@@ -2048,11 +1902,7 @@ namespace FactorioWebInterface.Services
 
                         LogChat(serverId, messageData.Message, DateTime.UtcNow);
                     }
-                }
-                finally
-                {
-                    sourceServerData.ServerLock.Release();
-                }
+                });
 
                 _ = SendToFactorioControl(serverId, messageData);
 
@@ -2062,9 +1912,8 @@ namespace FactorioWebInterface.Services
 
         private Task DoBan(string serverId, string content)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Task.CompletedTask;
             }
 
@@ -2073,9 +1922,8 @@ namespace FactorioWebInterface.Services
 
         private Task DoUnBan(string serverId, string content)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Task.CompletedTask;
             }
 
@@ -2109,14 +1957,19 @@ namespace FactorioWebInterface.Services
             };
             var t2 = _discordBotContext.SendEmbedToFactorioChannel(serverId, embed);
 
-            string name = null;
-            if (serverData.ServerExtraSettings.SetDiscordChannelName)
+            string name = await serverData.LockAsync(mutableData =>
             {
-                string cleanServerName = serverTagRegex.Replace(serverData.ServerSettings.Name, "");
+                if (!mutableData.ServerExtraSettings.SetDiscordChannelName)
+                {
+                    return null;
+                }
+
+                string cleanServerName = serverTagRegex.Replace(mutableData.ServerSettings.Name, "");
                 string cleanVersion = serverData.Version.Replace('.', '_');
 
-                name = $"s{serverId}-{cleanServerName}-{cleanVersion}";
-            }
+                return $"s{serverId}-{cleanServerName}-{cleanVersion}";
+            });
+
             var t3 = _discordBotContext.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
 
             LogChat(serverId, "[SERVER-STARTED]", dateTime);
@@ -2138,12 +1991,10 @@ namespace FactorioWebInterface.Services
 
         private async Task DoStoppedCallback(FactorioServerData serverData)
         {
-            try
+            await serverData.LockAsync(async mutableData =>
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var callback = serverData.StopCallback;
-                serverData.StopCallback = null;
+                var callback = mutableData.StopCallback;
+                mutableData.StopCallback = null;
 
                 if (callback == null)
                 {
@@ -2151,50 +2002,46 @@ namespace FactorioWebInterface.Services
                 }
 
                 await callback();
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+            });
         }
 
         private async Task MarkChannelOffline(FactorioServerData serverData)
         {
             string serverId = serverData.ServerId;
 
-            string name = null;
-            if (serverData.ServerExtraSettings.SetDiscordChannelName)
+            string name = await serverData.LockAsync(md =>
             {
-                name = $"s{serverId}-offline";
-            }
+                if (md.ServerExtraSettings.SetDiscordChannelName)
+                {
+                    return $"s{serverId}-offline";
+                }
+                else
+                {
+                    return null;
+                }
+            });
 
             await _discordBotContext.SetChannelNameAndTopic(serverId, name: name, topic: "Server offline");
         }
 
         public async Task StatusChanged(string serverId, FactorioServerStatus newStatus, FactorioServerStatus oldStatus, DateTime dateTime)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return;
             }
 
-            FactorioServerStatus recordedOldStatus;
-            try
+            FactorioServerStatus recordedOldStatus = await serverData.LockAsync(md =>
             {
-                await serverData.ServerLock.WaitAsync();
+                var old = serverData.Status;
 
-                recordedOldStatus = serverData.Status;
-
-                if (newStatus != recordedOldStatus)
+                if (newStatus != old)
                 {
-                    serverData.Status = newStatus;
+                    md.Status = newStatus;
                 }
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+
+                return old;
+            });
 
             Task discordTask = null;
 
@@ -2222,21 +2069,15 @@ namespace FactorioWebInterface.Services
 
                 LogChat(serverId, "[SERVER-STOPPED]", dateTime);
 
-                try
+                await serverData.LockAsync(md =>
                 {
-                    await serverData.ServerLock.WaitAsync();
-
-                    var logger = serverData.ChatLogger;
+                    var logger = md.ChatLogger;
                     if (logger != null)
                     {
                         logger.Dispose();
-                        serverData.ChatLogger = null;
+                        md.ChatLogger = null;
                     }
-                }
-                finally
-                {
-                    serverData.ServerLock.Release();
-                }
+                });
 
                 await _factorioFileManager.RaiseRecentTempFiles(serverData);
 
@@ -2256,21 +2097,15 @@ namespace FactorioWebInterface.Services
 
                 LogChat(serverId, "[SERVER-CRASHED]", dateTime);
 
-                try
+                await serverData.LockAsync(md =>
                 {
-                    await serverData.ServerLock.WaitAsync();
-
-                    var logger = serverData.ChatLogger;
+                    var logger = md.ChatLogger;
                     if (logger != null)
                     {
                         logger.Dispose();
-                        serverData.ChatLogger = null;
+                        md.ChatLogger = null;
                     }
-                }
-                finally
-                {
-                    serverData.ServerLock.Release();
-                }
+                });
             }
 
             var groups = _factorioControlHub.Clients.Group(serverId);
@@ -2286,7 +2121,7 @@ namespace FactorioWebInterface.Services
                     Message = $"[STATUS]: Changed from {oldStatus} to {newStatus}"
                 };
 
-                serverData.ControlMessageBuffer.Add(messageData);
+                _ = serverData.LockAsync(md => md.ControlMessageBuffer.Add(messageData));
                 controlTask2 = groups.SendMessage(messageData);
             }
 
@@ -2303,16 +2138,16 @@ namespace FactorioWebInterface.Services
             return _factorioProcessHub.Clients.Group(serverId).GetStatus();
         }
 
-        private async Task<FactorioServerSettings> GetServerSettings(FactorioServerData serverData)
+        private async Task<FactorioServerSettings> GetServerSettings(FactorioServerMutableData mutableData)
         {
-            var settings = serverData.ServerSettings;
+            var settings = mutableData.ServerSettings;
 
             if (settings != null)
             {
                 return settings;
             }
 
-            var fi = new FileInfo(serverData.ServerSettingsPath);
+            var fi = new FileInfo(mutableData.ServerSettingsPath);
 
             if (!fi.Exists)
             {
@@ -2334,21 +2169,21 @@ namespace FactorioWebInterface.Services
                 }
             }
 
-            serverData.ServerSettings = settings;
+            mutableData.ServerSettings = settings;
 
             return settings;
         }
 
-        private async Task<string[]> GetServerAdminList(FactorioServerData serverData)
+        private async Task<string[]> GetServerAdminList(FactorioServerMutableData mutableData)
         {
-            var adminList = serverData.ServerAdminList;
+            var adminList = mutableData.ServerAdminList;
 
             if (adminList != null)
             {
                 return adminList;
             }
 
-            var fi = new FileInfo(serverData.ServerAdminListPath);
+            var fi = new FileInfo(mutableData.ServerAdminListPath);
 
             if (!fi.Exists)
             {
@@ -2371,7 +2206,7 @@ namespace FactorioWebInterface.Services
                 }
             }
 
-            serverData.ServerAdminList = adminList;
+            mutableData.ServerAdminList = adminList;
 
             return adminList;
         }
@@ -2398,42 +2233,34 @@ namespace FactorioWebInterface.Services
 
         public async Task<(FactorioServerSettingsWebEditable settings, bool saved)> GetEditableServerSettings(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return (null, false);
             }
 
-            try
+            return await serverData.LockAsync(async mutableData =>
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var editableSettings = serverData.ServerWebEditableSettings;
+                var editableSettings = mutableData.ServerWebEditableSettings;
                 if (editableSettings != null)
                 {
-                    return (editableSettings, serverData.ServerSettingsSaved);
+                    return (editableSettings, mutableData.ServerSettingsSaved);
                 }
 
-                var serverSettings = await GetServerSettings(serverData);
-                var adminList = await GetServerAdminList(serverData);
+                var serverSettings = await GetServerSettings(mutableData);
+                var adminList = await GetServerAdminList(mutableData);
 
                 editableSettings = MakeEditableSettingsFromSettings(serverSettings, adminList);
 
-                serverData.ServerWebEditableSettings = editableSettings;
+                mutableData.ServerWebEditableSettings = editableSettings;
 
-                return (editableSettings, serverData.ServerSettingsSaved);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+                return (editableSettings, mutableData.ServerSettingsSaved);
+            });
         }
 
         public async Task<Result> SaveEditableServerSettings(string serverId, FactorioServerSettingsWebEditable settings)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return null;
             }
 
@@ -2443,13 +2270,9 @@ namespace FactorioWebInterface.Services
             settings.AutosaveSlots = settings.AutosaveSlots < 0 ? 0 : settings.AutosaveSlots;
             settings.AutosaveInterval = settings.AutosaveInterval < 1 ? 1 : settings.AutosaveInterval;
 
-            Result result;
-
-            try
+            async Task<Result> Inner(FactorioServerMutableData md)
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var serverSettigns = await GetServerSettings(serverData);
+                var serverSettigns = await GetServerSettings(md);
 
                 serverSettigns.Name = settings.Name;
                 serverSettigns.Description = settings.Description;
@@ -2480,10 +2303,10 @@ namespace FactorioWebInterface.Services
 
                 settings.Admins = admins;
 
-                serverData.ServerSettings = serverSettigns;
-                serverData.ServerAdminList = admins;
-                serverData.ServerWebEditableSettings = settings;
-                serverData.ServerSettingsSaved = true;
+                md.ServerSettings = serverSettigns;
+                md.ServerAdminList = admins;
+                md.ServerWebEditableSettings = settings;
+                md.ServerSettingsSaved = true;
 
                 var settingsData = JsonConvert.SerializeObject(serverSettigns, Formatting.Indented);
                 var adminData = JsonConvert.SerializeObject(admins, Formatting.Indented);
@@ -2491,16 +2314,18 @@ namespace FactorioWebInterface.Services
                 await File.WriteAllTextAsync(serverData.ServerSettingsPath, settingsData);
                 await File.WriteAllTextAsync(serverData.ServerAdminListPath, adminData);
 
-                result = Result.OK;
+                return Result.OK;
+            }
+
+            Result result;
+            try
+            {
+                result = await serverData.LockAsync(Inner);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Exception saving server settings.");
                 result = Result.Failure(Constants.UnexpctedErrorKey);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
             }
 
             if (result.Success)
@@ -2511,11 +2336,11 @@ namespace FactorioWebInterface.Services
             return result;
         }
 
-        private async Task<FactorioServerExtraSettings> GetServerExtraSettings(FactorioServerData serverData)
+        private async Task<FactorioServerExtraSettings> GetServerExtraSettings(FactorioServerMutableData mutableData)
         {
-            var settings = serverData.ServerExtraSettings;
+            var settings = mutableData.ServerExtraSettings;
 
-            var fi = new FileInfo(serverData.ServerExtraSettingsPath);
+            var fi = new FileInfo(mutableData.ServerExtraSettingsPath);
 
             if (!fi.Exists)
             {
@@ -2537,72 +2362,64 @@ namespace FactorioWebInterface.Services
                 }
             }
 
-            serverData.ServerExtraWebEditableSettings = settings;
+            mutableData.ServerExtraWebEditableSettings = settings;
 
             return settings;
         }
 
         public async Task<(FactorioServerExtraSettings settings, bool saved)> GetEditableServerExtraSettings(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return (null, false);
             }
 
-            try
+            return await serverData.LockAsync(async mutableData =>
             {
-                await serverData.ServerLock.WaitAsync();
-
-                var settings = serverData.ServerExtraWebEditableSettings;
+                var settings = mutableData.ServerExtraWebEditableSettings;
                 if (settings != null)
                 {
-                    return (settings, serverData.ServerExtraSettingsSaved);
+                    return (settings, mutableData.ServerExtraSettingsSaved);
                 }
 
-                settings = await GetServerExtraSettings(serverData);
+                settings = await GetServerExtraSettings(mutableData);
                 var copy = settings.Copy();
 
-                serverData.ServerExtraWebEditableSettings = copy;
-                return (copy, serverData.ServerExtraSettingsSaved);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+                mutableData.ServerExtraWebEditableSettings = copy;
+                return (copy, mutableData.ServerExtraSettingsSaved);
+            });
         }
 
         public async Task<Result> SaveEditableExtraServerSettings(string serverId, FactorioServerExtraSettings settings)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return null;
             }
 
-            Result result;
 
-            try
+
+            async Task<Result> Inner(FactorioServerMutableData mutableData)
             {
-                await serverData.ServerLock.WaitAsync();
-
-                serverData.ServerExtraSettings = settings;
-                serverData.ServerExtraWebEditableSettings = settings.Copy();
-                serverData.ServerExtraSettingsSaved = true;
+                mutableData.ServerExtraSettings = settings;
+                mutableData.ServerExtraWebEditableSettings = settings.Copy();
+                mutableData.ServerExtraSettingsSaved = true;
 
                 string data = JsonConvert.SerializeObject(settings, Formatting.Indented);
                 await File.WriteAllTextAsync(serverData.ServerExtraSettingsPath, data);
 
-                result = Result.OK;
+                return Result.OK;
+            }
+
+            Result result;
+            try
+            {
+                result = await serverData.LockAsync(Inner);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Exception saving server extra settings.");
                 result = Result.Failure(Constants.UnexpctedErrorKey);
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
             }
 
             if (result.Success)
@@ -2615,9 +2432,8 @@ namespace FactorioWebInterface.Services
 
         public async Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return;
             }
 
@@ -2626,13 +2442,11 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            try
+            void DoUpdate(FactorioServerMutableData mutableData)
             {
-                await serverData.ServerLock.WaitAsync();
+                mutableData.ServerSettingsSaved = false;
 
-                serverData.ServerSettingsSaved = false;
-
-                var settings = serverData.ServerWebEditableSettings;
+                var settings = mutableData.ServerWebEditableSettings;
 
                 if (settings == null)
                 {
@@ -2694,19 +2508,16 @@ namespace FactorioWebInterface.Services
                     }
                 }
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+
+            await serverData.LockAsync(DoUpdate);
 
             _ = _factorioControlHub.Clients.GroupExcept(serverId, connectionId).SendServerSettingsUpdate(data, true);
         }
 
         public async Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return;
             }
 
@@ -2715,13 +2526,11 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            try
+            void DoUpdate(FactorioServerMutableData mutableData)
             {
-                await serverData.ServerLock.WaitAsync();
+                mutableData.ServerExtraSettingsSaved = false;
 
-                serverData.ServerExtraSettingsSaved = false;
-
-                var settings = serverData.ServerExtraWebEditableSettings;
+                var settings = mutableData.ServerExtraWebEditableSettings;
 
                 if (settings == null)
                 {
@@ -2756,67 +2565,55 @@ namespace FactorioWebInterface.Services
                     }
                 }
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+
+            await serverData.LockAsync(DoUpdate);
 
             _ = _factorioControlHub.Clients.GroupExcept(serverId, connectionId).SendServerExtraSettingsUpdate(data, true);
         }
 
         public async Task UndoServerSettings(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return;
             }
 
-            FactorioServerSettingsWebEditable settings;
-
-            try
+            async Task<FactorioServerSettingsWebEditable> DoUndo(FactorioServerMutableData mutableData)
             {
-                await serverData.ServerLock.WaitAsync();
+                var serverSettings = await GetServerSettings(mutableData);
+                var adminList = await GetServerAdminList(mutableData);
 
-                var serverSettings = await GetServerSettings(serverData);
-                var adminList = await GetServerAdminList(serverData);
+                var newSettings = MakeEditableSettingsFromSettings(serverSettings, adminList);
 
-                settings = MakeEditableSettingsFromSettings(serverSettings, adminList);
+                mutableData.ServerWebEditableSettings = newSettings;
+                mutableData.ServerSettingsSaved = true;
 
-                serverData.ServerWebEditableSettings = settings;
-                serverData.ServerSettingsSaved = true;
+                return newSettings;
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+
+            FactorioServerSettingsWebEditable settings = await serverData.LockAsync(DoUndo);
 
             _ = _factorioControlHub.Clients.Group(serverId).SendServerSettings(settings, true);
         }
 
         public async Task UndoServerExtraSettings(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return;
             }
 
-            FactorioServerExtraSettings settings;
-
-            try
+            FactorioServerExtraSettings DoUndo(FactorioServerMutableData mutableData)
             {
-                await serverData.ServerLock.WaitAsync();
+                var newSettings = mutableData.ServerExtraSettings.Copy();
 
-                settings = serverData.ServerExtraSettings.Copy();
+                mutableData.ServerExtraWebEditableSettings = newSettings;
+                mutableData.ServerExtraSettingsSaved = true;
 
-                serverData.ServerExtraWebEditableSettings = settings;
-                serverData.ServerExtraSettingsSaved = true;
+                return newSettings;
             }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+
+            FactorioServerExtraSettings settings = await serverData.LockAsync(DoUndo);
 
             _ = _factorioControlHub.Clients.Group(serverId).SendServerExtraSettings(settings, true);
         }
@@ -2951,9 +2748,8 @@ namespace FactorioWebInterface.Services
 
         public string GetVersion(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return "";
             }
 
@@ -2962,93 +2758,58 @@ namespace FactorioWebInterface.Services
 
         private void LogChat(string serverId, string content, DateTime dateTime)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
-                return;
-            }
-
-            var logger = serverData.ChatLogger;
-
-            if (logger != null)
-            {
-                serverData.ChatLogger.Information("{dateTime} {content}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), content);
                 return;
             }
 
             Task.Run(async () =>
             {
-                try
+                await serverData.LockAsync(mutableData =>
                 {
-                    await serverData.ServerLock.WaitAsync();
+                    var logger = mutableData.ChatLogger;
 
-                    logger = serverData.ChatLogger;
                     if (logger != null)
                     {
-                        serverData.ChatLogger.Information("{dateTime} {content}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), content);
+                        logger.Information("{dateTime} {content}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), content);
                         return;
                     }
 
-                    serverData.BuildChatLogger();
-                    serverData.ChatLogger.Information("{dateTime} {content}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), content);
-                }
-                finally
-                {
-                    serverData.ServerLock.Release();
-                }
+                    mutableData.ChatLogger = FactorioServerMutableData.BuildChatLogger(mutableData.ChatLogCurrentPath);
+                    mutableData.ChatLogger.Information("{dateTime} {content}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), content);
+                });
             });
         }
 
         public async Task<string> GetSelectedModPack(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return null;
             }
 
-            try
-            {
-                await serverData.ServerLock.WaitAsync();
-
-                return serverData.ModPack;
-            }
-            finally
-            {
-                serverData.ServerLock.Release();
-            }
+            return await serverData.LockAsync(md => md.ModPack);
         }
 
         public Task SetSelectedModPack(string serverId, string modPack)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Task.CompletedTask;
             }
 
-            return Task.Run(async () =>
+            return serverData.LockAsync(md =>
             {
-                try
-                {
-                    await serverData.ServerLock.WaitAsync();
+                md.ModPack = modPack;
 
-                    serverData.ModPack = modPack;
-
-                    _ = _factorioControlHub.Clients.Group(serverId).SendSelectedModPack(modPack);
-                }
-                finally
-                {
-                    serverData.ServerLock.Release();
-                }
+                _ = _factorioControlHub.Clients.Group(md.ServerId).SendSelectedModPack(modPack);
             });
         }
 
         public FileMetaData[] GetTempSaveFiles(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Array.Empty<FileMetaData>();
             }
 
@@ -3057,7 +2818,7 @@ namespace FactorioWebInterface.Services
 
         public FileMetaData[] GetLocalSaveFiles(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
                 _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return Array.Empty<FileMetaData>();
@@ -3078,9 +2839,8 @@ namespace FactorioWebInterface.Services
 
         public List<FileMetaData> GetLogs(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return new List<FileMetaData>(0);
             }
 
@@ -3089,9 +2849,8 @@ namespace FactorioWebInterface.Services
 
         public List<FileMetaData> GetChatLogs(string serverId)
         {
-            if (!servers.TryGetValue(serverId, out var serverData))
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                _logger.LogError("Unknown serverId: {serverId}", serverId);
                 return new List<FileMetaData>(0);
             }
 

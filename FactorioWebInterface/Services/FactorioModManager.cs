@@ -16,15 +16,19 @@ namespace FactorioWebInterface.Services
     public class FactorioModManager
     {
         private readonly IHubContext<FactorioModHub, IFactorioModClientMethods> _factorioModHub;
+        private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<FactorioModManager> _logger;
 
         public event EventHandler<FactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
         public event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
 
-        public FactorioModManager(IHubContext<FactorioModHub, IFactorioModClientMethods> factorioModHub,
+        public FactorioModManager(IHubContext<FactorioModHub,
+            IFactorioModClientMethods> factorioModHub,
+            IFactorioServerDataService factorioServerDataService,
             ILogger<FactorioModManager> logger)
         {
             _factorioModHub = factorioModHub;
+            _factorioServerDataService = factorioServerDataService;
             _logger = logger;
 
             ModPackChanged += FactorioModManager_ModPackChanged;
@@ -45,7 +49,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -73,7 +77,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -107,7 +111,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -161,7 +165,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -207,7 +211,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -283,7 +287,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -327,7 +331,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -429,7 +433,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -539,7 +543,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -596,7 +600,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -731,7 +735,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {

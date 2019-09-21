@@ -91,20 +91,21 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public Task DoBanFromGameOutput(FactorioServerData serverData, string content)
+        public async Task DoBanFromGameOutput(FactorioServerData serverData, string content)
         {
-            if (!serverData.ServerExtraSettings.SyncBans)
+            bool syncBans = await serverData.LockAsync(fsmd => fsmd.ServerExtraSettings.SyncBans);
+            if (!syncBans)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             var ban = BanParser.FromBanGameOutput(content);
             if (ban == null || ban.Admin == Constants.ServerPlayerName)
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            return AddBan(ban, serverData.ServerId, true, ban.Admin);
+            await AddBan(ban, serverData.ServerId, true, ban.Admin);
         }
 
         public async Task<bool> AddBan(Ban ban, string serverId, bool synchronizeWithServers, string actor)
@@ -217,20 +218,21 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public Task DoUnBanFromGameOutput(FactorioServerData serverData, string content)
+        public async Task DoUnBanFromGameOutput(FactorioServerData serverData, string content)
         {
-            if (!serverData.ServerExtraSettings.SyncBans)
+            bool syncBans = await serverData.LockAsync(fsmd => fsmd.ServerExtraSettings.SyncBans);
+            if (!syncBans)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             var ban = BanParser.FromUnBanGameOutput(content);
             if (ban == null || ban.Admin == Constants.ServerPlayerName)
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            return RemoveBan(ban.Username, serverData.ServerId, true, ban.Admin);
+            await RemoveBan(ban.Username, serverData.ServerId, true, ban.Admin);
         }
 
         public async Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string actor)
