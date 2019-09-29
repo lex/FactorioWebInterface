@@ -13,7 +13,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace FactorioWebInterface.Pages.Admin
 {
     public class SigninModel : PageModel

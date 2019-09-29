@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Shared.Utils
 {
-    public class SingleConsumerQueue<T> : IDisposable
+    public sealed class SingleConsumerQueue<T> : IDisposable
     {
         private Queue<T> queue = new Queue<T>();
         private bool disposed = false;

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Nito.AsyncEx;
 using Shared;
 using System;
 using System.Collections.Generic;
@@ -52,6 +53,8 @@ namespace FactorioWebInterface.Services
         private readonly FactorioFileManager _factorioFileManager;
         private readonly ScenarioDataManager _scenarioDataManger;
         private readonly IFactorioServerDataService _factorioServerDataService;
+        private readonly IFactorioServerPreparer _factorioServerPreparer;
+        private readonly IFactorioServerRunner _factorioServerRunner;
 
         private readonly string factorioWrapperName;
 
@@ -69,7 +72,9 @@ namespace FactorioWebInterface.Services
             IFactorioBanService factorioBanManager,
             FactorioFileManager factorioFileManager,
             ScenarioDataManager scenarioDataManger,
-            IFactorioServerDataService factorioServerDataService
+            IFactorioServerDataService factorioServerDataService,
+            IFactorioServerPreparer factorioServerPreparer,
+            IFactorioServerRunner factorioServerRunner
         )
         {
             _configuration = configuration;
@@ -85,6 +90,8 @@ namespace FactorioWebInterface.Services
             _factorioFileManager = factorioFileManager;
             _scenarioDataManger = scenarioDataManger;
             _factorioServerDataService = factorioServerDataService;
+            _factorioServerPreparer = factorioServerPreparer;
+            _factorioServerRunner = factorioServerRunner;
 
             string name = _configuration[Constants.FactorioWrapperNameKey];
             if (string.IsNullOrWhiteSpace(name))
@@ -282,7 +289,7 @@ namespace FactorioWebInterface.Services
             string newStatusString = newStatus.ToString();
 
             MessageData message;
-            if (byUser == "")
+            if (string.IsNullOrWhiteSpace(byUser))
             {
                 message = new MessageData()
                 {
@@ -536,6 +543,12 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
+            var result = _factorioServerPreparer.CanResume(serverData.TempSavesDirectoryPath);
+            if (!result.Success)
+            {
+                return result;
+            }
+
             async Task<Result> ResumeInner(FactorioServerMutableData mutableData)
             {
                 if (!mutableData.Status.IsStartable())
@@ -543,74 +556,20 @@ namespace FactorioWebInterface.Services
                     return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot resume server when in state {mutableData.Status}");
                 }
 
-                var tempSaves = new DirectoryInfo(mutableData.TempSavesDirectoryPath);
-                if (!tempSaves.EnumerateFiles("*.zip").Any())
+                _ = FactorioServerUtils.SendControlMessage(mutableData, _factorioControlHub, $"Server resumed by user: {userName}");
+
+                var startInfoResult = await _factorioServerPreparer.PrepareResume(mutableData);
+                if (!startInfoResult.Success)
                 {
-                    return Result.Failure(Constants.MissingFileErrorKey, "No file to resume server from.");
+                    return startInfoResult;
                 }
 
-                var scenarioDir = new DirectoryInfo(mutableData.LocalScenarioDirectoryPath);
-                if (scenarioDir.Exists)
+                var startInfo = startInfoResult.Value;
+                var runResult = _factorioServerRunner.Run(mutableData, startInfo);
+                if (!runResult.Success)
                 {
-                    scenarioDir.Delete(true);
+                    return runResult;
                 }
-
-                string modDirPath = await PrepareServer(mutableData);
-
-                string factorioFilePath = mutableData.ExecutablePath;
-                string serverSettingsPath = mutableData.ServerSettingsPath;
-
-                string fullName;
-                string arguments;
-#if WINDOWS
-                fullName = "C:/Program Files/dotnet/dotnet.exe";
-                arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath}--start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
-#elif WSL
-                fullName = "/usr/bin/dotnet";
-                arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {serverData.Port}";
-#else
-                fullName = "/usr/bin/dotnet";
-                arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-latest --server-settings {serverSettingsPath} --port {mutableData.Port}";
-#endif
-                if (modDirPath != "")
-                {
-                    arguments += $" --mod-directory {modDirPath}";
-                }
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = fullName,
-                    Arguments = arguments,
-
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                try
-                {
-                    Process.Start(startInfo);
-                }
-                catch (Exception)
-                {
-                    _logger.LogError("Error resumeing serverId: {serverId}", serverId);
-                    return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
-                }
-
-                _logger.LogInformation("Server resumed serverId: {serverId} user: {userName}", serverId, userName);
-
-                var group = _factorioControlHub.Clients.Group(serverId);
-                await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), mutableData.Status.ToString());
-                mutableData.Status = FactorioServerStatus.WrapperStarting;
-
-                var message = new MessageData()
-                {
-                    ServerId = serverId,
-                    MessageType = Models.MessageType.Control,
-                    Message = $"Server resumed by user: {userName}"
-                };
-
-                mutableData.ControlMessageBuffer.Add(message);
-                await group.SendMessage(message);
 
                 return Result.OK;
             }
@@ -621,8 +580,8 @@ namespace FactorioWebInterface.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Error loading", e);
-                return Result.Failure(Constants.UnexpctedErrorKey);
+                _logger.LogError(nameof(Resume), e);
+                return Result.Failure(Constants.UnexpectedErrorKey);
             }
         }
 
@@ -633,10 +592,10 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            var saveFile = _factorioFileManager.GetSaveFile(serverId, directoryName, fileName);
-            if (saveFile == null)
+            var result = _factorioServerPreparer.CanLoadSave(serverId, directoryName, fileName);
+            if (!result.Success)
             {
-                return Result.Failure(Constants.MissingFileErrorKey, $"File {Path.Combine(directoryName, fileName)} not found.");
+                return result;
             }
 
             async Task<Result> LoadInner(FactorioServerMutableData mutableData)
@@ -646,98 +605,20 @@ namespace FactorioWebInterface.Services
                     return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load server when in state {mutableData.Status}");
                 }
 
-                switch (saveFile.Directory.Name)
+                _ = FactorioServerUtils.SendControlMessage(mutableData, _factorioControlHub, $"Server load file: {fileName} by user: {userName}");
+
+                var startInfoResult = await _factorioServerPreparer.PrepareLoadSave(mutableData, directoryName, fileName);
+                if (!startInfoResult.Success)
                 {
-                    case Constants.GlobalSavesDirectoryName:
-                    case Constants.LocalSavesDirectoryName:
-                        string copyToPath = Path.Combine(mutableData.TempSavesDirectoryPath, saveFile.Name);
-                        saveFile.CopyTo(copyToPath, true);
-
-                        var fi = new FileInfo(copyToPath);
-                        fi.LastWriteTimeUtc = DateTime.UtcNow;
-
-                        var data = new FileMetaData()
-                        {
-                            Name = fi.Name,
-                            CreatedTime = fi.CreationTimeUtc,
-                            LastModifiedTime = fi.LastWriteTimeUtc,
-                            Size = fi.Length,
-                            Directory = Constants.TempSavesDirectoryName
-                        };
-                        var changeData = CollectionChangedData.Add(new[] { data });
-                        var ev = new FilesChangedEventArgs(serverId, changeData);
-
-                        _factorioFileManager.RaiseTempFilesChanged(ev);
-                        break;
-                    case Constants.TempSavesDirectoryName:
-                        break;
-                    default:
-                        return Result.Failure(Constants.UnexpctedErrorKey, $"File {saveFile.FullName}.");
+                    return startInfoResult;
                 }
 
-                var scenarioDir = new DirectoryInfo(mutableData.LocalScenarioDirectoryPath);
-                if (scenarioDir.Exists)
+                var startInfo = startInfoResult.Value;
+                var runResult = _factorioServerRunner.Run(mutableData, startInfo);
+                if (!runResult.Success)
                 {
-                    scenarioDir.Delete(true);
+                    return runResult;
                 }
-
-                string modDirPath = await PrepareServer(mutableData);
-
-                string factorioFilePath = mutableData.ExecutablePath;
-                string serverSettingsPath = mutableData.ServerSettingsPath;
-
-                string fullName;
-                string arguments;
-#if WINDOWS
-                fullName = "C:/Program Files/dotnet/dotnet.exe";
-                arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
-#elif WSL
-                fullName = "/usr/bin/dotnet";
-                arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {serverData.Port}";
-#else
-                fullName = "/usr/bin/dotnet";
-                arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server {saveFile.Name} --server-settings {serverSettingsPath} --port {mutableData.Port}";
-#endif
-                if (modDirPath != "")
-                {
-                    arguments += $" --mod-directory {modDirPath}";
-                }
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = fullName,
-                    Arguments = arguments,
-
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                try
-                {
-                    Process.Start(startInfo);
-                }
-                catch (Exception)
-                {
-                    _logger.LogError("Error loading serverId: {serverId} file: {file}", serverId, saveFile.FullName);
-                    return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
-                }
-
-                _logger.LogInformation("Server load serverId: {serverId} file: {file} user: {userName}", serverId, saveFile.FullName, userName);
-
-                mutableData.Status = FactorioServerStatus.WrapperStarting;
-
-                var group = _factorioControlHub.Clients.Group(serverId);
-                await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), mutableData.Status.ToString());
-
-                var message = new MessageData()
-                {
-                    ServerId = serverId,
-                    MessageType = Models.MessageType.Control,
-                    Message = $"Server load file: {saveFile.Name} by user: {userName}"
-                };
-
-                mutableData.ControlMessageBuffer.Add(message);
-                await group.SendMessage(message);
 
                 return Result.OK;
             }
@@ -748,27 +629,9 @@ namespace FactorioWebInterface.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Error loading", e);
-                return Result.Failure(Constants.UnexpctedErrorKey);
+                _logger.LogError(nameof(Load), e);
+                return Result.Failure(Constants.UnexpectedErrorKey);
             }
-        }
-
-        private Result ValidateSceanrioName(string scenarioName)
-        {
-            string scenarioPath = Path.Combine(_factorioServerDataService.ScenarioDirectoryPath, scenarioName);
-            scenarioPath = Path.GetFullPath(scenarioPath);
-            if (!scenarioPath.StartsWith(_factorioServerDataService.ScenarioDirectoryPath))
-            {
-                return Result.Failure(Constants.MissingFileErrorKey, $"Scenario {scenarioName} not found.");
-            }
-
-            var scenarioDir = new DirectoryInfo(scenarioPath);
-            if (!scenarioDir.Exists)
-            {
-                return Result.Failure(Constants.MissingFileErrorKey, $"Scenario {scenarioName} not found.");
-            }
-
-            return Result.OK;
         }
 
         private async Task<Result> StartScenarioInner(FactorioServerMutableData mutableData, string scenarioName, string userName)
@@ -778,76 +641,20 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load scenario when server in state {mutableData.Status}");
             }
 
-            string factorioFilePath = mutableData.ExecutablePath;
-            string serverSettingsPath = mutableData.ServerSettingsPath;
-            string serverId = mutableData.ServerId;
-            string localScenarioDirectoryPath = mutableData.LocalScenarioDirectoryPath;
+            _ = FactorioServerUtils.SendControlMessage(mutableData, _factorioControlHub, $"Server start scenario: {scenarioName} by user: {userName}");
 
-            var dir = new DirectoryInfo(localScenarioDirectoryPath);
-            if (!dir.Exists)
+            var startInfoResult = await _factorioServerPreparer.PrepareStartScenario(mutableData, scenarioName);
+            if (!startInfoResult.Success)
             {
-                FileHelpers.CreateDirectorySymlink(_factorioServerDataService.ScenarioDirectoryPath, localScenarioDirectoryPath);
-            }
-            else if (!FileHelpers.IsSymbolicLink(localScenarioDirectoryPath))
-            {
-                dir.Delete(true);
-                FileHelpers.CreateDirectorySymlink(_factorioServerDataService.ScenarioDirectoryPath, localScenarioDirectoryPath);
+                return startInfoResult;
             }
 
-            string modDirPath = await PrepareServer(mutableData);
-
-            string fullName;
-            string arguments;
-#if WINDOWS
-            fullName = "C:/Program Files/dotnet/dotnet.exe";
-            arguments = $"C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {mutableData.Port}";
-#elif WSL
-            fullName = "/usr/bin/dotnet";
-            arguments = $"/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {serverData.Port}";
-#else
-            fullName = "/usr/bin/dotnet";
-            arguments = $"/factorio/{factorioWrapperName}/FactorioWrapper.dll {serverId} {factorioFilePath} --start-server-load-scenario {scenarioName} --server-settings {serverSettingsPath} --port {mutableData.Port}";
-#endif
-            if (modDirPath != "")
+            var startInfo = startInfoResult.Value;
+            var runResult = _factorioServerRunner.Run(mutableData, startInfo);
+            if (!runResult.Success)
             {
-                arguments += $" --mod-directory {modDirPath}";
+                return runResult;
             }
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = fullName,
-                Arguments = arguments,
-
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            try
-            {
-                Process.Start(startInfo);
-            }
-            catch (Exception)
-            {
-                _logger.LogError("Error loading scenario serverId: {serverId} file: {file}", serverId, scenarioName);
-                return Result.Failure(Constants.WrapperProcessErrorKey, "Wrapper process failed to start.");
-            }
-
-            _logger.LogInformation("Server load serverId: {serverId} scenario: {scenario} user: {userName}", mutableData.ServerId, scenarioName, userName);
-
-            mutableData.Status = FactorioServerStatus.WrapperStarting;
-
-            var group = _factorioControlHub.Clients.Group(mutableData.ServerId);
-            await group.FactorioStatusChanged(FactorioServerStatus.WrapperStarting.ToString(), mutableData.Status.ToString());
-
-            var message = new MessageData()
-            {
-                ServerId = serverId,
-                MessageType = Models.MessageType.Control,
-                Message = $"Server load scenario: {scenarioName} by user: {userName}"
-            };
-
-            mutableData.ControlMessageBuffer.Add(message);
-            await group.SendMessage(message);
 
             return Result.OK;
         }
@@ -859,7 +666,7 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            var result = ValidateSceanrioName(scenarioName);
+            var result = _factorioServerPreparer.CanStartScenario(scenarioName);
             if (!result.Success)
             {
                 return result;
@@ -871,8 +678,8 @@ namespace FactorioWebInterface.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Error loading scenario", e);
-                return Result.Failure(Constants.UnexpctedErrorKey);
+                _logger.LogError(nameof(StartScenario), e);
+                return Result.Failure(Constants.UnexpectedErrorKey);
             }
         }
 
@@ -883,29 +690,29 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            var result = ValidateSceanrioName(scenarioName);
+            var result = _factorioServerPreparer.CanStartScenario(scenarioName);
             if (!result.Success)
             {
                 return result;
             }
 
-            async Task<Result> ForceStartScenarioInner(FactorioServerMutableData md)
+            async Task<Result> ForceStartScenarioInner(FactorioServerMutableData mutableData)
             {
-                if (md.Status == FactorioServerStatus.Running)
+                if (mutableData.Status == FactorioServerStatus.Running)
                 {
-                    md.StopCallback = () => StartScenarioInner(md, scenarioName, userName);
+                    mutableData.StopCallback = md => StartScenarioInner(md, scenarioName, userName);
 
                     await StopInner(serverId, userName);
 
                     return Result.OK;
                 }
-                else if (md.Status.IsStartable())
+                else if (mutableData.Status.IsStartable())
                 {
-                    return await StartScenarioInner(md, scenarioName, userName);
+                    return await StartScenarioInner(mutableData, scenarioName, userName);
                 }
                 else
                 {
-                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot force start scenario when server in state {md.Status}");
+                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot force start scenario when server in state {mutableData.Status}");
                 }
             }
 
@@ -915,8 +722,8 @@ namespace FactorioWebInterface.Services
             }
             catch (Exception e)
             {
-                _logger.LogError("Error force loading scenario", e);
-                return Result.Failure(Constants.UnexpctedErrorKey);
+                _logger.LogError(nameof(ForceStartScenario), e);
+                return Result.Failure(Constants.UnexpectedErrorKey);
             }
         }
 
@@ -931,7 +738,11 @@ namespace FactorioWebInterface.Services
 
             _ = SendToFactorioControl(serverId, message);
 
+#if WINDOWS
+            await _factorioProcessHub.Clients.Groups(serverId).ForceStop();
+#else
             await _factorioProcessHub.Clients.Groups(serverId).Stop();
+#endif
 
             _logger.LogInformation("server stopped :serverId {serverId} user: {userName}", serverId, userName);
         }
@@ -966,7 +777,7 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            void ForceStopInner(FactorioServerMutableData mutableData)
+            async Task ForceStopInner(FactorioServerMutableData mutableData)
             {
                 mutableData.StopCallback = null;
 
@@ -979,48 +790,54 @@ namespace FactorioWebInterface.Services
 
                 _ = SendControlMessageNonLocking(mutableData, message);
 
-                if (mutableData.Status.IsForceStoppable())
+                if (mutableData.Status.IsStoppable())
                 {
-                    _ = _factorioProcessHub.Clients.Groups(serverId).ForceStop();
-
-                    _logger.LogInformation("Killing server via wrapper serverId: {serverId} user: {userName}", serverId, userName);
-                }
-                else
-                {
-                    _logger.LogInformation("Killing server via process lookup serverId: {serverId} user: {userName}", serverId, userName);
-
-                    _ = ChangeStatusNonLocking(mutableData, FactorioServerStatus.Killing);
-
-                    int foundCount = 0;
-                    int killedCount = 0;
-                    var processes = Process.GetProcessesByName("factorio");
-                    foreach (var process in processes)
+                    try
                     {
-                        try
+                        _logger.LogInformation("Killing server via wrapper serverId: {serverId} user: {userName}", serverId, userName);
+                        await _factorioProcessHub.Clients.Groups(serverId).ForceStop().TimeoutAfter(TimeSpan.FromSeconds(3));
+
+                        return;
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        _logger.LogInformation("No response Killing server via wrapper serverId: {serverId} user: {userName}", serverId, userName);
+                    }
+                }
+
+                _logger.LogInformation("Killing server via process lookup serverId: {serverId} user: {userName}", serverId, userName);
+
+                _ = ChangeStatusNonLocking(mutableData, FactorioServerStatus.Killing);
+
+                int foundCount = 0;
+                int killedCount = 0;
+                var processes = Process.GetProcessesByName("factorio");
+                foreach (var process in processes)
+                {
+                    try
+                    {
+                        if (process.MainModule.FileName == mutableData.ExecutablePath)
                         {
-                            if (process.MainModule.FileName == mutableData.ExecutablePath)
-                            {
-                                foundCount++;
-                                process.Kill();
-                                killedCount++;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _logger.LogWarning(e, "ForceStop Kill Processes");
+                            foundCount++;
+                            process.Kill();
+                            killedCount++;
                         }
                     }
-
-                    var killedMessage = new MessageData()
+                    catch (Exception e)
                     {
-                        ServerId = serverId,
-                        MessageType = Models.MessageType.Control,
-                        Message = $"{killedCount} out of {foundCount} processes killed"
-                    };
-                    _ = SendControlMessageNonLocking(mutableData, killedMessage);
-
-                    _ = ChangeStatusNonLocking(mutableData, FactorioServerStatus.Killed);
+                        _logger.LogWarning(e, "ForceStop Kill Processes");
+                    }
                 }
+
+                var killedMessage = new MessageData()
+                {
+                    ServerId = serverId,
+                    MessageType = Models.MessageType.Control,
+                    Message = $"{killedCount} out of {foundCount} processes killed"
+                };
+                _ = SendControlMessageNonLocking(mutableData, killedMessage);
+
+                _ = ChangeStatusNonLocking(mutableData, FactorioServerStatus.Killed);
             }
 
             await serverData.LockAsync(ForceStopInner);
@@ -1057,9 +874,11 @@ namespace FactorioWebInterface.Services
             return Result.OK;
         }
 
+        /// <summary>
         /// SignalR processes one message at a time, so this method needs to return before the downloading starts.
         /// Else if the user clicks the update button twice in quick succession, the first request is finished before
         /// the second requests starts, meaning the update will happen twice.
+        /// </summary>
         private void InstallInner(string serverId, FactorioServerData serverData, string version)
         {
             _ = Task.Run(async () =>
@@ -1075,13 +894,13 @@ namespace FactorioWebInterface.Services
                     {
                         mutableData.Status = FactorioServerStatus.Updated;
 
-                        _ = group.FactorioStatusChanged(FactorioServerStatus.Updated.ToString(), oldStatus.ToString());
+                        _ = group.FactorioStatusChanged(nameof(FactorioServerStatus.Updated), oldStatus.ToString());
 
                         var messageData = new MessageData()
                         {
                             ServerId = serverId,
                             MessageType = Models.MessageType.Status,
-                            Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updated}"
+                            Message = $"[STATUS]: Changed from {oldStatus} to {nameof(FactorioServerStatus.Updated)}"
                         };
 
                         mutableData.ControlMessageBuffer.Add(messageData);
@@ -1102,13 +921,13 @@ namespace FactorioWebInterface.Services
                     {
                         mutableData.Status = FactorioServerStatus.Crashed;
 
-                        _ = group.FactorioStatusChanged(FactorioServerStatus.Crashed.ToString(), oldStatus.ToString());
+                        _ = group.FactorioStatusChanged(nameof(FactorioServerStatus.Crashed), oldStatus.ToString());
 
                         var messageData = new MessageData()
                         {
                             ServerId = serverId,
                             MessageType = Models.MessageType.Status,
-                            Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Crashed}"
+                            Message = $"[STATUS]: Changed from {oldStatus} to {nameof(FactorioServerStatus.Crashed)}"
                         };
 
                         mutableData.ControlMessageBuffer.Add(messageData);
@@ -1226,7 +1045,7 @@ namespace FactorioWebInterface.Services
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                return Task.FromResult(new MessageData[0]);
+                return Task.FromResult(Array.Empty<MessageData>());
             }
 
             return serverData.LockAsync(md => md.ControlMessageBuffer.TakeWhile(x => x != null).ToArray());
@@ -2001,7 +1820,7 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                await callback();
+                await callback(mutableData);
             });
         }
 
@@ -2325,7 +2144,7 @@ namespace FactorioWebInterface.Services
             catch (Exception e)
             {
                 _logger.LogError(e, "Exception saving server settings.");
-                result = Result.Failure(Constants.UnexpctedErrorKey);
+                result = Result.Failure(Constants.UnexpectedErrorKey);
             }
 
             if (result.Success)
@@ -2397,8 +2216,6 @@ namespace FactorioWebInterface.Services
                 return null;
             }
 
-
-
             async Task<Result> Inner(FactorioServerMutableData mutableData)
             {
                 mutableData.ServerExtraSettings = settings;
@@ -2419,7 +2236,7 @@ namespace FactorioWebInterface.Services
             catch (Exception e)
             {
                 _logger.LogError(e, "Exception saving server extra settings.");
-                result = Result.Failure(Constants.UnexpctedErrorKey);
+                result = Result.Failure(Constants.UnexpectedErrorKey);
             }
 
             if (result.Success)
@@ -2813,7 +2630,7 @@ namespace FactorioWebInterface.Services
                 return Array.Empty<FileMetaData>();
             }
 
-            return _factorioFileManager.GetTempSaveFiles(serverData);
+            return _factorioFileManager.GetTempSaveFiles(serverData.TempSavesDirectoryPath);
         }
 
         public FileMetaData[] GetLocalSaveFiles(string serverId)

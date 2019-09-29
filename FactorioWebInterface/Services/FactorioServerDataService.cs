@@ -23,6 +23,7 @@ namespace FactorioWebInterface.Services
         int ServerCount { get; }
         int BufferSize { get; }
         int MaxLogFiles { get; }
+        string FactorioWrapperPath { get; }
 
         IReadOnlyDictionary<string, FactorioServerData> Servers { get; }
 
@@ -51,6 +52,7 @@ namespace FactorioWebInterface.Services
         public int ServerCount { get; }
         public int BufferSize { get; }
         public int MaxLogFiles { get; }
+        public string FactorioWrapperPath { get; }
 
         public IReadOnlyDictionary<string, FactorioServerData> Servers { get; }
 
@@ -59,7 +61,7 @@ namespace FactorioWebInterface.Services
             _logger = logger;
 
             BaseDirectoryPath = Path.GetFullPath("/factorio/");
-            BasePublicDirectoryPath = Path.GetFullPath("/factorio/public/");
+            BasePublicDirectoryPath = Path.GetFullPath(Path.Combine(BaseDirectoryPath, Constants.PublicDirectoryName));
             GlobalSavesDirectoryPath = Path.GetFullPath(Path.Combine(BaseDirectoryPath, Constants.GlobalSavesDirectoryName));
             ScenarioDirectoryPath = Path.GetFullPath(Path.Combine(BaseDirectoryPath, Constants.ScenarioDirectoryName));
             UpdateCacheDirectoryPath = Path.GetFullPath(Path.Combine(BaseDirectoryPath, Constants.UpdateCacheDirectoryName));
@@ -68,6 +70,14 @@ namespace FactorioWebInterface.Services
             ServerCount = factorioServerDataConfiguration.ServerCount;
             BufferSize = factorioServerDataConfiguration.BufferSize;
             MaxLogFiles = factorioServerDataConfiguration.MaxLogFiles;
+
+#if WINDOWS
+            FactorioWrapperPath = "C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll";
+#elif WSL
+            FactorioWrapperPath = "/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll";
+#else
+            FactorioWrapperPath = $"/factorio/{factorioServerDataConfiguration.FactorioWrapperName}/FactorioWrapper.dll";
+#endif
 
             validSaveDirectories.Add(Constants.GlobalSavesDirectoryName);
             validSaveDirectories.Add(Constants.PublicStartSavesDirectoryName);
@@ -154,7 +164,7 @@ namespace FactorioWebInterface.Services
                     return JsonConvert.DeserializeObject<FactorioServerExtraSettings>(data) ?? FactorioServerExtraSettings.MakeDefault();
                 }
             }
-            catch (Exception)
+            catch
             {
             }
 

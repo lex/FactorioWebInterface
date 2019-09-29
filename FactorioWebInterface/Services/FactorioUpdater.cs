@@ -288,7 +288,7 @@ namespace FactorioWebInterface.Services
             catch (Exception e)
             {
                 _logger.LogError(e, nameof(DoUpdate));
-                return Result.Failure(Constants.UnexpctedErrorKey, "Unexpected error installing.");
+                return Result.Failure(Constants.UnexpectedErrorKey, "Unexpected error installing.");
             }
         }
     }

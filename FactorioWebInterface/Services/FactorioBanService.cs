@@ -1,12 +1,12 @@
 ﻿using FactorioWebInterface.Data;
-using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,10 +23,17 @@ namespace FactorioWebInterface.Services
         Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string actor);
         Task<Result> RemoveBanFromWeb(string username, bool synchronizeWithServers, string actor);
         Task DoUnBanFromGameOutput(FactorioServerData serverData, string content);
+        Task<Result> BuildBanList(string serverBanListPath);
     }
 
     public class FactorioBanService : IFactorioBanService
     {
+        private static readonly JsonSerializerSettings banListSerializerSettings = new JsonSerializerSettings()
+        {
+            Formatting = Formatting.Indented,
+            NullValueHandling = NullValueHandling.Ignore
+        };
+
         private readonly DbContextFactory _dbContextFactory;
         private readonly ILogger<IFactorioBanService> _logger;
 
@@ -249,6 +256,34 @@ namespace FactorioWebInterface.Services
             }
 
             return removed;
+        }
+
+        public async Task<Result> BuildBanList(string serverBanListPath)
+        {
+            try
+            {
+                var db = _dbContextFactory.Create<ApplicationDbContext>();
+
+                var bans = await db.Bans.Select(b => new ServerBan()
+                {
+                    Username = b.Username,
+                    Address = b.Address,
+                    Reason = b.Reason
+                })
+                .ToArrayAsync();
+
+                string data = JsonConvert.SerializeObject(bans, banListSerializerSettings);
+
+                await File.WriteAllTextAsync(serverBanListPath, data);
+
+                return Result.OK;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, nameof(BuildBanList));
+
+                return Result.Failure(Constants.UnexpectedErrorKey, e.Message);
+            }
         }
 
         private async Task<bool> RemoveBanFromDatabase(string username)

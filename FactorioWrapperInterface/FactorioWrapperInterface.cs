@@ -18,6 +18,9 @@ namespace Shared
         Crashed,
         Updating,
         Updated,
+        Preparing,
+        Prepared,
+        Errored
     }
 
     public static class FactorioServerStatusExtensions
@@ -34,6 +37,7 @@ namespace Shared
                 case FactorioServerStatus.Killed:
                 case FactorioServerStatus.Crashed:
                 case FactorioServerStatus.Updated:
+                case FactorioServerStatus.Errored:
                     return true;
                 default:
                     return false;
@@ -51,7 +55,6 @@ namespace Shared
                 case FactorioServerStatus.WrapperStarted:
                 case FactorioServerStatus.Starting:
                 case FactorioServerStatus.Running:
-                case FactorioServerStatus.Updated:
                     return true;
                 default:
                     return false;
@@ -69,7 +72,6 @@ namespace Shared
                 case FactorioServerStatus.WrapperStarted:
                 case FactorioServerStatus.Starting:
                 case FactorioServerStatus.Running:
-                case FactorioServerStatus.Updated:
                     return true;
                 default:
                     return false;
@@ -88,6 +90,7 @@ namespace Shared
                 case FactorioServerStatus.Killed:
                 case FactorioServerStatus.Crashed:
                 case FactorioServerStatus.Updated:
+                case FactorioServerStatus.Errored:
                     return true;
                 default:
                     return false;

@@ -9,6 +9,9 @@ using Serilog;
 using Serilog.Events;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("FactorioWebInterfaceTests")]
 
 namespace FactorioWebInterface
 {
@@ -42,6 +45,7 @@ namespace FactorioWebInterface
                 host.Services.GetService<IFactorioServerManager>();
                 host.Services.GetService<DiscordBot>();
                 host.Services.GetService<BanHubEventHandlerService>();
+                host.Services.GetService<FactorioAdminManagerEventHandlerService>();
 
                 host.Run();
             }

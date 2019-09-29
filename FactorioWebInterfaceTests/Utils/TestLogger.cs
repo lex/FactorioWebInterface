@@ -9,7 +9,7 @@ namespace FactorioWebInterfaceTests.Utils
     {
         private Action<LogLevel, object> callback;
 
-        public TestLogger(Action<LogLevel, object> callback)
+        public TestLogger(Action<LogLevel, object> callback = null)
         {
             this.callback = callback;
         }
@@ -26,7 +26,7 @@ namespace FactorioWebInterfaceTests.Utils
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            callback(logLevel, state);
+            callback?.Invoke(logLevel, state);
         }
 
         public void Dispose()

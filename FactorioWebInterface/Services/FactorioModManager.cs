@@ -7,17 +7,37 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Threading.Tasks;
 //using static FactorioWebInterface.Models.ModPackChangedType;
 
 namespace FactorioWebInterface.Services
 {
-    public class FactorioModManager
+    public interface IFactorioModManager
+    {
+        event EventHandler<FactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
+        event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
+
+        Result CopyModPackFiles(string sourceModPack, string targetModPack, string[] files);
+        Result CreateModPack(string name);
+        Result DeleteModPack(string name);
+        Result DeleteModPackFiles(string modPack, string[] files);
+        IDirectoryInfo GetModPackDirectoryInfo(string modPack);
+        FileInfo GetModPackFile(string modPack, string fileName);
+        ModPackFileMetaData[] GetModPackFiles(string name);
+        ModPackMetaData[] GetModPacks();
+        Result MoveModPackFiles(string sourceModPack, string targetModPack, string[] files);
+        Result RenameModPack(string name, string newName);
+        Task<Result> UploadFiles(string modPack, IList<IFormFile> files);
+    }
+
+    public class FactorioModManager : IFactorioModManager
     {
         private readonly IHubContext<FactorioModHub, IFactorioModClientMethods> _factorioModHub;
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<FactorioModManager> _logger;
+        private readonly IFileSystem _fileSystem = new FileSystem();
 
         public event EventHandler<FactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
         public event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
@@ -73,7 +93,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public DirectoryInfo GetModPackDirectoryInfo(string modPack)
+        public IDirectoryInfo GetModPackDirectoryInfo(string modPack)
         {
             try
             {
@@ -87,7 +107,7 @@ namespace FactorioWebInterface.Services
 
                 string safeName = Path.GetFileName(modPack);
                 string modPackPath = Path.Combine(dir.FullName, safeName);
-                var modPackDir = new DirectoryInfo(modPackPath);
+                var modPackDir = _fileSystem.DirectoryInfo.FromDirectoryName(modPackPath);
 
                 if (!modPackDir.Exists)
                 {

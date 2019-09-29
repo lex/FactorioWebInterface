@@ -49,7 +49,7 @@ namespace FactorioWebInterface.Models
         public SortedList<string, int> OnlinePlayers { get; set; }
         public int OnlinePlayerCount { get; set; }
 
-        public Func<Task> StopCallback { get; set; }
+        public Func<FactorioServerMutableData, Task> StopCallback { get; set; }
         public HashSet<string> TrackingDataSets { get; set; } = new HashSet<string>();
 
         public FactorioServerMutableData(FactorioServerConstantData factorioServerConstantData, int bufferSize)
@@ -57,7 +57,6 @@ namespace FactorioWebInterface.Models
             Constants = factorioServerConstantData;
             Status = FactorioServerStatus.Unknown;
             ControlMessageBuffer = new RingBuffer<MessageData>(bufferSize);
-            ServerExtraSettings = FactorioServerExtraSettings.MakeDefault();
             OnlinePlayers = new SortedList<string, int>();
             OnlinePlayerCount = 0;
             ServerExtraSettings = FactorioServerExtraSettings.MakeDefault();

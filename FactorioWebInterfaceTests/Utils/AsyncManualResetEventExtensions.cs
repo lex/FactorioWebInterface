@@ -13,7 +13,7 @@ namespace FactorioWebInterfaceTests.Utils
         {
             using (var cts = new CancellationTokenSource(timeout))
             {
-                await self.WaitAsync(cts.Token).ConfigureAwait(false);
+                await self.WaitAsync(cts.Token);
             }
         }
     }

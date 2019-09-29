@@ -12,12 +12,17 @@ namespace FactorioWebInterfaceTests.Utils
             string baseFactorioDirectoryPath = "/factorio",
             int bufferSize = 100)
         {
-            var c = new FactorioServerConstantData(serverNumber, baseFactorioDirectoryPath);
-            var md = new FactorioServerMutableData(c, bufferSize);
-
+            var md = MakeMutableData(serverNumber, baseFactorioDirectoryPath, bufferSize);
             mutableDataBuilder(md);
-
             return new FactorioServerData(md);
+        }
+
+        public static FactorioServerMutableData MakeMutableData(int serverNumber = 1,
+            string baseFactorioDirectoryPath = "/factorio",
+            int bufferSize = 100)
+        {
+            var c = new FactorioServerConstantData(serverNumber, baseFactorioDirectoryPath);
+            return new FactorioServerMutableData(c, bufferSize);
         }
     }
 }
