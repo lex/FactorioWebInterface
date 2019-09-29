@@ -34,12 +34,12 @@ namespace FactorioWebInterface.Services
             NullValueHandling = NullValueHandling.Ignore
         };
 
-        private readonly DbContextFactory _dbContextFactory;
+        private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<IFactorioBanService> _logger;
 
         public event EventHandler<IFactorioBanService, FactorioBanEventArgs> BanChanged;
 
-        public FactorioBanService(DbContextFactory dbContextFactory, ILogger<IFactorioBanService> logger)
+        public FactorioBanService(IDbContextFactory dbContextFactory, ILogger<IFactorioBanService> logger)
         {
             _dbContextFactory = dbContextFactory;
             _logger = logger;

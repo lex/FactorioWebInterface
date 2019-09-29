@@ -15,9 +15,9 @@ namespace FactorioWebInterface.Pages.Admin
     public class ModsModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManger;
-        private readonly FactorioModManager _factorioModManager;
+        private readonly IFactorioModManager _factorioModManager;
 
-        public ModsModel(UserManager<ApplicationUser> userManger, FactorioModManager factorioModManager)
+        public ModsModel(UserManager<ApplicationUser> userManger, IFactorioModManager factorioModManager)
         {
             _userManger = userManger;
             _factorioModManager = factorioModManager;

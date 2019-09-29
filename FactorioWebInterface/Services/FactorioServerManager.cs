@@ -44,13 +44,13 @@ namespace FactorioWebInterface.Services
         private readonly DiscordBotContext _discordBotContext;
         private readonly IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> _factorioProcessHub;
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
-        private readonly DbContextFactory _dbContextFactory;
+        private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
-        private readonly FactorioAdminManager _factorioAdminManager;
+        private readonly IFactorioAdminManager _factorioAdminManager;
         private readonly FactorioUpdater _factorioUpdater;
-        private readonly FactorioModManager _factorioModManager;
+        private readonly IFactorioModManager _factorioModManager;
         private readonly IFactorioBanService _factorioBanManager;
-        private readonly FactorioFileManager _factorioFileManager;
+        private readonly IFactorioFileManager _factorioFileManager;
         private readonly ScenarioDataManager _scenarioDataManger;
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly IFactorioServerPreparer _factorioServerPreparer;
@@ -64,13 +64,13 @@ namespace FactorioWebInterface.Services
             DiscordBotContext discordBotContext,
             IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> factorioProcessHub,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
-            DbContextFactory dbContextFactory,
+            IDbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
-            FactorioAdminManager factorioAdminManager,
+            IFactorioAdminManager factorioAdminManager,
             FactorioUpdater factorioUpdater,
-            FactorioModManager factorioModManager,
+            IFactorioModManager factorioModManager,
             IFactorioBanService factorioBanManager,
-            FactorioFileManager factorioFileManager,
+            IFactorioFileManager factorioFileManager,
             ScenarioDataManager scenarioDataManger,
             IFactorioServerDataService factorioServerDataService,
             IFactorioServerPreparer factorioServerPreparer,
@@ -116,41 +116,41 @@ namespace FactorioWebInterface.Services
             _factorioUpdater.CachedVersionsChanged += _factorioUpdater_CachedVersionsChanged;
         }
 
-        private void _factorioFileManager_TempSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void _factorioFileManager_TempSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendTempSavesFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_LocalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void _factorioFileManager_LocalSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendLocalSaveFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_GlobalSaveFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void _factorioFileManager_GlobalSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             _factorioControlHub.Clients.All.SendGlobalSaveFiles(eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_LogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void _factorioFileManager_LogFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendLogFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_ChatLogFilesChanged(FactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void _factorioFileManager_ChatLogFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendChatLogFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_ScenariosChanged(FactorioFileManager sender, CollectionChangedData<ScenarioMetaData> eventArgs)
+        private void _factorioFileManager_ScenariosChanged(IFactorioFileManager sender, CollectionChangedData<ScenarioMetaData> eventArgs)
         {
             _factorioControlHub.Clients.All.SendScenarios(eventArgs);
         }
 
-        private void _factorioModManager_ModPackChanged(FactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
+        private void _factorioModManager_ModPackChanged(IFactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
         {
             _factorioControlHub.Clients.All.SendModPacks(eventArgs);
         }

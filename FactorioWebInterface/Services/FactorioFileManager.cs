@@ -14,12 +14,12 @@ namespace FactorioWebInterface.Services
 {
     public interface IFactorioFileManager
     {
-        event EventHandler<FactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
-        event EventHandler<FactorioFileManager, FilesChangedEventArgs> GlobalSaveFilesChanged;
-        event EventHandler<FactorioFileManager, FilesChangedEventArgs> LocalSaveFilesChanged;
-        event EventHandler<FactorioFileManager, FilesChangedEventArgs> LogFilesChanged;
-        event EventHandler<FactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
-        event EventHandler<FactorioFileManager, FilesChangedEventArgs> TempSaveFilesChanged;
+        event EventHandler<IFactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
+        event EventHandler<IFactorioFileManager, FilesChangedEventArgs> GlobalSaveFilesChanged;
+        event EventHandler<IFactorioFileManager, FilesChangedEventArgs> LocalSaveFilesChanged;
+        event EventHandler<IFactorioFileManager, FilesChangedEventArgs> LogFilesChanged;
+        event EventHandler<IFactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
+        event EventHandler<IFactorioFileManager, FilesChangedEventArgs> TempSaveFilesChanged;
 
         Result CopyFiles(string serverId, string destination, List<string> filePaths);
         Result DeleteFiles(string serverId, List<string> filePaths);
@@ -54,14 +54,14 @@ namespace FactorioWebInterface.Services
     {
         private readonly ILogger<FactorioFileManager> _logger;
         private readonly IFactorioServerDataService _factorioServerDataService;
-        private readonly IFileSystem _fileSystem;
+        private readonly IFileSystem _fileSystem = new FileSystem();
 
-        public event EventHandler<FactorioFileManager, FilesChangedEventArgs> TempSaveFilesChanged;
-        public event EventHandler<FactorioFileManager, FilesChangedEventArgs> LocalSaveFilesChanged;
-        public event EventHandler<FactorioFileManager, FilesChangedEventArgs> GlobalSaveFilesChanged;
-        public event EventHandler<FactorioFileManager, FilesChangedEventArgs> LogFilesChanged;
-        public event EventHandler<FactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
-        public event EventHandler<FactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> TempSaveFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> LocalSaveFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> GlobalSaveFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> LogFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
+        public event EventHandler<IFactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
 
         public FactorioFileManager(ILogger<FactorioFileManager> logger, IFactorioServerDataService factorioServerDataService)
         {

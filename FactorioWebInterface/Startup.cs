@@ -44,7 +44,7 @@ namespace FactorioWebInterface
 
             services.AddDbContextPool<ScenarioDbContext>(options => options.UseSqlite("Data Source=Scenario.db"));
 
-            services.AddSingleton<DbContextFactory, DbContextFactory>();
+            services.AddSingleton<IDbContextFactory, DbContextFactory>();
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -94,12 +94,12 @@ namespace FactorioWebInterface
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
             services.AddSingleton<DiscordBot, DiscordBot>();
             services.AddSingleton<FactorioUpdater, FactorioUpdater>();
-            services.AddSingleton<FactorioAdminManager, FactorioAdminManager>();
-            services.AddSingleton<FactorioModManager, FactorioModManager>();
+            services.AddSingleton<IFactorioAdminManager, FactorioAdminManager>();
+            services.AddSingleton<IFactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
             services.AddSingleton<IFactorioBanService, FactorioBanService>();
             services.AddSingleton<IPublicFactorioSaves, PublicFactorioSaves>();
-            services.AddSingleton<FactorioFileManager, FactorioFileManager>();
+            services.AddSingleton<IFactorioFileManager, FactorioFileManager>();
             services.AddSingleton<IFactorioServerPreparer, FactorioServerPreparer>();
             services.AddSingleton<IFactorioServerRunner, FactorioServerRunner>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();

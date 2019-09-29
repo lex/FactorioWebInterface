@@ -18,14 +18,14 @@ namespace FactorioWebInterface.Pages.Admin
         public static readonly FileTableModel globalSaves = new FileTableModel() { Name = "Global Saves", Id = "globalSaveFilesTable" };
 
         private readonly UserManager<ApplicationUser> _userManger;
-        private readonly FactorioFileManager _factorioFileManager;
+        private readonly IFactorioFileManager _factorioFileManager;
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<ServersModel> _logger;
 
         public int ServerCount => _factorioServerDataService.ServerCount;
 
         public ServersModel(UserManager<ApplicationUser> userManger,
-            FactorioFileManager factorioFileManager,
+            IFactorioFileManager factorioFileManager,
             IFactorioServerDataService factorioServerDataService,
             ILogger<ServersModel> logger)
         {

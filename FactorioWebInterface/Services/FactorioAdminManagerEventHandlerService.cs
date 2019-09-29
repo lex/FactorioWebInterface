@@ -21,12 +21,12 @@ namespace FactorioWebInterface.Services
             adminManager.AdminListChanged += AdminManager_AdminListChanged;
         }
 
-        private void FactorioAdminManager_AdminsChanged(FactorioAdminManager sender, CollectionChangedData<Admin> eventArgs)
+        private void FactorioAdminManager_AdminsChanged(IFactorioAdminManager sender, CollectionChangedData<Admin> eventArgs)
         {
             _adminHub.Clients.All.SendAdmins(eventArgs);
         }
 
-        private void AdminManager_AdminListChanged(FactorioAdminManager sender, FactorioAdminListChangedEventArgs eventArgs)
+        private void AdminManager_AdminListChanged(IFactorioAdminManager sender, FactorioAdminListChangedEventArgs eventArgs)
         {
             _factorioControlHub.Clients.Group(eventArgs.ServerId).SendServerSettingsUpdate(eventArgs.ChangedData, false);
         }

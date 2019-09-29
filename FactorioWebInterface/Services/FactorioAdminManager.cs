@@ -16,8 +16,8 @@ namespace FactorioWebInterface.Services
 {
     public interface IFactorioAdminManager
     {
-        event EventHandler<FactorioAdminManager, CollectionChangedData<Admin>> AdminsChanged;
-        event EventHandler<FactorioAdminManager, FactorioAdminListChangedEventArgs> AdminListChanged;
+        event EventHandler<IFactorioAdminManager, CollectionChangedData<Admin>> AdminsChanged;
+        event EventHandler<IFactorioAdminManager, FactorioAdminListChangedEventArgs> AdminListChanged;
 
         Task<Result> AddAdmins(string data);
         Task<Admin[]> GetAdmins();
@@ -27,14 +27,14 @@ namespace FactorioWebInterface.Services
 
     public class FactorioAdminManager : IFactorioAdminManager
     {
-        private readonly DbContextFactory _dbContextFactory;
+        private readonly IDbContextFactory _dbContextFactory;
         private readonly IHubContext<FactorioAdminHub, IFactorioAdminClientMethods> _adminHub;
         private readonly ILogger<FactorioAdminManager> _logger;
 
-        public event EventHandler<FactorioAdminManager, CollectionChangedData<Admin>> AdminsChanged;
-        public event EventHandler<FactorioAdminManager, FactorioAdminListChangedEventArgs> AdminListChanged;
+        public event EventHandler<IFactorioAdminManager, CollectionChangedData<Admin>> AdminsChanged;
+        public event EventHandler<IFactorioAdminManager, FactorioAdminListChangedEventArgs> AdminListChanged;
 
-        public FactorioAdminManager(DbContextFactory dbContextFactory,
+        public FactorioAdminManager(IDbContextFactory dbContextFactory,
             IHubContext<FactorioAdminHub, IFactorioAdminClientMethods> adminHub,
             ILogger<FactorioAdminManager> logger)
         {

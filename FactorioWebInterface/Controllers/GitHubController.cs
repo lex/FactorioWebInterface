@@ -15,9 +15,9 @@ namespace FactorioWebInterface.Controllers
     {
         private readonly string filePath;
 
-        private readonly FactorioFileManager _factorioFileManager;
+        private readonly IFactorioFileManager _factorioFileManager;
 
-        public GitHubController(FactorioFileManager factorioFileManager, IConfiguration config)
+        public GitHubController(IFactorioFileManager factorioFileManager, IConfiguration config)
         {
             _factorioFileManager = factorioFileManager;
 

@@ -16,8 +16,8 @@ namespace FactorioWebInterface.Services
 {
     public interface IFactorioModManager
     {
-        event EventHandler<FactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
-        event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
+        event EventHandler<IFactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
+        event EventHandler<IFactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
 
         Result CopyModPackFiles(string sourceModPack, string targetModPack, string[] files);
         Result CreateModPack(string name);
@@ -39,8 +39,8 @@ namespace FactorioWebInterface.Services
         private readonly ILogger<FactorioModManager> _logger;
         private readonly IFileSystem _fileSystem = new FileSystem();
 
-        public event EventHandler<FactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
-        public event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
+        public event EventHandler<IFactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
+        public event EventHandler<IFactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
 
         public FactorioModManager(IHubContext<FactorioModHub,
             IFactorioModClientMethods> factorioModHub,
@@ -55,12 +55,12 @@ namespace FactorioWebInterface.Services
             ModPackFilesChanged += FactorioModManager_ModPackFilesChanged;
         }
 
-        private void FactorioModManager_ModPackChanged(FactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
+        private void FactorioModManager_ModPackChanged(IFactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
         {
             _factorioModHub.Clients.All.SendModPacks(eventArgs);
         }
 
-        private void FactorioModManager_ModPackFilesChanged(FactorioModManager sender, ModPackFilesChangedEventArgs eventArgs)
+        private void FactorioModManager_ModPackFilesChanged(IFactorioModManager sender, ModPackFilesChangedEventArgs eventArgs)
         {
             _factorioModHub.Clients.All.SendModPackFiles(eventArgs.ModPack, eventArgs.ChangedData);
         }

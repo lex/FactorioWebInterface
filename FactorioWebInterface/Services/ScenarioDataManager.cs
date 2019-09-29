@@ -13,13 +13,13 @@ namespace FactorioWebInterface.Services
 {
     public class ScenarioDataManager
     {
-        private readonly DbContextFactory _dbContextFactory;
+        private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<ScenarioDataManager> _logger;
         private readonly IHubContext<ScenarioDataHub, IScenarioDataClientMethods> _scenariolHub;
 
         public event EventHandler<ScenarioDataManager, ScenarioDataEntryChangedEventArgs> EntryChanged;
 
-        public ScenarioDataManager(DbContextFactory dbContextFactory,
+        public ScenarioDataManager(IDbContextFactory dbContextFactory,
             ILogger<ScenarioDataManager> logger,
             IHubContext<ScenarioDataHub, IScenarioDataClientMethods> scenariolHub)
         {

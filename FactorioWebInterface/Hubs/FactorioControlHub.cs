@@ -13,10 +13,10 @@ namespace FactorioWebInterface.Hubs
     public class FactorioControlHub : Hub<IFactorioControlClientMethods>, IFactorioControlServerMethods
     {
         private readonly IFactorioServerManager _factorioServerManager;
-        private readonly FactorioFileManager _factorioFileManager;
-        private readonly FactorioModManager _factorioModManager;
+        private readonly IFactorioFileManager _factorioFileManager;
+        private readonly IFactorioModManager _factorioModManager;
 
-        public FactorioControlHub(IFactorioServerManager factorioServerManager, FactorioFileManager factorioFileManager, FactorioModManager factorioModManager)
+        public FactorioControlHub(IFactorioServerManager factorioServerManager, IFactorioFileManager factorioFileManager, IFactorioModManager factorioModManager)
         {
             _factorioServerManager = factorioServerManager;
             _factorioFileManager = factorioFileManager;
