@@ -1170,8 +1170,6 @@ namespace FactorioWebInterface.Services
             {
                 file.CreationTimeUtc = DateTime.UtcNow;
 
-                serverData.ChatLogger?.Dispose();
-
                 serverData.ChatLogger = new LoggerConfiguration()
                         .MinimumLevel.Information()
                         .WriteTo.Async(a => a.File(serverData.ChatLogCurrentPath, outputTemplate: "{Message:l}{NewLine}"))
@@ -1182,6 +1180,8 @@ namespace FactorioWebInterface.Services
 
             try
             {
+                serverData.ChatLogger?.Dispose();
+
                 var dir = new DirectoryInfo(serverData.ChatLogsDirectoryPath);
                 if (!dir.Exists)
                 {

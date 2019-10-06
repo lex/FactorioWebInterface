@@ -1,13 +1,26 @@
 ﻿using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using Microsoft.AspNetCore.SignalR;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Sdk;
 
 namespace FactorioWebInterfaceTests.Utils
 {
+    public class ContainsMessageException : Exception
+    {
+        public ContainsMessageException(string message) : base(message)
+        {
+        }
+
+        public ContainsMessageException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+
     public class TestFactorioControlHub : IHubContext<FactorioControlHub, IFactorioControlClientMethods>
     {
         public static void AssertSendMessage(string serverId, MessageType messageType, string message, MethodInvokeData data)
@@ -18,6 +31,24 @@ namespace FactorioWebInterfaceTests.Utils
             Assert.Equal(serverId, messageData.ServerId);
             Assert.Equal(messageType, messageData.MessageType);
             Assert.Equal(message, messageData.Message);
+        }
+
+        public void AssertContainsMessage(string serverId, MessageType messageType, string message)
+        {
+            foreach (var invocation in Invocations)
+            {
+                var arguments = invocation.Arguments;
+                if (arguments.Length == 1
+                    && arguments[0] is MessageData messageData
+                    && serverId == messageData.ServerId
+                    && messageType == messageData.MessageType
+                    && message == messageData.Message)
+                {
+                    return;
+                }
+            }
+
+            throw new ContainsMessageException($"Message with {nameof(MessageData.ServerId)}: {serverId} and {nameof(MessageData.MessageType)}: {messageType} and {nameof(MessageData.Message)}: {message} not found.");
         }
 
         private TestFactorioControlClients factorioControlClients = new TestFactorioControlClients();

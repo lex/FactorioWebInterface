@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -52,6 +53,7 @@ namespace FactorioWebInterface
             catch (Exception e)
             {
                 Log.Fatal(e, "Host terminated unexpectedly");
+                Debugger.Break();
             }
             finally
             {

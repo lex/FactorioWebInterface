@@ -52,5 +52,41 @@ namespace FactorioWebInterface.Utils
                 return await task;
             }
         }
+
+        public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            // This disposes the registration as soon as one of the tasks trigger
+            using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs))
+            {
+                var resultTask = await Task.WhenAny(task, tcs.Task);
+                if (resultTask == tcs.Task)
+                {
+                    // Operation cancelled
+                    throw new OperationCanceledException(cancellationToken);
+                }
+
+                await task;
+            }
+        }
+
+        public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            // This disposes the registration as soon as one of the tasks trigger
+            using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs))
+            {
+                var resultTask = await Task.WhenAny(task, tcs.Task);
+                if (resultTask == tcs.Task)
+                {
+                    // Operation cancelled
+                    throw new OperationCanceledException(cancellationToken);
+                }
+
+                return await task;
+            }
+        }
     }
 }

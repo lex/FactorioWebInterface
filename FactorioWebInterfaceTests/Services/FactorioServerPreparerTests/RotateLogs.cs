@@ -69,7 +69,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             Assert.NotEmpty(factorioControlHub.Invocations);
             var call = factorioControlHub.Invocations[factorioControlHub.Invocations.Count - 1];
-            TestFactorioControlHub.AssertSendMessage(data.ServerId, MessageType.Output, $"Error rotating logs: {expectedError}", call);
+            TestFactorioControlHub.AssertSendMessage(data.ServerId, MessageType.Error, $"Error rotating logs: {expectedError}", call);
         }
     }
 }

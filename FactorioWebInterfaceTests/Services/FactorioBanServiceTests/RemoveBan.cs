@@ -6,32 +6,28 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 {
-    public class RemoveBan
+    public class RemoveBan : IDisposable
     {
-        private readonly DbContextFactory dbContextFactory;
-        private readonly IFactorioBanService factorioBanService;
+        private readonly ServiceProvider serviceProvider;
+        private readonly IDbContextFactory dbContextFactory;
+        private readonly FactorioBanService factorioBanService;
+
         public RemoveBan()
         {
-            var serviceProvider = new ServiceCollection()
-                .AddEntityFrameworkInMemoryDatabase()
-                .AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("InMemoryDbForTesting");
-                })
-                .AddSingleton<DbContextFactory, DbContextFactory>()
-                .AddSingleton<IFactorioBanService, FactorioBanService>()
-                .BuildServiceProvider();
+            serviceProvider = FactorioBanServiceHelper.MakeFactorioBanServiceProvider();
+            dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory>();
+            factorioBanService = serviceProvider.GetRequiredService<FactorioBanService>();
+        }
 
-            var db = serviceProvider.GetService<ApplicationDbContext>();
-            db.Database.EnsureCreated();
-
-            dbContextFactory = serviceProvider.GetService<DbContextFactory>();
-            factorioBanService = serviceProvider.GetService<IFactorioBanService>();
+        public void Dispose()
+        {
+            serviceProvider.Dispose();
         }
 
         [Fact]

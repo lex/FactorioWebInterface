@@ -21,7 +21,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             IFactorioBanService factorioBanService = null,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub = null,
             IFactorioFileManager factorioFileManager = null,
-            IDbContextFactory dbContextFactory = null,
             ILogger<FactorioServerPreparer> logger = null
         )
         {
@@ -33,7 +32,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
                 factorioBanService ?? new Mock<IFactorioBanService>(MockBehavior.Strict).Object,
                 factorioControlHub ?? new Mock<IHubContext<FactorioControlHub, IFactorioControlClientMethods>>(MockBehavior.Strict).Object,
                 factorioFileManager ?? new Mock<IFactorioFileManager>(MockBehavior.Strict).Object,
-                dbContextFactory ?? new Mock<IDbContextFactory>(MockBehavior.Strict).Object,
                 logger ?? new TestLogger<FactorioServerPreparer>()
             );
         }
