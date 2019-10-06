@@ -100,8 +100,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             data.ServerExtraSettings.BuildBansFromDatabaseOnStart = true;
             data.ServerSettings = new FactorioServerSettings() { UseDefaultAdmins = true };
 
-            const string startTypeArguments = Constants.FactorioLoadLatestSaveFlag;
-            const string factorioWrapperPath = "FactorioWrapperPath";
             const string directoryName = "wrong_directory";
             const string fileName = "file.zip";
 
@@ -115,7 +113,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(
                 factorioFileManager: fileManagerMock.Object,
-                factorioControlHub: factorioControlHub);            
+                factorioControlHub: factorioControlHub);
 
             // Act.
             var result = await service.PrepareLoadSave(data, directoryName, fileName);

@@ -34,12 +34,6 @@ namespace FactorioWebInterface.Services
         // Match number and capture everything after.
         private static readonly Regex outputRegex = new Regex(@"\d+\.\d+ (.+)", RegexOptions.Compiled);
 
-        private static readonly JsonSerializerSettings banListSerializerSettings = new JsonSerializerSettings()
-        {
-            Formatting = Formatting.Indented,
-            NullValueHandling = NullValueHandling.Ignore
-        };
-
         private readonly IConfiguration _configuration;
         private readonly DiscordBotContext _discordBotContext;
         private readonly IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> _factorioProcessHub;
@@ -104,58 +98,58 @@ namespace FactorioWebInterface.Services
             }
 
             _discordBotContext.FactorioDiscordDataReceived += FactorioDiscordDataReceived;
-            _scenarioDataManger.EntryChanged += _scenarioDataManger_EntryChanged;
-            _factorioBanManager.BanChanged += _factorioBanManager_BanChanged;
-            _factorioFileManager.TempSaveFilesChanged += _factorioFileManager_TempSaveFilesChanged;
-            _factorioFileManager.LocalSaveFilesChanged += _factorioFileManager_LocalSaveFilesChanged;
-            _factorioFileManager.GlobalSaveFilesChanged += _factorioFileManager_GlobalSaveFilesChanged;
-            _factorioFileManager.LogFilesChanged += _factorioFileManager_LogFilesChanged;
-            _factorioFileManager.ChatLogFilesChanged += _factorioFileManager_ChatLogFilesChanged;
-            _factorioFileManager.ScenariosChanged += _factorioFileManager_ScenariosChanged;
-            _factorioModManager.ModPackChanged += _factorioModManager_ModPackChanged;
-            _factorioUpdater.CachedVersionsChanged += _factorioUpdater_CachedVersionsChanged;
+            _scenarioDataManger.EntryChanged += ScenarioDataManger_EntryChanged;
+            _factorioBanManager.BanChanged += FactorioBanManager_BanChanged;
+            _factorioFileManager.TempSaveFilesChanged += FactorioFileManager_TempSaveFilesChanged;
+            _factorioFileManager.LocalSaveFilesChanged += FactorioFileManager_LocalSaveFilesChanged;
+            _factorioFileManager.GlobalSaveFilesChanged += FactorioFileManager_GlobalSaveFilesChanged;
+            _factorioFileManager.LogFilesChanged += FactorioFileManager_LogFilesChanged;
+            _factorioFileManager.ChatLogFilesChanged += FactorioFileManager_ChatLogFilesChanged;
+            _factorioFileManager.ScenariosChanged += FactorioFileManager_ScenariosChanged;
+            _factorioModManager.ModPackChanged += FactorioModManager_ModPackChanged;
+            _factorioUpdater.CachedVersionsChanged += FactorioUpdater_CachedVersionsChanged;
         }
 
-        private void _factorioFileManager_TempSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void FactorioFileManager_TempSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendTempSavesFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_LocalSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void FactorioFileManager_LocalSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendLocalSaveFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_GlobalSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void FactorioFileManager_GlobalSaveFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             _factorioControlHub.Clients.All.SendGlobalSaveFiles(eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_LogFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void FactorioFileManager_LogFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendLogFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_ChatLogFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
+        private void FactorioFileManager_ChatLogFilesChanged(IFactorioFileManager sender, FilesChangedEventArgs eventArgs)
         {
             var id = eventArgs.ServerId;
             _factorioControlHub.Clients.Group(id).SendChatLogFiles(id, eventArgs.ChangedData);
         }
 
-        private void _factorioFileManager_ScenariosChanged(IFactorioFileManager sender, CollectionChangedData<ScenarioMetaData> eventArgs)
+        private void FactorioFileManager_ScenariosChanged(IFactorioFileManager sender, CollectionChangedData<ScenarioMetaData> eventArgs)
         {
             _factorioControlHub.Clients.All.SendScenarios(eventArgs);
         }
 
-        private void _factorioModManager_ModPackChanged(IFactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
+        private void FactorioModManager_ModPackChanged(IFactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
         {
             _factorioControlHub.Clients.All.SendModPacks(eventArgs);
         }
 
-        private void _factorioBanManager_BanChanged(IFactorioBanService sender, FactorioBanEventArgs eventArgs)
+        private void FactorioBanManager_BanChanged(IFactorioBanService sender, FactorioBanEventArgs eventArgs)
         {
             var changeData = eventArgs.ChangeData;
 
@@ -227,7 +221,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private void _scenarioDataManger_EntryChanged(ScenarioDataManager sender, ScenarioDataEntryChangedEventArgs eventArgs)
+        private void ScenarioDataManger_EntryChanged(ScenarioDataManager sender, ScenarioDataEntryChangedEventArgs eventArgs)
         {
             _ = Task.Run(async () =>
              {
@@ -269,7 +263,7 @@ namespace FactorioWebInterface.Services
              });
         }
 
-        private void _factorioUpdater_CachedVersionsChanged(FactorioUpdater sender, CollectionChangedData<string> eventArgs)
+        private void FactorioUpdater_CachedVersionsChanged(FactorioUpdater sender, CollectionChangedData<string> eventArgs)
         {
             _factorioControlHub.Clients.All.SendCachedVersions(eventArgs);
         }
@@ -361,107 +355,6 @@ namespace FactorioWebInterface.Services
             _ = SendToFactorioControl(eventArgs.ServerId, messageData);
         }
 
-        private Task RotateLogs(FactorioServerMutableData mutableData)
-        {
-            return Task.Run(() =>
-            {
-                _factorioFileManager.RotateFactorioLogs(mutableData);
-                _factorioFileManager.RotateChatLogs(mutableData);
-            });
-        }
-
-        private async Task BuildBanList(FactorioServerMutableData mutableData)
-        {
-            if (!mutableData.ServerExtraSettings.BuildBansFromDatabaseOnStart)
-            {
-                // If we don't want the database bans, the assumption is we should leave the
-                // server banlist alone with whatever bans are in there.
-                return;
-            }
-
-            try
-            {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-                var bans = await db.Bans.Select(b => new ServerBan()
-                {
-                    Username = b.Username,
-                    Address = b.Address,
-                    Reason = b.Reason
-                })
-                .ToArrayAsync();
-
-                string data = JsonConvert.SerializeObject(bans, banListSerializerSettings);
-
-                await File.WriteAllTextAsync(mutableData.ServerBanListPath, data);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, nameof(BuildBanList));
-            }
-        }
-
-        private async Task BuildAdminList(FactorioServerMutableData mutableData)
-        {
-            var settings = mutableData.ServerSettings;
-
-            if (!settings.UseDefaultAdmins)
-            {
-                return;
-            }
-
-            var a = await _factorioAdminManager.GetAdmins();
-            var admins = a.Select(x => x.Name).ToArray();
-
-            var adminData = JsonConvert.SerializeObject(admins, Formatting.Indented);
-            var writeTask = File.WriteAllTextAsync(mutableData.ServerAdminListPath, adminData);
-
-            mutableData.ServerAdminList = admins;
-            mutableData.ServerWebEditableSettings.Admins = admins;
-
-            var items = new Dictionary<string, object>
-            {
-                { nameof(FactorioServerSettingsWebEditable.Admins), admins }
-            };
-            var data = KeyValueCollectionChangedData.Add(items);
-            _ = _factorioControlHub.Clients.Group(mutableData.ServerId).SendServerSettingsUpdate(data, false);
-
-            await writeTask;
-        }
-
-        private void SendToEachRunningServer(string data)
-        {
-            var clients = _factorioProcessHub.Clients;
-            foreach (var server in _factorioServerDataService.Servers)
-            {
-                if (server.Value.Status == FactorioServerStatus.Running)
-                {
-                    clients.Group(server.Key).SendToFactorio(data);
-                }
-            }
-        }
-
-        private void SendBanCommandToEachRunningServer(string data)
-        {
-            var clients = _factorioProcessHub.Clients;
-            foreach (var server in _factorioServerDataService.Servers)
-            {
-                var serverData = server.Value;
-                if (serverData.Status != FactorioServerStatus.Running)
-                {
-                    continue;
-                }
-
-                _ = serverData.LockAsync(md =>
-                {
-                    if (md.ServerExtraSettings.SyncBans)
-                    {
-                        clients.Group(md.ServerId).SendToFactorio(data);
-                    }
-                });
-            }
-        }
-
         private void SendBanCommandToEachRunningServerExcept(string data, string exceptId)
         {
             var clients = _factorioProcessHub.Clients;
@@ -481,54 +374,6 @@ namespace FactorioWebInterface.Services
                     }
                 });
             }
-        }
-
-        private void SendToEachRunningServerExcept(string data, string exceptId)
-        {
-            var clients = _factorioProcessHub.Clients;
-            foreach (var server in _factorioServerDataService.Servers)
-            {
-                if (server.Key != exceptId && server.Value.Status == FactorioServerStatus.Running)
-                {
-                    clients.Group(server.Key).SendToFactorio(data);
-                }
-            }
-        }
-
-        private string PrepareModDirectory(FactorioServerMutableData mutableData)
-        {
-            var dir = _factorioModManager.GetModPackDirectoryInfo(mutableData.ModPack);
-            if (dir == null)
-            {
-                mutableData.ModPack = "";
-                return "";
-            }
-            else
-            {
-                return dir.FullName;
-            }
-        }
-
-        private async Task<string> PrepareServer(FactorioServerMutableData mutableData)
-        {
-            var banTask = BuildBanList(mutableData);
-            var adminTask = BuildAdminList(mutableData);
-            var logTask = RotateLogs(mutableData);
-
-            mutableData.TrackingDataSets.Clear();
-
-            mutableData.OnlinePlayers.Clear();
-            mutableData.OnlinePlayerCount = 0;
-
-            mutableData.LastTempFilesChecked = DateTime.UtcNow;
-
-            string modDirPath = PrepareModDirectory(mutableData);
-
-            await banTask;
-            await adminTask;
-            await logTask;
-
-            return modDirPath;
         }
 
         public bool IsValidServerId(string serverId)
@@ -951,6 +796,7 @@ namespace FactorioWebInterface.Services
                 await serverData.LockAsync(ReportInstall);
             });
         }
+
 #pragma warning disable CS1998
         public async Task<Result> Install(string serverId, string userName, string version)
         {
@@ -985,13 +831,13 @@ namespace FactorioWebInterface.Services
                 mutableData.ControlMessageBuffer.Add(controlMessage);
                 _ = group.SendMessage(controlMessage);
 
-                _ = group.FactorioStatusChanged(FactorioServerStatus.Updating.ToString(), oldStatus.ToString());
+                _ = group.FactorioStatusChanged(nameof(FactorioServerStatus.Updating), oldStatus.ToString());
 
                 var statusMessage = new MessageData()
                 {
                     ServerId = serverId,
                     MessageType = Models.MessageType.Status,
-                    Message = $"[STATUS]: Changed from {oldStatus} to {FactorioServerStatus.Updating} by user {userName}"
+                    Message = $"[STATUS]: Changed from {oldStatus} to {nameof(FactorioServerStatus.Updating)} by user {userName}"
                 };
                 mutableData.ControlMessageBuffer.Add(statusMessage);
                 _ = group.SendMessage(statusMessage);
@@ -1300,7 +1146,7 @@ namespace FactorioWebInterface.Services
 
                 if (sb.Length > Constants.discordTopicMaxLength)
                 {
-                    int start = Constants.discordTopicMaxLength - 3;
+                    const int start = Constants.discordTopicMaxLength - 3;
                     int length = sb.Length - start;
                     sb.Remove(start, length);
                     sb.Append("...");
@@ -1872,8 +1718,8 @@ namespace FactorioWebInterface.Services
             {
                 discordTask = ServerConnected(serverData);
             }
-            else if (oldStatus == FactorioServerStatus.Stopping && newStatus == FactorioServerStatus.Stopped
-                || oldStatus == FactorioServerStatus.Killing && newStatus == FactorioServerStatus.Killed)
+            else if ((oldStatus == FactorioServerStatus.Stopping && newStatus == FactorioServerStatus.Stopped)
+                || (oldStatus == FactorioServerStatus.Killing && newStatus == FactorioServerStatus.Killed))
             {
                 var embed = new DiscordEmbedBuilder()
                 {
