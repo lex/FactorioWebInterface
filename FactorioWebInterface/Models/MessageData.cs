@@ -6,7 +6,8 @@
         Wrapper,
         Control,
         Status,
-        Discord
+        Discord,
+        Error
     }
 
     public class MessageData

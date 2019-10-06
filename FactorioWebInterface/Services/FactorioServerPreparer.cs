@@ -35,7 +35,6 @@ namespace FactorioWebInterface.Services
         private readonly IFactorioBanService _factorioBanService;
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
         private readonly IFactorioFileManager _factorioFileManager;
-        private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerPreparer> _logger;
 
         public FactorioServerPreparer
@@ -46,7 +45,6 @@ namespace FactorioWebInterface.Services
             IFactorioBanService factorioBanService,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
             IFactorioFileManager factorioFileManager,
-            IDbContextFactory dbContextFactory,
             ILogger<FactorioServerPreparer> logger
         )
         {
@@ -56,7 +54,6 @@ namespace FactorioWebInterface.Services
             _factorioBanService = factorioBanService;
             _factorioControlHub = factorioControlHub;
             _factorioFileManager = factorioFileManager;
-            _dbContextFactory = dbContextFactory;
             _logger = logger;
         }
 
@@ -114,9 +111,8 @@ namespace FactorioWebInterface.Services
                         FactorioServerUtils.SendOutputMessage(mutableData, _factorioControlHub, $"Copying save file {saveFile.Directory.Name}/{saveFile.Name} into Temp Saves.");
 
                         string copyToPath = Path.Combine(mutableData.TempSavesDirectoryPath, saveFile.Name);
-                        saveFile.CopyTo(copyToPath, true);
+                        var fi = saveFile.CopyTo(copyToPath, true);
 
-                        var fi = new FileInfo(copyToPath);
                         fi.LastWriteTimeUtc = DateTime.UtcNow;
 
                         var data = new FileMetaData()
@@ -195,7 +191,7 @@ namespace FactorioWebInterface.Services
 
             if (!result.Success)
             {
-                _ = FactorioServerUtils.SendOutputMessage(mutableData, _factorioControlHub, $"Error building Ban list: {result}");
+                _ = FactorioServerUtils.SendErrorMessage(mutableData, _factorioControlHub, $"Error building Ban list: {result}");
             }
 
             return result;
@@ -217,7 +213,7 @@ namespace FactorioWebInterface.Services
 
             if (!result.Success)
             {
-                _ = FactorioServerUtils.SendOutputMessage(mutableData, _factorioControlHub, $"Error building Admin list: {result}");
+                _ = FactorioServerUtils.SendErrorMessage(mutableData, _factorioControlHub, $"Error building Admin list: {result}");
             }
 
             return result;
@@ -235,7 +231,7 @@ namespace FactorioWebInterface.Services
 
             if (!result.Success)
             {
-                _ = FactorioServerUtils.SendOutputMessage(mutableData, _factorioControlHub, $"Error rotating logs: {result}");
+                _ = FactorioServerUtils.SendErrorMessage(mutableData, _factorioControlHub, $"Error rotating logs: {result}");
             }
 
             return result;
@@ -313,7 +309,7 @@ namespace FactorioWebInterface.Services
             catch (Exception e)
             {
                 _logger.LogError(e, nameof(PrepareWithStatusChange));
-                return Result<ProcessStartInfo>.Failure(Constants.UnexpectedErrorKey);
+                return Result<ProcessStartInfo>.Failure(Constants.UnexpectedErrorKey, e.Message);
             }
             finally
             {

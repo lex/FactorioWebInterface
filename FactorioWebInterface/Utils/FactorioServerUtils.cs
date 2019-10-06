@@ -56,38 +56,54 @@ namespace FactorioWebInterface.Utils
             return factorioControlHub.Clients.Group(mutableData.ServerId).SendMessage(message);
         }
 
+        public static Task SendMessage(FactorioServerMutableData mutableData,
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
+            string message,
+            MessageType messageType)
+        {
+            var data = new MessageData()
+            {
+                ServerId = mutableData.ServerId,
+                MessageType = messageType,
+                Message = message
+            };
+
+            return SendMessage(mutableData, factorioControlHub, data);
+        }
+
         public static Task SendOutputMessage(FactorioServerMutableData mutableData,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
             string message)
         {
-            string serverId = mutableData.ServerId;
+            return SendMessage(mutableData, factorioControlHub, message, MessageType.Output);
+        }
 
-            var data = new MessageData()
-            {
-                ServerId = serverId,
-                MessageType = MessageType.Output,
-                Message = message
-            };
-
-            mutableData.ControlMessageBuffer.Add(data);
-            return factorioControlHub.Clients.Group(serverId).SendMessage(data);
+        public static Task SendWrapperMessage(FactorioServerMutableData mutableData,
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
+            string message)
+        {
+            return SendMessage(mutableData, factorioControlHub, message, MessageType.Wrapper);
         }
 
         public static Task SendControlMessage(FactorioServerMutableData mutableData,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
             string message)
         {
-            string serverId = mutableData.ServerId;
+            return SendMessage(mutableData, factorioControlHub, message, MessageType.Control);
+        }
 
-            var data = new MessageData()
-            {
-                ServerId = serverId,
-                MessageType = MessageType.Control,
-                Message = message
-            };
+        public static Task SendDiscordMessage(FactorioServerMutableData mutableData,
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
+            string message)
+        {
+            return SendMessage(mutableData, factorioControlHub, message, MessageType.Discord);
+        }
 
-            mutableData.ControlMessageBuffer.Add(data);
-            return factorioControlHub.Clients.Group(serverId).SendMessage(data);
+        public static Task SendErrorMessage(FactorioServerMutableData mutableData,
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
+            string message)
+        {
+            return SendMessage(mutableData, factorioControlHub, message, MessageType.Error);
         }
     }
 }
