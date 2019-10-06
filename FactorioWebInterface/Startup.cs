@@ -2,6 +2,7 @@ using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Services;
+using FactorioWebInterface.Utils.ProcessAbstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,8 +14,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualStudio.Web.CodeGeneration;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO.Abstractions;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,6 +92,8 @@ namespace FactorioWebInterface
 
             services.AddMemoryCache();
 
+            services.AddSingleton<System.IO.Abstractions.IFileSystem, FileSystem>();
+            services.AddSingleton<IProcessSystem, ProcessSystem>();
             services.AddSingleton<FactorioServerDataConfiguration>();
             services.AddSingleton<IFactorioServerDataService, FactorioServerDataService>();
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();

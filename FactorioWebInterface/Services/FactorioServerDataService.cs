@@ -87,7 +87,7 @@ namespace FactorioWebInterface.Services
             validSaveDirectories.Add(Constants.WindowsPublicFinalSavesDirectoryName);
             validSaveDirectories.Add(Constants.WindowsPublicOldSavesDirectoryName);
 
-            for (int serverNumber = 0; serverNumber < factorioServerDataConfiguration.ServerCount; serverNumber++)
+            for (int serverNumber = 1; serverNumber <= factorioServerDataConfiguration.ServerCount; serverNumber++)
             {
                 var serverData = FactorioServerData.New(serverNumber, BaseDirectoryPath, factorioServerDataConfiguration.BufferSize);
                 string serverId = serverData.ServerId;

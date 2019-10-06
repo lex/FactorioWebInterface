@@ -1,11 +1,13 @@
 ﻿using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
+using FactorioWebInterface.Utils.ProcessAbstractions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Shared;
 using System;
 using System.Diagnostics;
+using System.IO.Abstractions;
 
 namespace FactorioWebInterface.Services
 {
@@ -17,11 +19,13 @@ namespace FactorioWebInterface.Services
     public class FactorioServerRunner : IFactorioServerRunner
     {
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
+        private readonly IProcessSystem _processSystem;
         private readonly ILogger<FactorioServerRunner> _logger;
 
-        public FactorioServerRunner(IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub, ILogger<FactorioServerRunner> logger)
+        public FactorioServerRunner(IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub, IProcessSystem processSystem, ILogger<FactorioServerRunner> logger)
         {
             _factorioControlHub = factorioControlHub;
+            _processSystem = processSystem;
             _logger = logger;
         }
 
@@ -31,7 +35,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                Process.Start(startInfo);
+                _processSystem.Start(startInfo);
                 _logger.LogError("Wrapper process started, fileName: {fileName}, arguments: {arguments}", startInfo.FileName, startInfo.Arguments);
 
                 afterStatus = FactorioServerStatus.WrapperStarting;
