@@ -170,7 +170,7 @@ namespace FactorioWrapper
             }
 
             // Sometimes when factorio crashes the process isn't shutdown correctly, so we kill it to be sure.
-            if (status == FactorioServerStatus.Crashed)
+            if (status.HasFinishedRunning())
             {
                 var processes = Process.GetProcessesByName("factorio");
                 foreach (var process in processes)
