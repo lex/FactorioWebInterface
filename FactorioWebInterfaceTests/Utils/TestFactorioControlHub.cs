@@ -1,6 +1,7 @@
 ﻿using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using Microsoft.AspNetCore.SignalR;
+using Shared;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,10 @@ namespace FactorioWebInterfaceTests.Utils
         }
 
         public ContainsMessageException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        public ContainsMessageException()
         {
         }
     }
@@ -49,6 +54,21 @@ namespace FactorioWebInterfaceTests.Utils
             }
 
             throw new ContainsMessageException($"Message with {nameof(MessageData.ServerId)}: {serverId} and {nameof(MessageData.MessageType)}: {messageType} and {nameof(MessageData.Message)}: {message} not found.");
+        }
+
+        public void AssertContainsStatusMessage(string serverId, FactorioServerStatus oldStatus, FactorioServerStatus newStatus, string byUser = "")
+        {
+            string message;
+            if (string.IsNullOrWhiteSpace(byUser))
+            {
+                message = $"[STATUS] Change from {oldStatus} to {newStatus}";
+            }
+            else
+            {
+                message = $"[STATUS] Change from {oldStatus} to {newStatus} by user {byUser}";
+            }
+
+            AssertContainsMessage(serverId, MessageType.Status, message);
         }
 
         private TestFactorioControlClients factorioControlClients = new TestFactorioControlClients();
@@ -101,18 +121,6 @@ namespace FactorioWebInterfaceTests.Utils
         {
             invocations.Add(new MethodInvokeData(name, arguments));
             return Task.CompletedTask;
-        }
-    }
-
-    public class MethodInvokeData
-    {
-        public string Name { get; }
-        public object[] Arguments { get; }
-
-        public MethodInvokeData(string name, object[] arguments)
-        {
-            Name = name;
-            Arguments = arguments;
         }
     }
 }

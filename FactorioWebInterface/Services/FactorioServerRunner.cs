@@ -36,7 +36,7 @@ namespace FactorioWebInterface.Services
             try
             {
                 _processSystem.Start(startInfo);
-                _logger.LogError("Wrapper process started, fileName: {fileName}, arguments: {arguments}", startInfo.FileName, startInfo.Arguments);
+                _logger.LogInformation("Wrapper process started, fileName: {fileName}, arguments: {arguments}", startInfo.FileName, startInfo.Arguments);
 
                 afterStatus = FactorioServerStatus.WrapperStarting;
                 return Result.OK;
