@@ -30,7 +30,7 @@ namespace FactorioWebInterface.Services
     public class FactorioServerPreparer : IFactorioServerPreparer
     {
         private readonly IFactorioServerDataService _factorioServerDataService;
-        private readonly IFactorioAdminManager _factorioAdminManager;
+        private readonly IFactorioAdminService _factorioAdminService;
         private readonly IFactorioModManager _factorioModManager;
         private readonly IFactorioBanService _factorioBanService;
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
@@ -40,7 +40,7 @@ namespace FactorioWebInterface.Services
         public FactorioServerPreparer
         (
             IFactorioServerDataService factorioServerDataService,
-            IFactorioAdminManager factorioAdminManager,
+            IFactorioAdminService factorioAdminService,
             IFactorioModManager factorioModManager,
             IFactorioBanService factorioBanService,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
@@ -49,7 +49,7 @@ namespace FactorioWebInterface.Services
         )
         {
             _factorioServerDataService = factorioServerDataService;
-            _factorioAdminManager = factorioAdminManager;
+            _factorioAdminService = factorioAdminService;
             _factorioModManager = factorioModManager;
             _factorioBanService = factorioBanService;
             _factorioControlHub = factorioControlHub;
@@ -209,7 +209,7 @@ namespace FactorioWebInterface.Services
 
             _ = FactorioServerUtils.SendOutputMessage(mutableData, _factorioControlHub, "Building Admin list.");
 
-            var result = await _factorioAdminManager.BuildAdminList(mutableData);
+            var result = await _factorioAdminService.BuildAdminList(mutableData);
 
             if (!result.Success)
             {

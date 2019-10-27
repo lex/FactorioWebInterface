@@ -42,8 +42,8 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var banServiceMock = new Mock<IFactorioBanService>(MockBehavior.Strict);
             banServiceMock.Setup(x => x.BuildBanList(data.ServerBanListPath)).Returns(Task.FromResult(Result.OK)).Verifiable();
 
-            var adminManagerMock = new Mock<IFactorioAdminManager>(MockBehavior.Strict);
-            adminManagerMock.Setup(x => x.BuildAdminList(data)).Returns(Task.FromResult(Result.OK)).Verifiable();
+            var adminServiceMock = new Mock<IFactorioAdminService>(MockBehavior.Strict);
+            adminServiceMock.Setup(x => x.BuildAdminList(data)).Returns(Task.FromResult(Result.OK)).Verifiable();
 
             var fileManagerMock = new Mock<IFactorioFileManager>(MockBehavior.Strict);
             fileManagerMock.Setup(x => x.EnsureScenarioDirectoryRemoved(data.LocalScenarioDirectoryPath)).Verifiable();
@@ -58,7 +58,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
                 factorioServerDataService: factorioServerDataService.Object,
                 factorioModManager: factorioModManager.Object,
                 factorioBanService: banServiceMock.Object,
-                factorioAdminManager: adminManagerMock.Object,
+                factorioAdminService: adminServiceMock.Object,
                 factorioFileManager: fileManagerMock.Object,
                 factorioControlHub: factorioControlHub);
 
@@ -72,7 +72,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             factorioServerDataService.Verify();
             factorioModManager.Verify();
             banServiceMock.Verify();
-            adminManagerMock.Verify();
+            adminServiceMock.Verify();
             fileManagerMock.Verify();
 
             Assert.True(result.Success);

@@ -16,7 +16,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
         public static FactorioServerPreparer MakeFactorioServerPreparer
         (
             IFactorioServerDataService factorioServerDataService = null,
-            IFactorioAdminManager factorioAdminManager = null,
+            IFactorioAdminService factorioAdminService = null,
             IFactorioModManager factorioModManager = null,
             IFactorioBanService factorioBanService = null,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub = null,
@@ -27,7 +27,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             return new FactorioServerPreparer
             (
                 factorioServerDataService ?? new Mock<IFactorioServerDataService>(MockBehavior.Strict).Object,
-                factorioAdminManager ?? new Mock<IFactorioAdminManager>(MockBehavior.Strict).Object,
+                factorioAdminService ?? new Mock<IFactorioAdminService>(MockBehavior.Strict).Object,
                 factorioModManager ?? new Mock<IFactorioModManager>(MockBehavior.Strict).Object,
                 factorioBanService ?? new Mock<IFactorioBanService>(MockBehavior.Strict).Object,
                 factorioControlHub ?? new Mock<IHubContext<FactorioControlHub, IFactorioControlClientMethods>>(MockBehavior.Strict).Object,

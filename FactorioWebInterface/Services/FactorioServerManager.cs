@@ -40,7 +40,7 @@ namespace FactorioWebInterface.Services
         private readonly IHubContext<FactorioControlHub, IFactorioControlClientMethods> _factorioControlHub;
         private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<FactorioServerManager> _logger;
-        private readonly IFactorioAdminManager _factorioAdminManager;
+        private readonly IFactorioAdminService _factorioAdminService;
         private readonly FactorioUpdater _factorioUpdater;
         private readonly IFactorioModManager _factorioModManager;
         private readonly IFactorioBanService _factorioBanManager;
@@ -60,7 +60,7 @@ namespace FactorioWebInterface.Services
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
             IDbContextFactory dbContextFactory,
             ILogger<FactorioServerManager> logger,
-            IFactorioAdminManager factorioAdminManager,
+            IFactorioAdminService factorioAdminService,
             FactorioUpdater factorioUpdater,
             IFactorioModManager factorioModManager,
             IFactorioBanService factorioBanManager,
@@ -77,7 +77,7 @@ namespace FactorioWebInterface.Services
             _factorioControlHub = factorioControlHub;
             _dbContextFactory = dbContextFactory;
             _logger = logger;
-            _factorioAdminManager = factorioAdminManager;
+            _factorioAdminService = factorioAdminService;
             _factorioUpdater = factorioUpdater;
             _factorioModManager = factorioModManager;
             _factorioBanManager = factorioBanManager;
@@ -1852,7 +1852,7 @@ namespace FactorioWebInterface.Services
 
             if (!fi.Exists)
             {
-                var a = await _factorioAdminManager.GetAdmins();
+                var a = await _factorioAdminService.GetAdmins();
                 adminList = a.Select(x => x.Name).ToArray();
 
                 var data = JsonConvert.SerializeObject(adminList, Formatting.Indented);
@@ -1962,7 +1962,7 @@ namespace FactorioWebInterface.Services
                 }
                 else
                 {
-                    var a = await _factorioAdminManager.GetAdmins();
+                    var a = await _factorioAdminService.GetAdmins();
                     admins = a.Select(x => x.Name).ToArray();
                 }
 

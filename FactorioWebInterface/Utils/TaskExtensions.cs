@@ -31,6 +31,9 @@ namespace FactorioWebInterface.Utils
             }
         }
 
+        public static Task TimeoutAfter(this Task task, int timeoutInMilliseconds)
+            => task.TimeoutAfter(TimeSpan.FromMilliseconds(timeoutInMilliseconds));
+
         public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
         {
             using (var cts = new CancellationTokenSource())
@@ -52,6 +55,9 @@ namespace FactorioWebInterface.Utils
                 return await task;
             }
         }
+
+        public static Task<T> TimeoutAfter<T>(this Task<T> task, int timeoutInMilliseconds)
+            => task.TimeoutAfter(TimeSpan.FromMilliseconds(timeoutInMilliseconds));
 
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {

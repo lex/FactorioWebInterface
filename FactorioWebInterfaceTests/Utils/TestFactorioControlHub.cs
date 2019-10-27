@@ -11,21 +11,6 @@ using Xunit.Sdk;
 
 namespace FactorioWebInterfaceTests.Utils
 {
-    public class ContainsMessageException : Exception
-    {
-        public ContainsMessageException(string message) : base(message)
-        {
-        }
-
-        public ContainsMessageException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        public ContainsMessageException()
-        {
-        }
-    }
-
     public class TestFactorioControlHub : IHubContext<FactorioControlHub, IFactorioControlClientMethods>
     {
         public static void AssertSendMessage(string serverId, MessageType messageType, string message, MethodInvokeData data)
@@ -85,7 +70,8 @@ namespace FactorioWebInterfaceTests.Utils
 
         public IFactorioControlClientMethods All => clientMethods;
         public IFactorioControlClientMethods AllExcept(IReadOnlyList<string> excludedConnectionIds) => clientMethods;
-        public IFactorioControlClientMethods Client(string connectionId) => clientMethods; public IFactorioControlClientMethods Clients(IReadOnlyList<string> connectionIds) => clientMethods;
+        public IFactorioControlClientMethods Client(string connectionId) => clientMethods;
+        public IFactorioControlClientMethods Clients(IReadOnlyList<string> connectionIds) => clientMethods;
         public IFactorioControlClientMethods Group(string groupName) => clientMethods;
         public IFactorioControlClientMethods GroupExcept(string groupName, IReadOnlyList<string> excludedConnectionIds) => clientMethods;
         public IFactorioControlClientMethods Groups(IReadOnlyList<string> groupNames) => clientMethods;

@@ -47,18 +47,22 @@ namespace FactorioWebInterface.Services
 
         public async Task<Ban[]> GetBansAsync()
         {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Bans.AsNoTracking().ToArrayAsync();
+            using (var db = _dbContextFactory.Create<ApplicationDbContext>())
+            {
+                return await db.Bans.AsNoTracking().ToArrayAsync();
+            }
         }
 
         public async Task<string[]> GetBanUserNamesAsync()
         {
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-            return await db.Bans
-                .AsNoTracking()
-                .Select(x => x.Username)
-                .OrderBy(x => x.ToLowerInvariant())
-                .ToArrayAsync();
+            using (var db = _dbContextFactory.Create<ApplicationDbContext>())
+            {
+                return await db.Bans
+                    .AsNoTracking()
+                    .Select(x => x.Username)
+                    .OrderBy(x => x.ToLowerInvariant())
+                    .ToArrayAsync();
+            }
         }
 
         public async Task<Result> AddBanFromWeb(Ban ban, bool synchronizeWithServers, string actor)
@@ -135,60 +139,61 @@ namespace FactorioWebInterface.Services
         {
             ban.Username = ban.Username.ToLowerInvariant();
 
-            var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-            int retryCount = 10;
-            while (retryCount >= 0)
+            using (var db = _dbContextFactory.Create<ApplicationDbContext>())
             {
-                var old = await db.Bans.FirstOrDefaultAsync(b => b.Username == ban.Username);
+                int retryCount = 10;
+                while (retryCount >= 0)
+                {
+                    var old = await db.Bans.FirstOrDefaultAsync(b => b.Username == ban.Username);
 
-                try
-                {
-                    if (old == null)
+                    try
                     {
-                        db.Add(ban);
-                    }
-                    else
-                    {
-                        old.Admin = ban.Admin;
-                        old.DateTime = ban.DateTime;
-                        old.Reason = ban.Reason;
-                        db.Update(old);
-                    }
+                        if (old == null)
+                        {
+                            db.Add(ban);
+                        }
+                        else
+                        {
+                            old.Admin = ban.Admin;
+                            old.DateTime = ban.DateTime;
+                            old.Reason = ban.Reason;
+                            db.Update(old);
+                        }
 
-                    await db.SaveChangesAsync();
+                        await db.SaveChangesAsync();
 
-                    return true;
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    // This exception is thrown if the old entry no longer exists in the database 
-                    // when trying to update it. The solution is to remove the old cached entry
-                    // and try again.
-                    if (old != null)
-                    {
-                        db.Entry(old).State = EntityState.Detached;
+                        return true;
                     }
-                    retryCount--;
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        // This exception is thrown if the old entry no longer exists in the database 
+                        // when trying to update it. The solution is to remove the old cached entry
+                        // and try again.
+                        if (old != null)
+                        {
+                            db.Entry(old).State = EntityState.Detached;
+                        }
+                        retryCount--;
+                    }
+                    catch (DbUpdateException)
+                    {
+                        // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
+                        // Key pair already exists, when adding a new entry. The solution is to remove
+                        // the cached new entry so that the old entry is fetched from the database not
+                        // from the cache. Then the new entry can be properly compared and updated.
+                        db.Entry(ban).State = EntityState.Detached;
+                        retryCount--;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, nameof(AddBanToDatabase));
+                        return false;
+                    }
                 }
-                catch (DbUpdateException)
-                {
-                    // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
-                    // Key pair already exists, when adding a new entry. The solution is to remove
-                    // the cached new entry so that the old entry is fetched from the database not
-                    // from the cache. Then the new entry can be properly compared and updated.
-                    db.Entry(ban).State = EntityState.Detached;
-                    retryCount--;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, nameof(AddBanToDatabase));
-                    return false;
-                }
+
+                _logger.LogWarning("AddBanToDatabase failed to add ban: {@Ban}", ban);
+                return false;
             }
-
-            _logger.LogWarning("AddBanToDatabase failed to add ban: {@Ban}", ban);
-            return false;
         }
 
         private void LogBan(Ban ban, string actor)
@@ -262,21 +267,22 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-                var bans = await db.Bans.Select(b => new ServerBan()
+                using (var db = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    Username = b.Username,
-                    Address = b.Address,
-                    Reason = b.Reason
-                })
-                .ToArrayAsync();
+                    var bans = await db.Bans.Select(b => new ServerBan()
+                    {
+                        Username = b.Username,
+                        Address = b.Address,
+                        Reason = b.Reason
+                    })
+                    .ToArrayAsync();
 
-                string data = JsonConvert.SerializeObject(bans, banListSerializerSettings);
+                    string data = JsonConvert.SerializeObject(bans, banListSerializerSettings);
 
-                await File.WriteAllTextAsync(serverBanListPath, data);
+                    await File.WriteAllTextAsync(serverBanListPath, data);
 
-                return Result.OK;
+                    return Result.OK;
+                }
             }
             catch (Exception e)
             {
@@ -290,18 +296,19 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var db = _dbContextFactory.Create<ApplicationDbContext>();
-
-                var old = await db.Bans.SingleOrDefaultAsync(b => b.Username == username);
-                if (old == null)
+                using (var db = _dbContextFactory.Create<ApplicationDbContext>())
                 {
+                    var old = await db.Bans.SingleOrDefaultAsync(b => b.Username == username);
+                    if (old == null)
+                    {
+                        return true;
+                    }
+
+                    db.Bans.Remove(old);
+                    await db.SaveChangesAsync();
+
                     return true;
                 }
-
-                db.Bans.Remove(old);
-                await db.SaveChangesAsync();
-
-                return true;
             }
             catch (DbUpdateConcurrencyException)
             {

@@ -32,12 +32,12 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var data = ServerDataHelper.MakeMutableData();
             data.ServerSettings = new FactorioServerSettings() { UseDefaultAdmins = true };
 
-            var adminManagerMock = new Mock<IFactorioAdminManager>(MockBehavior.Strict);
+            var adminManagerMock = new Mock<IFactorioAdminService>(MockBehavior.Strict);
             adminManagerMock.Setup(x => x.BuildAdminList(data)).Returns(Task.FromResult(Result.OK)).Verifiable();
 
             var factorioControlHub = new TestFactorioControlHub();
 
-            var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(factorioAdminManager: adminManagerMock.Object, factorioControlHub: factorioControlHub);
+            var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(factorioAdminService: adminManagerMock.Object, factorioControlHub: factorioControlHub);
 
             // Act.
             var result = await service.BuildAdminList(data);
@@ -60,12 +60,12 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             Result expectedResult = Result.Failure("Some key", "Some error");
 
-            var adminManagerMock = new Mock<IFactorioAdminManager>(MockBehavior.Strict);
+            var adminManagerMock = new Mock<IFactorioAdminService>(MockBehavior.Strict);
             adminManagerMock.Setup(x => x.BuildAdminList(data)).Returns(Task.FromResult(expectedResult)).Verifiable();
 
             var factorioControlHub = new TestFactorioControlHub();
 
-            var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(factorioAdminManager: adminManagerMock.Object, factorioControlHub: factorioControlHub);
+            var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(factorioAdminService: adminManagerMock.Object, factorioControlHub: factorioControlHub);
 
             // Act.
             var result = await service.BuildAdminList(data);

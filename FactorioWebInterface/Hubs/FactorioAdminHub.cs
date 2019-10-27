@@ -10,11 +10,11 @@ namespace FactorioWebInterface.Hubs
     [Authorize]
     public class FactorioAdminHub : Hub<IFactorioAdminClientMethods>
     {
-        private readonly IFactorioAdminManager _factorioAdminManager;
+        private readonly IFactorioAdminService _factorioAdminService;
 
-        public FactorioAdminHub(IFactorioAdminManager factorioAdminManager)
+        public FactorioAdminHub(IFactorioAdminService factorioAdminService)
         {
-            _factorioAdminManager = factorioAdminManager;
+            _factorioAdminService = factorioAdminService;
         }
 
         public Task RequestAdmins()
@@ -23,7 +23,7 @@ namespace FactorioWebInterface.Hubs
 
             _ = Task.Run(async () =>
             {
-                var admins = await _factorioAdminManager.GetAdmins();
+                var admins = await _factorioAdminService.GetAdmins();
                 var data = CollectionChangedData.Reset(admins);
 
                 _ = client.SendAdmins(data);
@@ -34,12 +34,12 @@ namespace FactorioWebInterface.Hubs
 
         public async Task<Result> AddAdmins(string data)
         {
-            return await _factorioAdminManager.AddAdmins(data);
+            return await _factorioAdminService.AddAdmins(data);
         }
 
         public async Task<Result> RemoveAdmin(string name)
         {
-            return await _factorioAdminManager.RemoveAdmin(name);
+            return await _factorioAdminService.RemoveAdmin(name);
         }
     }
 }

@@ -98,7 +98,7 @@ namespace FactorioWebInterface
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
             services.AddSingleton<DiscordBot, DiscordBot>();
             services.AddSingleton<FactorioUpdater, FactorioUpdater>();
-            services.AddSingleton<IFactorioAdminManager, FactorioAdminManager>();
+            services.AddSingleton<IFactorioAdminService, FactorioAdminService>();
             services.AddSingleton<IFactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
             services.AddSingleton<IFactorioBanService, FactorioBanService>();
@@ -108,7 +108,7 @@ namespace FactorioWebInterface
             services.AddSingleton<IFactorioServerRunner, FactorioServerRunner>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
             services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();
-            services.AddSingleton<FactorioAdminManagerEventHandlerService, FactorioAdminManagerEventHandlerService>();
+            services.AddSingleton<FactorioAdminServiceEventHandlerService, FactorioAdminServiceEventHandlerService>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
 

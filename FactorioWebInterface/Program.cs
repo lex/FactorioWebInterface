@@ -46,7 +46,7 @@ namespace FactorioWebInterface
                 host.Services.GetService<IFactorioServerManager>();
                 host.Services.GetService<DiscordBot>();
                 host.Services.GetService<BanHubEventHandlerService>();
-                host.Services.GetService<FactorioAdminManagerEventHandlerService>();
+                host.Services.GetService<FactorioAdminServiceEventHandlerService>();
 
                 host.Run();
             }
