@@ -5,61 +5,60 @@ using FactorioWebInterfaceTests.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nito.AsyncEx;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 {
-    public class RemoveBan
+    public class RemoveBan : IDisposable
     {
-        private readonly DbContextFactory dbContextFactory;
-        private readonly IFactorioBanService factorioBanService;
+        private readonly ServiceProvider serviceProvider;
+        private readonly IDbContextFactory dbContextFactory;
+        private readonly FactorioBanService factorioBanService;
+
         public RemoveBan()
         {
-            var serviceProvider = new ServiceCollection()
-                .AddEntityFrameworkInMemoryDatabase()
-                .AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("InMemoryDbForTesting");
-                })
-            .AddSingleton<DbContextFactory, DbContextFactory>()
-            .AddSingleton<IFactorioBanService, FactorioBanService>()
-            .BuildServiceProvider();
+            serviceProvider = FactorioBanServiceHelper.MakeFactorioBanServiceProvider();
+            dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory>();
+            factorioBanService = serviceProvider.GetRequiredService<FactorioBanService>();
+        }
 
-            var db = serviceProvider.GetService<ApplicationDbContext>();
-            db.Database.EnsureCreated();
-
-            dbContextFactory = serviceProvider.GetService<DbContextFactory>();
-            factorioBanService = serviceProvider.GetService<IFactorioBanService>();
+        public void Dispose()
+        {
+            serviceProvider.Dispose();
         }
 
         [Fact]
         public async Task WhenBanIsRemovedEventIsRaised()
         {
-            var serverData = new FactorioServerData()
-            {
-                ServerExtraSettings = new FactorioServerExtraSettings() { SyncBans = true },
-                ServerId = "serverId"
-            };
+            // Arrange.
+            string serverId = "serverId";
+            bool syncBans = true;
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();
 
+            var eventRaised = new AsyncManualResetEvent();
             FactorioBanEventArgs eventArgs = null;
             void FactorioBanService_BanChanged(IFactorioBanService sender, FactorioBanEventArgs ev)
             {
                 eventArgs = ev;
+                eventRaised.Set();
             }
 
             factorioBanService.BanChanged += FactorioBanService_BanChanged;
-            await factorioBanService.RemoveBan(ban.Username, serverData.ServerId, serverData.ServerExtraSettings.SyncBans, "actor");
-            // event is raise on different thread, so we need to wait for it.
-            await Task.Delay(100);
 
+            // Act.
+            await factorioBanService.RemoveBan(ban.Username, serverId, syncBans, "actor");
+            await eventRaised.WaitAsyncWithTimeout(1000);
+
+            // Assert.
             Assert.NotNull(eventArgs);
-            Assert.Equal(serverData.ServerId, eventArgs.Source);
-            Assert.Equal(serverData.ServerExtraSettings.SyncBans, eventArgs.SynchronizeWithServers);
+            Assert.Equal(serverId, eventArgs.Source);
+            Assert.Equal(syncBans, eventArgs.SynchronizeWithServers);
 
             var changeData = eventArgs.ChangeData;
 
@@ -71,6 +70,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         [Fact]
         public async Task WhenBanIsRemovedLog()
         {
+            // Arrange.
             var actor = "actor";
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
             var parma = new object[] { ban.Username, ban.Admin, ban.Reason, actor };
@@ -88,23 +88,30 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             var logger = new TestLogger<IFactorioBanService>(Callback);
 
             var fbs = new FactorioBanService(dbContextFactory, logger);
+
+            // Act.
             await fbs.RemoveBan(ban.Username, "", true, actor);
 
+            // Assert.
             Assert.Equal(LogLevel.Information, level);
             Assert.Equal(expected, message);
-        }       
+        }
 
         [Fact]
         public async Task BanIsRemovedFromDatabase()
         {
-            var serverData = new FactorioServerData() { ServerExtraSettings = new FactorioServerExtraSettings() { SyncBans = true } };
+            // Arrange.
+            string serverId = "serverId";
+            bool syncBans = true;
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();
 
-            await factorioBanService.RemoveBan(ban.Username, serverData.ServerId, serverData.ServerExtraSettings.SyncBans, "");
+            // Act.
+            await factorioBanService.RemoveBan(ban.Username, serverId, syncBans, "");
 
+            // Assert.
             var bans = await db.Bans.ToArrayAsync();
             Assert.Empty(bans);
         }

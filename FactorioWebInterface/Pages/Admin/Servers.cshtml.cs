@@ -18,13 +18,20 @@ namespace FactorioWebInterface.Pages.Admin
         public static readonly FileTableModel globalSaves = new FileTableModel() { Name = "Global Saves", Id = "globalSaveFilesTable" };
 
         private readonly UserManager<ApplicationUser> _userManger;
-        private readonly FactorioFileManager _factorioFileManager;
+        private readonly IFactorioFileManager _factorioFileManager;
+        private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<ServersModel> _logger;
 
-        public ServersModel(UserManager<ApplicationUser> userManger, FactorioFileManager factorioFileManager, ILogger<ServersModel> logger)
+        public int ServerCount => _factorioServerDataService.ServerCount;
+
+        public ServersModel(UserManager<ApplicationUser> userManger,
+            IFactorioFileManager factorioFileManager,
+            IFactorioServerDataService factorioServerDataService,
+            ILogger<ServersModel> logger)
         {
             _userManger = userManger;
             _factorioFileManager = factorioFileManager;
+            _factorioServerDataService = factorioServerDataService;
             _logger = logger;
         }
 
@@ -44,7 +51,7 @@ namespace FactorioWebInterface.Pages.Admin
 
             var user = await _userManger.GetUserAsync(User);
 
-            if (Id < 1 || Id > FactorioServerData.serverCount)
+            if (Id < 1 || Id > _factorioServerDataService.ServerCount)
             {
                 return RedirectToPage("Servers", 1);
             }

@@ -1,5 +1,4 @@
 ﻿using FactorioWebInterface.Data;
-using FactorioWebInterface.Models;
 using FactorioWebInterface.Services;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -9,7 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("FactorioWebInterfaceTests")]
 
 namespace FactorioWebInterface
 {
@@ -37,16 +40,20 @@ namespace FactorioWebInterface
                 // This makes sure the databases are setup.
                 SeedData(host);
 
+                host.Services.GetService<IFactorioServerDataService>().Init();
+
                 // This makes sure the FactorioServerManger is started when the web interface starts.
                 host.Services.GetService<IFactorioServerManager>();
                 host.Services.GetService<DiscordBot>();
-                host.Services.GetServices<BanHubEventHandlerService>();
+                host.Services.GetService<BanHubEventHandlerService>();
+                host.Services.GetService<FactorioAdminServiceEventHandlerService>();
 
                 host.Run();
             }
             catch (Exception e)
             {
                 Log.Fatal(e, "Host terminated unexpectedly");
+                Debugger.Break();
             }
             finally
             {

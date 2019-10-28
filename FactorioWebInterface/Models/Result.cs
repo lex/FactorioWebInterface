@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using FactorioWebInterface.Utils;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -42,6 +43,8 @@ namespace FactorioWebInterface.Models
         {
             return !(left == right);
         }
+
+        public override string ToString() => $"{Key}: {Description}";
     }
 
     public class Result : IEquatable<Result>
@@ -64,6 +67,20 @@ namespace FactorioWebInterface.Models
             Errors = errors;
         }
 
+        public static Result Combine(IReadOnlyList<Result> results)
+        {
+            var errors = new List<Error>();
+
+            foreach (var result in results)
+            {
+                errors.AddRange(result.Errors);
+            }
+
+            return new Result(errors.Count == 0, errors);
+        }
+
+        public static Result Combine(params Result[] results) => Combine((IReadOnlyList<Result>)results);
+
         public override string ToString()
         {
             if (Success)
@@ -77,6 +94,8 @@ namespace FactorioWebInterface.Models
                 {
                     sb.Append(error.Key).Append(": ").AppendLine(error.Description);
                 }
+                sb.RemoveLast(Environment.NewLine.Length);
+
                 return sb.ToString();
             }
         }
@@ -132,5 +151,21 @@ namespace FactorioWebInterface.Models
 
         [JsonProperty(PropertyName = "Value")]
         public T Value { get; set; }
+
+        public static Result<T> FromResult(Result result)
+        {
+            if (result is Result<T> r)
+            {
+                return r;
+            }
+            else if (result.Success)
+            {
+                throw new InvalidCastException($"Can not convert {nameof(Result)} to {nameof(Result<T>)} when result is not in success state, unless {nameof(result)} is castable to {nameof(Result<T>)}.");
+            }
+            else
+            {
+                return Failure(result.Errors);
+            }
+        }
     }
 }

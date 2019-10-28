@@ -41,7 +41,7 @@
                         <div class="select">
                             <select id="serverSelect">
                                 @{
-                                    for (int i = 1; i <= FactorioServerData.serverCount; i++)
+                                    for (int i = 1; i <= Model.ServerCount; i++)
                                     {
                                         if (i == Model.Id)
                                         {
@@ -514,7 +514,7 @@
                             <select id="destinationSelect">
                                 <option value="@Constants.GlobalSavesDirectoryName">Global</option>
                                 @{
-                                    for (int i = 1; i <= FactorioServerData.serverCount; i++)
+                                    for (int i = 1; i <= Model.ServerCount; i++)
                                     {
                                         var path = System.IO.Path.Combine(i.ToString(), Constants.LocalSavesDirectoryName);
                                         <option value="@path">Local @i</option>

@@ -11,6 +11,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         Control = "Control",
         Status = "Status",
         Discord = "Discord",
+        Error = "Error"
     }
 
     interface MessageData {
@@ -416,7 +417,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
 
         switch (message.MessageType) {
             case MessageType.Output:
-                data = `${message.Message}`;
+                data = message.Message;
                 break;
             case MessageType.Wrapper:
                 data = `[Wrapper] ${message.Message}`;
@@ -431,6 +432,10 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
             case MessageType.Status:
                 div.classList.add('has-background-info', 'has-text-white');
                 data = message.Message;
+                break;
+            case MessageType.Error:
+                div.classList.add('has-background-danger', 'has-text-white');
+                data = `[Error] ${message.Message}`;
                 break;
             default:
                 data = "";

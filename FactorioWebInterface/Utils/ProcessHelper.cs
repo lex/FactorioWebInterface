@@ -94,7 +94,7 @@ namespace FactorioWebInterface.Utils
             var error = new StringBuilder();
 
             process.OutputDataReceived += (_, e) => output.Append(e.Data);
-            process.ErrorDataReceived += (_, e) => error.Append(e.Data);            
+            process.ErrorDataReceived += (_, e) => error.Append(e.Data);
 
             try
             {
@@ -245,7 +245,7 @@ namespace FactorioWebInterface.Utils
             {
                 return await RunProcessToEndAsync(fileName, arguments, cts.Token);
             }
-        }        
+        }
     }
 }
 

@@ -7,36 +7,60 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Threading.Tasks;
 //using static FactorioWebInterface.Models.ModPackChangedType;
 
 namespace FactorioWebInterface.Services
 {
-    public class FactorioModManager
+    public interface IFactorioModManager
+    {
+        event EventHandler<IFactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
+        event EventHandler<IFactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
+
+        Result CopyModPackFiles(string sourceModPack, string targetModPack, string[] files);
+        Result CreateModPack(string name);
+        Result DeleteModPack(string name);
+        Result DeleteModPackFiles(string modPack, string[] files);
+        IDirectoryInfo GetModPackDirectoryInfo(string modPack);
+        FileInfo GetModPackFile(string modPack, string fileName);
+        ModPackFileMetaData[] GetModPackFiles(string name);
+        ModPackMetaData[] GetModPacks();
+        Result MoveModPackFiles(string sourceModPack, string targetModPack, string[] files);
+        Result RenameModPack(string name, string newName);
+        Task<Result> UploadFiles(string modPack, IList<IFormFile> files);
+    }
+
+    public class FactorioModManager : IFactorioModManager
     {
         private readonly IHubContext<FactorioModHub, IFactorioModClientMethods> _factorioModHub;
+        private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<FactorioModManager> _logger;
+        private readonly IFileSystem _fileSystem = new FileSystem();
 
-        public event EventHandler<FactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
-        public event EventHandler<FactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
+        public event EventHandler<IFactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
+        public event EventHandler<IFactorioModManager, ModPackFilesChangedEventArgs> ModPackFilesChanged;
 
-        public FactorioModManager(IHubContext<FactorioModHub, IFactorioModClientMethods> factorioModHub,
+        public FactorioModManager(IHubContext<FactorioModHub,
+            IFactorioModClientMethods> factorioModHub,
+            IFactorioServerDataService factorioServerDataService,
             ILogger<FactorioModManager> logger)
         {
             _factorioModHub = factorioModHub;
+            _factorioServerDataService = factorioServerDataService;
             _logger = logger;
 
             ModPackChanged += FactorioModManager_ModPackChanged;
             ModPackFilesChanged += FactorioModManager_ModPackFilesChanged;
         }
 
-        private void FactorioModManager_ModPackChanged(FactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
+        private void FactorioModManager_ModPackChanged(IFactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
         {
             _factorioModHub.Clients.All.SendModPacks(eventArgs);
         }
 
-        private void FactorioModManager_ModPackFilesChanged(FactorioModManager sender, ModPackFilesChangedEventArgs eventArgs)
+        private void FactorioModManager_ModPackFilesChanged(IFactorioModManager sender, ModPackFilesChangedEventArgs eventArgs)
         {
             _factorioModHub.Clients.All.SendModPackFiles(eventArgs.ModPack, eventArgs.ChangedData);
         }
@@ -45,7 +69,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -69,11 +93,11 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public DirectoryInfo GetModPackDirectoryInfo(string modPack)
+        public IDirectoryInfo GetModPackDirectoryInfo(string modPack)
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -83,7 +107,7 @@ namespace FactorioWebInterface.Services
 
                 string safeName = Path.GetFileName(modPack);
                 string modPackPath = Path.Combine(dir.FullName, safeName);
-                var modPackDir = new DirectoryInfo(modPackPath);
+                var modPackDir = _fileSystem.DirectoryInfo.FromDirectoryName(modPackPath);
 
                 if (!modPackDir.Exists)
                 {
@@ -107,7 +131,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -161,7 +185,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -207,7 +231,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -283,7 +307,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -327,7 +351,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -429,7 +453,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -539,7 +563,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -596,7 +620,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {
@@ -731,7 +755,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.ModsDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)
                 {

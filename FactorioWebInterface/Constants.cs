@@ -21,6 +21,7 @@
         public const string TempSavesDirectoryName = "saves";
         public const string LocalSavesDirectoryName = "local_saves";
         public const string GlobalSavesDirectoryName = "global_saves";
+        public const string PublicDirectoryName = "public";
         public const string ScenarioDirectoryName = "scenarios";
         public const string LogDirectoryName = "logs";
         public const string LogArchiveDirectoryName = "archive_logs";
@@ -31,10 +32,25 @@
         public const string ArchiveDirectoryName = "archive";
         public const string ModsDirectoryName = "mods";
 
+        public const string FactorioLoadSaveFlag = "--start-server";
+        public const string FactorioLoadLatestSaveFlag = "--start-server-load-latest";
+        public const string FactorioStartScenarioFlag = "--start-server-load-scenario";
+
+        public const string FactorioSaveExtension = ".zip";
+        public const string FactorioSaveSearchPattern = "*.zip";
+
 #if WINDOWS
         public const string ExecutablePath = "bin/x64/factorio.exe";
 #else
         public const string ExecutablePath = "bin/x64/factorio";
+#endif
+
+#if WINDOWS
+        public const string DotNetPath = "C:/Program Files/dotnet/dotnet.exe";
+#elif WSL
+        public const string DotNetPath = "/usr/bin/dotnet";            
+#else
+        public const string DotNetPath = "/usr/bin/dotnet";            
 #endif
 
         public const string WindowsPublicStartSavesDirectoryName = "public\\start";
@@ -89,11 +105,12 @@
         public const string DataTrackedTag = "[DATA-TRACKED]";
         public const string QueryPlayersTag = "[QUERY-PLAYERS]";
 
-        public const string UnexpctedErrorKey = "unexpectedError";
+        public const string UnexpectedErrorKey = "unexpectedError";
         public const string ServerIdErrorKey = "serverId";
         public const string WrapperProcessErrorKey = "wrapperProcess";
         public const string InvalidServerStateErrorKey = "invalidState";
         public const string MissingFileErrorKey = "missingFile";
+        public const string MissingDirectoryErrorKey = "missingDirectory";
         public const string InvalidFileTypeErrorKey = "invalidFileType";
         public const string FileAlreadyExistsErrorKey = "fileAlreadyExists";
         public const string FileErrorKey = "fileError";

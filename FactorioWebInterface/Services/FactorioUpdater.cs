@@ -23,13 +23,17 @@ namespace FactorioWebInterface.Services
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<FactorioUpdater> _logger;
+        private readonly IFactorioServerDataService _factorioServerDataService;
 
         public event EventHandler<FactorioUpdater, CollectionChangedData<string>> CachedVersionsChanged;
 
-        public FactorioUpdater(IHttpClientFactory httpClientFactory, ILogger<FactorioUpdater> logger)
+        public FactorioUpdater(IHttpClientFactory httpClientFactory,
+             IFactorioServerDataService factorioServerDataService,
+             ILogger<FactorioUpdater> logger)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _factorioServerDataService = factorioServerDataService;
         }
 
         private string GetVersionOrFileName(string fileName)
@@ -50,7 +54,7 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.UpdateCacheDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.UpdateCacheDirectoryPath);
                 if (!dir.Exists)
                 {
                     return null;
@@ -82,7 +86,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.UpdateCacheDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.UpdateCacheDirectoryPath);
                 if (!dir.Exists)
                 {
                     return false;
@@ -116,7 +120,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var dir = new DirectoryInfo(FactorioServerData.UpdateCacheDirectoryPath);
+                var dir = new DirectoryInfo(_factorioServerDataService.UpdateCacheDirectoryPath);
                 if (!dir.Exists)
                 {
                     return result;
@@ -169,7 +173,7 @@ namespace FactorioWebInterface.Services
             {
                 await downloadLock.WaitAsync();
 
-                var cache = new DirectoryInfo(FactorioServerData.UpdateCacheDirectoryPath);
+                var cache = new DirectoryInfo(_factorioServerDataService.UpdateCacheDirectoryPath);
                 if (!cache.Exists)
                 {
                     cache.Create();
@@ -196,7 +200,7 @@ namespace FactorioWebInterface.Services
                 var fileName = download.Content.Headers.ContentDisposition.FileName;
                 fileName = GetVersionOrFileName(fileName);
 
-                var binariesPath = Path.Combine(FactorioServerData.UpdateCacheDirectoryPath, fileName);
+                var binariesPath = Path.Combine(_factorioServerDataService.UpdateCacheDirectoryPath, fileName);
                 var binaries = new FileInfo(binariesPath);
 
                 using (var fs = binaries.Open(FileMode.Create, FileAccess.Write, FileShare.None))
@@ -284,7 +288,7 @@ namespace FactorioWebInterface.Services
             catch (Exception e)
             {
                 _logger.LogError(e, nameof(DoUpdate));
-                return Result.Failure(Constants.UnexpctedErrorKey, "Unexpected error installing.");
+                return Result.Failure(Constants.UnexpectedErrorKey, "Unexpected error installing.");
             }
         }
     }

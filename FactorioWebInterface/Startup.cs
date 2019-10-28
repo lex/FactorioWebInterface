@@ -2,6 +2,7 @@ using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Services;
+using FactorioWebInterface.Utils.ProcessAbstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO.Abstractions;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,7 +46,7 @@ namespace FactorioWebInterface
 
             services.AddDbContextPool<ScenarioDbContext>(options => options.UseSqlite("Data Source=Scenario.db"));
 
-            services.AddSingleton<DbContextFactory, DbContextFactory>();
+            services.AddSingleton<IDbContextFactory, DbContextFactory>();
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -89,16 +91,24 @@ namespace FactorioWebInterface
 
             services.AddMemoryCache();
 
+            services.AddSingleton<System.IO.Abstractions.IFileSystem, FileSystem>();
+            services.AddSingleton<IProcessSystem, ProcessSystem>();
+            services.AddSingleton<FactorioServerDataConfiguration>();
+            services.AddSingleton<IFactorioServerDataService, FactorioServerDataService>();
             services.AddSingleton<DiscordBotContext, DiscordBotContext>();
             services.AddSingleton<DiscordBot, DiscordBot>();
             services.AddSingleton<FactorioUpdater, FactorioUpdater>();
-            services.AddSingleton<FactorioAdminManager, FactorioAdminManager>();
-            services.AddSingleton<FactorioModManager, FactorioModManager>();
+            services.AddSingleton<IFactorioAdminService, FactorioAdminService>();
+            services.AddSingleton<IFactorioModManager, FactorioModManager>();
             services.AddSingleton<ScenarioDataManager, ScenarioDataManager>();
             services.AddSingleton<IFactorioBanService, FactorioBanService>();
-            services.AddSingleton<FactorioFileManager, FactorioFileManager>();
+            services.AddSingleton<IPublicFactorioSaves, PublicFactorioSaves>();
+            services.AddSingleton<IFactorioFileManager, FactorioFileManager>();
+            services.AddSingleton<IFactorioServerPreparer, FactorioServerPreparer>();
+            services.AddSingleton<IFactorioServerRunner, FactorioServerRunner>();
             services.AddSingleton<IFactorioServerManager, FactorioServerManager>();
             services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();
+            services.AddSingleton<FactorioAdminServiceEventHandlerService, FactorioAdminServiceEventHandlerService>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
 

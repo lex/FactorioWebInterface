@@ -1,11 +1,12 @@
-﻿using System;
+﻿using FactorioWebInterface.Services;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace FactorioWebInterface.Models
 {
-    public class PublicFactorioSaves
+    public class PublicFactorioSaves : IPublicFactorioSaves
     {
         private static HashSet<string> ValidPublicDirectories { get; } = new HashSet<string>()
         {
@@ -17,16 +18,23 @@ namespace FactorioWebInterface.Models
             Constants.WindowsPublicOldSavesDirectoryName,
         };
 
-        private static DirectoryInfo GetDirectory(string dirName)
+        private readonly IFactorioServerDataService _factorioServerDataService;
+
+        public PublicFactorioSaves(IFactorioServerDataService factorioServerDataService)
+        {
+            _factorioServerDataService = factorioServerDataService;
+        }
+
+        private DirectoryInfo GetDirectory(string dirName)
         {
             try
             {
                 if (ValidPublicDirectories.Contains(dirName))
                 {
-                    var dirPath = Path.Combine(FactorioServerData.baseDirectoryPath, dirName);
+                    var dirPath = Path.Combine(_factorioServerDataService.BaseDirectoryPath, dirName);
                     dirPath = Path.GetFullPath(dirPath);
 
-                    if (!dirPath.StartsWith(FactorioServerData.baseDirectoryPath))
+                    if (!dirPath.StartsWith(_factorioServerDataService.BaseDirectoryPath))
                         return null;
 
                     var dir = new DirectoryInfo(dirPath);
@@ -48,7 +56,7 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public static FileMetaData[] GetFiles(string directoryName)
+        public FileMetaData[] GetFiles(string directoryName)
         {
             var dir = GetDirectory(directoryName);
 
@@ -78,7 +86,7 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public static FileInfo GetFile(string directoryName, string fileName)
+        public FileInfo GetFile(string directoryName, string fileName)
         {
             var dir = GetDirectory(directoryName);
             if (dir == null)
@@ -98,7 +106,7 @@ namespace FactorioWebInterface.Models
                 var filePath = Path.Combine(dir.FullName, fileName);
                 filePath = Path.GetFullPath(filePath);
 
-                if (!filePath.StartsWith(FactorioServerData.basePublicDirectoryPath))
+                if (!filePath.StartsWith(_factorioServerDataService.BasePublicDirectoryPath))
                 {
                     return null;
                 }

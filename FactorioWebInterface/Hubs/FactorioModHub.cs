@@ -9,9 +9,9 @@ namespace FactorioWebInterface.Hubs
     [Authorize]
     public class FactorioModHub : Hub<IFactorioModClientMethods>
     {
-        private readonly FactorioModManager _factorioModManager;
+        private readonly IFactorioModManager _factorioModManager;
 
-        public FactorioModHub(FactorioModManager factorioModManager)
+        public FactorioModHub(IFactorioModManager factorioModManager)
         {
             _factorioModManager = factorioModManager;
         }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace FactorioWebInterface.Models
+﻿namespace FactorioWebInterface.Models
 {
     public enum MessageType
     {
@@ -11,8 +6,10 @@ namespace FactorioWebInterface.Models
         Wrapper,
         Control,
         Status,
-        Discord
+        Discord,
+        Error
     }
+
     public class MessageData
     {
         public string ServerId { get; set; }

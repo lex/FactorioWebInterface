@@ -1,24 +1,9 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Threading.Tasks;
 
 namespace Shared
 {
-    public enum FactorioServerStatus
-    {
-        Unknown,
-        WrapperStarting,
-        WrapperStarted,
-        Starting,
-        Running,
-        Stopping,
-        Stopped,
-        Killing,
-        Killed,
-        Crashed,
-        Updating,
-        Updated,
-    }
-
     public interface IFactorioProcessClientMethods
     {
         Task SendToFactorio(string data);

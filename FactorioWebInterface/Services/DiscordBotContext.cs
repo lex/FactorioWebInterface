@@ -36,7 +36,7 @@ namespace FactorioWebInterface.Services
         private const int maxMessageQueueSize = 1000;
 
         private readonly IConfiguration _configuration;
-        private readonly DbContextFactory _dbContextFactory;
+        private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<DiscordBot> _logger;
 
         private readonly ulong guildId;
@@ -52,7 +52,7 @@ namespace FactorioWebInterface.Services
 
         public event EventHandler<DiscordBotContext, ServerMessageEventArgs> FactorioDiscordDataReceived;
 
-        public DiscordBotContext(IConfiguration configuration, DbContextFactory dbContextFactory, ILogger<DiscordBot> logger)
+        public DiscordBotContext(IConfiguration configuration, IDbContextFactory dbContextFactory, ILogger<DiscordBot> logger)
         {
             _configuration = configuration;
             _dbContextFactory = dbContextFactory;

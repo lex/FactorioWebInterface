@@ -13,13 +13,13 @@ namespace FactorioWebInterface.Services
 {
     public class ScenarioDataManager
     {
-        private readonly DbContextFactory _dbContextFactory;
+        private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<ScenarioDataManager> _logger;
         private readonly IHubContext<ScenarioDataHub, IScenarioDataClientMethods> _scenariolHub;
 
         public event EventHandler<ScenarioDataManager, ScenarioDataEntryChangedEventArgs> EntryChanged;
 
-        public ScenarioDataManager(DbContextFactory dbContextFactory,
+        public ScenarioDataManager(IDbContextFactory dbContextFactory,
             ILogger<ScenarioDataManager> logger,
             IHubContext<ScenarioDataHub, IScenarioDataClientMethods> scenariolHub)
         {
@@ -53,12 +53,14 @@ namespace FactorioWebInterface.Services
         {
             try
             {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries
-                    .AsNoTracking()
-                    .Select(x => x.DataSet)
-                    .Distinct()
-                    .ToArrayAsync();
+                using (var db = _dbContextFactory.Create<ScenarioDbContext>())
+                {
+                    return await db.ScenarioDataEntries
+                        .AsNoTracking()
+                        .Select(x => x.DataSet)
+                        .Distinct()
+                        .ToArrayAsync();
+                }
             }
             catch (Exception e)
             {
@@ -74,12 +76,14 @@ namespace FactorioWebInterface.Services
                 return null;
             }
 
-            var db = _dbContextFactory.Create<ScenarioDbContext>();
-            return await db.ScenarioDataEntries
-                .AsNoTracking()
-                .Where(x => x.DataSet == dataSet && x.Key == key)
-                .Select(x => x.Value)
-                .FirstOrDefaultAsync();
+            using (var db = _dbContextFactory.Create<ScenarioDbContext>())
+            {
+                return await db.ScenarioDataEntries
+                    .AsNoTracking()
+                    .Where(x => x.DataSet == dataSet && x.Key == key)
+                    .Select(x => x.Value)
+                    .FirstOrDefaultAsync();
+            }
         }
 
         public async Task<ScenarioDataKeyValue[]> GetAllEntries(string dataSet)
@@ -91,12 +95,14 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                var db = _dbContextFactory.Create<ScenarioDbContext>();
-                return await db.ScenarioDataEntries
-                    .AsNoTracking()
-                    .Where(x => x.DataSet == dataSet)
-                    .Select(x => new ScenarioDataKeyValue() { Key = x.Key, Value = x.Value })
-                    .ToArrayAsync();
+                using (var db = _dbContextFactory.Create<ScenarioDbContext>())
+                {
+                    return await db.ScenarioDataEntries
+                        .AsNoTracking()
+                        .Where(x => x.DataSet == dataSet)
+                        .Select(x => new ScenarioDataKeyValue() { Key = x.Key, Value = x.Value })
+                        .ToArrayAsync();
+                }
             }
             catch (Exception e)
             {
@@ -124,62 +130,63 @@ namespace FactorioWebInterface.Services
 
         private async Task UpdateDataSetDb(ScenarioDataEntry data)
         {
-            var db = _dbContextFactory.Create<ScenarioDbContext>();
-
-            int retryCount = 10;
-            while (retryCount >= 0)
+            using (var db = _dbContextFactory.Create<ScenarioDbContext>())
             {
-                var old = await db.ScenarioDataEntries.FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
-
-                try
+                int retryCount = 10;
+                while (retryCount >= 0)
                 {
-                    if (data.Value == null)
+                    var old = await db.ScenarioDataEntries.FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
+
+                    try
                     {
-                        if (old != null)
+                        if (data.Value == null)
                         {
-                            db.Remove(old);
-                            await db.SaveChangesAsync();
-                        }
-                    }
-                    else
-                    {
-                        if (old != null)
-                        {
-                            db.Entry(old).Property(x => x.Value).CurrentValue = data.Value;
+                            if (old != null)
+                            {
+                                db.Remove(old);
+                                await db.SaveChangesAsync();
+                            }
                         }
                         else
                         {
-                            db.Add(data);
+                            if (old != null)
+                            {
+                                db.Entry(old).Property(x => x.Value).CurrentValue = data.Value;
+                            }
+                            else
+                            {
+                                db.Add(data);
+                            }
+                            await db.SaveChangesAsync();
                         }
-                        await db.SaveChangesAsync();
-                    }
 
-                    return;
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    // This exception is thrown if the old entry no longer exists in the database 
-                    // when trying to update it. The solution is to remove the old cached entry
-                    // and try again.
-                    if (old != null)
-                    {
-                        db.Entry(old).State = EntityState.Detached;
+                        return;
                     }
-                    retryCount--;
-                }
-                catch (DbUpdateException)
-                {
-                    // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
-                    // Key pair already exists, when adding a new entry. The solution is to remove
-                    // the cached new entry so that the old entry is fetched from the database not
-                    // from the cache. Then the new entry can be properly compared and updated.
-                    db.Entry(data).State = EntityState.Detached;
-                    retryCount--;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, nameof(UpdateDataSetDb));
-                    return;
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        // This exception is thrown if the old entry no longer exists in the database 
+                        // when trying to update it. The solution is to remove the old cached entry
+                        // and try again.
+                        if (old != null)
+                        {
+                            db.Entry(old).State = EntityState.Detached;
+                        }
+                        retryCount--;
+                    }
+                    catch (DbUpdateException)
+                    {
+                        // This exception is thrown if the UNQIUE constraint fails, meaning the DataSet
+                        // Key pair already exists, when adding a new entry. The solution is to remove
+                        // the cached new entry so that the old entry is fetched from the database not
+                        // from the cache. Then the new entry can be properly compared and updated.
+                        db.Entry(data).State = EntityState.Detached;
+                        retryCount--;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, nameof(UpdateDataSetDb));
+                        return;
+                    }
                 }
             }
 
