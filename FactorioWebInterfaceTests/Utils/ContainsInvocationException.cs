@@ -11,17 +11,17 @@ using Xunit.Sdk;
 
 namespace FactorioWebInterfaceTests.Utils
 {
-    public class ContainsMessageException : Exception
+    public class ContainsInvocationException : Exception
     {
-        public ContainsMessageException(string message) : base(message)
+        public ContainsInvocationException(string message) : base(message)
         {
         }
 
-        public ContainsMessageException(string message, Exception innerException) : base(message, innerException)
+        public ContainsInvocationException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        public ContainsMessageException()
+        public ContainsInvocationException()
         {
         }
     }

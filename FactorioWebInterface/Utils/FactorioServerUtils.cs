@@ -23,29 +23,20 @@ namespace FactorioWebInterface.Utils
             string oldStatusString = oldStatus.ToString();
             string newStatusString = status.ToString();
 
-            MessageData message;
-            if (string.IsNullOrWhiteSpace(byUser))
+            string message = string.IsNullOrWhiteSpace(byUser)
+                ? $"[STATUS] Change from {oldStatusString} to {newStatusString}"
+                : $"[STATUS] Change from {oldStatusString} to {newStatusString} by user {byUser}";
+
+            MessageData messageData = new MessageData()
             {
-                message = new MessageData()
-                {
-                    ServerId = serverId,
-                    MessageType = MessageType.Status,
-                    Message = $"[STATUS] Change from {oldStatusString} to {newStatusString}"
-                };
-            }
-            else
-            {
-                message = new MessageData()
-                {
-                    ServerId = serverId,
-                    MessageType = MessageType.Status,
-                    Message = $"[STATUS] Change from {oldStatusString} to {newStatusString} by user {byUser}"
-                };
-            }
+                ServerId = serverId,
+                MessageType = MessageType.Status,
+                Message = message
+            };
+            mutableData.ControlMessageBuffer.Add(messageData);
 
             var group = factorioControlHub.Clients.Groups(serverId);
-
-            return Task.WhenAll(group.FactorioStatusChanged(newStatusString, oldStatusString), group.SendMessage(message));
+            return Task.WhenAll(group.FactorioStatusChanged(newStatusString, oldStatusString), group.SendMessage(messageData));
         }
 
         public static Task SendMessage(FactorioServerMutableData mutableData,

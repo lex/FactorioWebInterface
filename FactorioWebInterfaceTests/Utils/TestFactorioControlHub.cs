@@ -28,7 +28,7 @@ namespace FactorioWebInterfaceTests.Utils
             foreach (var invocation in Invocations)
             {
                 var arguments = invocation.Arguments;
-                if (arguments.Length == 1
+                if (invocation.Name == nameof(IFactorioControlClientMethods.SendMessage) && arguments.Length == 1
                     && arguments[0] is MessageData messageData
                     && serverId == messageData.ServerId
                     && messageType == messageData.MessageType
@@ -38,7 +38,7 @@ namespace FactorioWebInterfaceTests.Utils
                 }
             }
 
-            throw new ContainsMessageException($"Message with {nameof(MessageData.ServerId)}: {serverId} and {nameof(MessageData.MessageType)}: {messageType} and {nameof(MessageData.Message)}: {message} not found.");
+            throw new ContainsInvocationException($"Message with {nameof(MessageData.ServerId)}: {serverId} and {nameof(MessageData.MessageType)}: {messageType} and {nameof(MessageData.Message)}: {message} not found.");
         }
 
         public void AssertContainsStatusMessage(string serverId, FactorioServerStatus oldStatus, FactorioServerStatus newStatus, string byUser = "")
@@ -54,6 +54,25 @@ namespace FactorioWebInterfaceTests.Utils
             }
 
             AssertContainsMessage(serverId, MessageType.Status, message);
+        }
+
+        public void AssertContainsChangeStatus(FactorioServerStatus oldStatus, FactorioServerStatus newStatus)
+        {
+            string oldStatusString = oldStatus.ToString();
+            string newStatusString = newStatus.ToString();
+
+            foreach (var invocation in Invocations)
+            {
+                var arguments = invocation.Arguments;
+                if (invocation.Name == nameof(IFactorioControlClientMethods.FactorioStatusChanged) && arguments.Length == 2
+                    && arguments[0].ToString() == oldStatusString
+                    && arguments[1].ToString() == newStatusString)
+                {
+                    return;
+                }
+
+                throw new ContainsInvocationException($"Change Status with {nameof(oldStatus)}: {oldStatusString} and {nameof(newStatus)}: {newStatusString} not found.");
+            }
         }
 
         private TestFactorioControlClients factorioControlClients = new TestFactorioControlClients();
