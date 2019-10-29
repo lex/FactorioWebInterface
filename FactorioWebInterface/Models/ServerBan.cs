@@ -6,14 +6,14 @@ namespace FactorioWebInterface.Models
     public class ServerBan
     {
         [JsonProperty(PropertyName = "username")]
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         [JsonProperty(PropertyName = "reason")]
         [DefaultValue("")]
-        public string Reason { get; set; }
+        public string? Reason { get; set; }
 
         [JsonProperty(PropertyName = "address")]
         [DefaultValue(null)]
-        public string Address { get; set; }
+        public string? Address { get; set; }
     }
 }

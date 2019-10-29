@@ -16,12 +16,12 @@ namespace FactorioWebInterface.Services
     {
         event EventHandler<IFactorioBanService, FactorioBanEventArgs> BanChanged;
         Task<bool> AddBan(Ban ban, string serverId, bool synchronizeWithServers, string actor);
-        Task<Result> AddBanFromWeb(Ban ban, bool synchronizeWithServers, string actor);
+        Task<Result> AddBanFromWeb(Ban ban, bool synchronizeWithServers, string? actor);
         Task DoBanFromGameOutput(FactorioServerData serverData, string content);
         Task<Ban[]> GetBansAsync();
         Task<string[]> GetBanUserNamesAsync();
         Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string actor);
-        Task<Result> RemoveBanFromWeb(string username, bool synchronizeWithServers, string actor);
+        Task<Result> RemoveBanFromWeb(string username, bool synchronizeWithServers, string? actor);
         Task DoUnBanFromGameOutput(FactorioServerData serverData, string content);
         Task<Result> BuildBanList(string serverBanListPath);
     }
@@ -37,7 +37,7 @@ namespace FactorioWebInterface.Services
         private readonly IDbContextFactory _dbContextFactory;
         private readonly ILogger<IFactorioBanService> _logger;
 
-        public event EventHandler<IFactorioBanService, FactorioBanEventArgs> BanChanged;
+        public event EventHandler<IFactorioBanService, FactorioBanEventArgs>? BanChanged;
 
         public FactorioBanService(IDbContextFactory dbContextFactory, ILogger<IFactorioBanService> logger)
         {
@@ -67,7 +67,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public async Task<Result> AddBanFromWeb(Ban ban, bool synchronizeWithServers, string actor)
+        public async Task<Result> AddBanFromWeb(Ban ban, bool synchronizeWithServers, string? actor)
         {
             List<Error> errors = new List<Error>();
 
@@ -112,16 +112,16 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            var ban = BanParser.FromBanGameOutput(content);
-            if (ban == null || ban.Admin == Constants.ServerPlayerName)
+            var parsedBan = BanParser.FromBanGameOutput(content);
+            if (parsedBan == null || parsedBan.Admin == Constants.ServerPlayerName)
             {
                 return;
             }
 
-            await AddBan(ban, serverData.ServerId, true, ban.Admin);
+            await AddBan(parsedBan.ToBan(), serverData.ServerId, synchronizeWithServers: true, parsedBan.Admin);
         }
 
-        public async Task<bool> AddBan(Ban ban, string serverId, bool synchronizeWithServers, string actor)
+        public async Task<bool> AddBan(Ban ban, string serverId, bool synchronizeWithServers, string? actor)
         {
             bool added = await AddBanToDatabase(ban);
             if (added)
@@ -198,12 +198,12 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private void LogBan(Ban ban, string actor)
+        private void LogBan(Ban ban, string? actor)
         {
-            _logger.LogInformation("[BAN] {username} was banned by {admin}. Reason: {reason} Actor: {actor}", ban.Username, ban.Admin, ban.Reason, actor);
+            _logger.LogInformation("[BAN] {username} was banned by {admin}. Reason: {reason} Actor: {actor}", ban.Username, ban.Admin, ban.Reason, actor ?? "");
         }
 
-        public async Task<Result> RemoveBanFromWeb(string username, bool synchronizeWithServers, string actor)
+        public async Task<Result> RemoveBanFromWeb(string username, bool synchronizeWithServers, string? actor)
         {
             List<Error> errors = new List<Error>();
 

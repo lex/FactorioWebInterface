@@ -64,7 +64,7 @@ namespace FactorioWebInterface.Utils
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // This disposes the registration as soon as one of the tasks trigger
-            using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs))
+            using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state!).TrySetResult(true), tcs))
             {
                 var resultTask = await Task.WhenAny(task, tcs.Task);
                 if (resultTask == tcs.Task)
@@ -82,7 +82,7 @@ namespace FactorioWebInterface.Utils
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // This disposes the registration as soon as one of the tasks trigger
-            using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state).TrySetResult(true), tcs))
+            using (cancellationToken.Register(state => ((TaskCompletionSource<bool>)state!).TrySetResult(true), tcs))
             {
                 var resultTask = await Task.WhenAny(task, tcs.Task);
                 if (resultTask == tcs.Task)

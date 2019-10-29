@@ -8,13 +8,13 @@ namespace FactorioWebInterface.Data.GitHub
     public partial class PushEvent
     {
         [JsonProperty("ref")]
-        public string Ref { get; set; }
+        public string? Ref { get; set; }
 
         [JsonProperty("before")]
-        public string Before { get; set; }
+        public string? Before { get; set; }
 
         [JsonProperty("after")]
-        public string After { get; set; }
+        public string? After { get; set; }
 
         [JsonProperty("created")]
         public bool Created { get; set; }
@@ -26,82 +26,82 @@ namespace FactorioWebInterface.Data.GitHub
         public bool Forced { get; set; }
 
         [JsonProperty("base_ref")]
-        public object BaseRef { get; set; }
+        public object? BaseRef { get; set; }
 
         [JsonProperty("compare")]
-        public Uri Compare { get; set; }
+        public Uri? Compare { get; set; }
 
         [JsonProperty("commits")]
-        public Commit[] Commits { get; set; }
+        public Commit[]? Commits { get; set; }
 
         [JsonProperty("head_commit")]
-        public Commit HeadCommit { get; set; }
+        public Commit? HeadCommit { get; set; }
 
         [JsonProperty("repository")]
-        public Repository Repository { get; set; }
+        public Repository? Repository { get; set; }
 
         [JsonProperty("pusher")]
-        public Pusher Pusher { get; set; }
+        public Pusher? Pusher { get; set; }
 
         [JsonProperty("sender")]
-        public Sender Sender { get; set; }
+        public Sender? Sender { get; set; }
     }
 
     public partial class Commit
     {
         [JsonProperty("id")]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [JsonProperty("tree_id")]
-        public string TreeId { get; set; }
+        public string? TreeId { get; set; }
 
         [JsonProperty("distinct")]
         public bool Distinct { get; set; }
 
         [JsonProperty("message")]
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         [JsonProperty("timestamp")]
         public DateTimeOffset Timestamp { get; set; }
 
         [JsonProperty("url")]
-        public Uri Url { get; set; }
+        public Uri? Url { get; set; }
 
         [JsonProperty("author")]
-        public Author Author { get; set; }
+        public Author? Author { get; set; }
 
         [JsonProperty("committer")]
-        public Author Committer { get; set; }
+        public Author? Committer { get; set; }
 
         [JsonProperty("added")]
-        public object[] Added { get; set; }
+        public object[]? Added { get; set; }
 
         [JsonProperty("removed")]
-        public object[] Removed { get; set; }
+        public object[]? Removed { get; set; }
 
         [JsonProperty("modified")]
-        public string[] Modified { get; set; }
+        public string[]? Modified { get; set; }
     }
 
     public partial class Author
     {
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty("email")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [JsonProperty("username")]
-        public string Username { get; set; }
+        public string? Username { get; set; }
     }
 
     public partial class Pusher
     {
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty("email")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
     }
 
     public partial class Repository
@@ -110,139 +110,139 @@ namespace FactorioWebInterface.Data.GitHub
         public long Id { get; set; }
 
         [JsonProperty("node_id")]
-        public string NodeId { get; set; }
+        public string? NodeId { get; set; }
 
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty("full_name")]
-        public string FullName { get; set; }
+        public string? FullName { get; set; }
 
         [JsonProperty("private")]
         public bool Private { get; set; }
 
         [JsonProperty("owner")]
-        public Sender Owner { get; set; }
+        public Sender? Owner { get; set; }
 
         [JsonProperty("html_url")]
-        public Uri HtmlUrl { get; set; }
+        public Uri? HtmlUrl { get; set; }
 
         [JsonProperty("description")]
-        public object Description { get; set; }
+        public object? Description { get; set; }
 
         [JsonProperty("fork")]
         public bool Fork { get; set; }
 
         [JsonProperty("url")]
-        public Uri Url { get; set; }
+        public Uri? Url { get; set; }
 
         [JsonProperty("forks_url")]
-        public Uri ForksUrl { get; set; }
+        public Uri? ForksUrl { get; set; }
 
         [JsonProperty("keys_url")]
-        public string KeysUrl { get; set; }
+        public string? KeysUrl { get; set; }
 
         [JsonProperty("collaborators_url")]
-        public string CollaboratorsUrl { get; set; }
+        public string? CollaboratorsUrl { get; set; }
 
         [JsonProperty("teams_url")]
-        public Uri TeamsUrl { get; set; }
+        public Uri? TeamsUrl { get; set; }
 
         [JsonProperty("hooks_url")]
-        public Uri HooksUrl { get; set; }
+        public Uri? HooksUrl { get; set; }
 
         [JsonProperty("issue_events_url")]
-        public string IssueEventsUrl { get; set; }
+        public string? IssueEventsUrl { get; set; }
 
         [JsonProperty("events_url")]
-        public Uri EventsUrl { get; set; }
+        public Uri? EventsUrl { get; set; }
 
         [JsonProperty("assignees_url")]
-        public string AssigneesUrl { get; set; }
+        public string? AssigneesUrl { get; set; }
 
         [JsonProperty("branches_url")]
-        public string BranchesUrl { get; set; }
+        public string? BranchesUrl { get; set; }
 
         [JsonProperty("tags_url")]
-        public Uri TagsUrl { get; set; }
+        public Uri? TagsUrl { get; set; }
 
         [JsonProperty("blobs_url")]
-        public string BlobsUrl { get; set; }
+        public string? BlobsUrl { get; set; }
 
         [JsonProperty("git_tags_url")]
-        public string GitTagsUrl { get; set; }
+        public string? GitTagsUrl { get; set; }
 
         [JsonProperty("git_refs_url")]
-        public string GitRefsUrl { get; set; }
+        public string? GitRefsUrl { get; set; }
 
         [JsonProperty("trees_url")]
-        public string TreesUrl { get; set; }
+        public string? TreesUrl { get; set; }
 
         [JsonProperty("statuses_url")]
-        public string StatusesUrl { get; set; }
+        public string? StatusesUrl { get; set; }
 
         [JsonProperty("languages_url")]
-        public Uri LanguagesUrl { get; set; }
+        public Uri? LanguagesUrl { get; set; }
 
         [JsonProperty("stargazers_url")]
-        public Uri StargazersUrl { get; set; }
+        public Uri? StargazersUrl { get; set; }
 
         [JsonProperty("contributors_url")]
-        public Uri ContributorsUrl { get; set; }
+        public Uri? ContributorsUrl { get; set; }
 
         [JsonProperty("subscribers_url")]
-        public Uri SubscribersUrl { get; set; }
+        public Uri? SubscribersUrl { get; set; }
 
         [JsonProperty("subscription_url")]
-        public Uri SubscriptionUrl { get; set; }
+        public Uri? SubscriptionUrl { get; set; }
 
         [JsonProperty("commits_url")]
-        public string CommitsUrl { get; set; }
+        public string? CommitsUrl { get; set; }
 
         [JsonProperty("git_commits_url")]
-        public string GitCommitsUrl { get; set; }
+        public string? GitCommitsUrl { get; set; }
 
         [JsonProperty("comments_url")]
-        public string CommentsUrl { get; set; }
+        public string? CommentsUrl { get; set; }
 
         [JsonProperty("issue_comment_url")]
-        public string IssueCommentUrl { get; set; }
+        public string? IssueCommentUrl { get; set; }
 
         [JsonProperty("contents_url")]
-        public string ContentsUrl { get; set; }
+        public string? ContentsUrl { get; set; }
 
         [JsonProperty("compare_url")]
-        public string CompareUrl { get; set; }
+        public string? CompareUrl { get; set; }
 
         [JsonProperty("merges_url")]
-        public Uri MergesUrl { get; set; }
+        public Uri? MergesUrl { get; set; }
 
         [JsonProperty("archive_url")]
-        public string ArchiveUrl { get; set; }
+        public string? ArchiveUrl { get; set; }
 
         [JsonProperty("downloads_url")]
-        public Uri DownloadsUrl { get; set; }
+        public Uri? DownloadsUrl { get; set; }
 
         [JsonProperty("issues_url")]
-        public string IssuesUrl { get; set; }
+        public string? IssuesUrl { get; set; }
 
         [JsonProperty("pulls_url")]
-        public string PullsUrl { get; set; }
+        public string? PullsUrl { get; set; }
 
         [JsonProperty("milestones_url")]
-        public string MilestonesUrl { get; set; }
+        public string? MilestonesUrl { get; set; }
 
         [JsonProperty("notifications_url")]
-        public string NotificationsUrl { get; set; }
+        public string? NotificationsUrl { get; set; }
 
         [JsonProperty("labels_url")]
-        public string LabelsUrl { get; set; }
+        public string? LabelsUrl { get; set; }
 
         [JsonProperty("releases_url")]
-        public string ReleasesUrl { get; set; }
+        public string? ReleasesUrl { get; set; }
 
         [JsonProperty("deployments_url")]
-        public Uri DeploymentsUrl { get; set; }
+        public Uri? DeploymentsUrl { get; set; }
 
         [JsonProperty("created_at")]
         public long CreatedAt { get; set; }
@@ -254,19 +254,19 @@ namespace FactorioWebInterface.Data.GitHub
         public long PushedAt { get; set; }
 
         [JsonProperty("git_url")]
-        public string GitUrl { get; set; }
+        public string? GitUrl { get; set; }
 
         [JsonProperty("ssh_url")]
-        public string SshUrl { get; set; }
+        public string? SshUrl { get; set; }
 
         [JsonProperty("clone_url")]
-        public Uri CloneUrl { get; set; }
+        public Uri? CloneUrl { get; set; }
 
         [JsonProperty("svn_url")]
-        public Uri SvnUrl { get; set; }
+        public Uri? SvnUrl { get; set; }
 
         [JsonProperty("homepage")]
-        public object Homepage { get; set; }
+        public object? Homepage { get; set; }
 
         [JsonProperty("size")]
         public long Size { get; set; }
@@ -278,7 +278,7 @@ namespace FactorioWebInterface.Data.GitHub
         public long WatchersCount { get; set; }
 
         [JsonProperty("language")]
-        public object Language { get; set; }
+        public object? Language { get; set; }
 
         [JsonProperty("has_issues")]
         public bool HasIssues { get; set; }
@@ -299,7 +299,7 @@ namespace FactorioWebInterface.Data.GitHub
         public long ForksCount { get; set; }
 
         [JsonProperty("mirror_url")]
-        public object MirrorUrl { get; set; }
+        public object? MirrorUrl { get; set; }
 
         [JsonProperty("archived")]
         public bool Archived { get; set; }
@@ -308,7 +308,7 @@ namespace FactorioWebInterface.Data.GitHub
         public long OpenIssuesCount { get; set; }
 
         [JsonProperty("license")]
-        public object License { get; set; }
+        public object? License { get; set; }
 
         [JsonProperty("forks")]
         public long Forks { get; set; }
@@ -320,73 +320,73 @@ namespace FactorioWebInterface.Data.GitHub
         public long Watchers { get; set; }
 
         [JsonProperty("default_branch")]
-        public string DefaultBranch { get; set; }
+        public string? DefaultBranch { get; set; }
 
         [JsonProperty("stargazers")]
         public long Stargazers { get; set; }
 
         [JsonProperty("master_branch")]
-        public string MasterBranch { get; set; }
+        public string? MasterBranch { get; set; }
     }
 
     public partial class Sender
     {
         [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [JsonProperty("login")]
-        public string Login { get; set; }
+        public string? Login { get; set; }
 
         [JsonProperty("id")]
         public long Id { get; set; }
 
         [JsonProperty("node_id")]
-        public string NodeId { get; set; }
+        public string? NodeId { get; set; }
 
         [JsonProperty("avatar_url")]
-        public Uri AvatarUrl { get; set; }
+        public Uri? AvatarUrl { get; set; }
 
         [JsonProperty("gravatar_id")]
-        public string GravatarId { get; set; }
+        public string? GravatarId { get; set; }
 
         [JsonProperty("url")]
-        public Uri Url { get; set; }
+        public Uri? Url { get; set; }
 
         [JsonProperty("html_url")]
-        public Uri HtmlUrl { get; set; }
+        public Uri? HtmlUrl { get; set; }
 
         [JsonProperty("followers_url")]
-        public Uri FollowersUrl { get; set; }
+        public Uri? FollowersUrl { get; set; }
 
         [JsonProperty("following_url")]
-        public string FollowingUrl { get; set; }
+        public string? FollowingUrl { get; set; }
 
         [JsonProperty("gists_url")]
-        public string GistsUrl { get; set; }
+        public string? GistsUrl { get; set; }
 
         [JsonProperty("starred_url")]
-        public string StarredUrl { get; set; }
+        public string? StarredUrl { get; set; }
 
         [JsonProperty("subscriptions_url")]
-        public Uri SubscriptionsUrl { get; set; }
+        public Uri? SubscriptionsUrl { get; set; }
 
         [JsonProperty("organizations_url")]
-        public Uri OrganizationsUrl { get; set; }
+        public Uri? OrganizationsUrl { get; set; }
 
         [JsonProperty("repos_url")]
-        public Uri ReposUrl { get; set; }
+        public Uri? ReposUrl { get; set; }
 
         [JsonProperty("events_url")]
-        public string EventsUrl { get; set; }
+        public string? EventsUrl { get; set; }
 
         [JsonProperty("received_events_url")]
-        public Uri ReceivedEventsUrl { get; set; }
+        public Uri? ReceivedEventsUrl { get; set; }
 
         [JsonProperty("type")]
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
         [JsonProperty("site_admin")]
         public bool SiteAdmin { get; set; }

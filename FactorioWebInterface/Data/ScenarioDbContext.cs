@@ -4,7 +4,7 @@ namespace FactorioWebInterface.Data
 {
     public class ScenarioDbContext : DbContext
     {
-        public DbSet<ScenarioDataEntry> ScenarioDataEntries { get; set; }
+        public DbSet<ScenarioDataEntry> ScenarioDataEntries { get; set; } = default!;
 
         public ScenarioDbContext(DbContextOptions<ScenarioDbContext> options) : base(options)
         {

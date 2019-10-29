@@ -163,8 +163,10 @@ namespace FactorioWebInterface.Services
 
                 foreach (var ban in changeData.NewItems)
                 {
+                    var username = ban.Username;
+
                     // /ban doesn't support names with spaces.
-                    if (ban.Username.Contains(' '))
+                    if (username == null || username.Contains(' '))
                     {
                         return;
                     }
@@ -173,7 +175,7 @@ namespace FactorioWebInterface.Services
 
                     if (command.EndsWith('.'))
                     {
-                        command.Substring(0, command.Length - 1);
+                        command = command.Substring(command.Length - 1);
                     }
 
                     SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
@@ -192,7 +194,7 @@ namespace FactorioWebInterface.Services
                     var username = ban.Username;
 
                     // /ban doesn't support names with spaces.
-                    if (username.Contains(' '))
+                    if (username == null || username.Contains(' '))
                     {
                         return;
                     }
@@ -1487,13 +1489,13 @@ namespace FactorioWebInterface.Services
 
             if (data.StartsWith("/ban "))
             {
-                Ban ban = BanParser.FromBanCommand(data, actor);
-                if (ban == null)
+                ParsedBan? parsedBan = BanParser.FromBanCommand(data, actor);
+                if (parsedBan == null)
                 {
                     return;
                 }
 
-                var command = $"/ban {ban.Username} {ban.Reason}";
+                var command = $"/ban {parsedBan.Username} {parsedBan.Reason}";
                 if (command.EndsWith('.'))
                 {
                     command = command.Substring(0, command.Length - 1);
@@ -1511,13 +1513,17 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                await _factorioBanManager.AddBan(ban, serverId, true, actor);
+                await _factorioBanManager.AddBan(parsedBan.ToBan(), serverId, synchronizeWithServers: true, actor);
             }
             else if (data.StartsWith("/unban "))
             {
-                Ban ban = BanParser.FromUnBanCommand(data, actor);
+                string? player = BanParser.NameFromUnBanCommand(data);
+                if (player == null)
+                {
+                    return;
+                }
 
-                var command = $"/unban {ban.Username}";
+                var command = $"/unban {player}";
                 _ = SendToFactorioProcess(serverId, command);
 
                 if (!_factorioServerDataService.TryGetServerData(serverId, out var sourceServerData))
@@ -1530,7 +1536,7 @@ namespace FactorioWebInterface.Services
                     return;
                 }
 
-                await _factorioBanManager.RemoveBan(ban.Username, serverId, true, actor);
+                await _factorioBanManager.RemoveBan(player, serverId, true, actor);
             }
             else if (data.StartsWith('/'))
             {

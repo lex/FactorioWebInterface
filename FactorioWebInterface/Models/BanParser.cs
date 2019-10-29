@@ -8,7 +8,7 @@ namespace FactorioWebInterface.Models
 {
     public static class BanParser
     {
-        public static Ban FromBanGameOutput(string content)
+        public static ParsedBan? FromBanGameOutput(string content)
         {
             int index = content.IndexOf(" was banned by ");
 
@@ -69,16 +69,10 @@ namespace FactorioWebInterface.Models
                 reason = reason.Substring(0, reason.Length - 1);
             }
 
-            return new Ban()
-            {
-                Username = player,
-                Admin = admin,
-                Reason = reason,
-                DateTime = DateTime.UtcNow
-            };
+            return new ParsedBan(player, reason, admin, DateTime.UtcNow);
         }
 
-        public static Ban FromBanCommand(string content, string actor)
+        public static ParsedBan? FromBanCommand(string content, string actor)
         {
             string[] words = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
@@ -103,16 +97,10 @@ namespace FactorioWebInterface.Models
                 reason = "unspecified.";
             }
 
-            return new Ban()
-            {
-                Username = player,
-                Reason = reason,
-                Admin = actor,
-                DateTime = DateTime.UtcNow
-            };
+            return new ParsedBan(player, reason, actor, DateTime.UtcNow);
         }
 
-        public static Ban FromUnBanGameOutput(string content)
+        public static ParsedUnBan? FromUnBanGameOutput(string content)
         {
             int index = content.IndexOf(" was unbanned by ");
 
@@ -129,14 +117,10 @@ namespace FactorioWebInterface.Models
                 admin = admin.Substring(0, admin.Length - 1);
             }
 
-            return new Ban()
-            {
-                Username = player,
-                Admin = admin
-            };
+            return new ParsedUnBan(player, admin);
         }
 
-        public static Ban FromUnBanCommand(string content, string actor)
+        public static string? NameFromUnBanCommand(string content)
         {
             if (content.Length < 8)
             {
@@ -145,16 +129,12 @@ namespace FactorioWebInterface.Models
 
             string player = content.Substring(6).Trim();
 
-            if(player == "" || player.Contains(' '))
+            if (player == "" || player.Contains(' '))
             {
                 return null;
             }
 
-            return new Ban()
-            {
-                Username = player,
-                Admin = actor
-            };
+            return player;
         }
     }
 }

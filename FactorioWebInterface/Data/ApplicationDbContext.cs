@@ -7,18 +7,16 @@ namespace FactorioWebInterface.Data
     // Add-Migration InitialCreate
     // Update-Database
 
-
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-
         }
 
-        public DbSet<DiscordServers> DiscordServers { get; set; }
-        public DbSet<NamedDiscordServer> NamedDiscordServers { get; set; }
-        public DbSet<Admin> Admins { get; set; }
-        public DbSet<Ban> Bans { get; set; }
+        public DbSet<DiscordServers> DiscordServers { get; set; } = default!;
+        public DbSet<NamedDiscordServer> NamedDiscordServers { get; set; } = default!;
+        public DbSet<Admin> Admins { get; set; } = default!;
+        public DbSet<Ban> Bans { get; set; } = default!;
 
         /// <summary>
         /// This just changes the default names for the tables, becasue I didn't like all the tables

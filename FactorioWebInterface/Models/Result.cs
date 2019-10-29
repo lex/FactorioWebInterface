@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace FactorioWebInterface.Models
@@ -17,12 +18,12 @@ namespace FactorioWebInterface.Models
             Description = description;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as Error);
         }
 
-        public bool Equals(Error other)
+        public bool Equals(Error? other)
         {
             return other != null &&
                    Key == other.Key &&
@@ -34,12 +35,12 @@ namespace FactorioWebInterface.Models
             return HashCode.Combine(Key, Description);
         }
 
-        public static bool operator ==(Error left, Error right)
+        public static bool operator ==(Error? left, Error? right)
         {
             return EqualityComparer<Error>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(Error left, Error right)
+        public static bool operator !=(Error? left, Error? right)
         {
             return !(left == right);
         }
@@ -100,12 +101,12 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as Result);
         }
 
-        public bool Equals(Result other)
+        public bool Equals(Result? other)
         {
             return other != null &&
                    Success == other.Success &&
@@ -117,12 +118,12 @@ namespace FactorioWebInterface.Models
             return HashCode.Combine(Success, Errors);
         }
 
-        public static bool operator ==(Result left, Result right)
+        public static bool operator ==(Result? left, Result? right)
         {
             return EqualityComparer<Result>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(Result left, Result right)
+        public static bool operator !=(Result? left, Result? right)
         {
             return !(left == right);
         }
@@ -149,8 +150,9 @@ namespace FactorioWebInterface.Models
             Value = value;
         }
 
+        [MaybeNull]
         [JsonProperty(PropertyName = "Value")]
-        public T Value { get; set; }
+        public T Value { get; set; } = default!;
 
         public static Result<T> FromResult(Result result)
         {

@@ -6,6 +6,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -143,9 +144,9 @@ namespace FactorioWebInterface.Services
             return validSaveDirectories.Contains(path);
         }
 
-        public bool TryGetServerData(string serverId, out FactorioServerData serverData)
+        public bool TryGetServerData(string serverId, [MaybeNullWhen(false)] out FactorioServerData serverData)
         {
-            return servers.TryGetValue(serverId, out serverData);
+            return servers.TryGetValue(serverId, out serverData!);
         }
 
         public bool IsValidServerId(string serverId)

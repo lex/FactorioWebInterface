@@ -61,7 +61,6 @@ namespace FactorioWebInterface.Utils.ProcessAbstractions
         void Kill();
         void Refresh();
         bool Start();
-        string ToString();
         void WaitForExit();
         bool WaitForExit(int milliseconds);
         bool WaitForInputIdle(int milliseconds);
