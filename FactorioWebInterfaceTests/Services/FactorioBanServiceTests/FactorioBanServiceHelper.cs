@@ -1,7 +1,9 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Services;
+using FactorioWebInterfaceTests.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 {
@@ -9,20 +11,11 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
     {
         public static ServiceProvider MakeFactorioBanServiceProvider()
         {
-            ServiceProvider serviceProvider = new ServiceCollection()
-                .AddEntityFrameworkInMemoryDatabase()
-                .AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase("InMemoryDbForTesting");
-                })
-                .AddSingleton<IDbContextFactory, DbContextFactory>()
+            return new ServiceCollection()
+                .AddSingleton<IDbContextFactory, TestDbContextFactory>()
                 .AddSingleton<FactorioBanService>()
+                .AddSingleton<ILogger<IFactorioBanService>, TestLogger<IFactorioBanService>>()
                 .BuildServiceProvider();
-
-            var db = serviceProvider.GetService<ApplicationDbContext>();
-            db.Database.EnsureCreated();
-
-            return serviceProvider;
         }
     }
 }

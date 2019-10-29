@@ -168,6 +168,11 @@ namespace FactorioWebInterface.Services
 
         private async Task<bool> RemoveAdminFromDatabase(string name)
         {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return true;
+            }
+
             using (var db = _dbContextFactory.Create<ApplicationDbContext>())
             {
                 var admins = db.Admins;

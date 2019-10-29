@@ -57,11 +57,13 @@ namespace FactorioWebInterface.Services
         {
             using (var db = _dbContextFactory.Create<ApplicationDbContext>())
             {
-                return await db.Bans
+                var names = await db.Bans
                     .AsNoTracking()
                     .Select(x => x.Username)
-                    .OrderBy(x => x.ToLowerInvariant())
                     .ToArrayAsync();
+
+                Array.Sort(names, (a, b) => string.Compare(a, b, StringComparison.OrdinalIgnoreCase));
+                return names;
             }
         }
 

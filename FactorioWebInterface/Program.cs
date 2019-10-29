@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -61,13 +62,19 @@ namespace FactorioWebInterface
             }
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateWebHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.ConfigureKestrel(serverOptions =>
+                {
+                    serverOptions.Limits.MaxRequestBodySize = 1073741824; // 1GB.
+                })
                 .UseStartup<Startup>()
-                .UseKestrel(o => o.Limits.MaxRequestBodySize = 1073741824) // 1GB.
                 .UseSerilog();
+            });
 
-        private static void SeedData(IWebHost host)
+        private static void SeedData(IHost host)
         {
             using (var scope = host.Services.CreateScope())
             {

@@ -3,8 +3,6 @@ using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Services;
 using FactorioWebInterfaceTests.Utils;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,14 +15,13 @@ namespace FactorioWebInterfaceTests.Services.FactorioAdminServiceTests
     {
         public static ServiceProvider MakeFactorioAdminServiceProvider()
         {
-            var serviceCollection = new ServiceCollection()                
+            return new ServiceCollection()
                 .AddSingleton<IDbContextFactory, TestDbContextFactory>()
                 .AddSingleton<IHubContext<FactorioAdminHub, IFactorioAdminClientMethods>, TestFactorioAdminHub>()
                 .AddSingleton<IFileSystem, MockFileSystem>()
                 .AddSingleton<ILogger<FactorioAdminService>, TestLogger<FactorioAdminService>>()
-                .AddSingleton<FactorioAdminService>();
-
-            return serviceCollection.BuildServiceProvider();
+                .AddSingleton<FactorioAdminService>()
+                .BuildServiceProvider();
         }
     }
 
