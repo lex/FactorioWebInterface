@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FactorioWebInterface.Utils;
+using Serilog.Core;
 using Shared;
 
 namespace FactorioWebInterface.Models
@@ -41,6 +42,7 @@ namespace FactorioWebInterface.Models
         public string ChatLogsDirectoryPath => Constants.ChatLogsDirectoryPath;
         public string ChatLogsArchiveDirectoryPath => Constants.ChatLogsArchiveDirectoryPath;
         public string ChatLogCurrentPath => Constants.ChatLogCurrentPath;
+        public Logger ChatLogger => mutableData.ChatLogger;
 
         public FactorioServerData(FactorioServerMutableData factorioServerMutableData) : base(factorioServerMutableData)
         {

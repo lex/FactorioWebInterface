@@ -148,27 +148,6 @@ namespace FactorioWrapper
                 }
             }
 
-            switch (status)
-            {
-                case FactorioServerStatus.Stopping:
-                    await ChangeStatus(FactorioServerStatus.Stopped);
-                    break;
-                case FactorioServerStatus.Killing:
-                    await ChangeStatus(FactorioServerStatus.Killed);
-                    break;
-                case FactorioServerStatus.WrapperStarting:
-                    await ChangeStatus(FactorioServerStatus.Crashed);
-                    return;
-                case FactorioServerStatus.WrapperStarted:
-                case FactorioServerStatus.Starting:
-                case FactorioServerStatus.Running:
-                    await ChangeStatus(FactorioServerStatus.Crashed);
-                    break;
-                default:
-                    Log.Error("Previous status {status} was unexpected when exiting wrapper.", status);
-                    break;
-            }
-
             // Sometimes when factorio crashes the process isn't shutdown correctly, so we kill it to be sure.
             if (status.HasFinishedRunning())
             {
@@ -197,6 +176,28 @@ namespace FactorioWrapper
             }
 
             await messageQueue.WaitForEmpty(exitClearMessageQueueCancelSource.Token);
+
+            switch (status)
+            {
+                case FactorioServerStatus.Stopping:
+                    await ChangeStatus(FactorioServerStatus.Stopped);
+                    break;
+                case FactorioServerStatus.Killing:
+                    await ChangeStatus(FactorioServerStatus.Killed);
+                    break;
+                case FactorioServerStatus.WrapperStarting:
+                    // Todo change this to Errored.
+                    await ChangeStatus(FactorioServerStatus.Crashed);
+                    break;
+                case FactorioServerStatus.WrapperStarted:
+                case FactorioServerStatus.Starting:
+                case FactorioServerStatus.Running:
+                    await ChangeStatus(FactorioServerStatus.Crashed);
+                    break;
+                default:
+                    Log.Error("Previous status {status} was unexpected when exiting wrapper.", status);
+                    break;
+            }
         }
 
         private async Task RestartWrapperAsync()
