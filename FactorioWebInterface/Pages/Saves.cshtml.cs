@@ -8,9 +8,9 @@ namespace FactorioWebInterface.Pages
     {
         private readonly IPublicFactorioSaves _publicFactorioSaves;
 
-        public PublicFileTableModel StartSaves { get; private set; }
-        public PublicFileTableModel FinalSaves { get; private set; }
-        public PublicFileTableModel OldSaves { get; private set; }
+        public PublicFileTableModel StartSaves { get; private set; } = default!;
+        public PublicFileTableModel FinalSaves { get; private set; } = default!;
+        public PublicFileTableModel OldSaves { get; private set; } = default!;
 
         public SavesModel(IPublicFactorioSaves publicFactorioSaves)
         {

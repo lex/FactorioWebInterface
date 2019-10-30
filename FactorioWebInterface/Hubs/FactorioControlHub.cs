@@ -23,11 +23,11 @@ namespace FactorioWebInterface.Hubs
             _factorioModManager = factorioModManager;
         }
 
-        public async Task<FactorioContorlClientData> SetServerId(string serverId)
+        public async Task<FactorioControlClientData> SetServerId(string serverId)
         {
             string connectionId = Context.ConnectionId;
 
-            if (Context.TryGetData(out string oldServerId))
+            if (Context.TryGetData(out string? oldServerId))
             {
                 await Groups.RemoveFromGroupAsync(connectionId, oldServerId);
             }
@@ -36,7 +36,7 @@ namespace FactorioWebInterface.Hubs
 
             await Groups.AddToGroupAsync(connectionId, serverId);
 
-            return new FactorioContorlClientData()
+            return new FactorioControlClientData()
             {
                 Status = (await _factorioServerManager.GetStatus(serverId)).ToString(),
                 Messages = await _factorioServerManager.GetFactorioControlMessagesAsync(serverId)
@@ -46,7 +46,7 @@ namespace FactorioWebInterface.Hubs
         public override Task OnDisconnectedAsync(Exception exception)
         {
             string connectionId = Context.ConnectionId;
-            if (Context.TryGetData(out string serverId))
+            if (Context.TryGetData(out string? serverId))
             {
                 Groups.RemoveFromGroupAsync(connectionId, serverId);
             }
@@ -57,7 +57,7 @@ namespace FactorioWebInterface.Hubs
         public Task<Result> ForceStop()
         {
             string serverId = Context.GetDataOrDefault("");
-            string name = Context.User.Identity.Name;
+            string name = Context.User.Identity.Name ?? "";
 
             return _factorioServerManager.ForceStop(serverId, name);
         }
@@ -72,7 +72,7 @@ namespace FactorioWebInterface.Hubs
         public Task<Result> Load(string directoryName, string fileName)
         {
             string serverId = Context.GetDataOrDefault("");
-            string userName = Context.User.Identity.Name;
+            string userName = Context.User.Identity.Name ?? "";
 
             return _factorioServerManager.Load(serverId, directoryName, fileName, userName);
         }
@@ -80,7 +80,7 @@ namespace FactorioWebInterface.Hubs
         public Task SendToFactorio(string data)
         {
             string serverId = Context.GetDataOrDefault("");
-            string actor = Context.User.Identity.Name;
+            string actor = Context.User.Identity.Name ?? "";
 
             return _factorioServerManager.FactorioControlDataReceived(serverId, data, actor);
         }
@@ -88,7 +88,7 @@ namespace FactorioWebInterface.Hubs
         public Task<Result> Resume()
         {
             string serverId = Context.GetDataOrDefault("");
-            string name = Context.User.Identity.Name;
+            string name = Context.User.Identity.Name ?? "";
 
             return _factorioServerManager.Resume(serverId, name);
         }
@@ -96,7 +96,7 @@ namespace FactorioWebInterface.Hubs
         public Task<Result> StartScenario(string scenarioName)
         {
             string serverId = Context.GetDataOrDefault("");
-            string name = Context.User.Identity.Name;
+            string name = Context.User.Identity.Name ?? "";
 
             return _factorioServerManager.StartScenario(serverId, scenarioName, name);
         }
@@ -104,7 +104,7 @@ namespace FactorioWebInterface.Hubs
         public Task<Result> Stop()
         {
             string serverId = Context.GetDataOrDefault("");
-            string name = Context.User.Identity.Name;
+            string name = Context.User.Identity.Name ?? "";
 
             return _factorioServerManager.Stop(serverId, name);
         }
@@ -286,7 +286,7 @@ namespace FactorioWebInterface.Hubs
         public Task<Result> Save()
         {
             string serverId = Context.GetDataOrDefault("");
-            string name = Context.User.Identity.Name;
+            string name = Context.User.Identity.Name ?? "";
 
             return _factorioServerManager.Save(serverId, name, "currently-running.zip");
         }
@@ -301,7 +301,7 @@ namespace FactorioWebInterface.Hubs
         public async Task<Result> Update(string version = "latest")
         {
             string serverId = Context.GetDataOrDefault("");
-            string name = Context.User.Identity.Name;
+            string name = Context.User.Identity.Name ?? "";
 
             return await _factorioServerManager.Install(serverId, name, version);
         }

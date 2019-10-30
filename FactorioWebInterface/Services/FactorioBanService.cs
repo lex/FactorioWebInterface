@@ -249,7 +249,7 @@ namespace FactorioWebInterface.Services
             await RemoveBan(ban.Username, serverData.ServerId, true, ban.Admin);
         }
 
-        public async Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string actor)
+        public async Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string? actor)
         {
             bool removed = await RemoveBanFromDatabase(username);
             if (removed)
@@ -324,9 +324,9 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private void LogUnBan(string username, string actor)
+        private void LogUnBan(string username, string? actor = null)
         {
-            _logger.LogInformation("[UNBAN] {username} was unbanned by: {actor}", username, actor);
+            _logger.LogInformation("[UNBAN] {username} was unbanned by: {actor}", username, actor ?? "");
         }
     }
 }

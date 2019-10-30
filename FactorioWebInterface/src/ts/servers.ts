@@ -40,7 +40,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         LastModifiedTime: string;
     }
 
-    interface FactorioContorlClientData {
+    interface FactorioControlClientData {
         Status: string;
         Messages: MessageData[];
     }
@@ -207,7 +207,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         getVersion();
         getSelectedModPack();
 
-        let data = await promise as FactorioContorlClientData;
+        let data = await promise as FactorioControlClientData;
 
         statusText.innerText = data.Status;
 
@@ -1598,7 +1598,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
     });
 
     connection.on('SendSelectedModPack', function (modPack: string) {
-        selectedModPack = modPack;
+        selectedModPack = modPack || "";
         ensureModPackSelected();
     });
 

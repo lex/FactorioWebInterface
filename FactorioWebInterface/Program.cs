@@ -1,6 +1,5 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Services;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,11 +16,11 @@ using System.Runtime.CompilerServices;
 
 namespace FactorioWebInterface
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
-            string path = AppDomain.CurrentDomain.BaseDirectory;
+            string path = AppDomain.CurrentDomain.BaseDirectory!;
             path = Path.Combine(path, "logs/log.txt");
 
             Log.Logger = new LoggerConfiguration()

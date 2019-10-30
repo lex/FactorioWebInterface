@@ -7,7 +7,7 @@ namespace FactorioWebInterface.Models
 {
     public class ModPackMetaData
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = default!;
         public DateTime CreatedTime { get; set; }
         public DateTime LastModifiedTime { get; set; }
     }

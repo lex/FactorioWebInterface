@@ -23,14 +23,14 @@ namespace FactorioWebInterface.Services
 
         Result CopyFiles(string serverId, string destination, List<string> filePaths);
         Result DeleteFiles(string serverId, List<string> filePaths);
-        FileInfo GetChatLogFile(string directoryName, string fileName);
+        FileInfo? GetChatLogFile(string directoryName, string fileName);
         List<FileMetaData> GetChatLogs(FactorioServerData serverData);
         FileMetaData[] GetGlobalSaveFiles();
         FileMetaData[] GetLocalSaveFiles(FactorioServerData serverData);
-        FileInfo GetLogFile(string directoryName, string fileName);
+        FileInfo? GetLogFile(string directoryName, string fileName);
         List<FileMetaData> GetLogs(FactorioServerData serverData);
-        DirectoryInfo GetSaveDirectory(string serverId, string dirName);
-        IFileInfo GetSaveFile(string serverId, string directoryName, string fileName);
+        DirectoryInfo? GetSaveDirectory(string serverId, string dirName);
+        IFileInfo? GetSaveFile(string serverId, string directoryName, string fileName);
         ScenarioMetaData[] GetScenarios();
         bool HasTempSaveFiles(string tempSavesDirectoryPath);
         FileMetaData[] GetTempSaveFiles(string tempSavesDirectoryPath);
@@ -56,12 +56,12 @@ namespace FactorioWebInterface.Services
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly IFileSystem _fileSystem = new FileSystem();
 
-        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> TempSaveFilesChanged;
-        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> LocalSaveFilesChanged;
-        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> GlobalSaveFilesChanged;
-        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> LogFilesChanged;
-        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs> ChatLogFilesChanged;
-        public event EventHandler<IFactorioFileManager, CollectionChangedData<ScenarioMetaData>> ScenariosChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? TempSaveFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? LocalSaveFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? GlobalSaveFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? LogFilesChanged;
+        public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? ChatLogFilesChanged;
+        public event EventHandler<IFactorioFileManager, CollectionChangedData<ScenarioMetaData>>? ScenariosChanged;
 
         public FactorioFileManager(ILogger<FactorioFileManager> logger, IFactorioServerDataService factorioServerDataService)
         {
@@ -209,7 +209,7 @@ namespace FactorioWebInterface.Services
             return logs;
         }
 
-        public FileInfo GetLogFile(string directoryName, string fileName)
+        public FileInfo? GetLogFile(string directoryName, string fileName)
         {
             string safeFileName = Path.GetFileName(fileName);
             string path = Path.Combine(_factorioServerDataService.BaseDirectoryPath, directoryName, safeFileName);
@@ -245,7 +245,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public FileInfo GetChatLogFile(string directoryName, string fileName)
+        public FileInfo? GetChatLogFile(string directoryName, string fileName)
         {
             string safeFileName = Path.GetFileName(fileName);
             string path = Path.Combine(_factorioServerDataService.BaseDirectoryPath, directoryName, safeFileName);
@@ -320,7 +320,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private DirectoryInfo GetSaveDirectory(string dirName)
+        private DirectoryInfo? GetSaveDirectory(string dirName)
         {
             try
             {
@@ -351,7 +351,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public DirectoryInfo GetSaveDirectory(string serverId, string dirName)
+        public DirectoryInfo? GetSaveDirectory(string serverId, string dirName)
         {
             if (dirName == Constants.TempSavesDirectoryName || dirName == Constants.LocalSavesDirectoryName)
             {
@@ -374,7 +374,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private string SafeFilePath(string dirPath, string fileName)
+        private string? SafeFilePath(string dirPath, string fileName)
         {
             fileName = Path.GetFileName(fileName);
             string path = Path.Combine(dirPath, fileName);
@@ -388,7 +388,7 @@ namespace FactorioWebInterface.Services
             return path;
         }
 
-        public IFileInfo GetSaveFile(string serverId, string directoryName, string fileName)
+        public IFileInfo? GetSaveFile(string serverId, string directoryName, string fileName)
         {
             var directory = GetSaveDirectory(serverId, directoryName);
 
@@ -397,7 +397,7 @@ namespace FactorioWebInterface.Services
                 return null;
             }
 
-            string path = SafeFilePath(directory.FullName, fileName);
+            string? path = SafeFilePath(directory.FullName, fileName);
             if (path == null)
             {
                 return null;
@@ -452,7 +452,7 @@ namespace FactorioWebInterface.Services
                     continue;
                 }
 
-                string path = SafeFilePath(directory.FullName, file.FileName);
+                string? path = SafeFilePath(directory.FullName, file.FileName);
                 if (path == null)
                 {
                     errors.Add(new Error(Constants.FileErrorKey, $"Error uploading {file.FileName}."));
@@ -523,7 +523,7 @@ namespace FactorioWebInterface.Services
 
             foreach (string filePath in filePaths)
             {
-                var dirName = Path.GetDirectoryName(filePath);
+                var dirName = Path.GetDirectoryName(filePath) ?? "";
                 var dir = GetSaveDirectory(serverId, dirName);
 
                 if (dir == null)
@@ -532,7 +532,7 @@ namespace FactorioWebInterface.Services
                     continue;
                 }
 
-                string path = SafeFilePath(dir.FullName, filePath);
+                string? path = SafeFilePath(dir.FullName, filePath);
                 if (path == null)
                 {
                     errors.Add(new Error(Constants.FileErrorKey, $"Error deleting {filePath}."));
@@ -635,8 +635,8 @@ namespace FactorioWebInterface.Services
 
             bool trackDestination = trackMap.Contains(targetDir.Name);
 
-            List<FileMetaData> newFiles = null;
-            string destinationId = null;
+            List<FileMetaData>? newFiles = null;
+            string? destinationId = null;
             if (trackDestination)
             {
                 newFiles = new List<FileMetaData>();
@@ -651,7 +651,7 @@ namespace FactorioWebInterface.Services
 
             foreach (var filePath in filePaths)
             {
-                var sourceDirName = Path.GetDirectoryName(filePath);
+                var sourceDirName = Path.GetDirectoryName(filePath) ?? "";
                 var sourceDir = GetSaveDirectory(serverId, sourceDirName);
 
                 if (sourceDir == null)
@@ -660,7 +660,7 @@ namespace FactorioWebInterface.Services
                     continue;
                 }
 
-                string sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
+                string? sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
                 if (sourceFullPath == null)
                 {
                     errors.Add(new Error(Constants.FileErrorKey, $"Error moveing {filePath}."));
@@ -726,7 +726,7 @@ namespace FactorioWebInterface.Services
                             Directory = destinationFileInfo.Directory.Name
                         };
 
-                        newFiles.Add(newFileMetaData);
+                        newFiles!.Add(newFileMetaData);
                     }
                 }
                 catch (Exception e)
@@ -760,10 +760,10 @@ namespace FactorioWebInterface.Services
                 _ = Task.Run(() => GlobalSaveFilesChanged?.Invoke(this, ev));
             }
 
-            if (trackDestination && newFiles.Count > 0)
+            if (trackDestination && newFiles!.Count > 0)
             {
                 var changeData = CollectionChangedData.Add(newFiles);
-                var ev = new FilesChangedEventArgs(destinationId, changeData);
+                var ev = new FilesChangedEventArgs(destinationId!, changeData);
 
                 switch (targetDir.Name)
                 {
@@ -803,8 +803,8 @@ namespace FactorioWebInterface.Services
 
             bool trackDestination = trackMap.Contains(targetDir.Name);
 
-            List<FileMetaData> newFiles = null;
-            string destinationId = null;
+            List<FileMetaData>? newFiles = null;
+            string? destinationId = null;
             if (trackDestination)
             {
                 newFiles = new List<FileMetaData>();
@@ -815,7 +815,7 @@ namespace FactorioWebInterface.Services
 
             foreach (var filePath in filePaths)
             {
-                var sourceDirName = Path.GetDirectoryName(filePath);
+                var sourceDirName = Path.GetDirectoryName(filePath) ?? "";
                 var sourceDir = GetSaveDirectory(serverId, sourceDirName);
 
                 if (sourceDir == null)
@@ -824,7 +824,7 @@ namespace FactorioWebInterface.Services
                     continue;
                 }
 
-                string sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
+                string? sourceFullPath = SafeFilePath(sourceDir.FullName, filePath);
                 if (sourceFullPath == null)
                 {
                     errors.Add(new Error(Constants.FileErrorKey, $"Error coppying {filePath}."));
@@ -868,7 +868,7 @@ namespace FactorioWebInterface.Services
                             Directory = destinationFileInfo.Directory.Name
                         };
 
-                        newFiles.Add(newFileMetaData);
+                        newFiles!.Add(newFileMetaData);
                     }
                 }
                 catch (Exception e)
@@ -878,10 +878,10 @@ namespace FactorioWebInterface.Services
                 }
             }
 
-            if (trackDestination && newFiles.Count > 0)
+            if (trackDestination && newFiles!.Count > 0)
             {
                 var changeData = CollectionChangedData.Add(newFiles);
-                var ev = new FilesChangedEventArgs(destinationId, changeData);
+                var ev = new FilesChangedEventArgs(destinationId!, changeData);
 
                 switch (targetDir.Name)
                 {
@@ -1030,9 +1030,10 @@ namespace FactorioWebInterface.Services
         {
             public static FilesChanged empty = new FilesChanged();
 
-            public IReadOnlyList<FileMetaData> newFiles;
-            public IReadOnlyList<FileMetaData> oldFiles;
-            public FilesChanged(IReadOnlyList<FileMetaData> newFiles, IReadOnlyList<FileMetaData> oldFiles = null)
+            public IReadOnlyList<FileMetaData>? newFiles;
+            public IReadOnlyList<FileMetaData>? oldFiles;
+
+            public FilesChanged(IReadOnlyList<FileMetaData>? newFiles, IReadOnlyList<FileMetaData>? oldFiles = null)
             {
                 this.newFiles = newFiles;
                 this.oldFiles = oldFiles;
@@ -1048,9 +1049,13 @@ namespace FactorioWebInterface.Services
                 {
                     return CollectionChangedData.Add(newFiles);
                 }
-                else
+                else if (oldFiles != null)
                 {
                     return CollectionChangedData.Add(oldFiles);
+                }
+                else
+                {
+                    return CollectionChangedData.Add(Array.Empty<FileMetaData>());
                 }
             }
         }

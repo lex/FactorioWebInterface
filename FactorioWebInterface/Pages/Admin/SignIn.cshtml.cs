@@ -43,18 +43,16 @@ namespace FactorioWebInterface.Pages.Admin
         private string RedirectUrl => $"{Request.Scheme}://{Request.Host}/admin/signin";
 
         [BindProperty]
-        public InputModel Input { get; set; }
-
-        public string ReturnUrl { get; set; }
+        public InputModel Input { get; set; } = default!;
 
         public class InputModel
         {
             [Required]
-            public string UserName { get; set; }
+            public string UserName { get; set; } = default!;
 
             [Required]
             [DataType(DataType.Password)]
-            public string Password { get; set; }
+            public string Password { get; set; } = default!;
         }
 
         private async Task<bool> AllowedToSingIn(ApplicationUser user)
@@ -74,7 +72,7 @@ namespace FactorioWebInterface.Pages.Admin
             return true;
         }
 
-        public async Task<IActionResult> OnGetAsync(string code)
+        public async Task<IActionResult> OnGetAsync(string? code)
         {
             if (code == null)
             {

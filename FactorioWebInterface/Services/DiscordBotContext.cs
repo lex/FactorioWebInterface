@@ -18,19 +18,20 @@ namespace FactorioWebInterface.Services
     {
         public class Role
         {
-            public string Name { get; set; }
+            public string? Name { get; set; }
             public ulong Id { get; set; }
         }
+
         public class AdminRoles
         {
-            public Role[] Roles { get; set; }
+            public Role[] Roles { get; set; } = Array.Empty<Role>();
         }
 
         private class Message
         {
-            public DiscordChannel Channel { get; set; }
-            public string Content { get; set; }
-            public DiscordEmbed Embed { get; set; }
+            public DiscordChannel? Channel { get; set; }
+            public string? Content { get; set; }
+            public DiscordEmbed? Embed { get; set; }
         }
 
         private const int maxMessageQueueSize = 1000;
@@ -46,11 +47,11 @@ namespace FactorioWebInterface.Services
         private readonly Dictionary<ulong, string> discordToServer = new Dictionary<ulong, string>();
         private readonly Dictionary<string, ulong> serverdToDiscord = new Dictionary<string, ulong>();
 
-        private SingleConsumerQueue<Message> messageQueue;
+        private SingleConsumerQueue<Message> messageQueue = default!;
 
-        public DiscordClient DiscordClient { get; private set; }
+        public DiscordClient DiscordClient { get; private set; } = default!;
 
-        public event EventHandler<DiscordBotContext, ServerMessageEventArgs> FactorioDiscordDataReceived;
+        public event EventHandler<DiscordBotContext, ServerMessageEventArgs>? FactorioDiscordDataReceived;
 
         public DiscordBotContext(IConfiguration configuration, IDbContextFactory dbContextFactory, ILogger<DiscordBot> logger)
         {
@@ -73,7 +74,6 @@ namespace FactorioWebInterface.Services
             foreach (var item in ar.Roles)
             {
                 validAdminRoleIds.Add(item.Id);
-
             }
         }
 
@@ -125,10 +125,12 @@ namespace FactorioWebInterface.Services
             {
                 await discordLock.WaitAsync();
 
-                if (!discordToServer.TryGetValue(e.Channel.Id, out serverId))
+                if (!discordToServer.TryGetValue(e.Channel.Id, out string? id))
                 {
                     return;
                 }
+
+                serverId = id;
             }
             finally
             {
@@ -214,7 +216,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public async Task<string> UnSetServer(ulong channelId)
+        public async Task<string?> UnSetServer(ulong channelId)
         {
             try
             {
@@ -224,7 +226,7 @@ namespace FactorioWebInterface.Services
                 {
                     var query = context.DiscordServers.Where(x => x.DiscordChannelId == channelId);
 
-                    string serverId = null;
+                    string? serverId = null;
 
                     foreach (var ds in query)
                     {
@@ -325,7 +327,7 @@ namespace FactorioWebInterface.Services
             return SendEmbedToFactorioChannel(Constants.AdminChannelID, embed);
         }
 
-        public async Task SetChannelNameAndTopic(string serverId, string name = null, string topic = null)
+        public async Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null)
         {
             ulong channelId;
             try

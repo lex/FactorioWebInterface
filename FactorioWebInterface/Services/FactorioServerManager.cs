@@ -405,7 +405,7 @@ namespace FactorioWebInterface.Services
                     return startInfoResult;
                 }
 
-                var startInfo = startInfoResult.Value;
+                var startInfo = startInfoResult.Value!;
                 var runResult = _factorioServerRunner.Run(mutableData, startInfo);
                 if (!runResult.Success)
                 {
@@ -454,7 +454,7 @@ namespace FactorioWebInterface.Services
                     return startInfoResult;
                 }
 
-                var startInfo = startInfoResult.Value;
+                var startInfo = startInfoResult.Value!;
                 var runResult = _factorioServerRunner.Run(mutableData, startInfo);
                 if (!runResult.Success)
                 {
@@ -490,7 +490,7 @@ namespace FactorioWebInterface.Services
                 return startInfoResult;
             }
 
-            var startInfo = startInfoResult.Value;
+            var startInfo = startInfoResult.Value!;
             var runResult = _factorioServerRunner.Run(mutableData, startInfo);
             if (!runResult.Success)
             {
@@ -1628,7 +1628,7 @@ namespace FactorioWebInterface.Services
                     return null;
                 }
 
-                string cleanServerName = serverTagRegex.Replace(mutableData.ServerSettings.Name, "");
+                string cleanServerName = serverTagRegex.Replace(mutableData.ServerSettings?.Name ?? "", "");
                 string cleanVersion = serverData.Version.Replace('.', '_');
 
                 return $"s{serverId}-{cleanServerName}-{cleanVersion}";
@@ -1707,7 +1707,7 @@ namespace FactorioWebInterface.Services
                 return old;
             });
 
-            Task discordTask = null;
+            Task? discordTask = null;
             bool checkStoppedCallback = false;
 
             if (oldStatus == FactorioServerStatus.Starting && newStatus == FactorioServerStatus.Running)
@@ -1776,7 +1776,7 @@ namespace FactorioWebInterface.Services
             var groups = _factorioControlHub.Clients.Group(serverId);
             Task contorlTask1 = groups.FactorioStatusChanged(newStatus.ToString(), oldStatus.ToString());
 
-            Task controlTask2 = null;
+            Task? controlTask2 = null;
             if (newStatus != oldStatus)
             {
                 var messageData = new MessageData()
@@ -1898,7 +1898,7 @@ namespace FactorioWebInterface.Services
             };
         }
 
-        public async Task<(FactorioServerSettingsWebEditable settings, bool saved)> GetEditableServerSettings(string serverId)
+        public async Task<(FactorioServerSettingsWebEditable? settings, bool saved)> GetEditableServerSettings(string serverId)
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
@@ -1928,7 +1928,7 @@ namespace FactorioWebInterface.Services
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                return null;
+                return Result.Failure(Constants.UnexpectedErrorKey);
             }
 
             settings.Tags = settings.Tags.Select(x => x.Replace(' ', '\u00a0')).ToArray(); // \u00a0 is &nbsp;. Factorio splits tags on space, but not on &nbsp;.
@@ -2034,7 +2034,7 @@ namespace FactorioWebInterface.Services
             return settings;
         }
 
-        public async Task<(FactorioServerExtraSettings settings, bool saved)> GetEditableServerExtraSettings(string serverId)
+        public async Task<(FactorioServerExtraSettings? settings, bool saved)> GetEditableServerExtraSettings(string serverId)
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
@@ -2061,7 +2061,7 @@ namespace FactorioWebInterface.Services
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
-                return null;
+                return Result.Failure(Constants.UnexpectedErrorKey);
             }
 
             async Task<Result> Inner(FactorioServerMutableData mutableData)
@@ -2469,7 +2469,7 @@ namespace FactorioWebInterface.Services
             });
         }
 
-        public async Task<string> GetSelectedModPack(string serverId)
+        public async Task<string?> GetSelectedModPack(string serverId)
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {

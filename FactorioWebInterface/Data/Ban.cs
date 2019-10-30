@@ -13,7 +13,7 @@ namespace FactorioWebInterface.Data
         // Not nullable for the database.
         [Key]
         [JsonProperty(PropertyName = "username")]
-        public string? Username { get; set; }
+        public string Username { get; set; } = default!;
 
         [JsonProperty(PropertyName = "reason")]
         public string? Reason { get; set; }

@@ -30,9 +30,9 @@ namespace FactorioWebInterface.Services
         ScenarioMetaData[] GetScenarios();
         List<FileMetaData> GetLogs(string serverId);
         List<FileMetaData> GetChatLogs(string serverId);
-        Task<(FactorioServerSettingsWebEditable settings, bool saved)> GetEditableServerSettings(string serverId);
+        Task<(FactorioServerSettingsWebEditable? settings, bool saved)> GetEditableServerSettings(string serverId);
         Task<Result> SaveEditableServerSettings(string serverId, FactorioServerSettingsWebEditable settings);
-        Task<(FactorioServerExtraSettings settings, bool saved)> GetEditableServerExtraSettings(string serverId);
+        Task<(FactorioServerExtraSettings? settings, bool saved)> GetEditableServerExtraSettings(string serverId);
         Task<Result> SaveEditableExtraServerSettings(string serverId, FactorioServerExtraSettings settings);
         Task UpdateServerSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId);
         Task UpdateServerExtraSettings(KeyValueCollectionChangedData<string, object> data, string serverId, string connectionId);
@@ -45,7 +45,7 @@ namespace FactorioWebInterface.Services
         Task<string[]> GetCachedVersions();
         bool DeleteCachedVersion(string version);
         string GetVersion(string serverId);
-        Task<string> GetSelectedModPack(string serverId);
+        Task<string?> GetSelectedModPack(string serverId);
         Task SetSelectedModPack(string serverId, string modPack);
     }
 }

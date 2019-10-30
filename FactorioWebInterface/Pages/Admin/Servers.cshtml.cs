@@ -37,7 +37,7 @@ namespace FactorioWebInterface.Pages.Admin
 
         public class InputModel
         {
-            public string Id { get; set; }
+            public string Id { get; set; } = default!;
         }
 
         //[BindProperty]

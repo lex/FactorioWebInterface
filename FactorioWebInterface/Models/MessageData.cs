@@ -12,8 +12,8 @@
 
     public class MessageData
     {
-        public string ServerId { get; set; }
+        public string ServerId { get; set; } = default!;
         public MessageType MessageType { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = default!;
     }
 }

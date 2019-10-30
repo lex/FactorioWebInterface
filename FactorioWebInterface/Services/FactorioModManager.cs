@@ -23,8 +23,8 @@ namespace FactorioWebInterface.Services
         Result CreateModPack(string name);
         Result DeleteModPack(string name);
         Result DeleteModPackFiles(string modPack, string[] files);
-        IDirectoryInfo GetModPackDirectoryInfo(string modPack);
-        FileInfo GetModPackFile(string modPack, string fileName);
+        IDirectoryInfo? GetModPackDirectoryInfo(string modPack);
+        FileInfo? GetModPackFile(string modPack, string fileName);
         ModPackFileMetaData[] GetModPackFiles(string name);
         ModPackMetaData[] GetModPacks();
         Result MoveModPackFiles(string sourceModPack, string targetModPack, string[] files);
@@ -93,7 +93,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public IDirectoryInfo GetModPackDirectoryInfo(string modPack)
+        public IDirectoryInfo? GetModPackDirectoryInfo(string modPack)
         {
             try
             {
@@ -559,7 +559,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public FileInfo GetModPackFile(string modPack, string fileName)
+        public FileInfo? GetModPackFile(string modPack, string fileName)
         {
             try
             {

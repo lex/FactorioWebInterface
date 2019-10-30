@@ -32,8 +32,8 @@ namespace FactorioWebInterface.Services
         private readonly IFileSystem _fileSystem;
         private readonly ILogger<FactorioAdminService> _logger;
 
-        public event EventHandler<IFactorioAdminService, CollectionChangedData<Admin>> AdminsChanged;
-        public event EventHandler<IFactorioAdminService, FactorioAdminListChangedEventArgs> AdminListChanged;
+        public event EventHandler<IFactorioAdminService, CollectionChangedData<Admin>>? AdminsChanged;
+        public event EventHandler<IFactorioAdminService, FactorioAdminListChangedEventArgs>? AdminListChanged;
 
         public FactorioAdminService(IDbContextFactory dbContextFactory,
             IHubContext<FactorioAdminHub, IFactorioAdminClientMethods> adminHub,

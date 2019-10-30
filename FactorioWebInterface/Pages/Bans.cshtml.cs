@@ -15,7 +15,7 @@ namespace FactorioWebInterface.Pages
             _factorioBanManager = factorioBanManager;
         }
 
-        public string[] Bans { get; private set; }
+        public string[] Bans { get; private set; } = default!;
 
         public async Task<IActionResult> OnGetAsync()
         {

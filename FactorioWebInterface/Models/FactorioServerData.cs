@@ -42,7 +42,7 @@ namespace FactorioWebInterface.Models
         public string ChatLogsDirectoryPath => Constants.ChatLogsDirectoryPath;
         public string ChatLogsArchiveDirectoryPath => Constants.ChatLogsArchiveDirectoryPath;
         public string ChatLogCurrentPath => Constants.ChatLogCurrentPath;
-        public Logger ChatLogger => mutableData.ChatLogger;
+        public Logger? ChatLogger => mutableData.ChatLogger;
 
         public FactorioServerData(FactorioServerMutableData factorioServerMutableData) : base(factorioServerMutableData)
         {

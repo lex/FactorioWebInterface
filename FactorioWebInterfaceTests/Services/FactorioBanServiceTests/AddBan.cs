@@ -53,8 +53,8 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         {
             // Arrange.
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
-            var serverId = "serverId";
-            var sync = true;
+            const string serverId = "serverId";
+            const bool sync = true;
 
             var eventRaised = new AsyncManualResetEvent();
             FactorioBanEventArgs eventArgs = null;
@@ -86,10 +86,10 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         public async Task WhenBanIsAddedLog()
         {
             // Arrange.
-            var actor = "actor";
+            const string actor = "actor";
             var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
             var parma = new object[] { ban.Username, ban.Admin, ban.Reason, actor };
-            var expected = $"[BAN] {ban.Username} was banned by {ban.Admin}. Reason: {ban.Reason} Actor: {actor}";
+            string expected = $"[BAN] {ban.Username} was banned by {ban.Admin}. Reason: {ban.Reason} Actor: {actor}";
 
             LogLevel level = default;
             string message = null;
@@ -153,7 +153,5 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             Assert.Single(bans);
             Assert.Equal(newBan, bans[0]);
         }
-
-
     }
 }

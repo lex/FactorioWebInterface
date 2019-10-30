@@ -8,28 +8,28 @@ namespace FactorioWebInterface.Models
     public class FactorioServerSettings
     {
         [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = default!;
 
         [JsonProperty(PropertyName = "description")]
-        public string Description { get; set; }
+        public string Description { get; set; } = default!;
 
         [JsonProperty(PropertyName = "tags")]
-        public string[] Tags { get; set; }
+        public string[] Tags { get; set; } = default!;
 
         [JsonProperty(PropertyName = "max_players")]
         public int MaxPlayers { get; set; }
 
         [JsonProperty(PropertyName = "visibility")]
-        public FactorioServerSettingsConfigVisibility Visibility { get; set; }
+        public FactorioServerSettingsConfigVisibility Visibility { get; set; } = default!;
 
         [JsonProperty(PropertyName = "username")]
-        public string Username { get; set; }
+        public string Username { get; set; } = default!;
 
         [JsonProperty(PropertyName = "token")]
-        public string Token { get; set; }
+        public string Token { get; set; } = default!;
 
         [JsonProperty(PropertyName = "game_password")]
-        public string GamePassword { get; set; }
+        public string GamePassword { get; set; } = default!;
 
         [JsonProperty(PropertyName = "require_user_verification")]
         public bool RequireUserVerification { get; set; }
@@ -47,7 +47,7 @@ namespace FactorioWebInterface.Models
         public bool IgnorePlayerLimitForReturningPlayers { get; set; }
 
         [JsonProperty(PropertyName = "allow_commands")]
-        public string AllowCommands { get; set; }
+        public string AllowCommands { get; set; } = default!;
 
         [JsonProperty(PropertyName = "autosave_interval")]
         public int AutosaveInterval { get; set; }

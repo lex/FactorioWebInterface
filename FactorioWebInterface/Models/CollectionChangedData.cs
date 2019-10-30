@@ -17,7 +17,7 @@ namespace FactorioWebInterface.Models
         public IReadOnlyList<T> NewItems { get; set; }
         public IReadOnlyList<T> OldItems { get; set; }
 
-        public CollectionChangedData(CollectionChangeType type, IReadOnlyList<T> newItems, IReadOnlyList<T> oldItems = null)
+        public CollectionChangedData(CollectionChangeType type, IReadOnlyList<T>? newItems, IReadOnlyList<T>? oldItems = null)
         {
             Type = type;
             NewItems = newItems ?? Array.Empty<T>();
@@ -47,14 +47,14 @@ namespace FactorioWebInterface.Models
         }
     }
 
-    public class KeyValueCollectionChangedData<K, V>
+    public class KeyValueCollectionChangedData<K, V> where K : notnull
     {
         private static readonly IReadOnlyDictionary<K, V> empty = new Dictionary<K, V>(0);
         public CollectionChangeType Type { get; set; }
         public IReadOnlyDictionary<K, V> NewItems { get; set; }
         public IReadOnlyDictionary<K, V> OldItems { get; set; }
 
-        public KeyValueCollectionChangedData(CollectionChangeType type, IReadOnlyDictionary<K, V> newItems, IReadOnlyDictionary<K, V> oldItems = null)
+        public KeyValueCollectionChangedData(CollectionChangeType type, IReadOnlyDictionary<K, V>? newItems, IReadOnlyDictionary<K, V>? oldItems = null)
         {
             Type = type;
             NewItems = newItems ?? empty;
@@ -64,22 +64,22 @@ namespace FactorioWebInterface.Models
 
     public static class KeyValueCollectionChangedData
     {
-        public static KeyValueCollectionChangedData<K, V> Reset<K, V>(IReadOnlyDictionary<K, V> items)
+        public static KeyValueCollectionChangedData<K, V> Reset<K, V>(IReadOnlyDictionary<K, V> items) where K : notnull
         {
             return new KeyValueCollectionChangedData<K, V>(CollectionChangeType.Reset, items);
         }
 
-        public static KeyValueCollectionChangedData<K, V> Remove<K, V>(IReadOnlyDictionary<K, V> items)
+        public static KeyValueCollectionChangedData<K, V> Remove<K, V>(IReadOnlyDictionary<K, V> items) where K : notnull
         {
             return new KeyValueCollectionChangedData<K, V>(CollectionChangeType.Remove, null, items);
         }
 
-        public static KeyValueCollectionChangedData<K, V> Add<K, V>(IReadOnlyDictionary<K, V> items)
+        public static KeyValueCollectionChangedData<K, V> Add<K, V>(IReadOnlyDictionary<K, V> items) where K : notnull
         {
             return new KeyValueCollectionChangedData<K, V>(CollectionChangeType.Add, items);
         }
 
-        public static KeyValueCollectionChangedData<K, V> AddAndRemove<K, V>(IReadOnlyDictionary<K, V> newItems, IReadOnlyDictionary<K, V> oldItems)
+        public static KeyValueCollectionChangedData<K, V> AddAndRemove<K, V>(IReadOnlyDictionary<K, V> newItems, IReadOnlyDictionary<K, V> oldItems) where K : notnull
         {
             return new KeyValueCollectionChangedData<K, V>(CollectionChangeType.AddAndRemove, newItems, oldItems);
         }

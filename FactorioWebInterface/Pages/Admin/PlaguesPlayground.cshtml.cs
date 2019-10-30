@@ -12,7 +12,7 @@ namespace FactorioWebInterface.Pages.Admin
     {
         private readonly UserManager<ApplicationUser> _userManger;
 
-        public string UserName { get; set; }
+        public string UserName { get; set; } = default!;
         public string FilePath { get; set; }
 
         public PlaguesPlaygroundModel(UserManager<ApplicationUser> userManger, IConfiguration config)

@@ -4,7 +4,7 @@ namespace FactorioWebInterface.Pages
 {
     public class PublicFileTableModel
     {
-        public string Id { get; set; }
-        public FileMetaData[] Saves { get; set; }
+        public string Id { get; set; } = default!;
+        public FileMetaData[] Saves { get; set; } = default!;
     }
 }

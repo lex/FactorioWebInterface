@@ -104,7 +104,7 @@ namespace FactorioWebInterface.Services
 
             Result<string> CopySaveFile()
             {
-                switch (saveFile.Directory.Name)
+                switch (saveFile!.Directory.Name)
                 {
                     case Constants.GlobalSavesDirectoryName:
                     case Constants.LocalSavesDirectoryName:
@@ -201,7 +201,7 @@ namespace FactorioWebInterface.Services
         {
             var settings = mutableData.ServerSettings;
 
-            if (!settings.UseDefaultAdmins)
+            if (!(settings?.UseDefaultAdmins ?? true))
             {
                 // If we are not using the default admins, we use whatever admins are already in the admin list.
                 return Result.OK;

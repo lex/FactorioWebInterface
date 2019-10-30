@@ -21,7 +21,7 @@ namespace FactorioWebInterface.Services
 
         private async Task CommandErrored(CommandErrorEventArgs e)
         {
-            string commandName = e.Command?.Name;
+            string? commandName = e.Command?.Name;
             if (commandName == null)
             {
                 var embed = new DiscordEmbedBuilder()
@@ -105,7 +105,7 @@ namespace FactorioWebInterface.Services
         [Description("Disconnects the currently connected factorio server from this channel.")]
         public async Task UnSetServer(CommandContext ctx)
         {
-            string serverId = await _discordBotContext.UnSetServer(ctx.Channel.Id);
+            string? serverId = await _discordBotContext.UnSetServer(ctx.Channel.Id);
             if (serverId != null)
             {
                 string description = serverId == Constants.AdminChannelID

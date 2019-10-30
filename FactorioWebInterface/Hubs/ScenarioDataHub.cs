@@ -1,6 +1,7 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Services;
+using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -23,9 +24,9 @@ namespace FactorioWebInterface.Hubs
         public override Task OnDisconnectedAsync(Exception exception)
         {
             string connectionId = Context.ConnectionId;
-            if (Context.Items.TryGetValue(connectionId, out object oldDataSet))
+            if (Context.TryGetData(out string? oldDataSet) && oldDataSet != null)
             {
-                Groups.RemoveFromGroupAsync(connectionId, (string)oldDataSet);
+                Groups.RemoveFromGroupAsync(connectionId, oldDataSet);
             }
             return base.OnDisconnectedAsync(exception);
         }
@@ -34,9 +35,9 @@ namespace FactorioWebInterface.Hubs
         {
             string connectionId = Context.ConnectionId;
 
-            if (Context.Items.TryGetValue(connectionId, out object oldDataSet))
+            if (Context.TryGetData(out string? oldDataSet) && oldDataSet != null)
             {
-                await Groups.RemoveFromGroupAsync(connectionId, (string)oldDataSet);
+                await Groups.RemoveFromGroupAsync(connectionId, oldDataSet);
             }
 
             Context.Items[connectionId] = dataSet;
