@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Nito.AsyncEx;
+using Serilog.Core;
 using Shared;
 using System;
 using System.Collections.Generic;
@@ -331,28 +332,21 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
+            string name = SanitizeDiscordChat(eventArgs.User.Username);
+            string message = SanitizeDiscordChat(eventArgs.Message);
+            string data = $"/silent-command game.print('[Discord] {name}: {message}')";
+
+            LogChat(serverData, $"[Discord] {name}: {message}", DateTime.UtcNow);
+
             _ = serverData.LockAsync(md =>
             {
+                FactorioServerUtils.SendDiscordMessage(md, _factorioControlHub, $"[Discord] {eventArgs.User.Username}: {eventArgs.Message}");
+
                 if (md.ServerExtraSettings.DiscordToGameChat)
                 {
-                    var name = SanitizeDiscordChat(eventArgs.User.Username);
-                    var message = SanitizeDiscordChat(eventArgs.Message);
-
-                    string data = $"/silent-command game.print('[Discord] {name}: {message}')";
                     SendToFactorioProcess(eventArgs.ServerId, data);
-
-                    LogChat(serverId, $"[Discord] {name}: {message}", DateTime.UtcNow);
                 }
             });
-
-            var messageData = new MessageData()
-            {
-                ServerId = serverId,
-                MessageType = Models.MessageType.Discord,
-                Message = $"[Discord] {eventArgs.User.Username}: {eventArgs.Message}"
-            };
-
-            _ = SendToFactorioControl(eventArgs.ServerId, messageData);
         }
 
         private void SendBanCommandToEachRunningServerExcept(string data, string exceptId)
@@ -547,7 +541,7 @@ namespace FactorioWebInterface.Services
                 {
                     mutableData.StopCallback = md => StartScenarioInner(md, scenarioName, userName);
 
-                    await StopInner(serverId, userName);
+                    await StopInner(mutableData, userName);
 
                     return Result.OK;
                 }
@@ -572,16 +566,11 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private async Task StopInner(string serverId, string userName)
+        private async Task StopInner(FactorioServerMutableData mutableData, string userName)
         {
-            var message = new MessageData()
-            {
-                ServerId = serverId,
-                MessageType = Models.MessageType.Control,
-                Message = $"Server stopped by user {userName}"
-            };
+            string serverId = mutableData.ServerId;
 
-            _ = SendToFactorioControl(serverId, message);
+            _ = FactorioServerUtils.SendControlMessage(mutableData, _factorioControlHub, $"Server stopped by user {userName}");
 
 #if WINDOWS
             await _factorioProcessHub.Clients.Groups(serverId).ForceStop();
@@ -608,8 +597,11 @@ namespace FactorioWebInterface.Services
                 return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot stop server when in state {serverData.Status}");
             }
 
-            await serverData.LockAsync(md => md.StopCallback = null);
-            await StopInner(serverId, userName);
+            await serverData.LockAsync(md =>
+            {
+                md.StopCallback = null;
+                return StopInner(md, userName);
+            });
 
             return Result.OK;
 #endif
@@ -698,7 +690,9 @@ namespace FactorioWebInterface.Services
             }
 
             if (serverData.Status != FactorioServerStatus.Running)
+            {
                 return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot save game when in state {serverData.Status}");
+            }
 
             var message = new MessageData()
             {
@@ -883,8 +877,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            await serverData.LockAsync(md => md.ControlMessageBuffer.Add(data));
-            await _factorioControlHub.Clients.Group(serverId).SendMessage(data);
+            await serverData.LockAsync(md => FactorioServerUtils.SendMessage(md, _factorioControlHub, data));
         }
 
         public Task<MessageData[]> GetFactorioControlMessagesAsync(string serverId)
@@ -923,7 +916,7 @@ namespace FactorioWebInterface.Services
                             _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
                         }
 
-                        LogChat(serverId, content, dateTime);
+                        LogChat(serverData, content, dateTime);
                         break;
                     }
                 case Constants.ShoutTag:
@@ -938,7 +931,7 @@ namespace FactorioWebInterface.Services
                             _ = _discordBotContext.SendToFactorioChannel(serverId, SanitizeGameChat(content));
                         }
 
-                        LogChat(serverId, content, dateTime);
+                        LogChat(serverData, content, dateTime);
                         break;
                     }
                 case Constants.DiscordTag:
@@ -1557,6 +1550,8 @@ namespace FactorioWebInterface.Services
                     MessageType = Models.MessageType.Output
                 };
 
+                LogChat(sourceServerData, messageData.Message, DateTime.UtcNow);
+
                 await sourceServerData.LockAsync(md =>
                 {
                     if (md.Status == FactorioServerStatus.Running)
@@ -1565,11 +1560,9 @@ namespace FactorioWebInterface.Services
                         string command = $"/silent-command game.print('[Server] {actor}: {message}')";
                         _ = SendToFactorioProcess(serverId, command);
 
-                        LogChat(serverId, messageData.Message, DateTime.UtcNow);
+                        FactorioServerUtils.SendMessage(md, _factorioControlHub, messageData);
                     }
                 });
-
-                _ = SendToFactorioControl(serverId, messageData);
 
                 _ = _discordBotContext.SendToFactorioChannel(serverId, messageData.Message);
             }
@@ -1637,7 +1630,7 @@ namespace FactorioWebInterface.Services
 
             var t3 = _discordBotContext.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
 
-            LogChat(serverId, "[SERVER-STARTED]", dateTime);
+            LogChat(serverData, "[SERVER-STARTED]", dateTime);
 
             await t1;
             await ServerConnected(serverData);
@@ -1709,6 +1702,7 @@ namespace FactorioWebInterface.Services
             });
 
             Task discordTask = null;
+            bool checkStoppedCallback = false;
 
             if (oldStatus == FactorioServerStatus.Starting && newStatus == FactorioServerStatus.Running)
             {
@@ -1732,7 +1726,7 @@ namespace FactorioWebInterface.Services
 
                 _ = MarkChannelOffline(serverData);
 
-                LogChat(serverId, "[SERVER-STOPPED]", dateTime);
+                LogChat(serverData, "[SERVER-STOPPED]", dateTime);
 
                 await serverData.LockAsync(md =>
                 {
@@ -1746,7 +1740,7 @@ namespace FactorioWebInterface.Services
 
                 await _factorioFileManager.RaiseRecentTempFiles(serverData);
 
-                await DoStoppedCallback(serverData);
+                checkStoppedCallback = true;
             }
             else if (newStatus == FactorioServerStatus.Crashed && oldStatus != FactorioServerStatus.Crashed)
             {
@@ -1760,7 +1754,7 @@ namespace FactorioWebInterface.Services
                 discordTask = _discordBotContext.SendEmbedToFactorioChannel(serverId, embed);
                 _ = MarkChannelOffline(serverData);
 
-                LogChat(serverId, "[SERVER-CRASHED]", dateTime);
+                LogChat(serverData, "[SERVER-CRASHED]", dateTime);
 
                 await serverData.LockAsync(md =>
                 {
@@ -1796,6 +1790,8 @@ namespace FactorioWebInterface.Services
                 await contorlTask1;
             if (controlTask2 != null)
                 await controlTask2;
+            if (checkStoppedCallback)
+                await DoStoppedCallback(serverData);
         }
 
         public Task OnProcessRegistered(string serverId)
@@ -2426,21 +2422,44 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            Task.Run(async () =>
+            LogChat(serverData, content, dateTime);
+        }
+
+        private void LogChat(FactorioServerData serverData, string content, DateTime dateTime)
+        {
+            void SafeLog(Logger logger, string c, DateTime dt, ILogger<FactorioServerManager> expectionLogger)
             {
-                await serverData.LockAsync(mutableData =>
+                try
                 {
-                    var logger = mutableData.ChatLogger;
+                    logger.Information("{dateTime} {content}", dt.ToString("yyyy-MM-dd HH:mm:ss"), c);
+                }
+                catch (Exception e)
+                {
+                    expectionLogger.LogError(e, "content: {content}", c);
+                }
+            }
 
-                    if (logger != null)
-                    {
-                        logger.Information("{dateTime} {content}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), content);
-                        return;
-                    }
+            var chatLogger = serverData.ChatLogger;
 
-                    mutableData.ChatLogger = FactorioServerMutableData.BuildChatLogger(mutableData.ChatLogCurrentPath);
-                    mutableData.ChatLogger.Information("{dateTime} {content}", dateTime.ToString("yyyy-MM-dd HH:mm:ss"), content);
-                });
+            if (chatLogger != null)
+            {
+                SafeLog(chatLogger, content, dateTime, _logger);
+                return;
+            }
+
+            _ = serverData.LockAsync(mutableData =>
+            {
+                var newLogger = mutableData.ChatLogger;
+                if (newLogger != null)
+                {
+                    SafeLog(newLogger, content, dateTime, _logger);
+                    return;
+                }
+
+                newLogger = FactorioServerMutableData.BuildChatLogger(mutableData.ChatLogCurrentPath);
+                mutableData.ChatLogger = newLogger;
+
+                SafeLog(newLogger, content, dateTime, _logger);
             });
         }
 
