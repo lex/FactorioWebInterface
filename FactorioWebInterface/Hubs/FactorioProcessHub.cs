@@ -1,5 +1,6 @@
 ﻿using FactorioWebInterface.Models;
 using FactorioWebInterface.Services;
+using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -23,10 +24,9 @@ namespace FactorioWebInterface.Hubs
         public override Task OnDisconnectedAsync(Exception exception)
         {
             string connectionId = Context.ConnectionId;
-            if (Context.Items.TryGetValue(connectionId, out object serverId))
+            if (Context.TryGetData(out string? serverId) && serverId != null)
             {
-                string id = (string)serverId;
-                Groups.RemoveFromGroupAsync(connectionId, id);
+                Groups.RemoveFromGroupAsync(connectionId, serverId);
             }
             return base.OnDisconnectedAsync(exception);
         }
@@ -34,20 +34,18 @@ namespace FactorioWebInterface.Hubs
         public async Task RegisterServerIdWithDateTime(string serverId, DateTime dateTime)
         {
             string connectionId = Context.ConnectionId;
-            Context.Items[connectionId] = serverId;
+            Context.SetData(serverId);
 
-            await Groups.AddToGroupAsync(connectionId, serverId.ToString());
+            await Groups.AddToGroupAsync(connectionId, serverId);
 
             await _factorioServerManger.OnProcessRegistered(serverId);
         }
 
         public Task SendFactorioOutputDataWithDateTime(string data, DateTime dateTime)
         {
-            string connectionId = Context.ConnectionId;
-            if (Context.Items.TryGetValue(connectionId, out object serverId))
+            if (Context.TryGetData(out string? serverId) && serverId != null)
             {
-                string id = (string)serverId;
-                _factorioServerManger.FactorioDataReceived(id, data, dateTime);
+                _factorioServerManger.FactorioDataReceived(serverId, data, dateTime);
             }
 
             return Task.FromResult(0);
@@ -55,11 +53,9 @@ namespace FactorioWebInterface.Hubs
 
         public Task SendWrapperDataWithDateTime(string data, DateTime dateTime)
         {
-            string connectionId = Context.ConnectionId;
-            if (Context.Items.TryGetValue(connectionId, out object serverId))
+            if (Context.TryGetData(out string? serverId) && serverId != null)
             {
-                string id = (string)serverId;
-                _factorioServerManger.FactorioWrapperDataReceived(id, data, dateTime);
+                _factorioServerManger.FactorioWrapperDataReceived(serverId, data, dateTime);
             }
 
             return Task.FromResult(0);
@@ -67,11 +63,9 @@ namespace FactorioWebInterface.Hubs
 
         public Task StatusChangedWithDateTime(FactorioServerStatus newStatus, FactorioServerStatus oldStatus, DateTime dateTime)
         {
-            string connectionId = Context.ConnectionId;
-            if (Context.Items.TryGetValue(connectionId, out object serverId))
+            if (Context.TryGetData(out string? serverId) && serverId != null)
             {
-                string id = (string)serverId;
-                return _factorioServerManger.StatusChanged(id, newStatus, oldStatus, dateTime);
+                return _factorioServerManger.StatusChanged(serverId, newStatus, oldStatus, dateTime);
             }
 
             return Task.FromResult(0);

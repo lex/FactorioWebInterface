@@ -6,6 +6,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -72,9 +73,9 @@ namespace FactorioWebInterface.Services
             MaxLogFiles = factorioServerDataConfiguration.MaxLogFiles;
 
 #if WINDOWS
-            FactorioWrapperPath = "C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp2.2/FactorioWrapper.dll";
+            FactorioWrapperPath = "C:/Projects/FactorioWebInterface/FactorioWrapper/bin/Windows/netcoreapp3.0/FactorioWrapper.dll";
 #elif WSL
-            FactorioWrapperPath = "/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp2.2/publish/FactorioWrapper.dll";
+            FactorioWrapperPath = "/mnt/c/Projects/FactorioWebInterface/FactorioWrapper/bin/Wsl/netcoreapp3.0/publish/FactorioWrapper.dll";
 #else
             FactorioWrapperPath = $"/factorio/{factorioServerDataConfiguration.FactorioWrapperName}/FactorioWrapper.dll";
 #endif
@@ -143,9 +144,9 @@ namespace FactorioWebInterface.Services
             return validSaveDirectories.Contains(path);
         }
 
-        public bool TryGetServerData(string serverId, out FactorioServerData serverData)
+        public bool TryGetServerData(string serverId, [MaybeNullWhen(false)] out FactorioServerData serverData)
         {
-            return servers.TryGetValue(serverId, out serverData);
+            return servers.TryGetValue(serverId, out serverData!);
         }
 
         public bool IsValidServerId(string serverId)

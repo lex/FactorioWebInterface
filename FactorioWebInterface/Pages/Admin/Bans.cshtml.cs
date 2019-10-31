@@ -19,14 +19,14 @@ namespace FactorioWebInterface.Pages.Admin
 
         public class InputModel
         {
-            public string Admin { get; set; }
-            public string Date { get; set; }
-            public string Time { get; set; }
+            public string Admin { get; set; } = default!;
+            public string Date { get; set; } = default!;
+            public string Time { get; set; } = default!;
             public bool SynchronizeWithServers { get; set; } = true;
         }
 
         [BindProperty]
-        public InputModel Input { get; set; }
+        public InputModel Input { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync()
         {

@@ -34,22 +34,22 @@ namespace FactorioWebInterface.Models
         public string ChatLogCurrentPath => Constants.ChatLogCurrentPath;
 
         public FactorioServerStatus Status { get; set; }
-        public string Version { get; set; }
+        public string Version { get; set; } = "";
         public RingBuffer<MessageData> ControlMessageBuffer { get; set; }
-        public FactorioServerSettings ServerSettings { get; set; }
-        public string[] ServerAdminList { get; set; }
-        public FactorioServerSettingsWebEditable ServerWebEditableSettings { get; set; }
+        public FactorioServerSettings? ServerSettings { get; set; }
+        public string[]? ServerAdminList { get; set; }
+        public FactorioServerSettingsWebEditable? ServerWebEditableSettings { get; set; }
         public bool ServerSettingsSaved { get; set; } = true;
         public FactorioServerExtraSettings ServerExtraSettings { get; set; }
-        public FactorioServerExtraSettings ServerExtraWebEditableSettings { get; set; }
+        public FactorioServerExtraSettings? ServerExtraWebEditableSettings { get; set; }
         public bool ServerExtraSettingsSaved { get; set; } = true;
-        public Logger ChatLogger { get; set; }
+        public Logger? ChatLogger { get; set; }
         public string ModPack { get; set; } = "";
         public DateTime LastTempFilesChecked { get; set; } = default;
         public SortedList<string, int> OnlinePlayers { get; set; }
         public int OnlinePlayerCount { get; set; }
 
-        public Func<FactorioServerMutableData, Task> StopCallback { get; set; }
+        public Func<FactorioServerMutableData, Task>? StopCallback { get; set; }
         public HashSet<string> TrackingDataSets { get; set; } = new HashSet<string>();
 
         public FactorioServerMutableData(FactorioServerConstantData factorioServerConstantData, int bufferSize)

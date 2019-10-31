@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FactorioWebInterface.Utils
 {
@@ -6,7 +7,7 @@ namespace FactorioWebInterface.Utils
     {
         public static T GetDataOrDefault<T>(this HubCallerContext context, T defaultValue = default)
         {
-            if (context.Items.TryGetValue(typeof(T), out object data))
+            if (context.Items.TryGetValue(typeof(T), out object? data))
             {
                 return (T)data;
             }
@@ -16,16 +17,16 @@ namespace FactorioWebInterface.Utils
             }
         }
 
-        public static bool TryGetData<T>(this HubCallerContext context, out T data)
+        public static bool TryGetData<T>(this HubCallerContext context, [MaybeNull] out T data)
         {
-            if (context.Items.TryGetValue(typeof(T), out object obj))
+            if (context.Items.TryGetValue(typeof(T), out object? obj))
             {
                 data = (T)obj;
                 return true;
             }
             else
             {
-                data = default;
+                data = default!;
                 return false;
             }
         }

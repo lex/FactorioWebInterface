@@ -69,7 +69,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public async Task<string> GetValue(string dataSet, string key)
+        public async Task<string?> GetValue(string dataSet, string key)
         {
             if (dataSet == null || key == null)
             {

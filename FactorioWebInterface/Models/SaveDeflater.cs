@@ -100,12 +100,15 @@ namespace FactorioWebInterface.Models
         private void traverse(string file)
         {
             if (requiredFiles.ContainsKey(file))
-                return;
-            requiredFiles.Add(file, true);
-            string[] RequirePaths;
-            if (luaFileRequirePaths.TryGetValue(file, out RequirePaths))
             {
-                foreach (string requiredPath in RequirePaths)
+                return;
+            }
+
+            requiredFiles.Add(file, true);
+
+            if (luaFileRequirePaths.TryGetValue(file, out string[]? requirePaths) && requirePaths != null)
+            {
+                foreach (string requiredPath in requirePaths)
                 {
                     if (requiredPath.EndsWith("/"))
                     {
@@ -122,7 +125,6 @@ namespace FactorioWebInterface.Models
                     else
                         traverse(requiredPath);
                 }
-
             }
         }
 
@@ -135,7 +137,7 @@ namespace FactorioWebInterface.Models
             {
                 using (StreamReader reader = new StreamReader(stream))
                 {
-                    string line;
+                    string? line;
                     while ((line = reader.ReadLine()) != null) // Do not catch IO error. We want to handl
                     {
                         var lineMatch = lineRegex.Match(line).ToString().Trim(); //match everything upto -- or lines not containing --

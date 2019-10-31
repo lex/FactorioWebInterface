@@ -1,7 +1,6 @@
 ﻿using Xunit;
 using FactorioWebInterface.Data;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
 using FactorioWebInterface.Services;
 using System.Threading.Tasks;
 using System;
@@ -37,7 +36,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
                  new Ban() { Username = "ghi", Admin = "admin", Reason = "reason" },
             };
 
-            var db = serviceProvider.GetService<ApplicationDbContext>();
+            var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Bans.AddRange(bans);
             await db.SaveChangesAsync();
 
@@ -69,7 +68,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
                  new Ban() { Username = "abc", Admin = "admin", Reason = "reason" },
             };
 
-            var db = serviceProvider.GetService<ApplicationDbContext>();
+            var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Bans.AddRange(bans);
             await db.SaveChangesAsync();
 

@@ -1,5 +1,5 @@
-﻿import * as signalR from "@aspnet/signalr";
-import { MessagePackHubProtocol } from "@aspnet/signalr-protocol-msgpack"
+﻿import * as signalR from "@microsoft/signalr";
+import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import { strict } from "assert";
 
 !function () {

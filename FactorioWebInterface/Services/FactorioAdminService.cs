@@ -32,8 +32,8 @@ namespace FactorioWebInterface.Services
         private readonly IFileSystem _fileSystem;
         private readonly ILogger<FactorioAdminService> _logger;
 
-        public event EventHandler<IFactorioAdminService, CollectionChangedData<Admin>> AdminsChanged;
-        public event EventHandler<IFactorioAdminService, FactorioAdminListChangedEventArgs> AdminListChanged;
+        public event EventHandler<IFactorioAdminService, CollectionChangedData<Admin>>? AdminsChanged;
+        public event EventHandler<IFactorioAdminService, FactorioAdminListChangedEventArgs>? AdminListChanged;
 
         public FactorioAdminService(IDbContextFactory dbContextFactory,
             IHubContext<FactorioAdminHub, IFactorioAdminClientMethods> adminHub,
@@ -168,6 +168,11 @@ namespace FactorioWebInterface.Services
 
         private async Task<bool> RemoveAdminFromDatabase(string name)
         {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return true;
+            }
+
             using (var db = _dbContextFactory.Create<ApplicationDbContext>())
             {
                 var admins = db.Admins;

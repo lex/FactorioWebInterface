@@ -29,7 +29,7 @@ namespace FactorioWebInterface.Utils
         /// <param name="fileName"></param>
         /// <param name="arguments"></param>        
         /// <param name="timeout">-1 for no timeout.</param>     
-        public static bool RunProcessToEnd(string fileName, string arguments = null, int timeout = -1)
+        public static bool RunProcessToEnd(string fileName, string? arguments = null, int timeout = -1)
         {
             Log.Logger.Information("RunProcessToEnd filename: {fileName} arguments: {arguments}", fileName, arguments);
 
@@ -75,7 +75,7 @@ namespace FactorioWebInterface.Utils
         /// <param name="fileName"></param>
         /// <param name="arguments"></param>        
         /// <param name="timeout">-1 for no timeout.</param>     
-        public static ProcessResult RunProcessReadAll(string fileName, string arguments = null, int timeout = -1)
+        public static ProcessResult RunProcessReadAll(string fileName, string? arguments = null, int timeout = -1)
         {
             Log.Logger.Information("RunProcessReadAll filename: {fileName} arguments: {arguments}", fileName, arguments);
 
@@ -129,7 +129,7 @@ namespace FactorioWebInterface.Utils
         /// </summary>
         /// <param name="fileName"></param>
         /// <param name="arguments"></param> 
-        public static Task<bool> RunProcessToEndAsync(string fileName, string arguments = null)
+        public static Task<bool> RunProcessToEndAsync(string fileName, string? arguments = null)
         {
             Log.Logger.Information("RunProcessToEndAsync filename: {fileName} arguments: {arguments}", fileName, arguments);
 
@@ -171,7 +171,7 @@ namespace FactorioWebInterface.Utils
         /// <param name="fileName"></param>
         /// <param name="arguments"></param> 
         /// <param name="cancellationToken"></param> 
-        public static Task<bool> RunProcessToEndAsync(string fileName, string arguments = null, CancellationToken cancellationToken = default)
+        public static Task<bool> RunProcessToEndAsync(string fileName, string? arguments = null, CancellationToken cancellationToken = default)
         {
             Log.Logger.Information("RunProcessToEndAsync filename: {fileName} arguments: {arguments}", fileName, arguments);
 
@@ -239,7 +239,7 @@ namespace FactorioWebInterface.Utils
         /// <param name="fileName"></param>
         /// <param name="arguments"></param> 
         /// <param name="timeout"></param> 
-        public static async Task<bool> RunProcessToEndAsync(string fileName, string arguments = null, TimeSpan timeout = default)
+        public static async Task<bool> RunProcessToEndAsync(string fileName, string? arguments = null, TimeSpan timeout = default)
         {
             using (var cts = new CancellationTokenSource(timeout))
             {

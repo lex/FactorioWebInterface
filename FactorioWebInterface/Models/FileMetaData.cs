@@ -6,8 +6,8 @@ namespace FactorioWebInterface.Models
     {
         private static readonly string[] sizes = { "B", "KB", "MB", "GB", "TB" };
 
-        public string Name { get; set; }
-        public string Directory { get; set; }
+        public string Name { get; set; } = default!;
+        public string Directory { get; set; } = default!;
         public DateTime CreatedTime { get; set; }
         public DateTime LastModifiedTime { get; set; }
         public long Size { get; set; }

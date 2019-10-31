@@ -63,7 +63,7 @@ namespace FactorioWebInterface.Hubs
 
         public Task Start(string filePath, string arguments)
         {
-            if (Context.TryGetData<Process>(out var p))
+            if (Context.TryGetData<Process>(out var p) && p != null)
             {
                 try
                 {
@@ -108,10 +108,12 @@ namespace FactorioWebInterface.Hubs
 
             try
             {
-                if (process != null || !process.HasExited)
+                if (process != null && !process.HasExited)
                 {
-                    process?.Kill();
+                    process.Kill();
                     await Clients.Caller.Send("Process kill");
+
+                    return;
                 }
             }
             catch

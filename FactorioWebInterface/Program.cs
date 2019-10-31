@@ -1,10 +1,10 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Services;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -16,11 +16,11 @@ using System.Runtime.CompilerServices;
 
 namespace FactorioWebInterface
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
-            string path = AppDomain.CurrentDomain.BaseDirectory;
+            string path = AppDomain.CurrentDomain.BaseDirectory!;
             path = Path.Combine(path, "logs/log.txt");
 
             Log.Logger = new LoggerConfiguration()
@@ -61,13 +61,19 @@ namespace FactorioWebInterface
             }
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateWebHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.ConfigureKestrel(serverOptions =>
+                {
+                    serverOptions.Limits.MaxRequestBodySize = 1073741824; // 1GB.
+                })
                 .UseStartup<Startup>()
-                .UseKestrel(o => o.Limits.MaxRequestBodySize = 1073741824) // 1GB.
                 .UseSerilog();
+            });
 
-        private static void SeedData(IWebHost host)
+        private static void SeedData(IHost host)
         {
             using (var scope = host.Services.CreateScope())
             {

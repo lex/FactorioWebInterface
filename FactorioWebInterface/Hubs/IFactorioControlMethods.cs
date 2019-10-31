@@ -1,18 +1,19 @@
 ﻿using FactorioWebInterface.Models;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Hubs
 {
-    public class FactorioContorlClientData
+    public class FactorioControlClientData
     {
-        public string Status { get; set; }
-        public MessageData[] Messages { get; set; }
+        public string Status { get; set; } = "";
+        public MessageData[] Messages { get; set; } = Array.Empty<MessageData>();
     }
 
     public interface IFactorioControlServerMethods
     {
-        Task<FactorioContorlClientData> SetServerId(string serverId);
+        Task<FactorioControlClientData> SetServerId(string serverId);
         Task<Result> Resume();
         Task<Result> Load(string directoryName, string fileName);
         Task<Result> StartScenario(string scenarioName);
@@ -66,10 +67,10 @@ namespace FactorioWebInterface.Hubs
         Task SendDownloadableVersions(List<string> versions);
         Task SendCachedVersions(CollectionChangedData<string> data);
         Task SendVersion(string version);
-        Task SendSelectedModPack(string modPack);
-        Task SendServerSettings(FactorioServerSettingsWebEditable settings, bool isSaved);
+        Task SendSelectedModPack(string? modPack);
+        Task SendServerSettings(FactorioServerSettingsWebEditable? settings, bool isSaved);
         Task SendServerSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved);
-        Task SendServerExtraSettings(FactorioServerExtraSettings settings, bool isSaved);
+        Task SendServerExtraSettings(FactorioServerExtraSettings? settings, bool isSaved);
         Task SendServerExtraSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved);
     }
 }

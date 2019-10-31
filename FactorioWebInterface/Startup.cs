@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -112,8 +112,8 @@ namespace FactorioWebInterface
 
             services.AddRouting(o => o.LowercaseUrls = true);
 
-            services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+            services.AddControllers();
+            services.AddRazorPages()
                 .AddRazorPagesOptions(options =>
                 {
                     options.Conventions.AddPageRoute("/admin/servers", "/admin");
@@ -132,7 +132,7 @@ namespace FactorioWebInterface
 
             services.Configure<FormOptions>(o =>
             {
-                o.ValueLengthLimit = int.MaxValue;
+                o.ValueLengthLimit = int.MaxValue / 2;
                 o.MultipartBodyLengthLimit = int.MaxValue;
                 //o.MultipartHeadersLengthLimit = int.MaxValue;
             });
@@ -178,10 +178,12 @@ namespace FactorioWebInterface
                         }
                     };
                 });
+
+            services.AddHealthChecks();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseForwardedHeaders();
 
@@ -201,22 +203,27 @@ namespace FactorioWebInterface
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
+            app.UseRouting();
+            app.UseCors();
+
             app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseSession();
 
-            app.UseSignalR(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapHub<FactorioControlHub>("/factorioControlHub");
-                routes.MapHub<FactorioProcessHub>("/factorioProcessHub");
-                routes.MapHub<FactorioAdminHub>("/factorioAdminHub");
-                routes.MapHub<ScenarioDataHub>("/scenarioDataHub");
-                routes.MapHub<FactorioBanHub>("/factorioBanHub");
-                routes.MapHub<PlaguesPlaygroundHub>("/plaguesPlaygroundHub");
-                routes.MapHub<FactorioModHub>("/factorioModHub");
+                endpoints.MapControllers();
+                endpoints.MapRazorPages();
+                endpoints.MapHealthChecks("/health");
+                endpoints.MapHub<FactorioControlHub>("/factorioControlHub");
+                endpoints.MapHub<FactorioProcessHub>("/factorioProcessHub");
+                endpoints.MapHub<FactorioAdminHub>("/factorioAdminHub");
+                endpoints.MapHub<ScenarioDataHub>("/scenarioDataHub");
+                endpoints.MapHub<FactorioBanHub>("/factorioBanHub");
+                endpoints.MapHub<PlaguesPlaygroundHub>("/plaguesPlaygroundHub");
+                endpoints.MapHub<FactorioModHub>("/factorioModHub");
             });
-
-            app.UseMvc();
         }
 
         private string GenerateToken()

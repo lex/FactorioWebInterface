@@ -9,7 +9,7 @@ namespace FactorioWebInterface.Data
     public class DiscordServers
     {
         [Key]
-        public ulong DiscordChannelId { get; set; }
-        public string ServerId { get; set; }
+        public ulong DiscordChannelId { get; set; } = default!;
+        public string ServerId { get; set; } = default!;
     }
 }

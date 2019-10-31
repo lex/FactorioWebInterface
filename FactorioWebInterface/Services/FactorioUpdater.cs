@@ -25,7 +25,7 @@ namespace FactorioWebInterface.Services
         private readonly ILogger<FactorioUpdater> _logger;
         private readonly IFactorioServerDataService _factorioServerDataService;
 
-        public event EventHandler<FactorioUpdater, CollectionChangedData<string>> CachedVersionsChanged;
+        public event EventHandler<FactorioUpdater, CollectionChangedData<string>>? CachedVersionsChanged;
 
         public FactorioUpdater(IHttpClientFactory httpClientFactory,
              IFactorioServerDataService factorioServerDataService,
@@ -50,7 +50,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private FileInfo GetCachedFile(string version)
+        private FileInfo? GetCachedFile(string version)
         {
             try
             {
@@ -167,7 +167,7 @@ namespace FactorioWebInterface.Services
             return result;
         }
 
-        public async Task<FileInfo> Download(string version)
+        public async Task<FileInfo?> Download(string version)
         {
             try
             {

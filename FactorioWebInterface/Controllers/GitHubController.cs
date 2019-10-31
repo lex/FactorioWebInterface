@@ -40,14 +40,14 @@ namespace FactorioWebInterface.Controllers
                 }
 
                 var push = data.ToObject<PushEvent>();
-                string @ref = push.Ref;
+                string pushRef = push.Ref ?? "";
 
-                if (@ref.Length < 12)
+                if (pushRef.Length < 12)
                 {
                     return Ok();
                 }
 
-                string branch = push.Ref.Substring(11);
+                string branch = pushRef.Substring(11);
 
                 var timeout = TimeSpan.FromSeconds(300);
 

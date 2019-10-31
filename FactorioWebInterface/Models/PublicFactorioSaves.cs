@@ -25,7 +25,7 @@ namespace FactorioWebInterface.Models
             _factorioServerDataService = factorioServerDataService;
         }
 
-        private DirectoryInfo GetDirectory(string dirName)
+        private DirectoryInfo? GetDirectory(string dirName)
         {
             try
             {
@@ -56,7 +56,7 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public FileMetaData[] GetFiles(string directoryName)
+        public FileMetaData[]? GetFiles(string directoryName)
         {
             var dir = GetDirectory(directoryName);
 
@@ -86,7 +86,7 @@ namespace FactorioWebInterface.Models
             }
         }
 
-        public FileInfo GetFile(string directoryName, string fileName)
+        public FileInfo? GetFile(string directoryName, string fileName)
         {
             var dir = GetDirectory(directoryName);
             if (dir == null)
