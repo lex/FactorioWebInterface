@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace FactorioWebInterface.Data
 {
@@ -12,18 +12,18 @@ namespace FactorioWebInterface.Data
 
         // Not nullable for the database.
         [Key]
-        [JsonProperty(PropertyName = "username")]
+        [JsonPropertyName("username")]
         public string Username { get; set; } = default!;
 
-        [JsonProperty(PropertyName = "reason")]
+        [JsonPropertyName("reason")]
         public string? Reason { get; set; }
 
         public string? Address { get; set; }
 
-        [JsonProperty(PropertyName = "admin")]
+        [JsonPropertyName("admin")]
         public string? Admin { get; set; }
 
-        [JsonProperty(PropertyName = "dateTime")]
+        [JsonPropertyName("dateTime")]
         public DateTime DateTime { get; set; } = dummyDate;
 
         public override bool Equals(object? obj)

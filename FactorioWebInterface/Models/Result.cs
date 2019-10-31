@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace FactorioWebInterface.Models
 {
@@ -57,9 +58,11 @@ namespace FactorioWebInterface.Models
         public static Result Failure(string key, string description = "") => Failure(new Error(key, description));
 
         [JsonProperty(PropertyName = "Success")]
+        [JsonPropertyName("Success")]
         public bool Success { get; }
 
         [JsonProperty(PropertyName = "Errors")]
+        [JsonPropertyName("Errors")]
         public IReadOnlyList<Error> Errors { get; }
 
         public Result(bool success, IReadOnlyList<Error> errors)
@@ -152,6 +155,7 @@ namespace FactorioWebInterface.Models
 
         [MaybeNull]
         [JsonProperty(PropertyName = "Value")]
+        [JsonPropertyName("Value")]
         public T Value { get; set; } = default!;
 
         public static Result<T> FromResult(Result result)

@@ -1,32 +1,39 @@
 ﻿using Newtonsoft.Json;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace FactorioWebInterface.Models
 {
     public class FactorioServerExtraSettings
     {
         [DefaultValue(true)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "SyncBans", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("SyncBans")]
         public bool SyncBans { get; set; }
 
         [DefaultValue(true)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "BuildBansFromDatabaseOnStart", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("BuildBansFromDatabaseOnStart")]
         public bool BuildBansFromDatabaseOnStart { get; set; }
 
         [DefaultValue(true)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "SetDiscordChannelName", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("SetDiscordChannelName")]
         public bool SetDiscordChannelName { get; set; }
 
         [DefaultValue(true)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "GameChatToDiscord", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("GameChatToDiscord")]
         public bool GameChatToDiscord { get; set; }
 
         [DefaultValue(true)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "GameShoutToDiscord", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("GameShoutToDiscord")]
         public bool GameShoutToDiscord { get; set; }
 
         [DefaultValue(true)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "DiscordToGameChat", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("DiscordToGameChat")]
         public bool DiscordToGameChat { get; set; }
 
         public static FactorioServerExtraSettings MakeDefault()
