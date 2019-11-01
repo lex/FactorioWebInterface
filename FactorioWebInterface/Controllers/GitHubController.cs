@@ -1,11 +1,9 @@
 ﻿using FactorioWebInterface.Data.GitHub;
-using FactorioWebInterface.Models;
 using FactorioWebInterface.Services;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebHooks;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 
@@ -25,7 +23,7 @@ namespace FactorioWebInterface.Controllers
         }
 
         [GitHubWebHook]
-        public IActionResult GitHub(string id, string @event, JObject data)
+        public IActionResult GitHub(string? id, string @event, PushEvent data)
         {
             if (!ModelState.IsValid)
             {
@@ -39,16 +37,13 @@ namespace FactorioWebInterface.Controllers
                     return Ok();
                 }
 
-                var push = data.ToObject<PushEvent>();
-                string pushRef = push.Ref ?? "";
-
+                string pushRef = data.Ref ?? "";
                 if (pushRef.Length < 12)
                 {
                     return Ok();
                 }
 
                 string branch = pushRef.Substring(11);
-
                 var timeout = TimeSpan.FromSeconds(300);
 
                 Task.Run(async () =>
