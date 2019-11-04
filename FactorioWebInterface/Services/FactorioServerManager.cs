@@ -175,7 +175,7 @@ namespace FactorioWebInterface.Services
 
                     if (command.EndsWith('.'))
                     {
-                        command = command.Substring(command.Length - 1);
+                        command = command[0..^1];
                     }
 
                     SendBanCommandToEachRunningServerExcept(command, eventArgs.Source);
