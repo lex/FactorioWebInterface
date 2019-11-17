@@ -1,6 +1,5 @@
 ﻿using FactorioWebInterface.Data;
-using FactorioWebInterface.Models;
-using FactorioWebInterface.Services;
+using FactorioWebInterface.Services.Discord;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +21,7 @@ namespace FactorioWebInterface.Pages.Admin
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<SigninModel> _logger;
         private readonly IHttpClientFactory _clientFactory;
-        private readonly DiscordBotContext _discordBotContext;
+        private readonly IDiscordService _discordService;
 
         public SigninModel(
             IConfiguration configuration,
@@ -30,14 +29,14 @@ namespace FactorioWebInterface.Pages.Admin
             UserManager<ApplicationUser> userManager,
             ILogger<SigninModel> logger,
             IHttpClientFactory clientFactory,
-            DiscordBotContext discordBotContext)
+            IDiscordService discordService)
         {
             _configuration = configuration;
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
             _clientFactory = clientFactory;
-            _discordBotContext = discordBotContext;
+            _discordService = discordService;
         }
 
         private string RedirectUrl => $"{Request.Scheme}://{Request.Host}/admin/signin";
@@ -120,7 +119,7 @@ namespace FactorioWebInterface.Pages.Admin
             if (user == null)
             {
                 // If the user doesn't have an account make one, but only if they have the admin role in the Redmew guild.
-                var isAdmin = await _discordBotContext.IsAdminRoleAsync(userId);
+                var isAdmin = await _discordService.IsAdminRoleAsync(userId);
                 if (!isAdmin)
                 {
                     ModelState.AddModelError(string.Empty, "Discord authorization failed - not an admin member of the Redmew guild.");

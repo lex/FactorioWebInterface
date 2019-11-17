@@ -1,14 +1,10 @@
 ﻿using FactorioWebInterface.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.Web.CodeGeneration;
 using Newtonsoft.Json;
-using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Services
@@ -34,7 +30,7 @@ namespace FactorioWebInterface.Services
 
         bool IsValidSaveDirectory(string path);
 
-        void Init();
+        Task Init();
     }
 
     public class FactorioServerDataService : IFactorioServerDataService
@@ -104,7 +100,7 @@ namespace FactorioWebInterface.Services
             Servers = servers;
         }
 
-        public void Init()
+        public Task Init()
         {
             var tasks = new List<Task>();
 
@@ -136,7 +132,7 @@ namespace FactorioWebInterface.Services
                 tasks.Add(Task.Run(initServerData));
             }
 
-            Task.WhenAll(tasks).GetAwaiter().GetResult();
+            return Task.WhenAll(tasks);
         }
 
         public bool IsValidSaveDirectory(string path)

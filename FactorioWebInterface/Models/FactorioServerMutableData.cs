@@ -1,13 +1,9 @@
 ﻿using DSharpPlus;
-using FactorioWebInterface.Hubs;
-using Newtonsoft.Json;
 using Serilog;
 using Serilog.Core;
 using Shared;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Models

@@ -1,4 +1,6 @@
-﻿namespace FactorioWebInterface
+﻿using System.Data;
+
+namespace FactorioWebInterface
 {
     public static class Constants
     {
@@ -17,6 +19,8 @@
         public const string FactorioWrapperNameKey = "FactorioWrapperNameKey";
         public const string GitHubCallbackFilePathKey = "WebHookGitHubCallbackFile";
         public const string PlaguesScriptDefaultPathKey = "PlaguesScriptDefaultPath";
+
+        public const string DiscordBotCommandPrefix = ";;";
 
         public const string TempSavesDirectoryName = "saves";
         public const string LocalSavesDirectoryName = "local_saves";

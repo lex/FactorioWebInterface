@@ -1,8 +1,9 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
+﻿using Discord;
+using Discord.WebSocket;
 using FactorioWebInterface.Data;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Shared.Utils;
@@ -12,9 +13,26 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Services
+namespace FactorioWebInterface.Services.Discord
 {
-    public class DiscordBotContext
+    public interface IDiscordService
+    {
+        Task<bool> IsAdminRoleAsync(ulong userId);
+        Task<bool> IsAdminRoleAsync(string userId);
+        Task<bool> SetServer(string serverId, ulong channelId);
+        Task<string?> UnSetServer(ulong channelId);
+        Task SendToFactorioChannel(string serverId, string data);
+        Task SendEmbedToFactorioChannel(string serverId, Embed embed);
+        Task SendToFactorioAdminChannel(string data);
+        Task SendEmbedToFactorioAdminChannel(Embed embed);
+        Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null);
+
+        Task Init();
+
+        event EventHandler<IDiscordService, ServerMessageEventArgs>? FactorioDiscordDataReceived;
+    }
+
+    public class DiscordService : IDiscordService
     {
         public class Role
         {
@@ -29,16 +47,19 @@ namespace FactorioWebInterface.Services
 
         private class Message
         {
-            public DiscordChannel? Channel { get; set; }
+            public ISocketMessageChannel? Channel { get; set; }
             public string? Content { get; set; }
-            public DiscordEmbed? Embed { get; set; }
+            public Embed? Embed { get; set; }
         }
 
         private const int maxMessageQueueSize = 1000;
 
         private readonly IConfiguration _configuration;
+        private readonly DiscordSocketClient _client;
+        private readonly IDiscordMessageHandlingService _messageService;
         private readonly IDbContextFactory _dbContextFactory;
-        private readonly ILogger<DiscordBot> _logger;
+        private readonly IFactorioServerDataService _factorioServerDataService;
+        private readonly ILogger<DiscordService> _logger;
 
         private readonly ulong guildId;
         private readonly HashSet<ulong> validAdminRoleIds = new HashSet<ulong>();
@@ -49,96 +70,58 @@ namespace FactorioWebInterface.Services
 
         private SingleConsumerQueue<Message> messageQueue = default!;
 
-        public DiscordClient DiscordClient { get; private set; } = default!;
+        public event EventHandler<IDiscordService, ServerMessageEventArgs>? FactorioDiscordDataReceived;
 
-        public event EventHandler<DiscordBotContext, ServerMessageEventArgs>? FactorioDiscordDataReceived;
-
-        public DiscordBotContext(IConfiguration configuration, IDbContextFactory dbContextFactory, ILogger<DiscordBot> logger)
+        public DiscordService(IConfiguration configuration,
+            DiscordSocketClient client,
+            IDiscordMessageHandlingService messageService,
+            IDbContextFactory dbContextFactory,
+            IFactorioServerDataService factorioServerDataService,
+            ILogger<DiscordService> logger)
         {
             _configuration = configuration;
+            _client = client;
+            _messageService = messageService;
             _dbContextFactory = dbContextFactory;
+            _factorioServerDataService = factorioServerDataService;
             _logger = logger;
 
             guildId = ulong.Parse(_configuration[Constants.GuildIDKey]);
 
+            _messageService.MessageReceived += MessageReceived;
+
             BuildValidAdminRoleIds(configuration);
-
-            InitAsync().GetAwaiter().GetResult();
         }
 
-        private void BuildValidAdminRoleIds(IConfiguration configuration)
+        public async Task Init()
         {
-            var ar = new AdminRoles();
-            configuration.GetSection(Constants.AdminRolesKey).Bind(ar);
-
-            foreach (var item in ar.Roles)
-            {
-                validAdminRoleIds.Add(item.Id);
-            }
-        }
-
-        private async Task InitAsync()
-        {
-            DiscordClient = new DiscordClient(new DiscordConfiguration
-            {
-                Token = _configuration[Constants.DiscordBotTokenKey],
-                TokenType = TokenType.Bot
-            });
-
-            DiscordClient.MessageCreated += DiscordClient_MessageCreated;
-
-            var discordTask = DiscordClient.ConnectAsync();
-
             using (var context = _dbContextFactory.Create<ApplicationDbContext>())
             {
-                foreach (var ds in context.DiscordServers)
+                var servers = context.DiscordServers.ToArrayAsync();
+
+                messageQueue = new SingleConsumerQueue<Message>(maxMessageQueueSize, async m =>
+                {
+                    try
+                    {
+                        if (m.Channel != null)
+                        {
+                            await m.Channel.SendMessageAsync(text: m.Content, embed: m.Embed);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "messageQueue consumer");
+                    }
+                });
+
+                foreach (var ds in await servers)
                 {
                     discordToServer[ds.DiscordChannelId] = ds.ServerId;
                     serverdToDiscord[ds.ServerId] = ds.DiscordChannelId;
                 }
             }
-
-            messageQueue = new SingleConsumerQueue<Message>(maxMessageQueueSize, async m =>
-            {
-                try
-                {
-                    await DiscordClient.SendMessageAsync(m.Channel, m.Content, false, m.Embed);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, "messageQueue consumer");
-                }
-            });
-
-            await discordTask;
         }
 
-        private async Task DiscordClient_MessageCreated(DSharpPlus.EventArgs.MessageCreateEventArgs e)
-        {
-            if (e.Author.IsCurrent)
-            {
-                return;
-            }
-
-            string serverId;
-            try
-            {
-                await discordLock.WaitAsync();
-
-                if (!discordToServer.TryGetValue(e.Channel.Id, out string? id))
-                {
-                    return;
-                }
-
-                serverId = id;
-            }
-            finally
-            {
-                discordLock.Release();
-            }
-
-            FactorioDiscordDataReceived?.Invoke(this, new ServerMessageEventArgs(serverId, e.Author, e.Message.Content));
-        }
 
         /// <summary>
         /// Returns a boolean for if the discord user has the admin-like role in the Redmew guild.
@@ -146,24 +129,19 @@ namespace FactorioWebInterface.Services
         /// <param name="userId">The discord user's id.</param>        
         public async Task<bool> IsAdminRoleAsync(ulong userId)
         {
-            var guild = await DiscordClient.GetGuildAsync(guildId);
-            DiscordMember member;
-
-            try
-            {
-                // Apprently this throws an excpetion if the member isn't found.
-                member = await guild.GetMemberAsync(userId);
-            }
-            catch (Exception)
+            var guild = _client.GetGuild(guildId);
+            if (guild == null)
             {
                 return false;
             }
 
-            if (member == null)
+            var user = await GetUserAsync(guild, userId);
+            if (user == null)
+            {
                 return false;
+            }
 
-            var role = member.Roles.FirstOrDefault(x => validAdminRoleIds.Contains(x.Id));
-
+            var role = user.Roles.FirstOrDefault(x => validAdminRoleIds.Contains(x.Id));
             return role != null;
         }
 
@@ -181,13 +159,18 @@ namespace FactorioWebInterface.Services
 
         public async Task<bool> SetServer(string serverId, ulong channelId)
         {
+            if (!_factorioServerDataService.IsValidServerId(serverId))
+            {
+                return false;
+            }
+
             try
             {
                 await discordLock.WaitAsync();
 
                 using (var context = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var query = context.DiscordServers.Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId);
+                    var query = await context.DiscordServers.Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId).ToArrayAsync();
 
                     foreach (var ds in query)
                     {
@@ -224,7 +207,7 @@ namespace FactorioWebInterface.Services
 
                 using (var context = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var query = context.DiscordServers.Where(x => x.DiscordChannelId == channelId);
+                    var query = await context.DiscordServers.Where(x => x.DiscordChannelId == channelId).ToArrayAsync();
 
                     string? serverId = null;
 
@@ -268,7 +251,7 @@ namespace FactorioWebInterface.Services
                 discordLock.Release();
             }
 
-            var channel = await DiscordClient.GetChannelAsync(channelId);
+            var channel = _client.GetChannel(channelId) as ISocketMessageChannel;
             if (channel == null)
             {
                 return;
@@ -287,7 +270,7 @@ namespace FactorioWebInterface.Services
             messageQueue.Enqueue(message);
         }
 
-        public async Task SendEmbedToFactorioChannel(string serverId, DiscordEmbed embed)
+        public async Task SendEmbedToFactorioChannel(string serverId, Embed embed)
         {
             ulong channelId;
             try
@@ -303,7 +286,7 @@ namespace FactorioWebInterface.Services
                 discordLock.Release();
             }
 
-            var channel = await DiscordClient.GetChannelAsync(channelId);
+            var channel = _client.GetChannel(channelId) as ISocketMessageChannel;
             if (channel == null)
             {
                 return;
@@ -322,7 +305,7 @@ namespace FactorioWebInterface.Services
             return SendToFactorioChannel(Constants.AdminChannelID, data);
         }
 
-        public Task SendEmbedToFactorioAdminChannel(DiscordEmbed embed)
+        public Task SendEmbedToFactorioAdminChannel(Embed embed)
         {
             return SendEmbedToFactorioChannel(Constants.AdminChannelID, embed);
         }
@@ -343,13 +326,71 @@ namespace FactorioWebInterface.Services
                 discordLock.Release();
             }
 
-            var channel = await DiscordClient.GetChannelAsync(channelId);
+            var channel = _client.GetChannel(channelId) as ITextChannel;
             if (channel == null)
             {
                 return;
             }
 
-            await channel.ModifyAsync(name: name, topic: topic);
+            void Modify(TextChannelProperties props)
+            {
+                if (name != null)
+                {
+                    props.Name = name;
+                }
+
+                if (topic != null)
+                {
+                    props.Topic = topic;
+                }
+            }
+
+            await channel.ModifyAsync(Modify);
+        }
+
+        private async ValueTask<SocketGuildUser> GetUserAsync(SocketGuild guild, ulong id)
+        {
+            var user = guild.GetUser(id);
+            if (user != null)
+            {
+                return user;
+            }
+
+            await guild.DownloadUsersAsync();
+            return guild.GetUser(id);
+        }
+
+        private async void MessageReceived(IDiscordMessageHandlingService sender, SocketMessage eventArgs)
+        {
+            string serverId;
+            try
+            {
+                await discordLock.WaitAsync();
+
+                if (!discordToServer.TryGetValue(eventArgs.Channel.Id, out string? id))
+                {
+                    return;
+                }
+
+                serverId = id;
+            }
+            finally
+            {
+                discordLock.Release();
+            }
+
+            FactorioDiscordDataReceived?.Invoke(this, new ServerMessageEventArgs(serverId, eventArgs.Author, eventArgs.Content));
+        }
+
+        private void BuildValidAdminRoleIds(IConfiguration configuration)
+        {
+            var ar = new AdminRoles();
+            configuration.GetSection(Constants.AdminRolesKey).Bind(ar);
+
+            foreach (var item in ar.Roles)
+            {
+                validAdminRoleIds.Add(item.Id);
+            }
         }
     }
 }

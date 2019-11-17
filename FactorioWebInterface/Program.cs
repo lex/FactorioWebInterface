@@ -1,5 +1,6 @@
 ﻿using FactorioWebInterface.Data;
 using FactorioWebInterface.Services;
+using FactorioWebInterface.Services.Discord;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("FactorioWebInterfaceTests")]
 
@@ -18,7 +20,7 @@ namespace FactorioWebInterface
 {
     public static class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             string path = AppDomain.CurrentDomain.BaseDirectory!;
             path = Path.Combine(path, "logs/log.txt");
@@ -40,13 +42,17 @@ namespace FactorioWebInterface
                 // This makes sure the databases are setup.
                 SeedData(host);
 
-                host.Services.GetService<IFactorioServerDataService>().Init();
+                var services = host.Services;
+
+                await Task.WhenAll(
+                    services.GetService<IFactorioServerDataService>().Init(),
+                    services.GetService<DiscordBot>().Init(),
+                    services.GetService<IDiscordService>().Init());
 
                 // This makes sure the FactorioServerManger is started when the web interface starts.
-                host.Services.GetService<IFactorioServerManager>();
-                host.Services.GetService<DiscordBot>();
-                host.Services.GetService<BanHubEventHandlerService>();
-                host.Services.GetService<FactorioAdminServiceEventHandlerService>();
+                services.GetService<IFactorioServerManager>();
+                services.GetService<BanHubEventHandlerService>();
+                services.GetService<FactorioAdminServiceEventHandlerService>();
 
                 host.Run();
             }
