@@ -17,6 +17,7 @@ namespace FactorioWebInterface.Services.Discord
         }
 
         [Command("ping")]
+        [Alias("p")]
         [Summary("Pings the bot.")]
         [Example("")]
         public Task Ping()
@@ -32,8 +33,9 @@ namespace FactorioWebInterface.Services.Discord
         }
 
         [Command("setserver")]
+        [Alias("s")]
         [Summary("Connects a Factorio server to this channel.")]
-        [Remarks("Links the Discord channel to the Factorio server with the ID.")]
+        [Remarks("Links the Discord channel to the Factorio server with the ID. There can only be a one to one mapping from server IDs to channel IDs. If there is already a link from this channel to another server, the old link is removed. Links can be removed with the `;;unset` command.")]
         [Example("7")]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         public async Task SetServer([Summary("The ServerID as shown on the [/servers](https://redmew.com/admin/servers/) page on the web panel.")] string serverId)
@@ -60,6 +62,7 @@ namespace FactorioWebInterface.Services.Discord
         }
 
         [Command("unset")]
+        [Alias("u")]
         [Summary("Disconnects the currently connected Factorio server from this channel.")]
         [Remarks("If this Discord channel is linked to a Facotrio server, removes the connection.")]
         [Example("")]
@@ -93,6 +96,7 @@ namespace FactorioWebInterface.Services.Discord
         }
 
         [Command("setadmin")]
+        [Alias("a")]
         [Summary("Sets this Discord channel as the Admin channel.")]
         [Remarks("Remove with the unset command.")]
         [Example("")]
@@ -122,11 +126,13 @@ namespace FactorioWebInterface.Services.Discord
         }
 
         [Command("help")]
+        [Alias("h", "?")]
         [Summary("Shows Commands for this bot, use `" + Constants.DiscordBotCommandPrefix + "help <command_name>` for more details.")]
-        public Task Help([Remainder] string? command = null)
+        [Example("")]
+        [Example("setserver")]
+        public Task Help([Remainder][Summary("The command to show more information for.")] string? command = null)
         {
-            var embed = _helpService.GetEmbed(command);
-            return ReplyAsync(embed: embed);
+            return _helpService.DoHelp(Context.Channel, command);
         }
     }
 }

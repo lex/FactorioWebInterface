@@ -19,8 +19,9 @@ namespace FactorioWebInterface.Services.Discord
             public string? Name { get; set; }
             public string? Summary { get; set; }
             public string? Remark { get; set; }
-            public string? Exmaple { get; set; }
+            public List<string> Exmaples { get; } = new List<string>();
             public List<ParamaterData> Paramaters { get; } = new List<ParamaterData>();
+            public string[] Alias { get; set; } = Array.Empty<string>();
         }
 
         private class ParamaterData
@@ -30,12 +31,12 @@ namespace FactorioWebInterface.Services.Discord
             public bool IsOptional { get; set; }
         }
 
-        public static Dictionary<string, Embed> BuildHelp<T>() where T : ModuleBase<SocketCommandContext>
+        public static (Dictionary<string, Embed> commandLookup, Embed commandListings) BuildHelp<T>() where T : ModuleBase<SocketCommandContext>
         {
             return BuildHelp(typeof(T));
         }
 
-        public static Dictionary<string, Embed> BuildHelp(Type module)
+        public static (Dictionary<string, Embed> commandLookup, Embed commandListings) BuildHelp(Type module)
         {
             var map = new Dictionary<string, Embed>();
             var commands = new List<CommandData>();
@@ -63,7 +64,10 @@ namespace FactorioWebInterface.Services.Discord
                             commandData.Remark = remarks.Text;
                             break;
                         case ExampleAttribute exmaple:
-                            commandData.Exmaple = exmaple.Text;
+                            commandData.Exmaples.Add(exmaple.Text);
+                            break;
+                        case AliasAttribute alias:
+                            commandData.Alias = alias.Aliases;
                             break;
                         default:
                             break;
@@ -108,9 +112,14 @@ namespace FactorioWebInterface.Services.Discord
                     Color = DiscordColors.infoColor,
                 }
                 .Build();
+
+                foreach (var alias in command.Alias)
+                {
+                    map[alias] = map[command.Name!];
+                }
             }
 
-            map["help"] = new EmbedBuilder()
+            var listings = new EmbedBuilder()
             {
                 Title = Constants.DiscordBotCommandPrefix + "help [command_name]",
                 Description = $"Shows Commands for this bot, use `{Constants.DiscordBotCommandPrefix}help <command_name>` for more details.",
@@ -122,14 +131,13 @@ namespace FactorioWebInterface.Services.Discord
                 }).ToList()
             }.Build();
 
-            return map;
+            return (map, listings);
         }
 
         private static string GetGetParametersNameString(List<ParamaterData> paramaters)
         {
             char OpenParamaterChar(ParamaterData data) => data.IsOptional ? '[' : '<';
             char CloseParamaterChar(ParamaterData data) => data.IsOptional ? ']' : '>';
-
 
             if (paramaters.Count == 0)
             {
@@ -151,6 +159,43 @@ namespace FactorioWebInterface.Services.Discord
             return sb.ToString();
         }
 
+        private static void DoAliases(StringBuilder sb, string[] aliases)
+        {
+            switch (aliases.Length)
+            {
+                case 0:
+                    break;
+                case 1:
+                    sb.Append("__**Alias:**__ **").Append(Constants.DiscordBotCommandPrefix).Append(aliases[0]).Append("**\n\n");
+                    break;
+                default:
+                    sb.Append("__**Aliases:**__ ");
+                    foreach (var alias in aliases)
+                    {
+                        sb.Append("**").Append(Constants.DiscordBotCommandPrefix).Append(alias).Append("**, ");
+                    }
+                    sb.Remove(sb.Length - 2, 2);
+                    sb.Append("\n\n");
+                    break;
+            }
+        }
+
+        private static void DoSummary(StringBuilder sb, string? summary)
+        {
+            if (!string.IsNullOrWhiteSpace(summary))
+            {
+                sb.Append(summary);
+            }
+        }
+
+        private static void DoRemark(StringBuilder sb, string? remark)
+        {
+            if (!string.IsNullOrWhiteSpace(remark))
+            {
+                sb.Append("\n").Append(remark);
+            }
+        }
+
         private static void DoParametersDescription(StringBuilder sb, List<ParamaterData> paramaters)
         {
             if (paramaters.Count == 0)
@@ -162,31 +207,40 @@ namespace FactorioWebInterface.Services.Discord
 
             foreach (var p in paramaters)
             {
-                sb.Append("**").Append(p.Name).Append("**").Append(" - ").Append(p.Summary).Append("\n");
+                sb.Append("**").Append(p.Name).Append("**");
+                if (p.IsOptional)
+                {
+                    sb.Append(" [Optional]");
+                }
+                sb.Append(" - ").Append(p.Summary).Append("\n");
             }
             sb.Remove(sb.Length - 1, 1);
+        }
+
+        private static void DoExamples(StringBuilder sb, string commandName, List<string> examples)
+        {
+            if (examples.Count == 0)
+            {
+                return;
+            }
+            sb.Append("\n\n__**Example Usage:**__\n```\n");
+
+            foreach (var example in examples)
+            {
+                sb.Append(Constants.DiscordBotCommandPrefix).Append(commandName).Append(" ").Append(example).Append("\n");
+            }
+            sb.Append("```");
         }
 
         private static string GetDescriptionString(CommandData command)
         {
             var sb = new StringBuilder();
 
-            if (!string.IsNullOrWhiteSpace(command.Summary))
-            {
-                sb.Append(command.Summary);
-            }
-
-            if (!string.IsNullOrWhiteSpace(command.Remark))
-            {
-                sb.Append("\n").Append(command.Remark);
-            }
-
+            DoAliases(sb, command.Alias);
+            DoSummary(sb, command.Summary);
+            DoRemark(sb, command.Remark);
             DoParametersDescription(sb, command.Paramaters);
-
-            if (command.Exmaple != null)
-            {
-                sb.Append("\n\n**Example Usage:**\n```\n").Append(Constants.DiscordBotCommandPrefix).Append(command.Name).Append(" ").Append(command.Exmaple).Append("\n```");
-            }
+            DoExamples(sb, command.Name!, command.Exmaples);
 
             return sb.ToString();
         }

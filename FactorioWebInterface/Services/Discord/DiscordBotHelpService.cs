@@ -1,41 +1,61 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using FactorioWebInterface.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Services.Discord
 {
     public interface IDiscordBotHelpService<T> where T : ModuleBase<SocketCommandContext>
     {
-        public Embed GetEmbed(string? command);
+        Task DoHelp(ISocketMessageChannel channel, string? command);
     }
 
     public class DiscordBotHelpService<T> : IDiscordBotHelpService<T> where T : ModuleBase<SocketCommandContext>
     {
-        private Dictionary<string, Embed> HelpLookup = DiscordBotCommandHelpBuilder.BuildHelp<DiscordBotCommands>();
+        private Dictionary<string, Embed> commandLookup;
+        private Embed commandListings;
 
         public DiscordBotHelpService()
         {
+            (commandLookup, commandListings) = DiscordBotCommandHelpBuilder.BuildHelp<T>();
         }
 
-        public Embed GetEmbed(string? command)
+        public async Task DoHelp(ISocketMessageChannel channel, string? command)
         {
-            command = command ?? "help";
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                await channel.SendMessageAsync(embed: commandListings);
+                return;
+            }
+
             command = command.Trim();
             if (command.StartsWith(Constants.DiscordBotCommandPrefix))
             {
                 command = command.Substring(Constants.DiscordBotCommandPrefix.Length);
             }
 
-            if (!HelpLookup.TryGetValue(command, out Embed? embed))
+            if (string.IsNullOrWhiteSpace(command))
             {
-                embed = HelpLookup["help"];
+                await channel.SendMessageAsync(embed: commandListings);
+                return;
             }
 
-            return embed;
+            if (commandLookup.TryGetValue(command, out Embed? embed))
+            {
+                await channel.SendMessageAsync(embed: embed);
+                return;
+            }
+
+            var errorEmbed = new EmbedBuilder()
+            {
+                Description = $"Sorry, command `{command}` not found, see command listings below.",
+                Color = DiscordColors.failureColor
+            }.Build();
+            await channel.SendMessageAsync(embed: errorEmbed);
+
+            await channel.SendMessageAsync(embed: commandListings);
         }
     }
 }
