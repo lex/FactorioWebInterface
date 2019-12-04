@@ -60,7 +60,7 @@ namespace FactorioWebInterfaceTests.Utils
             invocations.Add(new MethodInvokeData(name, arguments));
         }
 
-        public void AssertContainsLog(LogLevel logLevel, string state)
+        public void AssertContainsLog(LogLevel logLevel, string state, Exception exception = null)
         {
             foreach (var invocation in Invocations)
             {
@@ -68,7 +68,8 @@ namespace FactorioWebInterfaceTests.Utils
 
                 if (arguments.Length == 5
                     && Equals(arguments[0], logLevel)
-                    && Equals(arguments[2].ToString(), state))
+                    && Equals(arguments[2].ToString(), state)
+                    && (exception == null || Equals(arguments[3], exception)))
                 {
                     return;
                 }

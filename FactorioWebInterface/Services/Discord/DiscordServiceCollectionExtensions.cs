@@ -12,6 +12,7 @@ namespace FactorioWebInterface.Services.Discord
                 .AddSingleton<CommandService>()
                 .AddSingleton<IDiscordMessageHandlingService, DiscordMessageHandlingService>()
                 .AddSingleton(typeof(IDiscordBotHelpService<>), typeof(DiscordBotHelpService<>))
+                .AddSingleton<IMessageQueueFactory, MessageQueueFactory>()
                 .AddSingleton<IDiscordService, DiscordService>()
                 .AddSingleton<DiscordBot>();
         }

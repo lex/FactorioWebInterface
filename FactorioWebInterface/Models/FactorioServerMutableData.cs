@@ -1,4 +1,4 @@
-﻿using DSharpPlus;
+﻿using FactorioWebInterface.Utils;
 using Serilog;
 using Serilog.Core;
 using Shared;
@@ -31,7 +31,7 @@ namespace FactorioWebInterface.Models
 
         public FactorioServerStatus Status { get; set; }
         public string Version { get; set; } = "";
-        public RingBuffer<MessageData> ControlMessageBuffer { get; set; }
+        public CircularBuffer<MessageData> ControlMessageBuffer { get; set; }
         public FactorioServerSettings? ServerSettings { get; set; }
         public string[]? ServerAdminList { get; set; }
         public FactorioServerSettingsWebEditable? ServerWebEditableSettings { get; set; }
@@ -52,7 +52,7 @@ namespace FactorioWebInterface.Models
         {
             Constants = factorioServerConstantData;
             Status = FactorioServerStatus.Unknown;
-            ControlMessageBuffer = new RingBuffer<MessageData>(bufferSize);
+            ControlMessageBuffer = new CircularBuffer<MessageData>(bufferSize);
             OnlinePlayers = new SortedList<string, int>();
             OnlinePlayerCount = 0;
             ServerExtraSettings = FactorioServerExtraSettings.MakeDefault();

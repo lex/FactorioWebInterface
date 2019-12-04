@@ -47,7 +47,7 @@ namespace FactorioWebInterfaceTests.UtilsTests.FactorioServerUtilsTests
             await FactorioServerUtils.ChangeStatus(data, controlHub, FactorioServerStatus.Preparing, byUser);
 
             // Assert.
-            var messages = data.ControlMessageBuffer.TakeWhile(x => x != null).ToArray();
+            var messages = data.ControlMessageBuffer.ToArray();
             Assert.NotEmpty(messages);
             var actual = messages[0];
             Assert.Equal(expected.ServerId, actual.ServerId);

@@ -886,7 +886,7 @@ namespace FactorioWebInterface.Services
                 return Task.FromResult(Array.Empty<MessageData>());
             }
 
-            return serverData.LockAsync(md => md.ControlMessageBuffer.TakeWhile(x => x != null).ToArray());
+            return serverData.LockAsync(md => md.ControlMessageBuffer.ToArray());
         }
 
         private async Task DoTags(string serverId, string data, DateTime dateTime)

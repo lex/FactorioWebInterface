@@ -1,14 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using FactorioWebInterface.Data;
 using FactorioWebInterface.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Serilog;
+using Nito.AsyncEx;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Services.Discord
@@ -46,10 +43,21 @@ namespace FactorioWebInterface.Services.Discord
         {
             string token = _configuration[Constants.DiscordBotTokenKey];
 
+            var ready = new AsyncManualResetEvent();
+            Task ReadyCallback()
+            {
+                _client.Ready -= ReadyCallback;
+                ready.Set();
+                return Task.CompletedTask;
+            }
+            _client.Ready += ReadyCallback;
+
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
 
             await _commands.AddModuleAsync<DiscordBotCommands>(_services);
+
+            await ready.WaitAsync();
         }
 
         private void CommandReceived(IDiscordMessageHandlingService sender, (SocketUserMessage message, int argPos) eventArgs)
