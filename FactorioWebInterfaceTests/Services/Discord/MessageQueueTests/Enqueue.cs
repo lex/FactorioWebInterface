@@ -255,6 +255,45 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             Assert.Equal(secondInput, sent.Task.Result);
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task AfterDispose_EnqueueDoesNotSend(bool sendText)
+        {
+            // Arrange.
+            object sent = null;
+            void Callback(string text, Embed embed)
+            {
+                if (sendText)
+                {
+                    sent = text;
+                }
+                else
+                {
+                    sent = embed;
+                }
+            }
+
+            var queue = MakeMessageQueue(Callback);
+
+            // Act.
+            queue.Dispose();
+
+            if (sendText)
+            {
+                queue.Enqueue("Some text");
+            }
+            else
+            {
+                queue.Enqueue(new EmbedBuilder().Build());
+            }
+
+            await Task.Delay(20);
+
+            // Assert.
+            Assert.Null(sent);
+        }
+
         private MessageQueue MakeMessageQueue(Action<string, Embed> callback = null, TestLogger<MessageQueue> logger = null)
         {
             return new MessageQueue(
