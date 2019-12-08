@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -103,6 +104,8 @@ namespace FactorioWebInterface.Models
                 return sb.ToString();
             }
         }
+
+        public string? ErrorDescriptions => Errors.Count == 0 ? null : string.Join(Environment.NewLine, Errors.Select(e => e.Description));
 
         public override bool Equals(object? obj)
         {

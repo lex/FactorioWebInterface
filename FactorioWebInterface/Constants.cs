@@ -4,6 +4,7 @@ namespace FactorioWebInterface
 {
     public static class Constants
     {
+        public const string ServerURLKey = "ServerURL";
         public const string RootRole = "Root";
         public const string AdminRole = "Admin";
         public const string DiscordBotTokenKey = "DiscordBotToken";

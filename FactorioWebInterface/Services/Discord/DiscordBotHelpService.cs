@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using FactorioWebInterface.Models;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -17,9 +18,9 @@ namespace FactorioWebInterface.Services.Discord
         private Dictionary<string, Embed> commandLookup;
         private Embed commandListings;
 
-        public DiscordBotHelpService()
+        public DiscordBotHelpService(IServiceProvider serviceProvider)
         {
-            (commandLookup, commandListings) = DiscordBotCommandHelpBuilder.BuildHelp<T>();
+            (commandLookup, commandListings) = DiscordBotCommandHelpBuilder.BuildHelp<T>(serviceProvider);
         }
 
         public async Task DoHelp(ISocketMessageChannel channel, string? command)

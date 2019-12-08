@@ -84,13 +84,22 @@ namespace FactorioWebInterface.Services.Discord
 
             if (!result.IsSuccess)
             {
-                string commandName = command.Value.Name;
+                string description;
+                if (result.Error == CommandError.UnmetPrecondition)
+                {
+                    description = "Insufficient permissions to run this command.";
+                }
+                else
+                {
+                    string commandName = command.Value.Name;
+                    description = $"Invalid use of {commandName} see `{Constants.DiscordBotCommandPrefix}help {commandName}` for more information with this command.";
+                }
+
                 var embed = new EmbedBuilder()
                 {
-                    Description = $"Invalid use of {commandName} see `{Constants.DiscordBotCommandPrefix}help {commandName}` for more information with this command.",
+                    Description = description,
                     Color = DiscordColors.failureColor
-                }
-                .Build();
+                }.Build();
 
                 await context.Channel.SendMessageAsync(embed: embed);
             }

@@ -1,12 +1,16 @@
 ﻿using Discord;
 using Discord.Commands;
 using FactorioWebInterface.Models;
+using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Services.Discord
 {
     public class DiscordBotCommands : ModuleBase<SocketCommandContext>
     {
+        public const string DefaultSuccessTitle = ":white_check_mark:  Success!";
+        public const string DefaultFailureTitle = ":x:  An Error Ocurred!";
+
         private readonly IDiscordBotHelpService<DiscordBotCommands> _helpService;
         private readonly IDiscordService _discordService;
 
@@ -24,12 +28,30 @@ namespace FactorioWebInterface.Services.Discord
         {
             var embed = new EmbedBuilder()
             {
-                Title = $"pong in {Context.Client.Latency}ms",
+                Title = $"pong in {Context.Client.Latency}ms.",
                 Color = DiscordColors.infoColor
             }
             .Build();
 
             return ReplyAsync(embed: embed);
+        }
+
+        public class SetServerParameterSummary : ISummaryCallbackMessage
+        {
+            public string Message { get; }
+
+            public SetServerParameterSummary(IConfiguration _configuration)
+            {
+                string? url = _configuration[Constants.ServerURLKey] ?? "";
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    Message = $"The ServerID as shown on the /admin/servers/ page on the web panel.";
+                }
+                else
+                {
+                    Message = $"The ServerID as shown on the [/servers]({url}/admin/servers/) page on the web panel.";
+                }
+            }
         }
 
         [Command("setserver")]
@@ -38,27 +60,10 @@ namespace FactorioWebInterface.Services.Discord
         [Remarks("Links the Discord channel to the Factorio server with the ID. There can only be a one to one mapping from server IDs to channel IDs. If there is already a link from this channel to another server, the old link is removed. Links can be removed with the `;;unset` command.")]
         [Example("7")]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task SetServer([Summary("The ServerID as shown on the [/servers](https://redmew.com/admin/servers/) page on the web panel.")] string serverId)
+        public async Task SetServer([SummaryCallback(typeof(SetServerParameterSummary))] string serverId)
         {
-            EmbedBuilder embed;
-            if (await _discordService.SetServer(serverId, Context.Channel.Id))
-            {
-                embed = new EmbedBuilder()
-                {
-                    Description = $"Factorio server {serverId} has been connected to this channel",
-                    Color = DiscordColors.successColor
-                };
-            }
-            else
-            {
-                embed = new EmbedBuilder()
-                {
-                    Description = $"Error connecting the factorio server {serverId} to this channel",
-                    Color = DiscordColors.failureColor
-                };
-            }
-
-            await ReplyAsync(embed: embed.Build());
+            var result = await _discordService.SetServer(serverId, Context.Channel.Id);
+            await ReplyForResult(result, successMessage: $"Factorio serverID {serverId} has been connected to this channel.");
         }
 
         [Command("unset")]
@@ -69,30 +74,18 @@ namespace FactorioWebInterface.Services.Discord
         [RequireUserPermission(GuildPermission.ManageChannels)]
         public async Task UnSetServer()
         {
-            EmbedBuilder embed;
-            string? serverId = await _discordService.UnSetServer(Context.Channel.Id);
-            if (serverId != null)
-            {
-                string description = serverId == Constants.AdminChannelID
-                    ? "Admin has been disconnected from this channel"
-                    : $"Factorio server {serverId} has been disconnected from this channel";
+            var result = await _discordService.UnSetServer(Context.Channel.Id);
 
-                embed = new EmbedBuilder()
-                {
-                    Description = description,
-                    Color = DiscordColors.successColor
-                };
-            }
-            else
+            string? successDescription = null;
+            if (result.Success)
             {
-                embed = new EmbedBuilder()
-                {
-                    Description = $"Error disconnecting the factorio server from this channel",
-                    Color = DiscordColors.failureColor
-                };
+                string serverId = result.Value!;
+                successDescription = serverId == Constants.AdminChannelID
+                    ? "Admin has been disconnected from this channel."
+                    : $"Factorio serverID {serverId} has been disconnected from this channel.";
             }
 
-            await ReplyAsync(embed: embed.Build());
+            await ReplyForResult(result, successDescription);
         }
 
         [Command("setadmin")]
@@ -103,26 +96,8 @@ namespace FactorioWebInterface.Services.Discord
         [RequireUserPermission(GuildPermission.ManageChannels)]
         public async Task SetAdmin()
         {
-            EmbedBuilder embed;
-            bool success = await _discordService.SetServer(Constants.AdminChannelID, Context.Channel.Id);
-            if (success)
-            {
-                embed = new EmbedBuilder()
-                {
-                    Description = $"Admin has been connected to this channel",
-                    Color = DiscordColors.successColor
-                };
-            }
-            else
-            {
-                embed = new EmbedBuilder()
-                {
-                    Description = $"Error connecting Admin to this channel",
-                    Color = DiscordColors.failureColor
-                };
-            }
-
-            await ReplyAsync(embed: embed.Build());
+            var result = await _discordService.SetAdminChannel(Context.Channel.Id);
+            await ReplyForResult(result, successMessage: "Admin has been connected to this channel.");
         }
 
         [Command("help")]
@@ -133,6 +108,31 @@ namespace FactorioWebInterface.Services.Discord
         public Task Help([Remainder][Summary("The command to show more information for.")] string? command = null)
         {
             return _helpService.DoHelp(Context.Channel, command);
+        }
+
+        private async ValueTask ReplyForResult(Result result, string? successTitle = DefaultSuccessTitle, string? successMessage = null, string? failureTitle = DefaultFailureTitle)
+        {
+            EmbedBuilder embed;
+            if (result.Success)
+            {
+                embed = new EmbedBuilder()
+                {
+                    Title = successTitle,
+                    Description = successMessage,
+                    Color = DiscordColors.successColor
+                };
+            }
+            else
+            {
+                embed = new EmbedBuilder()
+                {
+                    Title = failureTitle,
+                    Description = result.ErrorDescriptions,
+                    Color = DiscordColors.failureColor
+                };
+            }
+
+            await ReplyAsync(embed: embed.Build());
         }
     }
 }

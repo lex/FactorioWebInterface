@@ -19,12 +19,13 @@ namespace FactorioWebInterface.Services.Discord
     {
         Task<bool> IsAdminRoleAsync(ulong userId);
         Task<bool> IsAdminRoleAsync(string userId);
-        Task<bool> SetServer(string serverId, ulong channelId);
-        Task<string?> UnSetServer(ulong channelId);
-        Task SendToFactorioChannel(string serverId, string data);
-        Task SendEmbedToFactorioChannel(string serverId, Embed embed);
-        Task SendToFactorioAdminChannel(string data);
-        Task SendEmbedToFactorioAdminChannel(Embed embed);
+        Task<Result> SetServer(string serverId, ulong channelId);
+        Task<Result> SetAdminChannel(ulong channelId);
+        Task<Result<string?>> UnSetServer(ulong channelId);
+        Task SendToConnectedChannel(string serverId, string text);
+        Task SendToConnectedChannel(string serverId, Embed embed);
+        Task SendToAdminChannel(string text);
+        Task SendToAdminChannel(Embed embed);
         Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null);
 
         Task Init();
@@ -45,10 +46,8 @@ namespace FactorioWebInterface.Services.Discord
             public Role[] Roles { get; set; } = Array.Empty<Role>();
         }
 
-        private const int maxMessageQueueSize = 1000;
-
         private readonly IConfiguration _configuration;
-        private readonly DiscordSocketClient _client;
+        private readonly BaseSocketClient _client;
         private readonly IDiscordMessageHandlingService _messageService;
         private readonly IDbContextFactory _dbContextFactory;
         private readonly IFactorioServerDataService _factorioServerDataService;
@@ -67,7 +66,7 @@ namespace FactorioWebInterface.Services.Discord
         public event EventHandler<IDiscordService, ServerMessageEventArgs>? FactorioDiscordDataReceived;
 
         public DiscordService(IConfiguration configuration,
-            DiscordSocketClient client,
+            BaseSocketClient client,
             IDiscordMessageHandlingService messageService,
             IDbContextFactory dbContextFactory,
             IFactorioServerDataService factorioServerDataService,
@@ -83,10 +82,9 @@ namespace FactorioWebInterface.Services.Discord
             _messageQueueFactory = messageQueueFactory;
 
             guildId = ulong.Parse(_configuration[Constants.GuildIDKey]);
+            BuildValidAdminRoleIds(configuration);
 
             _messageService.MessageReceived += MessageReceived;
-
-            BuildValidAdminRoleIds(configuration);
         }
 
         public async Task Init()
@@ -137,54 +135,22 @@ namespace FactorioWebInterface.Services.Discord
                 return Task.FromResult(false);
         }
 
-        public async Task<bool> SetServer(string serverId, ulong channelId)
+        public Task<Result> SetServer(string serverId, ulong channelId)
         {
             if (!_factorioServerDataService.IsValidServerId(serverId))
             {
-                return false;
+                return Task.FromResult(Result.Failure(Constants.ServerIdErrorKey, $"The serverID {serverId} was not found."));
             }
 
-            try
-            {
-                await discordLock.WaitAsync();
-
-                using (var context = _dbContextFactory.Create<ApplicationDbContext>())
-                {
-                    var query = await context.DiscordServers.Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId).ToArrayAsync();
-
-                    foreach (var ds in query)
-                    {
-                        serverdToDiscord.Remove(ds.ServerId);
-                        discordToServer.Remove(ds.DiscordChannelId);
-                        context.DiscordServers.Remove(ds);
-
-                        if (MessageQueues.TryGetValue(channelId, out var messageQueue))
-                        {
-                            messageQueue.Dispose();
-                        }
-                    }
-
-                    serverdToDiscord.Add(serverId, channelId);
-                    discordToServer.Add(channelId, serverId);
-
-                    context.DiscordServers.Add(new DiscordServers() { DiscordChannelId = channelId, ServerId = serverId });
-
-                    await context.SaveChangesAsync();
-
-                    return true;
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            finally
-            {
-                discordLock.Release();
-            }
+            return SetServerInner(serverId, channelId);
         }
 
-        public async Task<string?> UnSetServer(ulong channelId)
+        public Task<Result> SetAdminChannel(ulong channelId)
+        {
+            return SetServerInner(Constants.AdminChannelID, channelId);
+        }
+
+        public async Task<Result<string?>> UnSetServer(ulong channelId)
         {
             try
             {
@@ -212,12 +178,18 @@ namespace FactorioWebInterface.Services.Discord
 
                     await context.SaveChangesAsync();
 
-                    return serverId;
+                    if (serverId == null)
+                    {
+                        return Result<string?>.Failure(Constants.ServerIdErrorKey, "No server was found for the channel.");
+                    }
+
+                    return Result<string?>.OK(serverId);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return null;
+                _logger.LogError(e, nameof(UnSetServer));
+                return Result<string?>.Failure(Constants.UnexpectedErrorKey, "An unexpected error occurred.");
             }
             finally
             {
@@ -225,7 +197,7 @@ namespace FactorioWebInterface.Services.Discord
             }
         }
 
-        public async Task SendToFactorioChannel(string serverId, string text)
+        public async Task SendToConnectedChannel(string serverId, string text)
         {
             var messageQueue = await GetMessageQueue(serverId);
             if (messageQueue == null)
@@ -241,7 +213,7 @@ namespace FactorioWebInterface.Services.Discord
             messageQueue.Enqueue(text);
         }
 
-        public async Task SendEmbedToFactorioChannel(string serverId, Embed embed)
+        public async Task SendToConnectedChannel(string serverId, Embed embed)
         {
             var messageQueue = await GetMessageQueue(serverId);
             if (messageQueue == null)
@@ -252,14 +224,14 @@ namespace FactorioWebInterface.Services.Discord
             messageQueue.Enqueue(embed);
         }
 
-        public Task SendToFactorioAdminChannel(string data)
+        public Task SendToAdminChannel(string text)
         {
-            return SendToFactorioChannel(Constants.AdminChannelID, data);
+            return SendToConnectedChannel(Constants.AdminChannelID, text);
         }
 
-        public Task SendEmbedToFactorioAdminChannel(Embed embed)
+        public Task SendToAdminChannel(Embed embed)
         {
-            return SendEmbedToFactorioChannel(Constants.AdminChannelID, embed);
+            return SendToConnectedChannel(Constants.AdminChannelID, embed);
         }
 
         public async Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null)
@@ -298,6 +270,49 @@ namespace FactorioWebInterface.Services.Discord
             }
 
             await channel.ModifyAsync(Modify);
+        }
+
+        private async Task<Result> SetServerInner(string serverId, ulong channelId)
+        {
+            try
+            {
+                await discordLock.WaitAsync();
+
+                using (var context = _dbContextFactory.Create<ApplicationDbContext>())
+                {
+                    var query = await context.DiscordServers.Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId).ToArrayAsync();
+
+                    foreach (var ds in query)
+                    {
+                        serverdToDiscord.Remove(ds.ServerId);
+                        discordToServer.Remove(ds.DiscordChannelId);
+                        context.DiscordServers.Remove(ds);
+
+                        if (MessageQueues.TryGetValue(channelId, out var messageQueue))
+                        {
+                            messageQueue.Dispose();
+                        }
+                    }
+
+                    serverdToDiscord.Add(serverId, channelId);
+                    discordToServer.Add(channelId, serverId);
+
+                    context.DiscordServers.Add(new DiscordServers() { DiscordChannelId = channelId, ServerId = serverId });
+
+                    await context.SaveChangesAsync();
+
+                    return Result.OK;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, nameof(SetServerInner));
+                return Result.Failure(Constants.UnexpectedErrorKey, "An unexpected error occurred.");
+            }
+            finally
+            {
+                discordLock.Release();
+            }
         }
 
         private async ValueTask<IMessageQueue?> GetMessageQueue(string serverId)

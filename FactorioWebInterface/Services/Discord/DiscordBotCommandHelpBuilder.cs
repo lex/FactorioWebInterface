@@ -28,12 +28,12 @@ namespace FactorioWebInterface.Services.Discord
             public bool IsOptional { get; set; }
         }
 
-        public static (Dictionary<string, Embed> commandLookup, Embed commandListings) BuildHelp<T>() where T : ModuleBase<SocketCommandContext>
+        public static (Dictionary<string, Embed> commandLookup, Embed commandListings) BuildHelp<T>(IServiceProvider? serviceProvider = null) where T : ModuleBase<SocketCommandContext>
         {
-            return BuildHelp(typeof(T));
+            return BuildHelp(typeof(T), serviceProvider);
         }
 
-        public static (Dictionary<string, Embed> commandLookup, Embed commandListings) BuildHelp(Type module)
+        public static (Dictionary<string, Embed> commandLookup, Embed commandListings) BuildHelp(Type module, IServiceProvider? serviceProvider = null)
         {
             var map = new Dictionary<string, Embed>();
             var commands = new List<CommandData>();
@@ -56,6 +56,12 @@ namespace FactorioWebInterface.Services.Discord
                             break;
                         case SummaryAttribute summary:
                             commandData.Summary = summary.Text;
+                            break;
+                        case SummaryCallbackAttribute summaryCallback:
+                            if (serviceProvider?.GetService(summaryCallback.Type) is ISummaryCallbackMessage message)
+                            {
+                                commandData.Summary = message.Message;
+                            }
                             break;
                         case RemarksAttribute remarks:
                             commandData.Remark = remarks.Text;
@@ -88,6 +94,12 @@ namespace FactorioWebInterface.Services.Discord
                         {
                             case SummaryAttribute summary:
                                 parameterData.Summary = summary.Text;
+                                break;
+                            case SummaryCallbackAttribute summaryCallback:
+                                if (serviceProvider?.GetService(summaryCallback.Type) is ISummaryCallbackMessage message)
+                                {
+                                    parameterData.Summary = message.Message;
+                                }
                                 break;
                             default:
                                 break;

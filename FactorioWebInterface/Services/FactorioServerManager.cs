@@ -751,7 +751,7 @@ namespace FactorioWebInterface.Services
                             Color = DiscordColors.updateColor,
                             Timestamp = DateTimeOffset.UtcNow
                         };
-                        _ = _discordService.SendEmbedToFactorioChannel(serverId, embed.Build());
+                        _ = _discordService.SendToConnectedChannel(serverId, embed.Build());
 
                         _logger.LogInformation("Updated server to version: {version}.", version);
                     }
@@ -912,7 +912,7 @@ namespace FactorioWebInterface.Services
 
                         if (await serverData.LockAsync(md => md.ServerExtraSettings.GameChatToDiscord))
                         {
-                            _ = _discordService.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                            _ = _discordService.SendToConnectedChannel(serverId, SanitizeGameChat(content));
                         }
 
                         LogChat(serverData, content, dateTime);
@@ -927,7 +927,7 @@ namespace FactorioWebInterface.Services
 
                         if (await serverData.LockAsync(md => md.ServerExtraSettings.GameShoutToDiscord))
                         {
-                            _ = _discordService.SendToFactorioChannel(serverId, SanitizeGameChat(content));
+                            _ = _discordService.SendToConnectedChannel(serverId, SanitizeGameChat(content));
                         }
 
                         LogChat(serverData, content, dateTime);
@@ -936,26 +936,26 @@ namespace FactorioWebInterface.Services
                 case Constants.DiscordTag:
                     content = content.Replace("\\n", "\n");
                     content = SanitizeGameChat(content);
-                    _ = _discordService.SendToFactorioChannel(serverId, content);
+                    _ = _discordService.SendToConnectedChannel(serverId, content);
                     break;
                 case Constants.DiscordRawTag:
                     content = content.Replace("\\n", "\n");
-                    _ = _discordService.SendToFactorioChannel(serverId, content);
+                    _ = _discordService.SendToConnectedChannel(serverId, content);
                     break;
                 case Constants.DiscordBold:
                     content = content.Replace("\\n", "\n");
                     content = SanitizeGameChat(content);
                     content = Format.Bold(content);
-                    _ = _discordService.SendToFactorioChannel(serverId, content);
+                    _ = _discordService.SendToConnectedChannel(serverId, content);
                     break;
                 case Constants.DiscordAdminTag:
                     content = content.Replace("\\n", "\n");
                     content = SanitizeGameChat(content);
-                    _ = _discordService.SendToFactorioAdminChannel(content);
+                    _ = _discordService.SendToAdminChannel(content);
                     break;
                 case Constants.DiscordAdminRawTag:
                     content = content.Replace("\\n", "\n");
-                    _ = _discordService.SendToFactorioAdminChannel(content);
+                    _ = _discordService.SendToAdminChannel(content);
                     break;
                 case Constants.PlayerJoinTag:
                     _ = DoPlayerJoined(serverId, content);
@@ -982,7 +982,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendEmbedToFactorioChannel(serverId, embed.Build());
+                        _ = _discordService.SendToConnectedChannel(serverId, embed.Build());
                         break;
                     }
                 case Constants.DiscordEmbedRawTag:
@@ -996,7 +996,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendEmbedToFactorioChannel(serverId, embed.Build());
+                        _ = _discordService.SendToConnectedChannel(serverId, embed.Build());
                         break;
                     }
 
@@ -1012,7 +1012,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendEmbedToFactorioAdminChannel(embed.Build());
+                        _ = _discordService.SendToAdminChannel(embed.Build());
                         break;
                     }
                 case Constants.DiscordAdminEmbedRawTag:
@@ -1026,7 +1026,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendEmbedToFactorioAdminChannel(embed.Build());
+                        _ = _discordService.SendToAdminChannel(embed.Build());
                         break;
                     }
                 case Constants.StartScenarioTag:
@@ -1163,7 +1163,7 @@ namespace FactorioWebInterface.Services
             }
 
             string safeName = SanitizeGameChat(name);
-            var t1 = _discordService.SendToFactorioChannel(serverId, $"**{safeName} has joined the game**");
+            var t1 = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has joined the game**");
 
             string topic = await serverData.LockAsync(mutableData =>
             {
@@ -1199,7 +1199,7 @@ namespace FactorioWebInterface.Services
             }
 
             string safeName = SanitizeGameChat(name);
-            var t1 = _discordService.SendToFactorioChannel(serverId, $"**{safeName} has left the game**");
+            var t1 = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has left the game**");
 
             string topic = await serverData.LockAsync(md =>
             {
@@ -1567,7 +1567,7 @@ namespace FactorioWebInterface.Services
                     }
                 });
 
-                _ = _discordService.SendToFactorioChannel(serverId, messageData.Message);
+                _ = _discordService.SendToConnectedChannel(serverId, messageData.Message);
             }
         }
 
@@ -1616,7 +1616,7 @@ namespace FactorioWebInterface.Services
                 Color = DiscordColors.successColor,
                 Timestamp = DateTimeOffset.UtcNow
             };
-            var t2 = _discordService.SendEmbedToFactorioChannel(serverId, embed.Build());
+            var t2 = _discordService.SendToConnectedChannel(serverId, embed.Build());
 
             string name = await serverData.LockAsync(mutableData =>
             {
@@ -1725,7 +1725,7 @@ namespace FactorioWebInterface.Services
                     Color = DiscordColors.infoColor,
                     Timestamp = DateTimeOffset.UtcNow
                 };
-                discordTask = _discordService.SendEmbedToFactorioChannel(serverId, embed.Build());
+                discordTask = _discordService.SendToConnectedChannel(serverId, embed.Build());
 
                 _ = MarkChannelOffline(serverData);
 
@@ -1754,7 +1754,7 @@ namespace FactorioWebInterface.Services
                     Color = DiscordColors.failureColor,
                     Timestamp = DateTimeOffset.UtcNow
                 };
-                discordTask = _discordService.SendEmbedToFactorioChannel(serverId, embed.Build());
+                discordTask = _discordService.SendToConnectedChannel(serverId, embed.Build());
                 _ = MarkChannelOffline(serverData);
 
                 LogChat(serverData, "[SERVER-CRASHED]", dateTime);
