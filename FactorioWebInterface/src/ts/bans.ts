@@ -3,7 +3,7 @@ import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import * as Table from "./table";
 import { Result, Utils, CollectionChangedData } from "./utils";
 
-!function () {
+(function () {
     interface Ban {
         Username: string;
         Reason: string;
@@ -169,4 +169,4 @@ import { Result, Utils, CollectionChangedData } from "./utils";
     }
 
     onPageLoad();
-}();
+})();
