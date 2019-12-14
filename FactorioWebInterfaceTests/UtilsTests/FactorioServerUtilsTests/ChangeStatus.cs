@@ -27,17 +27,17 @@ namespace FactorioWebInterfaceTests.UtilsTests.FactorioServerUtilsTests
             Message = $"[STATUS] Change from {nameof(FactorioServerStatus.Unknown)} to {nameof(FactorioServerStatus.Preparing)} by user User"
         };
 
-        public static object[][] ChangeStatusCorrectTestCases => new object[][]
+        public static object?[][] ChangeStatusCorrectTestCases => new object?[][]
         {
-            new object[] { noUserMessageData, "" },
-            new object[] { noUserMessageData, " " },
-            new object[] { noUserMessageData, null },
-            new object[] { userMessageData, "User" }
+            new object?[] { noUserMessageData, "" },
+            new object?[] { noUserMessageData, " " },
+            new object?[] { noUserMessageData, null },
+            new object?[] { userMessageData, "User" }
         };
 
         [Theory]
         [MemberData(nameof(ChangeStatusCorrectTestCases))]
-        public async Task ChangeStatusCorrect(MessageData expected, string byUser)
+        public async Task ChangeStatusCorrect(MessageData expected, string? byUser)
         {
             // Arrange.
             var controlHub = new TestFactorioControlHub();

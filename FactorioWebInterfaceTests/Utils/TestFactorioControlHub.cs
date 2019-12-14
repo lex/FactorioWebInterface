@@ -17,7 +17,7 @@ namespace FactorioWebInterfaceTests.Utils
         {
             Assert.Equal(nameof(IFactorioControlClientMethods.SendMessage), data.Name);
 
-            var messageData = (MessageData)data.Arguments[0];
+            var messageData = (MessageData)data.Arguments[0]!;
             Assert.Equal(serverId, messageData.ServerId);
             Assert.Equal(messageType, messageData.MessageType);
             Assert.Equal(message, messageData.Message);
@@ -41,7 +41,7 @@ namespace FactorioWebInterfaceTests.Utils
             throw new ContainsInvocationException($"Message with {nameof(MessageData.ServerId)}: {serverId} and {nameof(MessageData.MessageType)}: {messageType} and {nameof(MessageData.Message)}: {message} not found.");
         }
 
-        public void AssertContainsStatusMessage(string serverId, FactorioServerStatus oldStatus, FactorioServerStatus newStatus, string byUser = "")
+        public void AssertContainsStatusMessage(string serverId, FactorioServerStatus oldStatus, FactorioServerStatus newStatus, string? byUser = null)
         {
             string message;
             if (string.IsNullOrWhiteSpace(byUser))
@@ -65,8 +65,8 @@ namespace FactorioWebInterfaceTests.Utils
             {
                 var arguments = invocation.Arguments;
                 if (invocation.Name == nameof(IFactorioControlClientMethods.FactorioStatusChanged) && arguments.Length == 2
-                    && arguments[0].ToString() == oldStatusString
-                    && arguments[1].ToString() == newStatusString)
+                    && arguments[0]!.ToString() == oldStatusString
+                    && arguments[1]!.ToString() == newStatusString)
                 {
                     return;
                 }
@@ -79,7 +79,7 @@ namespace FactorioWebInterfaceTests.Utils
         public IReadOnlyList<MethodInvokeData> Invocations => factorioControlClients.Invocations;
 
         public IHubClients<IFactorioControlClientMethods> Clients => factorioControlClients;
-        public IGroupManager Groups { get; }
+        public IGroupManager Groups { get; } = default!;
     }
 
     public class TestFactorioControlClients : IHubClients<IFactorioControlClientMethods>
@@ -114,15 +114,15 @@ namespace FactorioWebInterfaceTests.Utils
         public Task SendMessage(MessageData message) => RecordInvoke(nameof(SendMessage), message);
         public Task SendModPacks(CollectionChangedData<ModPackMetaData> data) => RecordInvoke(nameof(SendModPacks), data);
         public Task SendScenarios(CollectionChangedData<ScenarioMetaData> data) => RecordInvoke(nameof(SendScenarios), data);
-        public Task SendSelectedModPack(string modPack) => RecordInvoke(nameof(SendSelectedModPack), modPack);
-        public Task SendServerExtraSettings(FactorioServerExtraSettings settings, bool isSaved) => RecordInvoke(nameof(SendServerExtraSettings), settings, isSaved);
+        public Task SendSelectedModPack(string? modPack) => RecordInvoke(nameof(SendSelectedModPack), modPack);
+        public Task SendServerExtraSettings(FactorioServerExtraSettings? settings, bool isSaved) => RecordInvoke(nameof(SendServerExtraSettings), settings, isSaved);
         public Task SendServerExtraSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved) => RecordInvoke(nameof(SendServerExtraSettingsUpdate), data, markUnsaved);
-        public Task SendServerSettings(FactorioServerSettingsWebEditable settings, bool isSaved) => RecordInvoke(nameof(SendServerSettings), settings, isSaved);
+        public Task SendServerSettings(FactorioServerSettingsWebEditable? settings, bool isSaved) => RecordInvoke(nameof(SendServerSettings), settings, isSaved);
         public Task SendServerSettingsUpdate(KeyValueCollectionChangedData<string, object> data, bool markUnsaved) => RecordInvoke(nameof(SendServerSettingsUpdate), data, markUnsaved);
         public Task SendTempSavesFiles(string serverId, CollectionChangedData<FileMetaData> data) => RecordInvoke(nameof(SendTempSavesFiles), serverId, data);
         public Task SendVersion(string version) => RecordInvoke(nameof(SendVersion), version);
 
-        private Task RecordInvoke([CallerMemberName] string name = "", params object[] arguments)
+        private Task RecordInvoke([CallerMemberName] string name = "", params object?[] arguments)
         {
             invocations.Add(new MethodInvokeData(name, arguments));
             return Task.CompletedTask;

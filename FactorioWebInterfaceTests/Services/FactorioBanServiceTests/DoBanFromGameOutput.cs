@@ -109,7 +109,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             var gameOutput = " abc was banned by <server>. Reason: reason.";
 
 
-            FactorioBanEventArgs eventArgs = null;
+            FactorioBanEventArgs? eventArgs = null;
             void FactorioBanService_BanChanged(IFactorioBanService sender, FactorioBanEventArgs ev)
             {
                 eventArgs = ev;
@@ -136,7 +136,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             var sync = true;
 
             var eventRaised = new AsyncManualResetEvent();
-            FactorioBanEventArgs eventArgs = null;
+            FactorioBanEventArgs? eventArgs = null;
             void FactorioBanService_BanChanged(IFactorioBanService sender, FactorioBanEventArgs ev)
             {
                 eventArgs = ev;
@@ -151,7 +151,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             // Assert.
             Assert.NotNull(eventArgs);
-            Assert.Equal(serverData.ServerId, eventArgs.Source);
+            Assert.Equal(serverData.ServerId, eventArgs!.Source);
             Assert.Equal(sync, eventArgs.SynchronizeWithServers);
 
             var changeData = eventArgs.ChangeData;

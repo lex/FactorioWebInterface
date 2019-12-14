@@ -23,7 +23,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns("FactorioWrapperPath");
 
             var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
-            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo)null);
+            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null);
 
             var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(factorioServerDataService: factorioServerDataService.Object,
                 factorioModManager: factorioModManager.Object);
@@ -47,7 +47,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath);
 
             var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
-            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo)null);
+            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null);
 
             var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(factorioServerDataService: factorioServerDataService.Object,
                 factorioModManager: factorioModManager.Object);

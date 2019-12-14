@@ -15,13 +15,13 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
     {
         public static FactorioServerPreparer MakeFactorioServerPreparer
         (
-            IFactorioServerDataService factorioServerDataService = null,
-            IFactorioAdminService factorioAdminService = null,
-            IFactorioModManager factorioModManager = null,
-            IFactorioBanService factorioBanService = null,
-            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub = null,
-            IFactorioFileManager factorioFileManager = null,
-            ILogger<FactorioServerPreparer> logger = null
+            IFactorioServerDataService? factorioServerDataService = null,
+            IFactorioAdminService? factorioAdminService = null,
+            IFactorioModManager? factorioModManager = null,
+            IFactorioBanService? factorioBanService = null,
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods>? factorioControlHub = null,
+            IFactorioFileManager? factorioFileManager = null,
+            ILogger<FactorioServerPreparer>? logger = null
         )
         {
             return new FactorioServerPreparer

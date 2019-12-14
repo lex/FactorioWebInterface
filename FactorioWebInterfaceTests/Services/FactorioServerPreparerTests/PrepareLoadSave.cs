@@ -37,7 +37,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath).Verifiable();
 
             var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
-            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo)null).Verifiable();
+            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null).Verifiable();
 
             var banServiceMock = new Mock<IFactorioBanService>(MockBehavior.Strict);
             banServiceMock.Setup(x => x.BuildBanList(data.ServerBanListPath)).Returns(Task.FromResult(Result.OK)).Verifiable();
@@ -77,7 +77,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             Assert.True(result.Success);
             var startInfo = result.Value;
-            Assert.Equal(Constants.DotNetPath, startInfo.FileName);
+            Assert.Equal(Constants.DotNetPath, startInfo!.FileName);
             Assert.Equal(expected, startInfo.Arguments);
 
             var calls = factorioControlHub.Invocations;

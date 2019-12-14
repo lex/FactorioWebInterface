@@ -31,7 +31,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerRunnerTests
             var logger = new TestLogger<FactorioServerRunner>();
 
             var processSystemMock = new Mock<IProcessSystem>(MockBehavior.Strict);
-            processSystemMock.Setup(x => x.Start(startInfo)).Returns((IProcess)null).Verifiable();
+            processSystemMock.Setup(x => x.Start(startInfo)).Returns((IProcess)null!).Verifiable();
 
             var runner = FactorioServerRunnerHelper.MakeFactorioServerRunner(factorioControlHub: controlHub, processSystem: processSystemMock.Object, logger: logger);
 

@@ -1,7 +1,6 @@
 ﻿using FactorioWebInterface.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 
@@ -13,7 +12,7 @@ namespace FactorioWebInterfaceTests.Utils
 
         public T Create<T>() where T : DbContext
         {
-            bool firstTime = !connections.TryGetValue(typeof(T), out SqliteConnection connection);
+            bool firstTime = !connections.TryGetValue(typeof(T), out SqliteConnection? connection);
             if (firstTime)
             {
                 connection = new SqliteConnection("DataSource=:memory:");
@@ -25,7 +24,7 @@ namespace FactorioWebInterfaceTests.Utils
                     .UseSqlite(connection)
                     .Options;
 
-            var value = (T)Activator.CreateInstance(typeof(T), options);
+            var value = (T)Activator.CreateInstance(typeof(T), options)!;
 
             if (firstTime)
             {

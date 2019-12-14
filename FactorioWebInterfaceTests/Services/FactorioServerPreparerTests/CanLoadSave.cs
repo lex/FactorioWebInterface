@@ -37,7 +37,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var fileInfoMock = new Mock<IFileInfo>(MockBehavior.Strict);
 
             var fileManagerMock = new Mock<IFactorioFileManager>(MockBehavior.Strict);
-            fileManagerMock.Setup(x => x.GetSaveFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns((IFileInfo)null);
+            fileManagerMock.Setup(x => x.GetSaveFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns((IFileInfo?)null);
 
             var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(factorioFileManager: fileManagerMock.Object);
 

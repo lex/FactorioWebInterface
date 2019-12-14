@@ -79,7 +79,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             await db.SaveChangesAsync();
 
             var eventRaised = new AsyncManualResetEvent();
-            FactorioBanEventArgs eventArgs = null;
+            FactorioBanEventArgs? eventArgs = null;
             void FactorioBanService_BanChanged(IFactorioBanService sender, FactorioBanEventArgs ev)
             {
                 eventArgs = ev;
@@ -94,7 +94,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             // Assert.
             Assert.NotNull(eventArgs);
-            Assert.Equal("", eventArgs.Source);
+            Assert.Equal("", eventArgs!.Source);
             Assert.Equal(sync, eventArgs.SynchronizeWithServers);
 
             var changeData = eventArgs.ChangeData;
