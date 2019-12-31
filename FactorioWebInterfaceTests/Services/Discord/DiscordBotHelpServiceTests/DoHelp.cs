@@ -20,7 +20,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotHelpServiceTests
 
         public DoHelp()
         {
-            _helpService = new DiscordBotHelpService<TestCommands>();
+            _helpService = new DiscordBotHelpService<TestCommands>(null!);
             (commandLookup, commandListings) = DiscordBotCommandHelpBuilder.BuildHelp<TestCommands>();
         }
 
@@ -36,7 +36,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotHelpServiceTests
         {
             // Arrange.
             int timesCalled = 0;
-            Embed embed = null;
+            Embed? embed = null;
             void Callback(Embed e)
             {
                 timesCalled++;
@@ -50,7 +50,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotHelpServiceTests
             // Assert.            
             Assert.Equal(1, timesCalled);
             Assert.NotNull(embed);
-            Assert.Equal(commandListings.Title, embed.Title);
+            Assert.Equal(commandListings.Title, embed!.Title);
             Assert.Equal(commandListings.Description, embed.Description);
         }
 
@@ -68,7 +68,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotHelpServiceTests
             Embed expected = commandLookup[lookupName];
 
             int timesCalled = 0;
-            Embed embed = null;
+            Embed? embed = null;
             void Callback(Embed e)
             {
                 timesCalled++;
@@ -82,7 +82,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotHelpServiceTests
             // Assert.            
             Assert.Equal(1, timesCalled);
             Assert.NotNull(embed);
-            Assert.Equal(expected.Title, embed.Title);
+            Assert.Equal(expected.Title, embed!.Title);
             Assert.Equal(expected.Description, embed.Description);
         }
 
@@ -121,7 +121,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotHelpServiceTests
         {
             var channelMock = new Mock<ISocketMessageChannel>(MockBehavior.Strict);
             channelMock.Setup(x => x.SendMessageAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>()))
-                .Returns(Task.FromResult<RestUserMessage>(null))
+                .Returns(Task.FromResult<RestUserMessage>(null!))
                 .Callback((string _, bool __, Embed embed, RequestOptions ___) => callback(embed));
 
             return channelMock.Object;

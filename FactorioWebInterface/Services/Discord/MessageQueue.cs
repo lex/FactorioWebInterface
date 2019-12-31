@@ -9,8 +9,7 @@ namespace FactorioWebInterface.Services.Discord
 {
     public interface IMessageQueue : IDisposable
     {
-        void Enqueue(string text);
-        void Enqueue(Embed embed);
+        void Enqueue(string? text = null, Embed? embed = null);
     }
 
     public sealed class MessageQueue : IMessageQueue
@@ -36,7 +35,7 @@ namespace FactorioWebInterface.Services.Discord
             this.channel = channel;
             this.logger = logger;
 
-            var options = new BoundedChannelOptions(capacity: 1000)
+            var options = new BoundedChannelOptions(capacity: 1024)
             {
                 AllowSynchronousContinuations = false,
                 SingleReader = true,
@@ -53,31 +52,19 @@ namespace FactorioWebInterface.Services.Discord
         {
             TextBatcher batcher = new TextBatcher(Constants.discordMaxMessageLength);
 
-            async ValueTask SendBatch()
+            async ValueTask SendBatch(Embed? embed = null)
             {
                 try
                 {
                     string batch = batcher.MakeBatch();
-                    if (batch.Length > 0)
+                    if (batch.Length > 0 || embed != null)
                     {
-                        await channel.SendMessageAsync(batch);
+                        await channel.SendMessageAsync(batch, embed: embed);
                     }
                 }
                 catch (Exception e)
                 {
                     logger.LogError(e, nameof(SendBatch));
-                }
-            }
-
-            async ValueTask SendEmbed(Embed embed)
-            {
-                try
-                {
-                    await channel.SendMessageAsync(embed: embed);
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, nameof(SendEmbed));
                 }
             }
 
@@ -87,8 +74,7 @@ namespace FactorioWebInterface.Services.Discord
                 {
                     if (message.Embed is Embed embed)
                     {
-                        await SendBatch();
-                        await SendEmbed(embed);
+                        await SendBatch(embed);
                     }
 
                     if (message.Text is string text && !batcher.TryAdd(text))
@@ -102,14 +88,9 @@ namespace FactorioWebInterface.Services.Discord
             }
         }
 
-        public void Enqueue(string text)
+        public void Enqueue(string? text = null, Embed? embed = null)
         {
-            queueWriter.TryWrite(new Message(text: text));
-        }
-
-        public void Enqueue(Embed embed)
-        {
-            queueWriter.TryWrite(new Message(embed: embed));
+            queueWriter.TryWrite(new Message(text, embed));
         }
 
         public void Dispose()

@@ -12,7 +12,7 @@ namespace FactorioWebInterface.Services.Discord
     /// </summary>
     public interface IDiscordMessageHandlingService
     {
-        event EventHandler<IDiscordMessageHandlingService, SocketMessage> MessageReceived;
+        event EventHandler<IDiscordMessageHandlingService, MessageReceivedEventArgs> MessageReceived;
         event EventHandler<IDiscordMessageHandlingService, (SocketUserMessage message, int argPos)> CommandReceived;
     }
 
@@ -21,7 +21,7 @@ namespace FactorioWebInterface.Services.Discord
     {
         private readonly DiscordSocketClient _client;
 
-        public event EventHandler<IDiscordMessageHandlingService, SocketMessage>? MessageReceived;
+        public event EventHandler<IDiscordMessageHandlingService, MessageReceivedEventArgs>? MessageReceived;
         public event EventHandler<IDiscordMessageHandlingService, (SocketUserMessage message, int argPos)>? CommandReceived;
 
         public DiscordMessageHandlingService(DiscordSocketClient client)
@@ -47,7 +47,7 @@ namespace FactorioWebInterface.Services.Discord
                 }
             }
 
-            MessageReceived?.Invoke(this, rawMessage);
+            MessageReceived?.Invoke(this, new MessageReceivedEventArgs(rawMessage.Channel, rawMessage.Author, rawMessage.Content));
             return Task.CompletedTask;
         }
     }

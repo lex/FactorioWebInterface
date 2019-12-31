@@ -54,7 +54,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             var queue = MakeMessageQueue(Callback);
 
             // Act.
-            queue.Enqueue(input);
+            queue.Enqueue(embed: input);
             await sent.Task.TimeoutAfter(1000);
 
             // Assert.
@@ -128,9 +128,9 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             var messagesSent = new AsyncManualResetEvent();
             var callbackEntered = new AsyncManualResetEvent();
 
-            string actualText = null;
-            Embed actualEmbed = null;
-            string actaulLastText = null;
+            string? actualText = null;
+            Embed? actualEmbed = null;
+            string? actaulLastText = null;
 
             int calls = 0;
             var batchesSent = new AsyncManualResetEvent();
@@ -149,16 +149,11 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
                 if (calls == 2)
                 {
                     actualText = text;
-                    return;
-                }
-
-                if (calls == 3)
-                {
                     actualEmbed = embed;
                     return;
                 }
 
-                if (calls == 4)
+                if (calls == 3)
                 {
                     actaulLastText = text;
                     batchesSent.Set();
@@ -171,14 +166,14 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             queue.Enqueue(firstMessage);
             await callbackEntered.WaitAsync(timeout);
             queue.Enqueue(textMessage);
-            queue.Enqueue(embedMessage);
+            queue.Enqueue(embed: embedMessage);
             queue.Enqueue(lastMessage);
 
             messagesSent.Set();
             await batchesSent.WaitAsync(timeout);
 
             // Assert.     
-            Assert.Equal(4, calls);
+            Assert.Equal(3, calls);
             Assert.Equal(textMessage, actualText);
             Assert.Equal(embedMessage, actualEmbed);
             Assert.Equal(lastMessage, actaulLastText);
@@ -190,7 +185,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
         public async Task LogsExceptions(bool text)
         {
             // Arrange.
-            string expectedState = text ? "SendBatch" : "SendEmbed";
+            string expectedState = "SendBatch";
 
             var exception = new Exception("test");
             void Callback(string text, Embed embed)
@@ -210,7 +205,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             }
             else
             {
-                queue.Enqueue(new EmbedBuilder().Build());
+                queue.Enqueue(embed: new EmbedBuilder().Build());
             }
             await finishedLogging.WaitAsyncWithTimeout(1000);
 
@@ -261,7 +256,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
         public async Task AfterDispose_EnqueueDoesNotSend(bool sendText)
         {
             // Arrange.
-            object sent = null;
+            object? sent = null;
             void Callback(string text, Embed embed)
             {
                 if (sendText)
@@ -285,7 +280,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             }
             else
             {
-                queue.Enqueue(new EmbedBuilder().Build());
+                queue.Enqueue(embed: new EmbedBuilder().Build());
             }
 
             await Task.Delay(20);
@@ -294,7 +289,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             Assert.Null(sent);
         }
 
-        private MessageQueue MakeMessageQueue(Action<string, Embed> callback = null, TestLogger<MessageQueue> logger = null)
+        private MessageQueue MakeMessageQueue(Action<string, Embed>? callback = null, TestLogger<MessageQueue>? logger = null)
         {
             return new MessageQueue(
                 MakeChannel(callback ?? ((_, __) => { })),
@@ -308,7 +303,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
                 .Returns((string text, bool _, Embed embed, RequestOptions __) =>
                 {
                     callback(text, embed);
-                    return Task.FromResult((IUserMessage)null);
+                    return Task.FromResult((IUserMessage?)null);
                 });
 
             return channel.Object;

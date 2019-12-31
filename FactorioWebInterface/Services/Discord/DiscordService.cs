@@ -4,9 +4,7 @@ using FactorioWebInterface.Data;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,20 +33,7 @@ namespace FactorioWebInterface.Services.Discord
 
     public class DiscordService : IDiscordService
     {
-        public class Role
-        {
-            public string? Name { get; set; }
-            public ulong Id { get; set; }
-        }
-
-        public class AdminRoles
-        {
-            public Role[] Roles { get; set; } = Array.Empty<Role>();
-        }
-
-        private readonly IConfiguration _configuration;
-        private readonly BaseSocketClient _client;
-        private readonly IDiscordMessageHandlingService _messageService;
+        private readonly IDiscordClientWrapper _client;
         private readonly IDbContextFactory _dbContextFactory;
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<DiscordService> _logger;
@@ -65,26 +50,24 @@ namespace FactorioWebInterface.Services.Discord
 
         public event EventHandler<IDiscordService, ServerMessageEventArgs>? FactorioDiscordDataReceived;
 
-        public DiscordService(IConfiguration configuration,
-            BaseSocketClient client,
+        public DiscordService(IDiscordServiceConfiguration configuration,
+            IDiscordClientWrapper client,
             IDiscordMessageHandlingService messageService,
             IDbContextFactory dbContextFactory,
             IFactorioServerDataService factorioServerDataService,
             ILogger<DiscordService> logger,
             IMessageQueueFactory messageQueueFactory)
         {
-            _configuration = configuration;
             _client = client;
-            _messageService = messageService;
             _dbContextFactory = dbContextFactory;
             _factorioServerDataService = factorioServerDataService;
             _logger = logger;
             _messageQueueFactory = messageQueueFactory;
 
-            guildId = ulong.Parse(_configuration[Constants.GuildIDKey]);
-            BuildValidAdminRoleIds(configuration);
+            guildId = configuration.GuildId;
+            validAdminRoleIds = configuration.AdminRoleIds;
 
-            _messageService.MessageReceived += MessageReceived;
+            messageService.MessageReceived += MessageReceived;
         }
 
         public async Task Init()
@@ -113,14 +96,13 @@ namespace FactorioWebInterface.Services.Discord
                 return false;
             }
 
-            var user = await GetUserAsync(guild, userId);
+            var user = await guild.GetUserAsync(userId);
             if (user == null)
             {
                 return false;
             }
 
-            var role = user.Roles.FirstOrDefault(x => validAdminRoleIds.Contains(x.Id));
-            return role != null;
+            return user.RoleIds.Any(id => validAdminRoleIds.Contains(id));
         }
 
         /// <summary>
@@ -221,7 +203,7 @@ namespace FactorioWebInterface.Services.Discord
                 return;
             }
 
-            messageQueue.Enqueue(embed);
+            messageQueue.Enqueue(embed: embed);
         }
 
         public Task SendToAdminChannel(string text)
@@ -345,19 +327,7 @@ namespace FactorioWebInterface.Services.Discord
             }
         }
 
-        private async ValueTask<SocketGuildUser> GetUserAsync(SocketGuild guild, ulong id)
-        {
-            var user = guild.GetUser(id);
-            if (user != null)
-            {
-                return user;
-            }
-
-            await guild.DownloadUsersAsync();
-            return guild.GetUser(id);
-        }
-
-        private async void MessageReceived(IDiscordMessageHandlingService sender, SocketMessage eventArgs)
+        private async void MessageReceived(IDiscordMessageHandlingService sender, MessageReceivedEventArgs eventArgs)
         {
             string serverId;
             try
@@ -376,18 +346,7 @@ namespace FactorioWebInterface.Services.Discord
                 discordLock.Release();
             }
 
-            FactorioDiscordDataReceived?.Invoke(this, new ServerMessageEventArgs(serverId, eventArgs.Author, eventArgs.Content));
-        }
-
-        private void BuildValidAdminRoleIds(IConfiguration configuration)
-        {
-            var ar = new AdminRoles();
-            configuration.GetSection(Constants.AdminRolesKey).Bind(ar);
-
-            foreach (var item in ar.Roles)
-            {
-                validAdminRoleIds.Add(item.Id);
-            }
+            FactorioDiscordDataReceived?.Invoke(this, new ServerMessageEventArgs(serverId, eventArgs.User, eventArgs.Message));
         }
     }
 }

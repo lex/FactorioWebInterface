@@ -11,13 +11,14 @@ namespace FactorioWebInterface.Services.Discord
         public static IServiceCollection AddDiscord(this IServiceCollection services)
         {
             return services
-                .AddSingleton<BaseSocketClient, DiscordSocketClient>()
-                .AddSingleton(sp => (DiscordSocketClient)sp.GetRequiredService<BaseSocketClient>())
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton<IDiscordClientWrapper, PhysicalDiscordClientWrapper>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<IDiscordMessageHandlingService, DiscordMessageHandlingService>()
                 .AddSingleton<SetServerParameterSummary, SetServerParameterSummary>()
                 .AddSingleton(typeof(IDiscordBotHelpService<>), typeof(DiscordBotHelpService<>))
                 .AddSingleton<IMessageQueueFactory, MessageQueueFactory>()
+                .AddSingleton<IDiscordServiceConfiguration, DiscordServiceConfiguration>()
                 .AddSingleton<IDiscordService, DiscordService>()
                 .AddSingleton<DiscordBot>();
         }

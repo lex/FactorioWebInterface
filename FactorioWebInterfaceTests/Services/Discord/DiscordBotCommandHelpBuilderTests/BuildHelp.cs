@@ -28,7 +28,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotCommandHelpBuilde
             (var commandLookup, var _) = DiscordBotCommandHelpBuilder.BuildHelp<DiscordBotCommands>();
 
             // Act.
-            bool result = commandLookup.TryGetValue(commandName, out Embed value);
+            bool result = commandLookup.TryGetValue(commandName, out Embed? value);
 
             // Assert.
             Assert.True(result);
