@@ -13,7 +13,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanCommand(content, actor);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Username);
+            Assert.Equal(expected, ban!.Username);
         }
 
         [Theory]
@@ -24,7 +24,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanCommand(content, actor);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Reason);
+            Assert.Equal(expected, ban!.Reason);
         }
 
         [Fact]
@@ -35,7 +35,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanCommand("/ban grilledham", admin);
 
             Assert.NotNull(ban);
-            Assert.Equal(admin, ban.Admin);
+            Assert.Equal(admin, ban!.Admin);
         }
 
         [Theory]

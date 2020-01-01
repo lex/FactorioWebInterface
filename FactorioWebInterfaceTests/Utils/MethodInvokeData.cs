@@ -13,9 +13,9 @@ namespace FactorioWebInterfaceTests.Utils
     public class MethodInvokeData
     {
         public string Name { get; }
-        public object[] Arguments { get; }
+        public object?[] Arguments { get; }
 
-        public MethodInvokeData(string name, object[] arguments)
+        public MethodInvokeData(string name, object?[] arguments)
         {
             Name = name;
             Arguments = arguments;

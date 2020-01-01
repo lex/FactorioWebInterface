@@ -1,10 +1,10 @@
-﻿using DSharpPlus.Entities;
+﻿using Discord;
 
 namespace FactorioWebInterface.Models
 {
     public class ServerMessageEventArgs
     {
-        public ServerMessageEventArgs(string serverId, DiscordUser user, string message)
+        public ServerMessageEventArgs(string serverId, IUser user, string message)
         {
             ServerId = serverId;
             User = user;
@@ -12,7 +12,7 @@ namespace FactorioWebInterface.Models
         }
 
         public string ServerId { get; }
-        public DiscordUser User { get; }
+        public IUser User { get; }
         public string Message { get; }
     }
 }

@@ -15,9 +15,9 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerRunnerTests
     {
         public static FactorioServerRunner MakeFactorioServerRunner
         (
-            IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub = null,
-            IProcessSystem processSystem = null,
-            ILogger<FactorioServerRunner> logger = null
+            IHubContext<FactorioControlHub, IFactorioControlClientMethods>? factorioControlHub = null,
+            IProcessSystem? processSystem = null,
+            ILogger<FactorioServerRunner>? logger = null
         )
         {
             return new FactorioServerRunner

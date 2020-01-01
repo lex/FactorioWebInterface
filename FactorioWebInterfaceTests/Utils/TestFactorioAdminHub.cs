@@ -15,8 +15,8 @@ namespace FactorioWebInterfaceTests.Utils
         private TestFactorioAdminClients factorioAdminClients = new TestFactorioAdminClients();
         public IReadOnlyList<MethodInvokeData> Invocations => factorioAdminClients.Invocations;
 
-        public IHubClients<IFactorioAdminClientMethods> Clients { get; }
-        public IGroupManager Groups { get; }
+        public IHubClients<IFactorioAdminClientMethods> Clients { get; } = default!;
+        public IGroupManager Groups { get; } = default!;
     }
 
     public class TestFactorioAdminClients : IHubClients<IFactorioAdminClientMethods>

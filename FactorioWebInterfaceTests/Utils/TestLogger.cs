@@ -24,12 +24,12 @@ namespace FactorioWebInterfaceTests.Utils
 
     public sealed class TestLogger<T> : ILogger<T>, IDisposable
     {
-        private Action<LogLevel, object> callback;
+        private Action<LogLevel, object>? callback;
 
         private List<MethodInvokeData> invocations = new List<MethodInvokeData>();
         public IReadOnlyList<MethodInvokeData> Invocations => invocations;
 
-        public TestLogger(Action<LogLevel, object> callback = null)
+        public TestLogger(Action<LogLevel, object>? callback = null)
         {
             this.callback = callback;
         }
@@ -46,8 +46,8 @@ namespace FactorioWebInterfaceTests.Utils
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            RecordInvoke(nameof(Log), logLevel, eventId, state, exception, formatter);
-            callback?.Invoke(logLevel, state);
+            RecordInvoke(nameof(Log), logLevel, eventId, state!, exception, formatter);
+            callback?.Invoke(logLevel, state!);
         }
 
         public void Dispose()
@@ -60,7 +60,7 @@ namespace FactorioWebInterfaceTests.Utils
             invocations.Add(new MethodInvokeData(name, arguments));
         }
 
-        public void AssertContainsLog(LogLevel logLevel, string state)
+        public void AssertContainsLog(LogLevel logLevel, string state, Exception? exception = null)
         {
             foreach (var invocation in Invocations)
             {
@@ -68,7 +68,8 @@ namespace FactorioWebInterfaceTests.Utils
 
                 if (arguments.Length == 5
                     && Equals(arguments[0], logLevel)
-                    && Equals(arguments[2].ToString(), state))
+                    && Equals(arguments[2]!.ToString(), state)
+                    && (exception == null || Equals(arguments[3], exception)))
                 {
                     return;
                 }

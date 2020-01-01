@@ -2,7 +2,7 @@
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import { strict } from "assert";
 
-!function () {
+(function () {
     const scriptPath = document.getElementById('scriptPath') as HTMLInputElement;
     const argumentsList = document.getElementById('argumentsList') as HTMLElement;
     const startButton = document.getElementById('startButton') as HTMLButtonElement;
@@ -114,4 +114,4 @@ import { strict } from "assert";
     }
 
     start();
-}();
+})();

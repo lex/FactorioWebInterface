@@ -2,6 +2,7 @@ using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Services;
+using FactorioWebInterface.Services.Discord;
 using FactorioWebInterface.Utils.ProcessAbstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -95,8 +96,7 @@ namespace FactorioWebInterface
             services.AddSingleton<IProcessSystem, ProcessSystem>();
             services.AddSingleton<FactorioServerDataConfiguration>();
             services.AddSingleton<IFactorioServerDataService, FactorioServerDataService>();
-            services.AddSingleton<DiscordBotContext, DiscordBotContext>();
-            services.AddSingleton<DiscordBot, DiscordBot>();
+            services.AddDiscord();
             services.AddSingleton<FactorioUpdater, FactorioUpdater>();
             services.AddSingleton<IFactorioAdminService, FactorioAdminService>();
             services.AddSingleton<IFactorioModManager, FactorioModManager>();

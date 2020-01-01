@@ -3,7 +3,7 @@ import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import * as Table from "./table";
 import { Result, CollectionChangedData } from "./utils";
 
-!function () {
+(function () {
 
     const textArea = document.getElementById('textArea') as HTMLTextAreaElement;
     const addButton = document.getElementById('addButton') as HTMLButtonElement;
@@ -104,4 +104,4 @@ import { Result, CollectionChangedData } from "./utils";
     }
 
     onPageLoad();
-}();
+})();

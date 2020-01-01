@@ -3,7 +3,7 @@ import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { Result, Utils, CollectionChangedData } from "./utils";
 import * as Table from "./table";
 
-!function () {
+(function () {
     interface ModPackMetaData {
         Name: string;
         CreatedTime: string;
@@ -560,4 +560,4 @@ import * as Table from "./table";
     }
 
     onPageLoad();
-}();
+})();

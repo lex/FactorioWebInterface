@@ -1,6 +1,6 @@
 ﻿import * as Table from "./table";
 
-!function () {
+(function () {
     function buildTable(id: string) {
         const tableElement: HTMLTableElement = document.getElementById(id) as HTMLTableElement;
 
@@ -30,4 +30,4 @@
     buildTable('startSavesTable');
     buildTable('finalSavesTable');
     buildTable('oldSavesTable');
-}();
+})();

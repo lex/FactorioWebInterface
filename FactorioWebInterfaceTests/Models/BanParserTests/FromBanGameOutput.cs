@@ -15,7 +15,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Username);
+            Assert.Equal(expected, ban!.Username);
         }
 
         [Theory]
@@ -30,7 +30,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Username);
+            Assert.Equal(expected, ban!.Username);
         }
 
         [Theory]
@@ -44,7 +44,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Username);
+            Assert.Equal(expected, ban!.Username);
         }
 
         [Theory]
@@ -58,7 +58,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Admin);
+            Assert.Equal(expected, ban!.Admin);
         }
 
         [Theory]
@@ -73,7 +73,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Admin);
+            Assert.Equal(expected, ban!.Admin);
         }
 
         [Theory]
@@ -87,7 +87,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Admin);
+            Assert.Equal(expected, ban!.Admin);
         }
 
         [Theory]
@@ -101,7 +101,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Reason);
+            Assert.Equal(expected, ban!.Reason);
         }
 
         [Theory]
@@ -115,7 +115,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Reason);
+            Assert.Equal(expected, ban!.Reason);
         }
 
         [Theory]
@@ -129,7 +129,7 @@ namespace FactorioWebInterfaceTests.Models.BanParserTests
             var ban = BanParser.FromBanGameOutput(content);
 
             Assert.NotNull(ban);
-            Assert.Equal(expected, ban.Reason);
+            Assert.Equal(expected, ban!.Reason);
         }
 
         [Theory]

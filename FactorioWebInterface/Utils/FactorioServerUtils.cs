@@ -14,7 +14,7 @@ namespace FactorioWebInterface.Utils
         public static Task ChangeStatus(FactorioServerMutableData mutableData,
             IHubContext<FactorioControlHub, IFactorioControlClientMethods> factorioControlHub,
             FactorioServerStatus status,
-            string byUser = "")
+            string? byUser = null)
         {
             string serverId = mutableData.ServerId;
             var oldStatus = mutableData.Status;

@@ -3,7 +3,7 @@ import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import { CollectionChangedData } from "./utils";
 import * as Table from "./table";
 
-!function () {
+(function () {
 
     interface ScenarioData {
         DataSet: string;
@@ -157,4 +157,4 @@ import * as Table from "./table";
     }
 
     onPageLoad();
-}();
+})();

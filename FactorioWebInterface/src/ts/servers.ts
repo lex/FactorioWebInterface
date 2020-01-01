@@ -3,7 +3,7 @@ import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import * as Table from "./table";
 import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyValueCollectionChangedData } from "./utils";
 
-!function () {
+(function () {
 
     enum MessageType {
         Output = "Output",
@@ -1781,5 +1781,5 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
     }
 
     onPageLoad();
-}();
+})();
 

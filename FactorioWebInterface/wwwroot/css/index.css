@@ -44,17 +44,17 @@ a:hover, a:active, a:focus {
 
 .menu {
 	background-color: rgba(70,70,75,0.9);
-	ext-align: center;
+	text-align: center;
 	margin: auto;
     min-width: 100px;
 	width:35vh;
 	margin-top: 15%;
-	border-bottom: transparent;v
+	border-bottom: transparent;
 	border-left: 2px solid gray;
 	border-top: 2px solid gray;
 	border-right: 2px solid black;
 	border-bottom: 2px solid black;
-i}
+}
 
 .menu_button {
 	background-color: #46464b;

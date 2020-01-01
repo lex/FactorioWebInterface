@@ -57,7 +57,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             const bool sync = true;
 
             var eventRaised = new AsyncManualResetEvent();
-            FactorioBanEventArgs eventArgs = null;
+            FactorioBanEventArgs? eventArgs = null;
             void FactorioBanService_BanChanged(IFactorioBanService sender, FactorioBanEventArgs ev)
             {
                 eventArgs = ev;
@@ -72,7 +72,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             // Assert.
             Assert.NotNull(eventArgs);
-            Assert.Equal(serverId, eventArgs.Source);
+            Assert.Equal(serverId, eventArgs!.Source);
             Assert.Equal(sync, eventArgs.SynchronizeWithServers);
 
             var changeData = eventArgs.ChangeData;
@@ -92,7 +92,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             string expected = $"[BAN] {ban.Username} was banned by {ban.Admin}. Reason: {ban.Reason} Actor: {actor}";
 
             LogLevel level = default;
-            string message = null;
+            string? message = null;
 
             void Callback(LogLevel l, object state)
             {

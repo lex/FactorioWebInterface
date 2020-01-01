@@ -42,7 +42,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             await db.SaveChangesAsync();
 
             var eventRaised = new AsyncManualResetEvent();
-            FactorioBanEventArgs eventArgs = null;
+            FactorioBanEventArgs? eventArgs = null;
             void FactorioBanService_BanChanged(IFactorioBanService sender, FactorioBanEventArgs ev)
             {
                 eventArgs = ev;
@@ -57,7 +57,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             // Assert.
             Assert.NotNull(eventArgs);
-            Assert.Equal(serverId, eventArgs.Source);
+            Assert.Equal(serverId, eventArgs!.Source);
             Assert.Equal(syncBans, eventArgs.SynchronizeWithServers);
 
             var changeData = eventArgs.ChangeData;
@@ -77,7 +77,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             var expected = $"[UNBAN] {ban.Username} was unbanned by: {actor}";
 
             LogLevel level = default;
-            string message = null;
+            string? message = null;
 
             void Callback(LogLevel l, object state)
             {
