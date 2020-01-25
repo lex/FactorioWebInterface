@@ -13,21 +13,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@microsoft/signalr": "^3.0.0",
+    "@microsoft/signalr": "^3.1.0",
     "@microsoft/signalr-protocol-msgpack": "3.0.0",
     "@types/jquery": "^3.3.31",
-    "@types/node": "^11.15.2",
+    "@types/node": "^11.15.4",
     "bulma": "0.8.0"
   },
   "devDependencies": {
     "clean-webpack-plugin": "^0.1.19",
-    "css-loader": "^3.2.0",
+    "css-loader": "^3.4.2",
     "html-webpack-plugin": "^3.2.0",
     "lodash": ">=4.17.13",
     "mini-css-extract-plugin": "^0.4.5",
     "ts-loader": "^4.5.0",
     "typescript": "^2.9.2",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.9"
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
   }
 }
