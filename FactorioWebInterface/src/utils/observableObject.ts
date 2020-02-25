@@ -1,0 +1,40 @@
+﻿import { Observable } from "./observable";
+
+export interface IObservableObject {
+    propertyChanged(propertyName: string, callback: (event) => void): () => void;
+}
+
+export abstract class ObservableObject implements IObservableObject {
+    private _propertyChangeObservable = new Map<string, Observable<any>>();
+
+    propertyChanged(propertyName: string, callback: (event: any) => void): () => void {
+        let observables = this._propertyChangeObservable.get(propertyName);
+        if (!observables) {
+            observables = new Observable();
+            this._propertyChangeObservable.set(propertyName, observables);
+        }
+
+        return observables.subscribe(callback);
+    }
+
+    protected raise(propertyName: string, value: any) {
+        let observables = this._propertyChangeObservable.get(propertyName);
+        if (!observables) {
+            return;
+        }
+
+        observables.raise(value);
+    }
+
+    protected setAndRaise(fields: object, propertyName: string, value: any) {
+        let old = fields[propertyName];
+
+        if (old === value) {
+            return false;
+        }
+
+        fields[propertyName] = value;
+        this.raise(propertyName, value);
+        return true;
+    }
+}

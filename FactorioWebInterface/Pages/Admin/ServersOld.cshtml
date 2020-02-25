@@ -1,0 +1,755 @@
+﻿@page "{id:int?}"
+@model FactorioWebInterface.Pages.Admin.ServersModelOld
+
+@using FactorioWebInterface.Models
+
+@{
+    ViewData["Title"] = "Servers";
+}
+
+@Html.AntiForgeryToken()
+@section css{
+    <environment include="Development">
+        <link href="/css/servers.css" rel="stylesheet" asp-append-version="true">
+    </environment>
+    <environment exclude="Development">
+        <link href="/css/servers.min.css" rel="stylesheet">
+    </environment>
+}
+
+<style>
+    .box-danger {
+        border-style: solid;
+        border-width: 1px;
+        border-color: hsl(348, 100%, 61%);
+    }
+
+    .input-zone {
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        margin: 10px;
+    }
+
+    .input-zone-input {
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    .message-author {
+        font-weight: bold;
+    }
+
+    .messages {
+        border: 1px solid #000;
+        margin: 10px;
+        max-height: 600px;
+        min-height: 600px;
+        overflow-y: auto;
+        padding: 5px;
+    }
+
+    .form {
+        display: grid;
+        grid-template-columns: minmax(0vw, 1vw) 1fr 5fr minmax(0vw, 1vw);
+    }
+
+    .form-border {
+        border-style: solid;
+        border-width: 2px;
+        border-radius: 5px;
+        border-color: lightgrey;
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .form-close:hover,
+    .form-close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .form > label {
+        grid-column: 2;
+        text-align: right;
+    }
+
+    .form > .form-label {
+        grid-column: 2;
+        text-align: right;
+    }
+
+    .form > input,
+    .form > select {
+        grid-column: 3;
+    }
+
+    .form > .form-input {
+        grid-column: 3;
+    }
+
+    .form > .form-center {
+        grid-column: 2 / 4;
+        text-align: center;
+    }
+
+    .form > * {
+        margin: 10px;
+    }
+</style>
+
+<div style="padding: 0rem 1rem;">
+    <div class="column">
+        <h2 class="title is-2">Servers</h2>
+        <h3 id="serverName" class="title is-3"></h3>
+    </div>
+    <div class="columns">
+
+        <div class="column is-6">
+
+            <section style="padding: 1rem 0rem;">
+                <div>
+
+                    <div class="control has-icons-left" style="display:inline;">
+                        <div class="select">
+                            <select id="serverSelect">
+                                @{
+                                    for (int i = 1; i <= Model.ServerCount; i++)
+                                    {
+                                        if (i == Model.Id)
+                                        {
+                                            <option selected>@i</option>
+                                        }
+                                        else
+                                        {
+                                            <option>@i</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="icon is-small is-left has-text-black">
+                            <i class="fas fa-server"></i>
+                        </div>
+                    </div>
+
+                    <button id="resumeButton" class="button is-success">
+                        <span class="icon"><i class="fas fa-play"></i></span>
+                        <span>Resume</span>
+                    </button>
+                    <button id="loadButton" class="button is-success">
+                        <span class="icon"><i class="fas fa-play"></i></span>
+                        <span> Load</span>
+                    </button>
+                    <button id="startScenarioButton" class="button is-success">
+                        <span class="icon"><i class="fas fa-play"></i></span>
+                        <span>Start Scenario</span>
+                    </button>
+                    <button id="saveButton" class="button is-success">
+                        <span class="icon"><i class="fas fa-save"></i></span>
+                        <span>Save</span>
+                    </button>
+                    <button id="updateButton" class="button is-danger">
+                        <span class="icon"><i class="fas fa-download"></i></span>
+                        <span>Update</span>
+                    </button>
+                    <button id="stopButton" class="button is-danger">
+                        <span class="icon"><i class="fas fa-stop"></i></span>
+                        <span>Stop</span>
+                    </button>
+                    <button id="forceStopButton" class="button is-danger">
+                        <span class="icon"><i class="fas fa-bomb"></i></span>
+                        <span>Force Stop</span>
+                    </button>
+                    <div>
+                        <div class="columns is-variable is-8">
+                            <div class="column is-narrow is-offset-1">
+                                <div class="field is-grouped">
+                                    <div class="control">
+                                        <label class="label">Status:</label>
+                                    </div>
+                                    <div class="control">
+                                        <label id="statusText" class="label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-narrow">
+                                <div class="field is-grouped">
+                                    <div class="control">
+                                        <label class="label">Version:</label>
+                                    </div>
+                                    <div class="control">
+                                        <label id="versionText" class="label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-narrow">
+                                <button id="getStatusButton" class="button is-info">
+                                    <span class="icon"><i class="fas fa-info-circle"></i></span>
+                                    <span>Get Status</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="box">
+                    <div id="divMessages" class="messages">
+                    </div>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal" style="flex-grow: 0;">
+                            <label id="lblMessage" for="tbMessage">Message:</label>
+                        </div>
+                        <div class=" field-body">
+                            <div class="field is-grouped">
+                                <div class="control is-expanded">
+                                    <input id="tbMessage" class="input" type="text" />
+                                </div>
+                                <div class="control">
+                                    <button id="btnSend" class="button">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section>
+
+                <div id="settingsBox" class="box">
+                    <h3 class="title is-3" style="display:inline">Server Settings</h3>
+                    <label id="settingsUnsavedLabel" class="label is-hidden" style="display:inline; float:right;">
+                        <span class="icon has-text-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                        <span class="has-text-danger">There are unsaved changes.</span>
+                    </label>
+                    <hr />
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configNameInput" class="label">Name:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control is-expanded">
+                                    <input id="configNameInput" class="input" type="text" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configDescriptionInput" class="label">Description:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control is-expanded">
+                                    <input id="configDescriptionInput" class="input" type="text" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configTagsInput" class="label">Tags:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control is-expanded">
+                                    <textarea id="configTagsInput" class="textarea" style="white-space: nowrap;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configMaxPlayersInput" class="label">Max Players (blank for unlimited):</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configMaxPlayersInput" class="" type="number" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configPasswordInput" class="label">Password (blank for no password):</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control is-expanded">
+                                    <input id="configPasswordInput" class="input" type="text" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configMaxUploadSlots" class="label">Max Upload Slots (0 for unlimited):</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configMaxUploadSlots" class="" type="number" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configPauseInput" class="label">Auto Pause when no players online:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configPauseInput" class="checkbox" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configAdminUseDefault" class="label">Use Default Admins:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configAdminUseDefault" class="checkbox" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configAdminInput" class="label">Admins (if not default):</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control is-expanded">
+                                    <textarea id="configAdminInput" class="textarea"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configAutoSaveIntervalInput" class="label">Auto save Interval (min 1 minute):</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configAutoSaveIntervalInput" type="number" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configAutoSaveSlotsInput" class="label">Auto save slots (0 for no auto saves):</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configAutoSaveSlotsInput" type="number" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configNonBlockingSavingInput" class="label">Non blocking saving (experimental):</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configNonBlockingSavingInput" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configPublicVisibleInput" class="label">Public Visible:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configPublicVisibleInput" class="checkbox" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <!-- Left empty for spacing -->
+                        </div>
+                        <div class="field-body">
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button id="configSaveButton" class="button is-success" disabled>Save Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="undoSettingsButton" class="button is-danger" disabled>Undo Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="copySettingsButton" class="button is-link">Copy Settings</button>
+                                </div>
+
+                                <div class="control">
+                                    <input id="pasteSettingsTextInput" class="input" type="text" placeholder="Paste settings here" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="extraSettingsBox" class="box">
+                    <h3 class="title is-3" style="display:inline">Server Extra Settings</h3>
+                    <label id="extraSettingsUnsavedLabel" class="label is-hidden" style="display:inline; float:right;">
+                        <span class="icon has-text-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                        <span class="has-text-danger">There are unsaved changes.</span>
+                    </label>
+                    <hr />
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configSyncBans" class="label">Sync Bans:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configSyncBans" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configBuildBansFromDb" class="label">Overwrite server-banlist.json from database at start:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configBuildBansFromDb" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configSetDiscordChannelName" class="label">Set Discord channel name on start and stop:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configSetDiscordChannelName" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configSetGameChatToDiscord" class="label">Game Chat to Discord:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configSetGameChatToDiscord" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configSetGameShoutToDiscord" class="label">Game Shout to Discord:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configSetGameShoutToDiscord" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="configSetDiscordToGameChat" class="label">Discord to Game Chat:</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input id="configSetDiscordToGameChat" type="checkbox" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <!-- Left empty for spacing -->
+                        </div>
+                        <div class="field-body">
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button id="configExtraSaveButton" class="button is-success" disabled>Save Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="undoExtraSettingsButton" class="button is-danger" disabled>Undo Changes</button>
+                                </div>
+
+                                <div class="control">
+                                    <button id="copyExtraSettingsButton" class="button is-link">Copy Settings</button>
+                                </div>
+
+                                <div class="control">
+                                    <input id="pasteExtraSettingsTextInput" class="input" type="text" placeholder="Paste settings here" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+        <div class="column is-6">
+
+            <section>
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <input id="fileUploadInput" type="file" multiple style="display:none" />
+                        <button id="fileUploadButton" class="button is-link">
+                            <span class="icon"><i class="fas fa-upload"></i></span>
+                            <span>Upload Saves</span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <button id="fileDeleteButton" class="button is-danger">
+                            <span class="icon"><i class="fas fa-trash"></i></span>
+                            <span>Delete Saves</span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <span id="fileProgressContiner" hidden>
+                            Uploading<progress id="fileProgress" class="progress is-info" max="1"></progress>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button id="fileMoveButton" class="button is-link">
+                            <span class="icon"><i class="fas fa-share-square"></i></span>
+                            <span>Move Saves</span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <button id="fileCopyButton" class="button is-link">
+                            <span class="icon"><i class="fas fa-clone"></i></span>
+                            <span>Copy Saves</span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <div class=" field-label is-normal">
+                            <label class="label">Destination</label>
+                        </div>
+                    </div>
+                    <div class="control">
+                        <div class="select">
+                            <select id="destinationSelect">
+                                <option value="@Constants.GlobalSavesDirectoryName">Global</option>
+                                @{
+                                    for (int i = 1; i <= Model.ServerCount; i++)
+                                    {
+                                        var path = System.IO.Path.Combine(i.ToString(), Constants.LocalSavesDirectoryName);
+                                        <option value="@path">Local @i</option>
+                                    }
+                                }
+                                <option value="@Constants.PublicStartSavesDirectoryName">Public Start</option>
+                                <option value="@Constants.PublicFinalSavesDirectoryName">Public Final</option>
+                                <option value="@Constants.PublicOldSavesDirectoryName">Public Old</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button id="saveRenameButton" class="button is-link">
+                            <span class="icon"><i class="fas fa-edit"></i></span>
+                            <span>Rename Saves</span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <button id="saveDeflateButton" class="button is-link">
+                            <span class="icon"><i class="fas fa-compress-arrows-alt"></i></span>
+                            <span>Deflate Saves</span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <div class="field-label is-normal">
+                            <label class="label">New Name:</label>
+                        </div>
+                    </div>
+                    <div class="control">
+                        <input id="fileRenameInput" class="input" type="text" />
+                    </div>
+                    <div class="control">
+                        <span id="deflateProgress" hidden>
+                            Deflating<progress class="progress is-info" max="100"></progress>
+                        </span>
+                    </div>
+                </div>
+
+            </section>
+
+            <section style="padding: 2rem 0rem;">
+
+                @await Html.PartialAsync("_FileTablePartial", ServersModelOld.tempSaves)
+                @await Html.PartialAsync("_FileTablePartial", ServersModelOld.localSaves)
+                @await Html.PartialAsync("_FileTablePartial", ServersModelOld.globalSaves)
+
+                <h3 class="title is-3">Scenarios</h3>
+
+                <table id="scenarioTable" class="table is-bordered is-striped is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" /> Select</th>
+                            <th>Name</th>
+                            <th>Modified Time</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <h3 class="title is-3">Mod Packs</h3>
+
+                <table id="modPackTable" class="table is-bordered is-striped is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Name</th>
+                            <th>Modified Time</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </section>
+
+            <section>
+
+                <h3 class="title is-3">Logs</h3>
+
+                <table id="logsFileTable" class="table is-bordered is-striped is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Modified Time</th>
+                            <th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <h3 class="title is-3">Chat Logs</h3>
+
+                <table id="chatLogsFileTable" class="table is-bordered is-striped is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Modified Time</th>
+                            <th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </section>
+
+        </div>
+    </div>
+
+    <div id="updateModal" class="modal">
+        <div id="modalBackground" class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Update</p>
+                <button id="closeModalButton" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+
+                <section class="section">
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <div class="select">
+                                <select id="updateSelect">
+                                    <option>latest</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control">
+                            <button id="downloadAndUpdateButton" class="button is-link">Download and Update</button>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="columns is-centered">
+                    <div class="column is-8 is-center" style="flex-grow: 0;">
+                        <h4 class="title is-4" style="text-align:center;">Cached Updates</h4>
+                        <table id="cachedVersionsTable" class="table is-bordered is-striped is-hoverable" style="margin-left:auto; margin-right: auto;">
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Delete</th>
+                                    <th>Update</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+            <footer class="modal-card-foot"></footer>
+        </div>
+    </div>
+
+    @section Scripts{
+        <environment include="Development">
+            <script type="text/javascript" src="~/js/serversOld.js" asp-append-version="true"></script>
+        </environment>
+        <environment exclude="Development">
+            <script type="text/javascript" src="~/js/serversOld.js"></script>
+        </environment>
+    }
+</div>

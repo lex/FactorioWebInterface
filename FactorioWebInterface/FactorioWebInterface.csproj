@@ -3,12 +3,17 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <TypeScriptToolsVersion>3.9</TypeScriptToolsVersion>
-    <Configurations>Debug;Release;Wsl;Windows</Configurations>
+    <Configurations>Debug;Release;Wsl;Windows;Watch</Configurations>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Watch|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;WATCH; WINDOWS</DefineConstants>
+    <Optimize>false</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Windows|AnyCPU'">
@@ -20,7 +25,7 @@
     <DefineConstants>TRACE;DEBUG;WSL</DefineConstants>
     <Optimize>false</Optimize>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <Content Remove="appsettings.json" />
     <Content Remove="appsettings.template.json" />
@@ -29,12 +34,148 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="FactorioWebInterface.db" />
+    <None Remove="Scenario.db" />
+    <None Remove="src\components\button.ts" />
+    <None Remove="src\components\contentBase.ts" />
+    <None Remove="src\components\dateField.ts" />
+    <None Remove="src\components\field.ts" />
+    <None Remove="src\components\icon.ts" />
+    <None Remove="src\components\progress.ts" />
+    <None Remove="src\components\select.ts" />
+    <None Remove="src\components\tab.ts" />
+    <None Remove="src\components\tabHeaders.ts" />
+    <None Remove="src\components\table.ts" />
+    <None Remove="src\components\tabSet.ts" />
+    <None Remove="src\components\textInput.ts" />
+    <None Remove="src\components\timeField.ts" />
+    <None Remove="src\components\tooltip.ts" />
+    <None Remove="src\pages\admins\adminsPage.ts" />
+    <None Remove="src\pages\admins\adminsService.ts" />
+    <None Remove="src\pages\admins\adminsView.ts" />
+    <None Remove="src\pages\admins\adminsViewModel.ts" />
+    <None Remove="src\pages\admins\helpSectionView.ts" />
+    <None Remove="src\pages\admins\mainView.ts" />
+    <None Remove="src\pages\bans\bansPage.ts" />
+    <None Remove="src\pages\bans\bansService.ts" />
+    <None Remove="src\pages\bans\bansView.ts" />
+    <None Remove="src\pages\bans\bansViewModel.ts" />
+    <None Remove="src\pages\bans\helpSectionView.ts" />
+    <None Remove="src\pages\bans\mainView.ts" />
+    <None Remove="src\pages\scenarioData\dataSetOption.ts" />
+    <None Remove="src\pages\scenarioData\dataSetView.ts" />
+    <None Remove="src\pages\scenarioData\dataSetViewModel.ts" />
+    <None Remove="src\pages\scenarioData\helpSectionView.ts" />
+    <None Remove="src\pages\scenarioData\scenarioDataPage.ts" />
+    <None Remove="src\pages\scenarioData\scenarioDataService.ts" />
+    <None Remove="src\pages\servers\consoleMessageView.ts" />
+    <None Remove="src\pages\servers\fileView.ts" />
+    <None Remove="src\pages\servers\fileViewModel.ts" />
+    <None Remove="src\pages\servers\logFileView.ts" />
+    <None Remove="src\pages\servers\logFileViewModel.ts" />
+    <None Remove="src\pages\servers\modPacksView.ts" />
+    <None Remove="src\pages\servers\modPacksViewModel.ts" />
+    <None Remove="src\pages\servers\scenariosView.ts" />
+    <None Remove="src\pages\servers\scenariosViewModel.ts" />
+    <None Remove="src\pages\servers\serverConsoleService.ts" />
+    <None Remove="src\pages\servers\serverExtraSettingsService.ts" />
+    <None Remove="src\pages\servers\serverExtraSettingsView.ts" />
+    <None Remove="src\pages\servers\serverExtraSettingsViewModel.ts" />
+    <None Remove="src\pages\servers\serverFileManagementService.ts" />
+    <None Remove="src\pages\servers\serverFileManagementView.ts" />
+    <None Remove="src\pages\servers\serverFileManagementViewModel.ts" />
+    <None Remove="src\pages\servers\serverFileService.ts" />
+    <None Remove="src\pages\servers\serverIdService.ts" />
+    <None Remove="src\pages\servers\serversConsoleView.ts" />
+    <None Remove="src\pages\servers\serversConsoleViewModel.ts" />
+    <None Remove="src\pages\servers\serverSettingsService.ts" />
+    <None Remove="src\pages\servers\serverSettingsView.ts" />
+    <None Remove="src\pages\servers\serverSettingsViewModel.ts" />
+    <None Remove="src\pages\servers\serversHubService.ts" />
+    <None Remove="src\pages\servers\serversPage.ts" />
+    <None Remove="src\pages\servers\serversTypes.ts" />
+    <None Remove="src\pages\servers\serversView.ts" />
+    <None Remove="src\pages\servers\serversViewModel.ts" />
+    <None Remove="src\services\copyToClipboardService.ts" />
+    <None Remove="src\services\errorService.ts" />
+    <None Remove="src\services\fileSelectionservice.ts" />
+    <None Remove="src\services\requestVerificationService.ts" />
+    <None Remove="src\services\uploadService.ts" />
     <None Remove="src\ts\admins.ts" />
+    <None Remove="src\ts\command.ts" />
+    <None Remove="src\ts\componentsOld\app.ts" />
+    <None Remove="src\ts\componentsOld\button.ts" />
+    <None Remove="src\ts\componentsOld\checkboxField.ts" />
+    <None Remove="src\ts\componentsOld\Classes.ts" />
+    <None Remove="src\ts\componentsOld\collapse.ts" />
+    <None Remove="src\ts\componentsOld\componentBase.ts" />
+    <None Remove="src\ts\componentsOld\container.ts" />
+    <None Remove="src\ts\componentsOld\div.ts" />
+    <None Remove="src\ts\componentsOld\fieldBase.ts" />
+    <None Remove="src\ts\componentsOld\if.ts" />
+    <None Remove="src\ts\componentsOld\lazy.ts" />
+    <None Remove="src\ts\componentsOld\numberField.ts" />
+    <None Remove="src\ts\componentsOld\stackPanel.ts" />
+    <None Remove="src\ts\componentsOld\tab.ts" />
+    <None Remove="src\ts\componentsOld\tabSet.ts" />
+    <None Remove="src\ts\componentsOld\textBlock.ts" />
+    <None Remove="src\ts\componentsOld\textField.ts" />
+    <None Remove="src\components\BaseElement.ts" />
+    <None Remove="src\components\checkboxField.ts" />
+    <None Remove="src\components\collapse.ts" />
+    <None Remove="src\components\contentPresenter.ts" />
+    <None Remove="src\components\fieldBase.ts" />
+    <None Remove="src\components\hideableContent.ts" />
+    <None Remove="src\components\inputFieldBase.ts" />
+    <None Remove="src\components\numberField.ts" />
+    <None Remove="src\components\stackPanel.ts" />
+    <None Remove="src\components\textAreaField.ts" />
+    <None Remove="src\components\textField.ts" />
+    <None Remove="src\components\virtualComponent.ts" />
+    <None Remove="src\components\virtualForm.ts" />
+    <None Remove="src\ts\custom.d.ts" />
+    <None Remove="src\ts\form.ts" />
     <None Remove="src\ts\mods.ts" />
+    <None Remove="src\pages\scenarioData\mainView.ts" />
+    <None Remove="src\pages\scenarioData\mainViewModel.ts" />
+    <None Remove="src\pages\scenarioData\updateDataView.ts" />
+    <None Remove="src\pages\scenarioData\updateDataViewModel.ts" />
     <None Remove="src\ts\plaguesplayground.ts" />
     <None Remove="src\ts\saves.ts" />
     <None Remove="src\ts\table.ts" />
+    <None Remove="src\ts\test.ts" />
+    <None Remove="src\ts\testOld.ts" />
+    <None Remove="src\ts\testOld\vm.ts" />
+    <None Remove="src\ts\test\vm.ts" />
     <None Remove="src\ts\utils.ts" />
+    <None Remove="src\ts\utilsOld\fieldProperty.ts" />
+    <None Remove="src\ts\utilsOld\functions.ts" />
+    <None Remove="src\ts\utilsOld\observable.ts" />
+    <None Remove="src\ts\utilsOld\ObservableErrors.ts" />
+    <None Remove="src\ts\utilsOld\observableObject.ts" />
+    <None Remove="src\ts\utilsOld\validator.ts" />
+    <None Remove="src\utils\arrayHelper.ts" />
+    <None Remove="src\utils\bindingSource.ts" />
+    <None Remove="src\utils\box.ts" />
+    <None Remove="src\utils\circularBuffer.spec.ts" />
+    <None Remove="src\utils\circularBuffer.ts" />
+    <None Remove="src\utils\collectionView.ts" />
+    <None Remove="src\utils\commandHistory.spec.ts" />
+    <None Remove="src\utils\commandHistory.ts" />
+    <None Remove="src\utils\comparatorHelper.ts" />
+    <None Remove="src\utils\eventListener.ts" />
+    <None Remove="src\utils\fieldId.ts" />
+    <None Remove="src\utils\iterableHelper.ts" />
+    <None Remove="src\utils\mathHelper.ts" />
+    <None Remove="src\utils\nodeHelper.ts" />
+    <None Remove="src\utils\observable.ts" />
+    <None Remove="src\utils\observableCircularBuffer.ts" />
+    <None Remove="src\utils\observableCollection.ts" />
+    <None Remove="src\utils\observableErrors.ts" />
+    <None Remove="src\utils\observableObject.ts" />
+    <None Remove="src\utils\observableProperty.ts" />
+    <None Remove="src\utils\serviceLocator.ts" />
+    <None Remove="src\utils\validator.ts" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.css" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.css.map" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.min.css" />
@@ -93,14 +234,148 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="src\components\button.ts" />
+    <TypeScriptCompile Include="src\components\contentBase.ts" />
+    <TypeScriptCompile Include="src\components\dateField.ts" />
+    <TypeScriptCompile Include="src\components\field.ts" />
+    <TypeScriptCompile Include="src\components\icon.ts" />
+    <TypeScriptCompile Include="src\components\progress.ts" />
+    <TypeScriptCompile Include="src\components\select.ts" />
+    <TypeScriptCompile Include="src\components\tab.ts" />
+    <TypeScriptCompile Include="src\components\tabHeaders.ts" />
+    <TypeScriptCompile Include="src\components\table.ts" />
+    <TypeScriptCompile Include="src\components\tabSet.ts" />
+    <TypeScriptCompile Include="src\components\textInput.ts" />
+    <TypeScriptCompile Include="src\components\timeField.ts" />
+    <TypeScriptCompile Include="src\components\tooltip.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsPage.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsService.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsView.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\admins\helpSectionView.ts" />
+    <TypeScriptCompile Include="src\pages\admins\mainView.ts" />
+    <TypeScriptCompile Include="src\pages\bans\bansPage.ts" />
+    <TypeScriptCompile Include="src\pages\bans\bansService.ts" />
+    <TypeScriptCompile Include="src\pages\bans\bansView.ts" />
+    <TypeScriptCompile Include="src\pages\bans\bansViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\bans\helpSectionView.ts" />
+    <TypeScriptCompile Include="src\pages\bans\mainView.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\dataSetOption.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\dataSetView.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\dataSetViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\helpSectionView.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\scenarioDataPage.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\scenarioDataService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\consoleMessageView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\fileView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\fileViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\logFileView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\logFileViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\modPacksView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\modPacksViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\scenariosView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\scenariosViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverConsoleService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverExtraSettingsService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverExtraSettingsView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverExtraSettingsViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverFileManagementService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverFileManagementViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverFileService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverIdService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serversConsoleView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serversConsoleViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverSettingsService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverSettingsView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverSettingsViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverFileManagementView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serversPage.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serversHubService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serversTypes.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serversView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serversViewModel.ts" />
+    <TypeScriptCompile Include="src\services\copyToClipboardService.ts" />
+    <TypeScriptCompile Include="src\services\errorService.ts" />
+    <TypeScriptCompile Include="src\services\fileSelectionService.ts" />
+    <TypeScriptCompile Include="src\services\uploadService.ts" />
+    <TypeScriptCompile Include="src\services\requestVerificationService.ts" />
     <TypeScriptCompile Include="src\ts\admins.ts" />
     <TypeScriptCompile Include="src\ts\bans.ts" />
+    <TypeScriptCompile Include="src\utils\bindingSource.ts" />
+    <TypeScriptCompile Include="src\utils\circularBuffer.spec.ts" />
+    <TypeScriptCompile Include="src\utils\circularBuffer.ts" />
+    <TypeScriptCompile Include="src\utils\command.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\app.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\button.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\checkboxField.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\classes.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\collapse.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\componentBase.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\container.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\div.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\fieldBase.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\form.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\if.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\lazy.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\numberField.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\stackPanel.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\tab.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\tabSet.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\textBlock.ts" />
+    <TypeScriptCompile Include="src\ts\componentsOld\textField.ts" />
+    <TypeScriptCompile Include="src\components\baseElement.ts" />
+    <TypeScriptCompile Include="src\components\checkboxField.ts" />
+    <TypeScriptCompile Include="src\components\collapse.ts" />
+    <TypeScriptCompile Include="src\components\contentPresenter.ts" />
+    <TypeScriptCompile Include="src\components\fieldBase.ts" />
+    <TypeScriptCompile Include="src\components\hideableContent.ts" />
+    <TypeScriptCompile Include="src\components\inputFieldBase.ts" />
+    <TypeScriptCompile Include="src\components\numberField.ts" />
+    <TypeScriptCompile Include="src\components\stackPanel.ts" />
+    <TypeScriptCompile Include="src\components\textareaField.ts" />
+    <TypeScriptCompile Include="src\components\textField.ts" />
+    <TypeScriptCompile Include="src\components\virtualComponent.ts" />
+    <TypeScriptCompile Include="src\components\virtualForm.ts" />
+    <TypeScriptCompile Include="src\ts\custom.d.ts" />
     <TypeScriptCompile Include="src\ts\mods.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\mainView.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\mainViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\updateDataView.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\updateDataViewModel.ts" />
     <TypeScriptCompile Include="src\ts\plaguesPlayground.ts" />
     <TypeScriptCompile Include="src\ts\saves.ts" />
     <TypeScriptCompile Include="src\ts\servers.ts" />
     <TypeScriptCompile Include="src\ts\table.ts" />
+    <TypeScriptCompile Include="src\ts\test.ts" />
+    <TypeScriptCompile Include="src\ts\testOld.ts" />
+    <TypeScriptCompile Include="src\ts\testOld\vm.ts" />
+    <TypeScriptCompile Include="src\ts\test\vm.ts" />
     <TypeScriptCompile Include="src\ts\utils.ts" />
+    <TypeScriptCompile Include="src\ts\utilsOld\fieldProperty.ts" />
+    <TypeScriptCompile Include="src\ts\utilsOld\functions.ts" />
+    <TypeScriptCompile Include="src\ts\utilsOld\observableErrors.ts" />
+    <TypeScriptCompile Include="src\ts\utilsOld\observable.ts" />
+    <TypeScriptCompile Include="src\ts\utilsOld\observableObject.ts" />
+    <TypeScriptCompile Include="src\ts\utilsOld\validator.ts" />
+    <TypeScriptCompile Include="src\utils\arrayHelper.ts" />
+    <TypeScriptCompile Include="src\utils\box.ts" />
+    <TypeScriptCompile Include="src\utils\collectionView.ts" />
+    <TypeScriptCompile Include="src\utils\commandHistory.spec.ts" />
+    <TypeScriptCompile Include="src\utils\commandHistory.ts" />
+    <TypeScriptCompile Include="src\utils\comparatorHelper.ts" />
+    <TypeScriptCompile Include="src\utils\eventListener.ts" />
+    <TypeScriptCompile Include="src\utils\fieldId.ts" />
+    <TypeScriptCompile Include="src\utils\iterableHelper.ts" />
+    <TypeScriptCompile Include="src\utils\mathHelper.ts" />
+    <TypeScriptCompile Include="src\utils\nodeHelper.ts" />
+    <TypeScriptCompile Include="src\utils\observable.ts" />
+    <TypeScriptCompile Include="src\utils\observableCircularBuffer.ts" />
+    <TypeScriptCompile Include="src\utils\observableCollection.ts" />
+    <TypeScriptCompile Include="src\utils\observableErrors.ts" />
+    <TypeScriptCompile Include="src\utils\observableObject.ts" />
+    <TypeScriptCompile Include="src\utils\observableProperty.ts" />
+    <TypeScriptCompile Include="src\utils\serviceLocator.ts" />
+    <TypeScriptCompile Include="src\utils\validator.ts" />
   </ItemGroup>
 
   <ItemGroup>
@@ -141,7 +416,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if not exist &quot;$(ProjectDir)appsettings.json&quot; (&#xD;&#xA;    copy &quot;$(ProjectDir)appsettings.template.json&quot; &quot;$(ProjectDir)appsettings.json&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if $(ConfigurationName) == Release npm run release&#xD;&#xA;if $(ConfigurationName) == Debug npm run build&#xD;&#xA;if $(ConfigurationName) == Windows npm run build&#xD;&#xA;if $(ConfigurationName) == Wsl npm run build&#xD;&#xA;" />
+    <Exec Command="if not exist &quot;$(ProjectDir)appsettings.json&quot; (&#xD;&#xA;    copy &quot;$(ProjectDir)appsettings.template.json&quot; &quot;$(ProjectDir)appsettings.json&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if $(ConfigurationName) == Release npm run release&#xD;&#xA;if $(ConfigurationName) == Debug npm run build&#xD;&#xA;if $(ConfigurationName) == Watch powershell.exe start-process npm -argumentList 'run', 'watch'&#xD;&#xA;if $(ConfigurationName) == Windows npm run build&#xD;&#xA;if $(ConfigurationName) == Wsl npm run build&#xD;&#xA;" />
   </Target>
 
   <!--

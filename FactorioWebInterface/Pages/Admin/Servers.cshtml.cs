@@ -1,47 +1,34 @@
-﻿using FactorioWebInterface.Data;
-using FactorioWebInterface.Models;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using FactorioWebInterface.Data;
 using FactorioWebInterface.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Pages.Admin
 {
     public class ServersModel : PageModel
     {
-        public static readonly FileTableModel tempSaves = new FileTableModel() { Name = "Temp Saves", Id = "tempSaveFilesTable" };
-        public static readonly FileTableModel localSaves = new FileTableModel() { Name = "Local Saves", Id = "localSaveFilesTable" };
-        public static readonly FileTableModel globalSaves = new FileTableModel() { Name = "Global Saves", Id = "globalSaveFilesTable" };
-
         private readonly UserManager<ApplicationUser> _userManger;
         private readonly IFactorioFileManager _factorioFileManager;
         private readonly IFactorioServerDataService _factorioServerDataService;
-        private readonly ILogger<ServersModel> _logger;
+        private readonly ILogger<ServersModelOld> _logger;
 
         public int ServerCount => _factorioServerDataService.ServerCount;
 
         public ServersModel(UserManager<ApplicationUser> userManger,
             IFactorioFileManager factorioFileManager,
             IFactorioServerDataService factorioServerDataService,
-            ILogger<ServersModel> logger)
+            ILogger<ServersModelOld> logger)
         {
             _userManger = userManger;
             _factorioFileManager = factorioFileManager;
             _factorioServerDataService = factorioServerDataService;
             _logger = logger;
         }
-
-        public class InputModel
-        {
-            public string Id { get; set; } = default!;
-        }
-
-        //[BindProperty]
-        //public InputModel Input { get; set; }
 
         public int Id { get; set; }
 

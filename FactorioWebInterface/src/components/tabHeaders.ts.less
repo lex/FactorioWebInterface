@@ -1,0 +1,23 @@
+﻿@import "./component.less";
+
+@background-color: rgb(255,255,255);
+@hover-color: rgba(30,144,255, 0.5);
+@selected-color: rgb(30,144,255);
+
+.tab-border(@color) {
+    border-bottom: solid 5px @color;
+    padding-bottom: calc(1em - 5px);
+    color: @selected-color;
+}
+
+a-tab-headers {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-content: flex-start;
+    flex: 0 1;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0em 0.35em;
+    width: 100%;
+}

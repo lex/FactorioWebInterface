@@ -1,0 +1,149 @@
+﻿.is-horizontal() {
+    flex-direction: row;
+    justify-content: flex-start;
+
+    & > label {
+        margin-top: 0.35em;
+        margin-right: 0.50em;
+        min-width: 5em;
+        max-width: 15em;
+        text-align: right;
+        flex-grow: 1;
+        flex-basis: 0;
+    }
+}
+
+.field-input() {
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    display: inline-flex;
+    flex-grow: 1;
+    font-size: 1rem;
+    height: 2.25em;
+    justify-content: flex-start;
+    line-height: 1.5;
+    padding-bottom: calc(0.375em - 1px);
+    padding-left: calc(0.625em - 1px);
+    padding-right: calc(0.625em - 1px);
+    padding-top: calc(0.375em - 1px);
+    vertical-align: top;
+    background-color: white;
+    border-color: #dbdbdb;
+    color: #363636;
+    box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
+    max-width: 100%;
+    width: 100%;
+    clear: both;
+    position: relative;
+    text-align: left;
+}
+
+.field-input-focus() {
+    outline: none;
+    border-color: #3273dc;
+    box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+}
+
+.field-input-disabled() {
+    cursor: not-allowed;
+    background-color: whitesmoke;
+    border-color: whitesmoke;
+    box-shadow: none;
+    color: #7a7a7a;
+}
+
+.field-input-readonly() {
+    box-shadow: none;
+}
+
+.field-input-hover() {
+    border-color: #b5b5b5;
+}
+
+.field-input-error() {
+    border-color: red;
+}
+
+.field-input-error-hover() {
+    border-color: rgb(255, 128, 128);
+}
+
+.input-part() {
+    .field-input();
+
+    &:focus {
+        .field-input-focus();
+    }
+
+    &[disabled] {
+        .field-input-disabled();
+    }
+
+    &[readonly] {
+        .field-input-readonly();
+    }
+
+    &:hover {
+        .field-input-hover();
+    }
+}
+
+.field() {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.1em;
+
+    & > label {
+        color: #363636;
+        display: block;
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.25em;
+        position: relative;
+        align-self: flex-start;
+    }
+
+    & > div {
+        flex-grow: 5;
+        flex-basis: 0;
+
+        & > input {
+            .input-part();
+        }
+
+        & > div {
+            display: block;
+            font-size: 0.75rem;
+            margin: 0.25em 0em;
+            height: 1rem;
+            color: red;
+            visibility: hidden;
+        }
+    }
+
+    &[invalid] > div {
+        & > input {
+            .field-input-error();
+
+            &:hover {
+                .field-input-error-hover();
+            }
+        }
+
+        & > div {
+            visibility: visible;
+        }
+    }
+
+    @media screen and (min-width: 769px) {
+        &.is-horizontal {
+            .is-horizontal();
+        }
+    }
+}
+
+.hide-error > div > div {
+    display: none;
+}

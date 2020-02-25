@@ -1,9 +1,9 @@
-﻿using FactorioWebInterface.Data;
+﻿using System.Threading.Tasks;
+using FactorioWebInterface.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Pages.Admin
 {

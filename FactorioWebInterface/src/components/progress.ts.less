@@ -1,0 +1,59 @@
+﻿a-progress {
+    width: 6em;
+    height: 2.25em;
+    font-size: 1rem;
+
+    & > div {
+        //width: 100%;
+        height: 100%;
+        background-color: limegreen;
+    }
+
+    & > a-stack-panel {
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+
+        & > div {
+            margin: auto;
+        }
+    }
+
+    &.indeterminate {
+        -webkit-animation-duration: 1.5s;
+        animation-duration: 1.5s;
+        -webkit-animation-iteration-count: infinite;
+        animation-iteration-count: infinite;
+        -webkit-animation-name: moveIndeterminate;
+        animation-name: moveIndeterminate;
+        -webkit-animation-timing-function: linear;
+        animation-timing-function: linear;
+        background-image: linear-gradient(to right, limegreen 30%, rgba(0,0,0,0) 30%);
+        background-position: top left;
+        background-repeat: no-repeat;
+        background-size: 150% 150%;
+    }
+}
+
+@-webkit-keyframes moveIndeterminate {
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes moveIndeterminate {
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+}

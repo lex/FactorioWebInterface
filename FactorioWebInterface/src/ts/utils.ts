@@ -5,8 +5,8 @@
 
 export interface Result<T = void> {
     Success: boolean;
-    Errors: Error[];
-    Value: T;
+    Errors?: Error[];
+    Value?: T;
 }
 
 export enum CollectionChangeType {
@@ -22,7 +22,7 @@ export interface CollectionChangedData<T = any> {
     OldItems?: T[];
 }
 
-export interface KeyValueCollectionChangedData<V=any> {
+export interface KeyValueCollectionChangedData<V = any> {
     Type: CollectionChangeType;
     NewItems?: object;
     OldItems?: object;

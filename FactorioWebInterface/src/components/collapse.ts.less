@@ -1,0 +1,28 @@
+﻿a-collapse {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+
+    & > a-stack-panel {
+        align-self: flex-start;
+    }
+}
+
+a-collapse-button {
+    flex-shrink: 1;
+    cursor: pointer;
+    user-select: none;
+    width: 1em;
+    height: 1em;
+    display: flex;
+    align-self: center;
+    margin-right: 0.5em;
+}
+
+a-collapse[open] a-collapse-button {
+    transform: rotate(90deg);
+}
+
+a-collapse.wide > a-stack-panel{
+    align-self: stretch;
+}

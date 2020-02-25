@@ -1,0 +1,25 @@
+﻿a-tooltip {
+    visibility: hidden;
+    position: absolute;
+    border: 1px solid lightgrey;
+    border-radius: 10px;
+    background: white;
+    z-index: 1;
+    font-size: 1rem;
+    padding: 0.5em;
+    width: intrinsic;
+    width: -moz-max-content;
+    width: -webkit-max-content;
+    width: max-content;
+    top: 100%;
+    left: 100%;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-weight: normal;
+    box-shadow: 0 2px 3px rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.1);
+}
+
+*:hover > a-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
