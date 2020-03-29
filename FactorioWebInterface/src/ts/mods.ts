@@ -25,8 +25,12 @@ import * as Table from "./table";
     const fileTableElement = document.getElementById('fileTable') as HTMLTableElement;
     const uploadfileInput = document.getElementById('uploadfileInput') as HTMLInputElement;
     const uploadFileButton = document.getElementById('uploadFileButton') as HTMLButtonElement;
+    const modPortalInput = document.getElementById('modPortalInput') as HTMLInputElement;
+    const modPortalButton = document.getElementById('modPortalButton') as HTMLButtonElement;
     const fileProgress = document.getElementById('fileProgress') as HTMLProgressElement;
+    const modPortalProgress = document.getElementById('modPortalProgress') as HTMLProgressElement;
     const fileProgressContiner = document.getElementById('fileProgressContiner') as HTMLSpanElement;
+    const modPortalProgressContiner = document.getElementById('modPortalProgressContiner') as HTMLSpanElement;
     const deleteFileButton = document.getElementById('deleteFileButton') as HTMLButtonElement;
     const copyFileButton = document.getElementById('copyFileButton') as HTMLButtonElement;
     const moveFileButton = document.getElementById('moveFileButton') as HTMLButtonElement;
@@ -380,6 +384,7 @@ import * as Table from "./table";
 
         xhr.onloadend = function (event) {
             fileProgressContiner.hidden = true;
+            uploadFileButton.disabled = false;
 
             var result = JSON.parse(xhr.responseText) as Result;
             if (!result.Success) {
@@ -391,6 +396,30 @@ import * as Table from "./table";
         xhr.send(formData);
 
         uploadfileInput.value = "";
+        uploadFileButton.disabled = true;
+    }
+
+    modPortalButton.onclick = () => {
+        modPortalInput.click();
+    }
+
+    modPortalInput.onchange = function (this: HTMLInputElement, ev: Event) {
+        if (this.files.length == 0) {
+            return;
+        }
+
+        let fileNames: string[] = [];
+
+        let files = modPortalInput.files
+        for (let i = 0; i < files.length; i++) {
+            fileNames.push(files[i].name);
+        }
+
+        modPortalProgressContiner.hidden = false;
+        modPortalButton.disabled = true;
+        uploadfileInput.value = "";
+
+        connection.send('DownloadFromModPortal', currentModPack, fileNames);
     }
 
     deleteFileButton.onclick = async () => {
@@ -495,6 +524,9 @@ import * as Table from "./table";
         if (currentModPack !== null) {
             connection.invoke('RequestModPackFiles', currentModPack);
         }
+
+        modPortalProgressContiner.hidden = true;
+        modPortalButton.disabled = false;
     }
 
     async function startConnection() {
@@ -550,6 +582,15 @@ import * as Table from "./table";
     connection.on("SendModPackFiles", (modPack: string, data: CollectionChangedData<ModPackFileMetaData>) => {
         if (currentModPack === modPack) {
             fileTable.update(data);
+        }
+    });
+
+    connection.on("EndDownloadFromModPortal", (result: Result) => {
+        modPortalProgressContiner.hidden = true;
+        modPortalButton.disabled = false;
+
+        if (!result.Success) {
+            alert(JSON.stringify(result.Errors));
         }
     });
 

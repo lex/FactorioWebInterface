@@ -30,6 +30,7 @@ namespace FactorioWebInterface.Services
         Result MoveModPackFiles(string sourceModPack, string targetModPack, string[] files);
         Result RenameModPack(string name, string newName);
         Task<Result> UploadFiles(string modPack, IList<IFormFile> files);
+        Task<Result> DownloadFromModPortal(string modPack, IReadOnlyList<string> fileNames);
     }
 
     public class FactorioModManager : IFactorioModManager
@@ -37,6 +38,7 @@ namespace FactorioWebInterface.Services
         private readonly IHubContext<FactorioModHub, IFactorioModClientMethods> _factorioModHub;
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<FactorioModManager> _logger;
+        private readonly IFactorioModPortalService _modPortalService;
         private readonly IFileSystem _fileSystem = new FileSystem();
 
         public event EventHandler<IFactorioModManager, CollectionChangedData<ModPackMetaData>> ModPackChanged;
@@ -45,11 +47,13 @@ namespace FactorioWebInterface.Services
         public FactorioModManager(IHubContext<FactorioModHub,
             IFactorioModClientMethods> factorioModHub,
             IFactorioServerDataService factorioServerDataService,
-            ILogger<FactorioModManager> logger)
+            ILogger<FactorioModManager> logger,
+            IFactorioModPortalService modPortalService)
         {
             _factorioModHub = factorioModHub;
             _factorioServerDataService = factorioServerDataService;
             _logger = logger;
+            _modPortalService = modPortalService;
 
             ModPackChanged += FactorioModManager_ModPackChanged;
             ModPackFilesChanged += FactorioModManager_ModPackFilesChanged;
@@ -901,6 +905,142 @@ namespace FactorioWebInterface.Services
             {
                 _logger.LogError(ex, nameof(MoveModPackFiles));
                 return Result.Failure(Constants.FileErrorKey, $"Error moving mod pack files.");
+            }
+        }
+
+        public async Task<Result> DownloadFromModPortal(string modPack, IReadOnlyList<string> fileNames)
+        {
+            var modPackDirResult = TryGetModPackDirectoryInfo(modPack);
+            if (!modPackDirResult.Success)
+            {
+                return modPackDirResult;
+            }
+
+            var modPackDir = modPackDirResult.Value!;
+
+            var downloadResult = await _modPortalService.GetDownloadUrls(fileNames);
+            if (!downloadResult.Success)
+            {
+                return downloadResult;
+            }
+
+            IReadOnlyList<GetModDownloadResult> downloadInfos = downloadResult.Value!;
+            var errors = new List<Error>();
+
+            foreach (var downloadInfo in downloadInfos)
+            {
+                if (downloadInfo.Status != GetModDownloadResultStatus.Success)
+                {
+                    errors.Add(GetDownloadUrlError(downloadInfo.Status, downloadInfo.FileName));
+                    continue;
+                }
+
+                var targetFileInfo = new FileInfo(Path.Combine(modPackDir.FullName, downloadInfo.FileName));
+                if (targetFileInfo.Exists)
+                {
+                    errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, $"File {downloadInfo.FileName} already exists."));
+                    continue;
+                }
+
+                var downloadStream = await _modPortalService.DownloadMod(downloadInfo.DownloadUrl!);
+                if (downloadStream == null)
+                {
+                    errors.Add(new Error(Constants.InvalidHttpResponseErrorKey, $"Failed to download {downloadInfo.FileName}"));
+                    continue;
+                }
+
+                using (downloadStream)
+                using (var writeStream = targetFileInfo.OpenWrite())
+                {
+                    await downloadStream.CopyToAsync(writeStream);
+                    await writeStream.FlushAsync();
+                }
+
+                RaiseModPackFileChanged(modPack, modPackDir, targetFileInfo);
+            }
+
+            if (errors.Count != 0)
+            {
+                return Result.Failure(errors);
+            }
+
+            return Result.OK;
+        }
+
+        private void RaiseModPackFileChanged(string modPack, DirectoryInfo modPackDirectory, FileInfo fileInfo)
+        {
+            void Raise()
+            {
+                modPackDirectory.Refresh();
+                var data = new ModPackMetaData()
+                {
+                    Name = modPack,
+                    CreatedTime = modPackDirectory.CreationTimeUtc,
+                    LastModifiedTime = modPackDirectory.LastWriteTimeUtc
+                };
+
+                fileInfo.Refresh();
+                var fileMetaData = new ModPackFileMetaData()
+                {
+                    Name = fileInfo.Name,
+                    CreatedTime = fileInfo.CreationTimeUtc,
+                    LastModifiedTime = fileInfo.LastWriteTimeUtc,
+                    Size = fileInfo.Length
+                };
+
+                var packEventArgs = CollectionChangedData.Add(new[] { data });
+                var filesChangedData = CollectionChangedData.Add(new[] { fileMetaData });
+                var filesEventArgs = new ModPackFilesChangedEventArgs(modPack, filesChangedData);
+
+                ModPackChanged?.Invoke(this, packEventArgs);
+                ModPackFilesChanged?.Invoke(this, filesEventArgs);
+            }
+
+            _ = Task.Run(Raise);
+        }
+
+        private Result<DirectoryInfo> TryGetModPackDirectoryInfo(string modPack)
+        {
+            var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
+
+            if (!dir.Exists)
+            {
+                dir.Create();
+                return Result<DirectoryInfo>.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
+            }
+
+            string safeModPackName = Path.GetFileName(modPack);
+            string modPackPath = Path.Combine(dir.FullName, safeModPackName);
+            var modPackDir = new DirectoryInfo(modPackPath);
+
+            if (!modPackDir.Exists)
+            {
+                return Result<DirectoryInfo>.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
+            }
+            if (modPackDir.Parent.FullName != dir.FullName)
+            {
+                return Result<DirectoryInfo>.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
+            }
+
+            return Result<DirectoryInfo>.OK(modPackDir);
+        }
+
+        private static Error GetDownloadUrlError(GetModDownloadResultStatus status, string fileName)
+        {
+            switch (status)
+            {
+                case GetModDownloadResultStatus.InvalidModName:
+                    return new Error(Constants.InvalidModNameKeyErrorKey, $"File Name: {fileName} is an invalid mod name.");
+                case GetModDownloadResultStatus.InvalidHttpResponse:
+                    return new Error(Constants.InvalidHttpResponseErrorKey, $"Unsuccessful http code - File Name: {fileName}");
+                case GetModDownloadResultStatus.InvalidReleaseData:
+                    return new Error(Constants.InvalidReleaseDataErrorKey, $"File Name: {fileName} returned invalid releases data.");
+                case GetModDownloadResultStatus.MissingMod:
+                    return new Error(Constants.MissingModErrorKey, $"File Name: {fileName} mod name was not found on the mod portal.");
+                case GetModDownloadResultStatus.MissingVersion:
+                    return new Error(Constants.MissingVersionErrorKey, $"File Name: {fileName} version was not found on the mod portal.");
+                default:
+                    throw new ArgumentException(nameof(status));
             }
         }
     }

@@ -1201,7 +1201,7 @@ namespace FactorioWebInterface.Services
             string safeName = SanitizeGameChat(name);
             var t1 = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has left the game**");
 
-            string topic = await serverData.LockAsync(md =>
+            string? topic = await serverData.LockAsync(md =>
             {
                 var op = md.OnlinePlayers;
                 if (op.TryGetValue(name, out int count))
@@ -1618,7 +1618,7 @@ namespace FactorioWebInterface.Services
             };
             var t2 = _discordService.SendToConnectedChannel(serverId, embed.Build());
 
-            string name = await serverData.LockAsync(mutableData =>
+            string? name = await serverData.LockAsync(mutableData =>
             {
                 if (!mutableData.ServerExtraSettings.SetDiscordChannelName)
                 {
@@ -1670,7 +1670,7 @@ namespace FactorioWebInterface.Services
         {
             string serverId = serverData.ServerId;
 
-            string name = await serverData.LockAsync(md =>
+            string? name = await serverData.LockAsync(md =>
             {
                 if (md.ServerExtraSettings.SetDiscordChannelName)
                 {

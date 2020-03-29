@@ -7,5 +7,6 @@ namespace FactorioWebInterface.Hubs
     {
         Task SendModPacks(CollectionChangedData<ModPackMetaData> data);
         Task SendModPackFiles(string modPack, CollectionChangedData<ModPackFileMetaData> data);
+        Task EndDownloadFromModPortal(Result result);
     }
 }
