@@ -81,5 +81,18 @@ namespace FactorioWebInterface.Hubs
             var result = _factorioModManager.MoveModPackFiles(sourceModPack, targetModPack, files);
             return Task.FromResult(result);
         }
+
+        public Task DownloadFromModPortal(string modPack, string[] files)
+        {
+            var client = Clients.Client(Context.ConnectionId);
+
+            _ = Task.Run(async () =>
+            {
+                var result = await _factorioModManager.DownloadFromModPortal(modPack, files);
+                _ = client.EndDownloadFromModPortal(result);
+            });
+
+            return Task.CompletedTask;
+        }
     }
 }

@@ -69,6 +69,8 @@ namespace FactorioWebInterface
         public const string DownloadHeadlessURL = @"https://factorio.com/download-headless";
         public const string DownloadHeadlessExperimentalURL = @"https://factorio.com/download-headless/experimental";
         public const string GetDownloadURL = @"https://factorio.com/get-download/";
+        public const string ModPortalApi = @"https://mods.factorio.com/api/mods";
+        public const string ModPortalUrl = @" https://mods.factorio.com";
 
         //public const string DefaultFileName = "current_map.zip";
         public const string ServerSettingsFileName = "server-settings.json";
@@ -128,5 +130,10 @@ namespace FactorioWebInterface
         public const string FailedToRemoveBanFromDatabaseErrorKey = "failedToRemoveBanFromDatabase";
         public const string FailedToAddAdminsErrorKey = "failedToAddAdminsErrorKey";
         public const string FailedToRemoveAdminErrorKey = "failedToRemoveAdminErrorKey";
+        public const string InvalidModNameKeyErrorKey = "invalidModNameKey";
+        public const string InvalidHttpResponseErrorKey = "invalidHttpResponse";
+        public const string InvalidReleaseDataErrorKey = "InvalidReleaseData";
+        public const string MissingModErrorKey = "missingMod";
+        public const string MissingVersionErrorKey = "missingVersion";
     }
 }
