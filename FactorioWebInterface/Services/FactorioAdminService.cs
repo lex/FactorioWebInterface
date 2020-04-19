@@ -125,7 +125,10 @@ namespace FactorioWebInterface.Services
         {
             using (var db = _dbContextFactory.Create<ApplicationDbContext>())
             {
-                var newAdmins = data.Split(',').Select(x => new Admin { Name = x.Trim() }).ToArray();
+                var newAdmins = data.Split(',')
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => new Admin { Name = x.Trim() })
+                    .ToArray();
                 var admins = db.Admins;
 
                 foreach (var admin in newAdmins)

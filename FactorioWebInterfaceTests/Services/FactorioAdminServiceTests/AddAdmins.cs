@@ -69,6 +69,9 @@ namespace FactorioWebInterfaceTests.Services.FactorioAdminServiceTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
+        [InlineData(",")]
+        [InlineData(" , ")]
+        [InlineData(" , , , ")]
         public async Task EmptyDataIsOK(string data)
         {
             // Act.
