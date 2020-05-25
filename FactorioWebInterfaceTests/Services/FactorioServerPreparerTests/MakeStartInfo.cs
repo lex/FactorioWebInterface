@@ -19,8 +19,10 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
         public void CorrectFileName()
         {
             // Arrange.
+            const string factorioWrapperPath = "FactorioWrapperPath";
+
             var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
-            factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns("FactorioWrapperPath");
+            factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath);
 
             var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
             factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null);
@@ -34,13 +36,13 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var startInfo = service.MakeStartInfo(data, "startTypeArguments");
 
             // Assert.
-            Assert.Equal(Constants.DotNetPath, startInfo.FileName);
+            Assert.Equal(factorioWrapperPath, startInfo.FileName);
         }
 
         [Fact]
         public void CorrectArguments()
         {
-            // Arrange.
+            // Arrange.   
             const string factorioWrapperPath = "FactorioWrapperPath";
 
             var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
@@ -55,7 +57,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var data = ServerDataHelper.MakeMutableData();
             string startTypeArguments = Constants.FactorioLoadSaveFlag + " save_name";
 
-            string expected = $"{factorioWrapperPath} {data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} ";
+            string expected = $"{data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} ";
 
             // Act.
             var startInfo = service.MakeStartInfo(data, startTypeArguments);
@@ -86,7 +88,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var data = ServerDataHelper.MakeMutableData();
             string startTypeArguments = Constants.FactorioLoadSaveFlag + " save_name";
 
-            string expected = $"{factorioWrapperPath} {data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} --mod-directory {modDirPath}";
+            string expected = $"{data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} --mod-directory {modDirPath}";
 
             // Act.
             var startInfo = service.MakeStartInfo(data, startTypeArguments);
