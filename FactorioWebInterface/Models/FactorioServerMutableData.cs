@@ -44,6 +44,7 @@ namespace FactorioWebInterface.Models
         public DateTime LastTempFilesChecked { get; set; } = default;
         public SortedList<string, int> OnlinePlayers { get; set; }
         public int OnlinePlayerCount { get; set; }
+        public DateTime StartTime { get; set; }
 
         public Func<FactorioServerMutableData, Task>? StopCallback { get; set; }
         public HashSet<string> TrackingDataSets { get; set; } = new HashSet<string>();

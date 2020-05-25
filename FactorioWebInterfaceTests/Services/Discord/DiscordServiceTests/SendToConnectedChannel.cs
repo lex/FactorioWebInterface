@@ -63,7 +63,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
             await DiscordService.Init();
 
             // Act.
-            await DiscordService.SendToConnectedChannel(serverId, message);
+            await DiscordService.SendToConnectedChannel(serverId, embed: message);
             var actualMessage = await messageSent.Task.TimeoutAfter(1000);
 
             // Assert.
@@ -123,7 +123,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
             await DiscordService.Init();
 
             // Act.
-            await DiscordService.SendToAdminChannel(message);
+            await DiscordService.SendToAdminChannel(embed: message);
             var actualMessage = await messageSent.Task.TimeoutAfter(1000);
 
             // Assert.

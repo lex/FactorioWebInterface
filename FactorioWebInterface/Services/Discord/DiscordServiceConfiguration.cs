@@ -8,6 +8,7 @@ namespace FactorioWebInterface.Services.Discord
     public interface IDiscordServiceConfiguration
     {
         HashSet<ulong> AdminRoleIds { get; }
+        ulong CrashRoleId { get; }
         ulong GuildId { get; }
     }
 
@@ -26,6 +27,7 @@ namespace FactorioWebInterface.Services.Discord
 
         public ulong GuildId { get; }
         public HashSet<ulong> AdminRoleIds { get; }
+        public ulong CrashRoleId { get; }
 
         public DiscordServiceConfiguration(IConfiguration configuration)
         {
@@ -35,6 +37,10 @@ namespace FactorioWebInterface.Services.Discord
             configuration.GetSection(Constants.AdminRolesKey).Bind(adminRoles);
 
             AdminRoleIds = adminRoles.Roles.Select(r => r.Id).ToHashSet();
+
+            var crashRole = new Role();
+            configuration.GetSection(Constants.CrashRoleKey).Bind(crashRole);
+            CrashRoleId = crashRole.Id;
         }
 
         internal DiscordServiceConfiguration(ulong guildId, HashSet<ulong> adminRoleIds)

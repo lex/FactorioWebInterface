@@ -15,15 +15,15 @@ namespace FactorioWebInterface.Services.Discord
 {
     public interface IDiscordService
     {
+        string? CrashRoleMention { get; }
+
         Task<bool> IsAdminRoleAsync(ulong userId);
         Task<bool> IsAdminRoleAsync(string userId);
         Task<Result> SetServer(string serverId, ulong channelId);
         Task<Result> SetAdminChannel(ulong channelId);
         Task<Result<string?>> UnSetServer(ulong channelId);
-        Task SendToConnectedChannel(string serverId, string text);
-        Task SendToConnectedChannel(string serverId, Embed embed);
-        Task SendToAdminChannel(string text);
-        Task SendToAdminChannel(Embed embed);
+        Task SendToConnectedChannel(string serverId, string? text = null, Embed? embed = null);
+        Task SendToAdminChannel(string? text = null, Embed? embed = null);
         Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null);
 
         Task Init();
@@ -48,6 +48,8 @@ namespace FactorioWebInterface.Services.Discord
 
         private Dictionary<ulong, IMessageQueue> MessageQueues = new Dictionary<ulong, IMessageQueue>();
 
+        public string? CrashRoleMention { get; }
+
         public event EventHandler<IDiscordService, ServerMessageEventArgs>? FactorioDiscordDataReceived;
 
         public DiscordService(IDiscordServiceConfiguration configuration,
@@ -66,6 +68,12 @@ namespace FactorioWebInterface.Services.Discord
 
             guildId = configuration.GuildId;
             validAdminRoleIds = configuration.AdminRoleIds;
+
+            ulong crashRoleId = configuration.CrashRoleId;
+            if (crashRoleId != 0)
+            {
+                CrashRoleMention = MentionUtils.MentionRole(crashRoleId);
+            }
 
             messageService.MessageReceived += MessageReceived;
         }
@@ -179,7 +187,7 @@ namespace FactorioWebInterface.Services.Discord
             }
         }
 
-        public async Task SendToConnectedChannel(string serverId, string text)
+        public async Task SendToConnectedChannel(string serverId, string? text = null, Embed? embed = null)
         {
             var messageQueue = await GetMessageQueue(serverId);
             if (messageQueue == null)
@@ -187,33 +195,17 @@ namespace FactorioWebInterface.Services.Discord
                 return;
             }
 
-            if (text.Length > Constants.discordMaxMessageLength)
+            if (text?.Length > Constants.discordMaxMessageLength)
             {
                 text = text.Substring(0, Constants.discordMaxMessageLength);
             }
 
-            messageQueue.Enqueue(text);
+            messageQueue.Enqueue(text, embed);
         }
 
-        public async Task SendToConnectedChannel(string serverId, Embed embed)
+        public Task SendToAdminChannel(string? text = null, Embed? embed = null)
         {
-            var messageQueue = await GetMessageQueue(serverId);
-            if (messageQueue == null)
-            {
-                return;
-            }
-
-            messageQueue.Enqueue(embed: embed);
-        }
-
-        public Task SendToAdminChannel(string text)
-        {
-            return SendToConnectedChannel(Constants.AdminChannelID, text);
-        }
-
-        public Task SendToAdminChannel(Embed embed)
-        {
-            return SendToConnectedChannel(Constants.AdminChannelID, embed);
+            return SendToConnectedChannel(Constants.AdminChannelID, text, embed);
         }
 
         public async Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null)

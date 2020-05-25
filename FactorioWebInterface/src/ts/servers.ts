@@ -70,6 +70,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         GameChatToDiscord: boolean;
         GameShoutToDiscord: boolean;
         DiscordToGameChat: boolean;
+        PingDiscordCrashRole: boolean;
     }
 
     type FactorioServerExtraSettingsType = keyof FactorioServerExtraSettings;
@@ -149,6 +150,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
     const configSetGameChatToDiscord = document.getElementById('configSetGameChatToDiscord') as HTMLInputElement;
     const configSetGameShoutToDiscord = document.getElementById('configSetGameShoutToDiscord') as HTMLInputElement;
     const configSetDiscordToGameChat = document.getElementById('configSetDiscordToGameChat') as HTMLInputElement;
+    const configPingDiscordCrashRole = document.getElementById('configPingDiscordCrashRole') as HTMLInputElement;
     const configExtraSaveButton = document.getElementById('configExtraSaveButton') as HTMLButtonElement;
     const undoExtraSettingsButton = document.getElementById('undoExtraSettingsButton') as HTMLButtonElement;
     const copyExtraSettingsButton = document.getElementById('copyExtraSettingsButton') as HTMLButtonElement;
@@ -1101,6 +1103,10 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         if (settings.DiscordToGameChat === undefined)
             settings.DiscordToGameChat = true;
         configSetDiscordToGameChat.checked = settings.DiscordToGameChat;
+
+        if (settings.PingDiscordCrashRole === undefined)
+            settings.PingDiscordCrashRole = true;
+        configPingDiscordCrashRole.checked = settings.PingDiscordCrashRole;
     }
 
     function buildSettings(): FactorioServerSettings {
@@ -1322,6 +1328,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
             GameChatToDiscord: configSetGameChatToDiscord.checked,
             GameShoutToDiscord: configSetGameShoutToDiscord.checked,
             DiscordToGameChat: configSetDiscordToGameChat.checked,
+            PingDiscordCrashRole: configPingDiscordCrashRole.checked
         }
 
         return settings;
@@ -1383,6 +1390,16 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         let data: KeyValueCollectionChangedData = {
             Type: CollectionChangeType.Add,
             NewItems: { DiscordToGameChat: configSetDiscordToGameChat.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
+    configPingDiscordCrashRole.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { PingDiscordCrashRole: configPingDiscordCrashRole.checked }
         };
         connection.send('UpdateServerExtraSettings', data);
     }
@@ -1758,6 +1775,12 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
                         value = true;
                     configSetDiscordToGameChat.checked = value;
                     break;
+                case "PingDiscordCrashRole":
+                    if (value === undefined)
+                        value = true;
+                    configPingDiscordCrashRole.checked = value;
+                    break;
+
                 default:
                     break;
             }
