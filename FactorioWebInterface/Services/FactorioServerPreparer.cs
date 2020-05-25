@@ -242,9 +242,9 @@ namespace FactorioWebInterface.Services
             string modDirPath = PrepareModDirectory(mutableData);
             string modDirPathArg = string.IsNullOrWhiteSpace(modDirPath) ? "" : $"--mod-directory {modDirPath}";
             // The order of these arguments matters. The wrapper expects serverId first and executablePath second.
-            string arguments = $"{_factorioServerDataService.FactorioWrapperPath} {mutableData.ServerId} {mutableData.ExecutablePath} {startTypeArguments} --server-settings {mutableData.ServerSettingsPath} --port {mutableData.Port} {modDirPathArg}";
+            string arguments = $"{mutableData.ServerId} {mutableData.ExecutablePath} {startTypeArguments} --server-settings {mutableData.ServerSettingsPath} --port {mutableData.Port} {modDirPathArg}";
 
-            return new ProcessStartInfo() { FileName = Constants.DotNetPath, Arguments = arguments };
+            return new ProcessStartInfo() { FileName = _factorioServerDataService.FactorioWrapperPath, Arguments = arguments };
         }
 
         private void ResetData(FactorioServerMutableData mutableData)

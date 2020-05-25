@@ -54,7 +54,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
                 factorioFileManager: fileManagerMock.Object,
                 factorioControlHub: factorioControlHub);
 
-            string expected = $"{factorioWrapperPath} {data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} ";
+            string expected = $"{data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} ";
 
             // Act.
             var result = await service.PrepareStartScenario(data, scenarioName);
@@ -68,7 +68,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             Assert.True(result.Success);
             var startInfo = result.Value;
-            Assert.Equal(Constants.DotNetPath, startInfo!.FileName);
+            Assert.Equal(factorioWrapperPath, startInfo!.FileName);
             Assert.Equal(expected, startInfo.Arguments);
 
             var calls = factorioControlHub.Invocations;
