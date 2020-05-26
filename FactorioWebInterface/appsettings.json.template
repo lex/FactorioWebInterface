@@ -12,6 +12,10 @@
       }
     ]
   },
+  "CrashRole": {
+    "name": "crash",
+    "id": 794588494245125044
+  },
   "ServerURL": "https://redmew.com",
   "SecurityKey": "a3555e32-454e-4496-8c83-25bc41abd507",
   "serverSettingsUsername": "username",

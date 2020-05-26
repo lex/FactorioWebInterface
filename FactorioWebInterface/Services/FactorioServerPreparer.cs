@@ -256,6 +256,7 @@ namespace FactorioWebInterface.Services
 
             mutableData.StopCallback = null;
             mutableData.LastTempFilesChecked = DateTime.UtcNow;
+            mutableData.StartTime = default;
         }
 
         private string PrepareModDirectory(FactorioServerMutableData mutableData)

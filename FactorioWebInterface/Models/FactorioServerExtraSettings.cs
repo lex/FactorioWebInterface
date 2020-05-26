@@ -9,32 +9,37 @@ namespace FactorioWebInterface.Models
         [DefaultValue(true)]
         [JsonProperty(PropertyName = "SyncBans", DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonPropertyName("SyncBans")]
-        public bool SyncBans { get; set; }
+        public bool SyncBans { get; set; } = true;
 
         [DefaultValue(true)]
         [JsonProperty(PropertyName = "BuildBansFromDatabaseOnStart", DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonPropertyName("BuildBansFromDatabaseOnStart")]
-        public bool BuildBansFromDatabaseOnStart { get; set; }
+        public bool BuildBansFromDatabaseOnStart { get; set; } = true;
 
         [DefaultValue(true)]
         [JsonProperty(PropertyName = "SetDiscordChannelName", DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonPropertyName("SetDiscordChannelName")]
-        public bool SetDiscordChannelName { get; set; }
+        public bool SetDiscordChannelName { get; set; } = true;
 
         [DefaultValue(true)]
         [JsonProperty(PropertyName = "GameChatToDiscord", DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonPropertyName("GameChatToDiscord")]
-        public bool GameChatToDiscord { get; set; }
+        public bool GameChatToDiscord { get; set; } = true;
 
         [DefaultValue(true)]
         [JsonProperty(PropertyName = "GameShoutToDiscord", DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonPropertyName("GameShoutToDiscord")]
-        public bool GameShoutToDiscord { get; set; }
+        public bool GameShoutToDiscord { get; set; } = true;
 
         [DefaultValue(true)]
         [JsonProperty(PropertyName = "DiscordToGameChat", DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonPropertyName("DiscordToGameChat")]
-        public bool DiscordToGameChat { get; set; }
+        public bool DiscordToGameChat { get; set; } = true;
+
+        [DefaultValue(true)]
+        [JsonProperty(PropertyName = "PingDiscordCrashRole", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("PingDiscordCrashRole")]
+        public bool PingDiscordCrashRole { get; set; } = true;
 
         public static FactorioServerExtraSettings MakeDefault()
         {
@@ -45,7 +50,8 @@ namespace FactorioWebInterface.Models
                 SetDiscordChannelName = true,
                 GameChatToDiscord = true,
                 GameShoutToDiscord = true,
-                DiscordToGameChat = true
+                DiscordToGameChat = true,
+                PingDiscordCrashRole = true
             };
         }
 
@@ -58,7 +64,8 @@ namespace FactorioWebInterface.Models
                 SetDiscordChannelName = SetDiscordChannelName,
                 GameChatToDiscord = GameChatToDiscord,
                 GameShoutToDiscord = GameShoutToDiscord,
-                DiscordToGameChat = DiscordToGameChat
+                DiscordToGameChat = DiscordToGameChat,
+                PingDiscordCrashRole = PingDiscordCrashRole
             };
         }
     }

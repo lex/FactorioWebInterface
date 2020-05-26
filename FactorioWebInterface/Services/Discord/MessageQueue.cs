@@ -72,15 +72,15 @@ namespace FactorioWebInterface.Services.Discord
             {
                 while (reader.TryRead(out Message message))
                 {
-                    if (message.Embed is Embed embed)
-                    {
-                        await SendBatch(embed);
-                    }
-
                     if (message.Text is string text && !batcher.TryAdd(text))
                     {
                         await SendBatch();
                         batcher.TryAdd(text);
+                    }
+
+                    if (message.Embed is Embed embed)
+                    {
+                        await SendBatch(embed);
                     }
                 }
 

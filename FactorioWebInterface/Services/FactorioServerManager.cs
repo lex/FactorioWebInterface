@@ -32,6 +32,8 @@ namespace FactorioWebInterface.Services
         // Match number and capture everything after.
         private static readonly Regex outputRegex = new Regex(@"\d+\.\d+ (.+)", RegexOptions.Compiled);
 
+        private static readonly TimeSpan crashStartTimeCooldown = TimeSpan.FromSeconds(10);
+
         private readonly IConfiguration _configuration;
         private readonly IDiscordService _discordService;
         private readonly IHubContext<FactorioProcessHub, IFactorioProcessClientMethods> _factorioProcessHub;
@@ -751,7 +753,7 @@ namespace FactorioWebInterface.Services
                             Color = DiscordColors.updateColor,
                             Timestamp = DateTimeOffset.UtcNow
                         };
-                        _ = _discordService.SendToConnectedChannel(serverId, embed.Build());
+                        _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
                         _logger.LogInformation("Updated server to version: {version}.", version);
                     }
@@ -982,7 +984,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendToConnectedChannel(serverId, embed.Build());
+                        _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
                         break;
                     }
                 case Constants.DiscordEmbedRawTag:
@@ -996,7 +998,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendToConnectedChannel(serverId, embed.Build());
+                        _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
                         break;
                     }
 
@@ -1012,7 +1014,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendToAdminChannel(embed.Build());
+                        _ = _discordService.SendToAdminChannel(embed: embed.Build());
                         break;
                     }
                 case Constants.DiscordAdminEmbedRawTag:
@@ -1026,7 +1028,7 @@ namespace FactorioWebInterface.Services
                             Timestamp = DateTimeOffset.UtcNow
                         };
 
-                        _ = _discordService.SendToAdminChannel(embed.Build());
+                        _ = _discordService.SendToAdminChannel(embed: embed.Build());
                         break;
                     }
                 case Constants.StartScenarioTag:
@@ -1616,7 +1618,7 @@ namespace FactorioWebInterface.Services
                 Color = DiscordColors.successColor,
                 Timestamp = DateTimeOffset.UtcNow
             };
-            var t2 = _discordService.SendToConnectedChannel(serverId, embed.Build());
+            var t2 = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
             string? name = await serverData.LockAsync(mutableData =>
             {
@@ -1634,6 +1636,8 @@ namespace FactorioWebInterface.Services
             var t3 = _discordService.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
 
             LogChat(serverData, "[SERVER-STARTED]", dateTime);
+
+            await serverData.LockAsync(md => md.StartTime = DateTime.UtcNow);
 
             await t1;
             await ServerConnected(serverData);
@@ -1725,7 +1729,7 @@ namespace FactorioWebInterface.Services
                     Color = DiscordColors.infoColor,
                     Timestamp = DateTimeOffset.UtcNow
                 };
-                discordTask = _discordService.SendToConnectedChannel(serverId, embed.Build());
+                discordTask = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
                 _ = MarkChannelOffline(serverData);
 
@@ -1754,7 +1758,16 @@ namespace FactorioWebInterface.Services
                     Color = DiscordColors.failureColor,
                     Timestamp = DateTimeOffset.UtcNow
                 };
-                discordTask = _discordService.SendToConnectedChannel(serverId, embed.Build());
+
+                var startTime = await serverData.LockAsync(md => md.ServerExtraSettings.PingDiscordCrashRole ? md.StartTime : default);
+
+                string? mention = null;
+                if (startTime != default && (DateTime.UtcNow - startTime) >= crashStartTimeCooldown)
+                {
+                    mention = _discordService.CrashRoleMention;
+                }
+
+                discordTask = _discordService.SendToConnectedChannel(serverId, mention, embed.Build());
                 _ = MarkChannelOffline(serverData);
 
                 LogChat(serverData, "[SERVER-CRASHED]", dateTime);
@@ -2008,25 +2021,13 @@ namespace FactorioWebInterface.Services
 
             if (!fi.Exists)
             {
-                settings = FactorioServerExtraSettings.MakeDefault();
-
                 var data = JsonConvert.SerializeObject(settings, Formatting.Indented);
                 using (var fs = fi.CreateText())
                 {
                     await fs.WriteAsync(data);
                     await fs.FlushAsync();
                 }
-            }
-            else
-            {
-                using (var s = fi.OpenText())
-                {
-                    string output = await s.ReadToEndAsync();
-                    settings = JsonConvert.DeserializeObject<FactorioServerExtraSettings>(output);
-                }
-            }
-
-            mutableData.ServerExtraWebEditableSettings = settings;
+            }                        
 
             return settings;
         }
@@ -2221,6 +2222,9 @@ namespace FactorioWebInterface.Services
                             break;
                         case nameof(FactorioServerExtraSettings.DiscordToGameChat):
                             settings.DiscordToGameChat = value;
+                            break;
+                        case nameof(FactorioServerExtraSettings.PingDiscordCrashRole):
+                            settings.PingDiscordCrashRole = value;
                             break;
                         default:
                             break;
