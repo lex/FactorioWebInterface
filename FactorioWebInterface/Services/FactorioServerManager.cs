@@ -1072,7 +1072,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private void DoCheckSave(string serverId, string data)
+        private void DoCheckNonTag(string serverId, string data)
         {
             var match = outputRegex.Match(data);
             if (!match.Success)
@@ -1081,6 +1081,12 @@ namespace FactorioWebInterface.Services
             }
 
             string line = match.Groups[1].Value;
+            DoCheckSave(serverId, line);
+            DoCheckDesync(serverId, line);
+        }
+
+        private void DoCheckSave(string serverId, string line)
+        {
             if (!line.EndsWith("Saving finished"))
             {
                 return;
@@ -1092,6 +1098,14 @@ namespace FactorioWebInterface.Services
             }
 
             _factorioFileManager.RaiseRecentTempFiles(serverData);
+        }
+
+        private void DoCheckDesync(string serverId, string line)
+        {
+            if (line.Contains("received playerDesynced peer"))
+            {
+                _discordService.SendToConnectedChannel(serverId, "**[PLAYER-DESYNCED]**");
+            }
         }
 
         public async Task FactorioDataReceived(string serverId, string data, DateTime dateTime)
@@ -1111,7 +1125,7 @@ namespace FactorioWebInterface.Services
             _ = SendToFactorioControl(serverId, messageData);
 
             var t1 = DoTags(serverId, data, dateTime);
-            DoCheckSave(serverId, data);
+            DoCheckNonTag(serverId, data);
 
             await t1;
         }
@@ -2027,7 +2041,7 @@ namespace FactorioWebInterface.Services
                     await fs.WriteAsync(data);
                     await fs.FlushAsync();
                 }
-            }                        
+            }
 
             return settings;
         }
