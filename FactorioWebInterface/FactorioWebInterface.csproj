@@ -90,6 +90,7 @@
     <None Remove="src\pages\servers\serversConsoleViewModel.ts" />
     <None Remove="src\pages\servers\serverSettingsService.ts" />
     <None Remove="src\pages\servers\serverSettingsView.ts" />
+    <None Remove="src\pages\servers\serverSettingsViewModel.spec.ts" />
     <None Remove="src\pages\servers\serverSettingsViewModel.ts" />
     <None Remove="src\pages\servers\serversHubService.ts" />
     <None Remove="src\pages\servers\serversPage.ts" />
@@ -101,6 +102,7 @@
     <None Remove="src\services\fileSelectionservice.ts" />
     <None Remove="src\services\requestVerificationService.ts" />
     <None Remove="src\services\uploadService.ts" />
+    <None Remove="src\testUtils\invokeBase.ts" />
     <None Remove="src\ts\admins.ts" />
     <None Remove="src\ts\command.ts" />
     <None Remove="src\ts\componentsOld\app.ts" />
@@ -175,6 +177,7 @@
     <None Remove="src\utils\observableObject.ts" />
     <None Remove="src\utils\observableProperty.ts" />
     <None Remove="src\utils\serviceLocator.ts" />
+    <None Remove="src\utils\types.ts" />
     <None Remove="src\utils\validator.ts" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.css" />
     <None Remove="wwwroot\lib\bootstrap\dist\css\bootstrap-theme.css.map" />
@@ -287,6 +290,7 @@
     <TypeScriptCompile Include="src\pages\servers\serversConsoleViewModel.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverSettingsService.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverSettingsView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverSettingsViewModel.spec.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverSettingsViewModel.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverFileManagementView.ts" />
     <TypeScriptCompile Include="src\pages\servers\serversPage.ts" />
@@ -299,6 +303,7 @@
     <TypeScriptCompile Include="src\services\fileSelectionService.ts" />
     <TypeScriptCompile Include="src\services\uploadService.ts" />
     <TypeScriptCompile Include="src\services\requestVerificationService.ts" />
+    <TypeScriptCompile Include="src\testUtils\invokeBase.ts" />
     <TypeScriptCompile Include="src\ts\admins.ts" />
     <TypeScriptCompile Include="src\ts\bans.ts" />
     <TypeScriptCompile Include="src\utils\bindingSource.ts" />
@@ -375,6 +380,7 @@
     <TypeScriptCompile Include="src\utils\observableObject.ts" />
     <TypeScriptCompile Include="src\utils\observableProperty.ts" />
     <TypeScriptCompile Include="src\utils\serviceLocator.ts" />
+    <TypeScriptCompile Include="src\utils\types.ts" />
     <TypeScriptCompile Include="src\utils\validator.ts" />
   </ItemGroup>
 
