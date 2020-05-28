@@ -1,10 +1,8 @@
 ﻿import * as signalR from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import { Result, CollectionChangedData, KeyValueCollectionChangedData } from "../../ts/utils";
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
-import { FactorioControlClientData, FactorioServerSettings, FactorioServerExtraSettings, MessageData, FileMetaData, ScenarioMetaData, ModPackMetaData } from "./serversTypes";
+import { FactorioControlClientData, FactorioServerSettings, FactorioServerExtraSettings, MessageData, FileMetaData, ScenarioMetaData, ModPackMetaData, FactorioServerStatus } from "./serversTypes";
 import { Observable, IObservable } from "../../utils/observable";
-import { ObservableProperty } from "../../utils/observableProperty";
 
 export interface CollectionChangedDataWithServerId<T> extends CollectionChangedData<T> {
     serverId: string;
@@ -17,7 +15,7 @@ export class ServersHubService {
 
     private _onDeflateFinished = new Observable<Result>();
     private _onMessage = new Observable<MessageData>();
-    private _onFactorioStatusChanged = new Observable<{ newStatus: string, oldStatus: string }>();
+    private _onFactorioStatusChanged = new Observable<{ newStatus: FactorioServerStatus, oldStatus: FactorioServerStatus }>();
     private _onVersion = new Observable<string>();
     private _onDownloadableVersions = new Observable<string[]>();
 
@@ -48,7 +46,7 @@ export class ServersHubService {
         return this._onMessage;
     }
 
-    get onFactorioStatusChanged(): IObservable<{ newStatus: string, oldStatus: string }> {
+    get onFactorioStatusChanged(): IObservable<{ newStatus: FactorioServerStatus, oldStatus: FactorioServerStatus }> {
         return this._onFactorioStatusChanged;
     }
 
@@ -126,7 +124,7 @@ export class ServersHubService {
             this._onMessage.raise(messageData);
         })
 
-        this._connection.on('FactorioStatusChanged', (newStatus: string, oldStatus: string) => {
+        this._connection.on('FactorioStatusChanged', (newStatus: FactorioServerStatus, oldStatus: FactorioServerStatus) => {
             this._onFactorioStatusChanged.raise({ newStatus, oldStatus });
         })
 

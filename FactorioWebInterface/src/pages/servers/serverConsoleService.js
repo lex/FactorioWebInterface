@@ -8,12 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { ObservableCircularBuffer } from "../../utils/observableCircularBuffer";
+import { FactorioServerStatus } from "./serversTypes";
 import { CircularBuffer } from "../../utils/circularBuffer";
 import { ObservableProperty } from "../../utils/observableProperty";
 export class ServerConsoleService {
     constructor(serverIdService, serverHubService) {
         this._bufferSize = 200;
-        this._status = new ObservableProperty('Unknown');
+        this._status = new ObservableProperty(FactorioServerStatus.Unknown);
         this._version = new ObservableProperty('');
         this._serverIdService = serverIdService;
         this._serverHubService = serverHubService;

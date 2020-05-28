@@ -7,7 +7,7 @@ import { ObservableObject } from "../../utils/observableObject";
 export class FileViewModel extends ObservableObject {
     private _sourceFiles: ObservableCollection<FileMetaData>;
     private _tableName: string;
-    private _count: number;
+    private _prevCount: number;
 
     private _header: string;
     private _files: CollectionView<FileMetaData>;
@@ -25,6 +25,10 @@ export class FileViewModel extends ObservableObject {
         return this._serverId;
     }
 
+    get count(): number {
+        return this._sourceFiles.count;
+    }
+
     constructor(tableName: string, files: ObservableCollection<FileMetaData>, serverId: IObservableProperty<string>) {
         super();
 
@@ -39,13 +43,13 @@ export class FileViewModel extends ObservableObject {
     }
 
     private updateHeader() {
-        let newCount = this._sourceFiles.count;
+        let newCount = this.count;
 
-        if (this._count === newCount) {
+        if (this._prevCount === newCount) {
             return;
         }
 
-        this._count = newCount;
+        this._prevCount = newCount;
 
         this._header = `${this._tableName} (${newCount})`;
         this.raise('header', this._header);

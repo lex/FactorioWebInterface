@@ -4,7 +4,7 @@ import { DelegateCommand, ICommand } from "../../utils/command";
 import { ServerConsoleService } from "./serverConsoleService";
 import { Result } from "../../ts/utils";
 import { FileViewModel } from "./fileViewModel";
-import { FileMetaData, ScenarioMetaData, MessageData } from "./serversTypes";
+import { FileMetaData, ScenarioMetaData, MessageData, FactorioServerStatus } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { ScenariosViewModel } from "./scenariosViewModel";
 import { ErrorService } from "../../services/errorService";
@@ -12,6 +12,8 @@ import { CollectionView } from "../../utils/collectionView";
 import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
 import { IObservableProperty } from "../../utils/observableProperty";
+import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
+import { Server } from "https";
 
 export class ServersConsoleViewModel extends ObservableObject {
     private _serverIdService: ServerIdService;
@@ -133,7 +135,8 @@ export class ServersConsoleViewModel extends ObservableObject {
         this._resumeCommand = new DelegateCommand(async () => {
             let result = await this._serverConsoleService.resume();
             this._errorService.reportIfError(result);
-        });
+        },
+            () => this._tempFiles.count > 0 && FactorioServerStatusUtils.isStartable(this._serverConsoleService.status.value));
 
         this._loadCommand = new DelegateCommand(async () => {
             let file = this.getSelectedSaveFile();
@@ -141,7 +144,7 @@ export class ServersConsoleViewModel extends ObservableObject {
             let result = await this._serverConsoleService.load(file.Directory, file.Name);
             this._errorService.reportIfError(result);
         },
-            () => this.getSaveFileSelectedCount() === 1);
+            () => this.getSaveFileSelectedCount() === 1 && FactorioServerStatusUtils.isStartable(this._serverConsoleService.status.value));
 
         this._startScenarioCommand = new DelegateCommand(async () => {
             let scenario = this.getSelectedScenario();
@@ -149,17 +152,19 @@ export class ServersConsoleViewModel extends ObservableObject {
             let result = await this._serverConsoleService.startScenario(scenario.Name);
             this._errorService.reportIfError(result);
         },
-            () => this.getScenarioSelectedCount() === 1);
+            () => this.getScenarioSelectedCount() === 1 && FactorioServerStatusUtils.isStartable(this._serverConsoleService.status.value));
 
         this._saveCommand = new DelegateCommand(async () => {
             let result = await this._serverConsoleService.save();
             this._errorService.reportIfError(result);
-        });
+        },
+            () => this._serverConsoleService.status.value === FactorioServerStatus.Running);
 
         this._stopCommand = new DelegateCommand(async () => {
             let result = await this._serverConsoleService.stop();
             this._errorService.reportIfError(result);
-        });
+        },
+            () => FactorioServerStatusUtils.IsStoppable(this._serverConsoleService.status.value));
 
         this._forceStopCommand = new DelegateCommand(async () => {
             let result = await this._serverConsoleService.forceStop();
@@ -186,6 +191,17 @@ export class ServersConsoleViewModel extends ObservableObject {
         globalFiles.files.selectedChanged.subscribe(selectedSaveFilesChanged);
 
         scenarios.scenarios.selectedChanged.subscribe(() => this._startScenarioCommand.raiseCanExecuteChanged());
+
+        tempFiles.files.subscribe(() => this._resumeCommand.raiseCanExecuteChanged());
+
+        serverConsoleService.status.subscribe(event => {
+            this._resumeCommand.raiseCanExecuteChanged();
+            this._loadCommand.raiseCanExecuteChanged();
+            this._startScenarioCommand.raiseCanExecuteChanged();
+            this._saveCommand.raiseCanExecuteChanged();
+            this._stopCommand.raiseCanExecuteChanged();
+            //this._forceStopCommand.raiseCanExecuteChanged();
+        });
     }
 
     sendInputKey(key: number) {
@@ -227,6 +243,6 @@ export class ServersConsoleViewModel extends ObservableObject {
     }
 
     private getSelectedScenario(): ScenarioMetaData {
-        return IterableHelper.firstOrDefault(this._scenarios.scenarios.values).value;
+        return IterableHelper.firstOrDefault(this._scenarios.scenarios.selected).value;
     }
 }

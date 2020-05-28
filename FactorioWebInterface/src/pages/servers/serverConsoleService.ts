@@ -1,7 +1,7 @@
 ﻿import { ServersHubService } from "./serversHubService";
 import { Result } from "../../ts/utils";
 import { ObservableCircularBuffer } from "../../utils/observableCircularBuffer";
-import { MessageData, FactorioControlClientData } from "./serversTypes";
+import { MessageData, FactorioControlClientData, FactorioServerStatus } from "./serversTypes";
 import { CircularBuffer } from "../../utils/circularBuffer";
 import { ObservableCollection } from "../../utils/observableCollection";
 import { ServerIdService } from "./serverIdService";
@@ -14,14 +14,14 @@ export class ServerConsoleService {
     private _serverHubService: ServersHubService;
 
     private _messages: ObservableCircularBuffer<MessageData>;
-    private _status = new ObservableProperty<string>('Unknown');
+    private _status = new ObservableProperty<FactorioServerStatus>(FactorioServerStatus.Unknown);
     private _version = new ObservableProperty<string>('');
 
     get messages(): ObservableCollection<MessageData> {
         return this._messages;
     }
 
-    get status(): IObservableProperty<string> {
+    get status(): IObservableProperty<FactorioServerStatus> {
         return this._status;
     }
 

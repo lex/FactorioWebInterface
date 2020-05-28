@@ -7,6 +7,24 @@
     Error = "Error"
 }
 
+export enum FactorioServerStatus {
+    Unknown = 'Unknown',
+    WrapperStarting = 'WrapperStarting',
+    WrapperStarted = 'WrapperStarted',
+    Starting = 'Starting',
+    Running = 'Running',
+    Stopping = 'Stopping',
+    Stopped = 'Stopped',
+    Killing = 'Killing',
+    Killed = 'Killed',
+    Crashed = 'Crashed',
+    Updating = 'Updating',
+    Updated = 'Updated',
+    Preparing = 'Preparing',
+    Prepared = 'Prepared',
+    Errored = 'Errored'
+}
+
 export interface MessageData {
     ServerId: string;
     MessageType: MessageType;
@@ -34,7 +52,7 @@ export interface ModPackMetaData {
 }
 
 export interface FactorioControlClientData {
-    Status: string;
+    Status: FactorioServerStatus;
     Messages: MessageData[];
 }
 

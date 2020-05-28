@@ -20,12 +20,15 @@ export class FileViewModel extends ObservableObject {
     get serverId() {
         return this._serverId;
     }
+    get count() {
+        return this._sourceFiles.count;
+    }
     updateHeader() {
-        let newCount = this._sourceFiles.count;
-        if (this._count === newCount) {
+        let newCount = this.count;
+        if (this._prevCount === newCount) {
             return;
         }
-        this._count = newCount;
+        this._prevCount = newCount;
         this._header = `${this._tableName} (${newCount})`;
         this.raise('header', this._header);
     }

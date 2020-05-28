@@ -1,0 +1,1 @@
+{"version":3,"file":"copyToClipboardServiceMockBase.js","sourceRoot":"","sources":["copyToClipboardServiceMockBase.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,UAAU,EAAE,MAAM,eAAe,CAAC;AAG3C,MAAM,OAAO,8BAA+B,SAAQ,UAAkC;IAClF,YAAY,SAAkB,KAAK;QAC/B,KAAK,CAAC,MAAM,CAAC,CAAC;IAClB,CAAC;IAED,IAAI,CAAC,IAAY;QACb,IAAI,CAAC,OAAO,CAAC,MAAM,EAAE,IAAI,CAAC,CAAC;IAC/B,CAAC;CACJ"}

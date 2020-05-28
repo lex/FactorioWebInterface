@@ -9,10 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ObservableKeyArray } from "../../utils/observableCollection";
 import { DelegateCommand } from "../../utils/command";
+import { FactorioServerStatus } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionView } from "../../utils/collectionView";
 import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
+import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 export class ServersConsoleViewModel extends ObservableObject {
     constructor(serverIdService, serverConsoleService, errorService, tempFiles, localFiles, globalFiles, scenarios) {
         super();
@@ -40,25 +42,25 @@ export class ServersConsoleViewModel extends ObservableObject {
         this._resumeCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let result = yield this._serverConsoleService.resume();
             this._errorService.reportIfError(result);
-        }));
+        }), () => this._tempFiles.count > 0 && FactorioServerStatusUtils.isStartable(this._serverConsoleService.status.value));
         this._loadCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let file = this.getSelectedSaveFile();
             let result = yield this._serverConsoleService.load(file.Directory, file.Name);
             this._errorService.reportIfError(result);
-        }), () => this.getSaveFileSelectedCount() === 1);
+        }), () => this.getSaveFileSelectedCount() === 1 && FactorioServerStatusUtils.isStartable(this._serverConsoleService.status.value));
         this._startScenarioCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let scenario = this.getSelectedScenario();
             let result = yield this._serverConsoleService.startScenario(scenario.Name);
             this._errorService.reportIfError(result);
-        }), () => this.getScenarioSelectedCount() === 1);
+        }), () => this.getScenarioSelectedCount() === 1 && FactorioServerStatusUtils.isStartable(this._serverConsoleService.status.value));
         this._saveCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let result = yield this._serverConsoleService.save();
             this._errorService.reportIfError(result);
-        }));
+        }), () => this._serverConsoleService.status.value === FactorioServerStatus.Running);
         this._stopCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let result = yield this._serverConsoleService.stop();
             this._errorService.reportIfError(result);
-        }));
+        }), () => FactorioServerStatusUtils.IsStoppable(this._serverConsoleService.status.value));
         this._forceStopCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let result = yield this._serverConsoleService.forceStop();
             this._errorService.reportIfError(result);
@@ -78,6 +80,15 @@ export class ServersConsoleViewModel extends ObservableObject {
         localFiles.files.selectedChanged.subscribe(selectedSaveFilesChanged);
         globalFiles.files.selectedChanged.subscribe(selectedSaveFilesChanged);
         scenarios.scenarios.selectedChanged.subscribe(() => this._startScenarioCommand.raiseCanExecuteChanged());
+        tempFiles.files.subscribe(() => this._resumeCommand.raiseCanExecuteChanged());
+        serverConsoleService.status.subscribe(event => {
+            this._resumeCommand.raiseCanExecuteChanged();
+            this._loadCommand.raiseCanExecuteChanged();
+            this._startScenarioCommand.raiseCanExecuteChanged();
+            this._saveCommand.raiseCanExecuteChanged();
+            this._stopCommand.raiseCanExecuteChanged();
+            //this._forceStopCommand.raiseCanExecuteChanged();
+        });
     }
     get serverIds() {
         return this._serverIdsCollectionView;
@@ -158,7 +169,7 @@ export class ServersConsoleViewModel extends ObservableObject {
         return this._scenarios.scenarios.selectedCount;
     }
     getSelectedScenario() {
-        return IterableHelper.firstOrDefault(this._scenarios.scenarios.values).value;
+        return IterableHelper.firstOrDefault(this._scenarios.scenarios.selected).value;
     }
 }
 //# sourceMappingURL=serversConsoleViewModel.js.map

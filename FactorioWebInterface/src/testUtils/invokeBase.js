@@ -6,14 +6,18 @@ export class MethodInvocation {
     }
 }
 export class InvokeBase {
-    constructor() {
+    constructor(strict = false) {
         this._methodCalled = new Observable();
+        this._strict = strict;
     }
     get methodCalled() {
         return this._methodCalled;
     }
     invoked(name, ...args) {
         this._methodCalled.raise(new MethodInvocation(name, args));
+        if (this._strict) {
+            throw new Error(`MEthod ${name} not implemented.`);
+        }
     }
 }
 //# sourceMappingURL=invokeBase.js.map
