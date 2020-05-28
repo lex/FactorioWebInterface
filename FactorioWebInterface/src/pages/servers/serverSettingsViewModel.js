@@ -173,9 +173,6 @@ export class ServerSettingsViewModel extends ObservableObject {
     }
     setAndDoValidation(propertyName, value) {
         if (this.setAndRaise(this._formFields, propertyName, value)) {
-            if (propertyName === 'UseDefaultAdmins') {
-                this.raise('adminsEditEnabled', this.adminsEditEnabled);
-            }
             let validationResult = this._validator.validate(propertyName);
             this.errors.setError(propertyName, validationResult);
             return true;
@@ -185,7 +182,9 @@ export class ServerSettingsViewModel extends ObservableObject {
     update(settings) {
         for (let propertyName in settings) {
             let value = ServerSettingsViewModel.convertToFormField(propertyName, settings[propertyName]);
-            this.setAndDoValidation(propertyName, value);
+            if (this.setAndDoValidation(propertyName, value) && propertyName === 'UseDefaultAdmins') {
+                this.raise('adminsEditEnabled', this.adminsEditEnabled);
+            }
         }
     }
     setField(propertyName, value, forceRaise) {

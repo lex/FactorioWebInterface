@@ -1,63 +1,54 @@
-﻿import { strict } from "assert";
+import { strict } from "assert";
 import { ServerSettingsViewModel } from "./serverSettingsViewModel";
-import { ServerSettingsService } from "./serverSettingsService";
-import { FactorioServerSettings } from "./serversTypes";
-import { IObservable, Observable } from "../../utils/observable";
-import { KeyValueCollectionChangedData, Result, CollectionChangeType } from "../../ts/utils";
-import { IObservableProperty, ObservableProperty } from "../../utils/observableProperty";
-import { PublicPart } from "../../utils/types";
+import { Observable } from "../../utils/observable";
+import { CollectionChangeType } from "../../ts/utils";
+import { ObservableProperty } from "../../utils/observableProperty";
 import { InvokeBase } from "../../testUtils/invokeBase";
-import { CopyToClipboardService } from "../../services/copyToClipboardService";
-import { ErrorService } from "../../services/errorService";
-
-class ServerSettingsServiceMock extends InvokeBase<ServerSettingsService> implements PublicPart<ServerSettingsService> {
-    static create(): ServerSettingsService {
-        return new ServerSettingsServiceMock() as any as ServerSettingsService;
+class ServerSettingsServiceMock extends InvokeBase {
+    constructor() {
+        super(...arguments);
+        this._settingsChangedObservable = new Observable();
     }
-
-    private _settingsChangedObservable = new Observable<KeyValueCollectionChangedData<any>>();
-
-    raiseSettingsChangedObservable(event: KeyValueCollectionChangedData<any>) {
+    static create() {
+        return new ServerSettingsServiceMock();
+    }
+    raiseSettingsChangedObservable(event) {
         this._settingsChangedObservable.raise(event);
     }
-
-    get settings(): FactorioServerSettings {
+    get settings() {
         this.invoked('settings');
-        return {} as FactorioServerSettings;
+        return {};
     }
-    get saved(): boolean {
+    get saved() {
         this.invoked('saved');
         return true;
     }
-    get settingsChanged(): IObservable<KeyValueCollectionChangedData<any>> {
+    get settingsChanged() {
         this.invoked('settingsChanged');
         return this._settingsChangedObservable;
     }
-    get savedChanged(): IObservableProperty<boolean> {
+    get savedChanged() {
         this.invoked('savedChanged');
         return new ObservableProperty();
     }
-    saveSettings(settings: FactorioServerSettings): Promise<Result> {
+    saveSettings(settings) {
         this.invoked('saveSettings', [settings]);
         return Promise.resolve({ Success: true });
     }
-    updateSettings(data: KeyValueCollectionChangedData<any>): void {
+    updateSettings(data) {
         this.invoked('updateSettings', data);
     }
-    undoSettings(): void {
+    undoSettings() {
         this.invoked('undoSettings');
     }
 }
-
 describe('ServerSettingsViewModel', function () {
-    function makeServerSettingsViewModel(serverSettingsService?: ServerSettingsService): ServerSettingsViewModel {
-        serverSettingsService = serverSettingsService ?? (new ServerSettingsServiceMock() as any as ServerSettingsService);
-        let copyToClipoardService = {} as CopyToClipboardService;
-        let errorService = {} as ErrorService;
-
-        return new ServerSettingsViewModel(serverSettingsService, copyToClipoardService, errorService)
+    function makeServerSettingsViewModel(serverSettingsService) {
+        serverSettingsService = serverSettingsService !== null && serverSettingsService !== void 0 ? serverSettingsService : new ServerSettingsServiceMock();
+        let copyToClipoardService = {};
+        let errorService = {};
+        return new ServerSettingsViewModel(serverSettingsService, copyToClipoardService, errorService);
     }
-
     let serverSettingsTestCases = [
         { property: 'Name', value: 'new value', settingValue: 'new value' },
         { property: 'Description', value: 'new value', settingValue: 'new value' },
@@ -73,7 +64,6 @@ describe('ServerSettingsViewModel', function () {
         { property: 'NonBlockingSaving', value: false, settingValue: false },
         { property: 'PublicVisible', value: false, settingValue: false },
     ];
-
     describe('setting form property triggers updates:', function () {
         for (let testCase of serverSettingsTestCases) {
             it(testCase.property, function () {
@@ -81,28 +71,21 @@ describe('ServerSettingsViewModel', function () {
                 let expectedSettings = {};
                 expectedSettings[testCase.property] = testCase.settingValue;
                 let expectedUpdateSettings = { Type: CollectionChangeType.Add, NewItems: expectedSettings };
-
-                let actaulUpdateSettings: any = undefined;
-
+                let actaulUpdateSettings = undefined;
                 let serverSettingsServiceMock = new ServerSettingsServiceMock();
                 serverSettingsServiceMock.methodCalled.subscribe(event => {
                     if (event.name === 'updateSettings') {
                         actaulUpdateSettings = event.args[0];
                     }
                 });
-
-                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock as any as ServerSettingsService);
-
-                let actaulPropertyValue: any = undefined;
+                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock);
+                let actaulPropertyValue = undefined;
                 serverSettingsViewModel.propertyChanged(testCase.property, event => actaulPropertyValue = event);
-
                 let saved = serverSettingsViewModel.saved;
                 strict.equal(saved, true);
                 serverSettingsViewModel.propertyChanged('saved', event => saved = event);
-
                 // Act.
                 serverSettingsViewModel[testCase.property] = testCase.value;
-
                 // Assert.            
                 strict.equal(actaulPropertyValue, testCase.value);
                 strict.deepEqual(actaulUpdateSettings, expectedUpdateSettings);
@@ -110,83 +93,66 @@ describe('ServerSettingsViewModel', function () {
             });
         }
     });
-
     describe('setting from update triggers property:', function () {
         for (let testCase of serverSettingsTestCases) {
             it(testCase.property, function () {
                 // Arrange.
                 let serverSettingsServiceMock = new ServerSettingsServiceMock();
-
                 let updateSettingsCalled = false;
                 serverSettingsServiceMock.methodCalled.subscribe(event => {
                     if (event.name === 'updateSettings') {
                         updateSettingsCalled = true;
                     }
                 });
-
-                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock as any as ServerSettingsService);
-
+                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock);
                 let actaulPropertyValue = undefined;
                 serverSettingsViewModel.propertyChanged(testCase.property, event => actaulPropertyValue = event);
-
                 let settings = {};
                 settings[testCase.property] = testCase.settingValue;
                 let settingsEvent = { Type: CollectionChangeType.Add, NewItems: settings };
-
                 // Act.
                 serverSettingsServiceMock.raiseSettingsChangedObservable(settingsEvent);
-
                 // Assert.
                 strict.equal(actaulPropertyValue, testCase.value);
                 strict.equal(updateSettingsCalled, false);
             });
         }
     });
-
     describe('setting UseDefaultAdmins updates adminsEditEnabled', function () {
         let testCases = [
             { value: false, expected: true },
             { value: true, expected: false }
         ];
-
         for (let testCase of testCases) {
             it(`from property: ${testCase.value}`, function () {
                 // Arrange.
                 let serverSettingsViewModel = makeServerSettingsViewModel();
                 serverSettingsViewModel.UseDefaultAdmins = !testCase.value;
-
                 let actaulRaised = undefined;
                 serverSettingsViewModel.propertyChanged('adminsEditEnabled', event => actaulRaised = event);
-
                 // Act.
                 serverSettingsViewModel.UseDefaultAdmins = testCase.value;
-
                 // Assert.
                 strict.equal(actaulRaised, testCase.expected);
             });
         }
-
         for (let testCase of testCases) {
             it(`from settings: ${testCase.value}`, function () {
                 // Arrange.
                 let serverSettingsServiceMock = new ServerSettingsServiceMock();
-
                 let settings = {};
                 settings['UseDefaultAdmins'] = testCase.value;
                 let settingsEvent = { Type: CollectionChangeType.Add, NewItems: settings };
-
-                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock as any as ServerSettingsService);
+                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock);
                 serverSettingsViewModel.UseDefaultAdmins = !testCase.value;
-
                 let actaulRaised = undefined;
                 serverSettingsViewModel.propertyChanged('adminsEditEnabled', event => actaulRaised = event);
-
                 // Act.
                 serverSettingsServiceMock.raiseSettingsChangedObservable(settingsEvent);
-
                 // Assert.
                 strict.equal(actaulRaised, testCase.expected);
             });
         }
     });
 });
+//# sourceMappingURL=serverSettingsViewModel.spec.js.map

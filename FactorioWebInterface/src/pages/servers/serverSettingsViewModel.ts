@@ -252,10 +252,6 @@ export class ServerSettingsViewModel extends ObservableObject implements IObserv
 
     private setAndDoValidation(propertyName: string, value: any): boolean {
         if (this.setAndRaise(this._formFields, propertyName, value)) {
-            if (propertyName === 'UseDefaultAdmins') {
-                this.raise('adminsEditEnabled', this.adminsEditEnabled);
-            }
-
             let validationResult = this._validator.validate(propertyName);
             this.errors.setError(propertyName, validationResult);
             return true;
@@ -267,7 +263,9 @@ export class ServerSettingsViewModel extends ObservableObject implements IObserv
     private update(settings: FactorioServerSettings) {
         for (let propertyName in settings) {
             let value = ServerSettingsViewModel.convertToFormField(propertyName as FactorioServerSettingsType, settings[propertyName])
-            this.setAndDoValidation(propertyName, value);
+            if (this.setAndDoValidation(propertyName, value) && propertyName === 'UseDefaultAdmins') {
+                this.raise('adminsEditEnabled', this.adminsEditEnabled);
+            }
         }
     }
 
