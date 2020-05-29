@@ -82,7 +82,7 @@ namespace FactorioWebInterface.Services.Discord
         {
             using (var context = _dbContextFactory.Create<ApplicationDbContext>())
             {
-                var servers = context.DiscordServers.ToArrayAsync();
+                var servers = context.DiscordServers.AsQueryable().ToArrayAsync();
 
                 foreach (var ds in await servers)
                 {
@@ -148,7 +148,7 @@ namespace FactorioWebInterface.Services.Discord
 
                 using (var context = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var query = await context.DiscordServers.Where(x => x.DiscordChannelId == channelId).ToArrayAsync();
+                    var query = await context.DiscordServers.AsQueryable().Where(x => x.DiscordChannelId == channelId).ToArrayAsync();
 
                     string? serverId = null;
 
@@ -254,7 +254,7 @@ namespace FactorioWebInterface.Services.Discord
 
                 using (var context = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var query = await context.DiscordServers.Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId).ToArrayAsync();
+                    var query = await context.DiscordServers.AsQueryable().Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId).ToArrayAsync();
 
                     foreach (var ds in query)
                     {
