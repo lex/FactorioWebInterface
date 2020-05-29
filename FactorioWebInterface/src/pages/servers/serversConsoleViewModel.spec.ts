@@ -22,8 +22,46 @@ const tempFile2: FileMetaData = {
     LastModifiedTime: '2020-01-01 00:00:00'
 };
 
+const localFile: FileMetaData = {
+    Name: 'local_file.zip',
+    Size: 0,
+    Directory: 'local_saves',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+}
+
+const localFile2: FileMetaData = {
+    Name: 'local_file2.zip',
+    Size: 0,
+    Directory: 'local_saves',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+}
+
+const globalFile: FileMetaData = {
+    Name: 'global_file.zip',
+    Size: 0,
+    Directory: 'global_saves',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+}
+
+const globalFile2: FileMetaData = {
+    Name: 'global_file2.zip',
+    Size: 0,
+    Directory: 'global_saves',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+}
+
 const scenario: ScenarioMetaData = {
     Name: 'scenario',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+}
+
+const scenario2: ScenarioMetaData = {
+    Name: 'scenario2',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
 }
@@ -312,6 +350,76 @@ describe('ServerConsoleViewModel', function () {
             // Assert.
             strict.equal(raised, true);
         });
+
+        let loadTestCases = [
+            {
+                name: 'temp',
+                expected: tempFile,
+                act: (vm: ServersViewModel) => {
+                    let files = vm.tempFileViewModel.files;
+                    files.setSingleSelected(files.getBoxByKey(tempFile.Name));
+                }
+            },
+            {
+                name: 'temp2',
+                expected: tempFile2,
+                act: (vm: ServersViewModel) => {
+                    let files = vm.tempFileViewModel.files;
+                    files.setSingleSelected(files.getBoxByKey(tempFile2.Name));
+                }
+            },
+            {
+                name: 'local',
+                expected: localFile,
+                act: (vm: ServersViewModel) => {
+                    let files = vm.localFileViewModel.files;
+                    files.setSingleSelected(files.getBoxByKey(localFile.Name));
+                }
+            },
+            {
+                name: 'global',
+                expected: globalFile,
+                act: (vm: ServersViewModel) => {
+                    let files = vm.globalFileViewModel.files;
+                    files.setSingleSelected(files.getBoxByKey(globalFile.Name));
+                }
+            }
+        ]
+
+        for (let testCase of loadTestCases) {
+            it(`loads the selected save: ${testCase.name}`, function () {
+                // Arrange.          
+                let services = new ServersPageTestServiceLocator();
+
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverConsoleViewModel;
+
+                let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                let actualDirectory = undefined;
+                let actualFile = undefined;
+                hubService.methodCalled.subscribe(event => {
+                    if (event.name === 'load') {
+                        actualDirectory = event.args[0];
+                        actualFile = event.args[1];
+                    }
+                });
+
+                hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+                hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile, tempFile2] });
+                hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile, localFile2] });
+                hubService._globalSaveFiles.raise({ Type: CollectionChangeType.Reset, NewItems: [globalFile, globalFile2] });
+
+                testCase.act(mainViewModel);
+
+                // Act.
+                viewModel.loadCommand.execute();
+
+                // Assert.
+                strict.equal(actualDirectory, testCase.expected.Directory);
+                strict.equal(actualFile, testCase.expected.Name);
+            });
+        }
     });
 
     describe('start scenario command', function () {
@@ -402,6 +510,35 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(viewModel.startScenarioCommand.canExecute(), false);
         });
 
+        it('can not execute when multiple scenarios selected.', function () {
+            // Arrange.          
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let actualScenario = undefined;
+            hubService.methodCalled.subscribe(event => {
+                if (event.name === 'startScenario') {
+                    actualScenario = event.args[0];
+                }
+            });
+
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario, scenario2] });
+
+            mainViewModel.scenariosViewModel.scenarios.selectAll();
+
+            // Act.
+            viewModel.startScenarioCommand.execute();
+
+            // Assert.
+            strict.equal(actualScenario, undefined);
+            strict.equal(viewModel.startScenarioCommand.canExecute(), false);
+        });
+
         it('canExecuteChanged raised: status.', function () {
             // Arrange.          
             let services = new ServersPageTestServiceLocator();
@@ -442,6 +579,48 @@ describe('ServerConsoleViewModel', function () {
             // Assert.
             strict.equal(raised, true);
         });
+
+        let scenarioTestCases = [
+            {
+                name: 'scenario',
+                scenario: scenario
+            },
+            {
+                name: 'scenario2',
+                scenario: scenario2
+            }
+        ];
+
+        for (let testCase of scenarioTestCases) {
+            it(`starts the selected scenario ${testCase.name}`, function () {
+                // Arrange.          
+                let services = new ServersPageTestServiceLocator();
+
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverConsoleViewModel;
+
+                let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                let actualScenario = undefined;
+                hubService.methodCalled.subscribe(event => {
+                    if (event.name === 'startScenario') {
+                        actualScenario = event.args[0];
+                    }
+                });
+
+                hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+                hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario, scenario2] });
+
+                let scenarios = mainViewModel.scenariosViewModel.scenarios;
+                scenarios.setSingleSelected(scenarios.getBoxByKey(testCase.scenario.Name));
+
+                // Act.
+                viewModel.startScenarioCommand.execute();
+
+                // Assert.
+                strict.equal(actualScenario, testCase.scenario.Name);
+            });
+        }
     });
 
     describe('save command', function () {
