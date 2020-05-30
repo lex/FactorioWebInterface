@@ -146,7 +146,7 @@ namespace FactorioWebInterface.Services
                 int retryCount = 10;
                 while (retryCount >= 0)
                 {
-                    var old = await db.Bans.FirstOrDefaultAsync(b => b.Username == ban.Username);
+                    var old = await db.Bans.AsQueryable().FirstOrDefaultAsync(b => b.Username == ban.Username);
 
                     try
                     {
@@ -271,7 +271,7 @@ namespace FactorioWebInterface.Services
             {
                 using (var db = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var bans = await db.Bans.Select(b => new ServerBan()
+                    var bans = await db.Bans.AsQueryable().Select(b => new ServerBan()
                     {
                         Username = b.Username,
                         Address = b.Address,
@@ -300,7 +300,7 @@ namespace FactorioWebInterface.Services
             {
                 using (var db = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var old = await db.Bans.SingleOrDefaultAsync(b => b.Username == username);
+                    var old = await db.Bans.AsQueryable().SingleOrDefaultAsync(b => b.Username == username);
                     if (old == null)
                     {
                         return true;

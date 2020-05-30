@@ -135,7 +135,7 @@ namespace FactorioWebInterface.Services
                 int retryCount = 10;
                 while (retryCount >= 0)
                 {
-                    var old = await db.ScenarioDataEntries.FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
+                    var old = await db.ScenarioDataEntries.AsQueryable().FirstOrDefaultAsync(x => x.DataSet == data.DataSet && x.Key == data.Key);
 
                     try
                     {
