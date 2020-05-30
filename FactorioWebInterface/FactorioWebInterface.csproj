@@ -187,6 +187,7 @@
     <None Remove="src\utils\observableErrors.ts" />
     <None Remove="src\utils\observableObject.ts" />
     <None Remove="src\utils\observableProperty.ts" />
+    <None Remove="src\utils\promiseHelper.ts" />
     <None Remove="src\utils\serviceLocator.ts" />
     <None Remove="src\utils\types.ts" />
     <None Remove="src\utils\validator.ts" />
@@ -401,6 +402,7 @@
     <TypeScriptCompile Include="src\utils\observableErrors.ts" />
     <TypeScriptCompile Include="src\utils\observableObject.ts" />
     <TypeScriptCompile Include="src\utils\observableProperty.ts" />
+    <TypeScriptCompile Include="src\utils\promiseHelper.ts" />
     <TypeScriptCompile Include="src\utils\serviceLocator.ts" />
     <TypeScriptCompile Include="src\utils\types.ts" />
     <TypeScriptCompile Include="src\utils\validator.ts" />

@@ -25,17 +25,22 @@ export class ServerIdService {
         this._serversHubService = serversHubService;
 
         serversHubService.onConnection.subscribe(() => {
-            this._serversHubService.setServerId(this.currentServerId);
+            this.updateServerId(this.currentServerId);
         });
     }
 
-    async setServerId(value: string): Promise<void> {
+    setServerId(value: string): Promise<void> {
         if (this.currentServerId === value) {
             return;
         }
 
-        let data = await this._serversHubService.setServerId(value);
         this._serverId.raise(value);
+
+        return this.updateServerId(value);
+    }
+
+    private async updateServerId(value: string): Promise<void> {
+        let data = await this._serversHubService.setServerId(value);
         this._clientData.raise(data);
     }
 }

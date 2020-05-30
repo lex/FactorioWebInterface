@@ -13,7 +13,6 @@ import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
-import { Server } from "https";
 
 export class ServersConsoleViewModel extends ObservableObject {
     private _serverIdService: ServerIdService;
@@ -44,7 +43,7 @@ export class ServersConsoleViewModel extends ObservableObject {
         return this._serverIdsCollectionView;
     }
 
-    get status(): IObservableProperty<string> {
+    get status(): IObservableProperty<FactorioServerStatus> {
         return this._serverConsoleService.status;
     }
 

@@ -3,8 +3,10 @@ import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocato
 import { ServersViewModel } from "./serversViewModel";
 import { ServersHubService } from "./serversHubService";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
-import { CollectionChangeType } from "../../ts/utils";
-import { FileMetaData, FactorioServerStatus, ScenarioMetaData } from "./serversTypes";
+import { CollectionChangeType, CollectionChangedData } from "../../ts/utils";
+import { FileMetaData, FactorioServerStatus, ScenarioMetaData, MessageData, MessageType, FactorioControlClientData } from "./serversTypes";
+import { MethodInvocation } from "../../testUtils/invokeBase";
+import { PromiseHelper } from "../../utils/promiseHelper";
 
 const tempFile: FileMetaData = {
     Name: 'file.zip',
@@ -62,6 +64,22 @@ const scenario: ScenarioMetaData = {
 
 const scenario2: ScenarioMetaData = {
     Name: 'scenario2',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+}
+
+const logFile: FileMetaData = {
+    Name: 'log.log',
+    Size: 0,
+    Directory: 'logs',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+}
+
+const chatLogFile: FileMetaData = {
+    Name: 'chatlog.log',
+    Size: 0,
+    Directory: 'chat_logs',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
 }
@@ -792,6 +810,327 @@ describe('ServerConsoleViewModel', function () {
             // Assert.
             strict.equal(forceStopRaised, true);
             strict.equal(viewModel.forceStopCommand.canExecute(), true);
+        });
+    });
+
+    describe('send text command', function () {
+        it('can execute', function () {
+            // Arrange.          
+            const message = 'message';
+
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let messageSent = undefined;
+            hubService.methodCalled.subscribe(event => {
+                if (event.name === 'sendToFactorio') {
+                    messageSent = event.args[0];
+                }
+            });
+
+            viewModel.sendText = message;
+
+            // Act.
+            viewModel.sendCommand.execute();
+
+            // Assert.
+            strict.equal(messageSent, message);
+            strict.equal(viewModel.sendCommand.canExecute(), true);
+        })
+
+        it('can execute enter key', function () {
+            // Arrange.          
+            const message = 'message';
+
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let messageSent = undefined;
+            hubService.methodCalled.subscribe(event => {
+                if (event.name === 'sendToFactorio') {
+                    messageSent = event.args[0];
+                }
+            });
+
+            viewModel.sendText = message;
+
+            // Act.
+            viewModel.sendInputKey(13); // enter
+
+            // Assert.
+            strict.equal(messageSent, message);
+            strict.equal(viewModel.sendCommand.canExecute(), true);
+        })
+
+        it('does not send empty string.', function () {
+            // Arrange.          
+            const message = '';
+
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let messageSent = undefined;
+            hubService.methodCalled.subscribe(event => {
+                if (event.name === 'sendToFactorio') {
+                    messageSent = event.args[0];
+                }
+            });
+
+            viewModel.sendText = message;
+
+            // Act.
+            viewModel.sendCommand.execute();
+
+            // Assert.
+            strict.equal(messageSent, undefined);
+        });
+
+        it('does write to command history.', function () {
+            // Arrange.     
+            const message1 = 'message1';
+            const message2 = 'message2';
+            const message3 = 'message3';
+
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            viewModel.sendText = message1;
+            viewModel.sendCommand.execute();
+
+            viewModel.sendText = message2;
+            viewModel.sendCommand.execute();
+
+            viewModel.sendText = message3;
+            viewModel.sendCommand.execute();
+
+            // Act + Assert prev.
+            viewModel.sendInputKey(38); // up
+            strict.equal(viewModel.sendText, message3);
+
+            viewModel.sendInputKey(38); // up
+            strict.equal(viewModel.sendText, message2);
+
+            viewModel.sendInputKey(38); // up
+            strict.equal(viewModel.sendText, message1);
+
+            // Act + Assert reset history index.
+            viewModel.sendInputKey(27) // escape
+            strict.equal(viewModel.sendText, '');
+
+            // Act + Assert next.
+            viewModel.sendInputKey(40); // down
+            strict.equal(viewModel.sendText, message1);
+
+            viewModel.sendInputKey(40); // down
+            strict.equal(viewModel.sendText, message2);
+
+            viewModel.sendInputKey(40); // down
+            strict.equal(viewModel.sendText, message3);
+        });
+
+        it('send empty string resets history index', function () {
+            // Arrange.          
+            const message1 = 'message1';
+            const message2 = 'message2';
+            const message3 = 'message3';
+
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            viewModel.sendText = message1;
+            viewModel.sendCommand.execute();
+
+            viewModel.sendText = message2;
+            viewModel.sendCommand.execute();
+
+            viewModel.sendText = message3;
+            viewModel.sendCommand.execute();
+
+            viewModel.sendInputKey(38); // up
+
+            viewModel.sendText = '';
+
+            // Act.
+            viewModel.sendCommand.execute();
+
+            // Assert.
+            viewModel.sendInputKey(38); // up
+            strict.equal(viewModel.sendText, message3);
+        });
+    });
+
+    describe('messages', function () {
+        it('raised when message is received', function () {
+            // Arrange.
+            const messageData: MessageData = { ServerId: '1', MessageType: MessageType.Control, Message: 'message' };
+
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let messages = viewModel.messages;
+            let actualEvent: CollectionChangedData<MessageData> = undefined;
+            messages.subscribe(event => actualEvent = event);
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            // Act.
+            hubService._onMessage.raise(messageData);
+
+            // Assert.
+            strict.equal(actualEvent.Type, CollectionChangeType.Add);
+            strict.equal(actualEvent.NewItems[0], messageData);
+        });
+    });
+
+    describe('Server Console data', function () {
+        class HubServiceMock extends ServersHubServiceMockBase {
+            _version: string = '0.0.0';
+            _factorioControlClientData: FactorioControlClientData = { Status: FactorioServerStatus.Unknown, Messages: [] };
+
+            getVersion(): Promise<string> {
+                super.getVersion();
+                return Promise.resolve(this._version);
+            }
+
+            setServerId(value: string): Promise<FactorioControlClientData> {
+                super.setServerId(value);
+                return Promise.resolve(this._factorioControlClientData);
+            }
+        }
+
+        it('requests when hub connection starts.', async function () {
+            // Arrange.
+            let factorioControlClientData: FactorioControlClientData = {
+                Status: FactorioServerStatus.Stopped,
+                Messages: [{ MessageType: MessageType.Control, ServerId: '1', Message: 'message' }]
+            };
+
+            let hubService = new HubServiceMock();
+            hubService._factorioControlClientData = factorioControlClientData;
+
+            let services = new ServersPageTestServiceLocator();
+            services.register(ServersHubService, () => hubService);
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let statusEvent: FactorioServerStatus = undefined;
+            viewModel.status.subscribe(event => statusEvent = event);
+
+            let versionEvent: string = undefined;
+            viewModel.version.subscribe(event => versionEvent = event);
+
+            let messageEvent: CollectionChangedData<MessageData> = undefined;
+            viewModel.messages.subscribe(event => messageEvent = event);
+
+            // Act.
+            hubService._onConnection.raise();
+            await PromiseHelper.delay(0);
+
+            // Assert.
+            strict.equal(statusEvent, factorioControlClientData.Status);
+            strict.equal(versionEvent, '0.0.0');
+            strict.equal(messageEvent.Type, CollectionChangeType.Reset);
+            strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
+        });
+
+        //it('request when first loading', async function () {
+        //    // Arrange.
+        //    let factorioControlClientData: FactorioControlClientData = {
+        //        Status: FactorioServerStatus.Stopped,
+        //        Messages: [{ MessageType: MessageType.Control, ServerId: '1', Message: 'message' }]
+        //    };
+
+        //    let hubService = new HubServiceMock();
+        //    hubService._onConnection.raise();
+
+        //    await PromiseHelper.delay(0);
+
+        //    hubService._factorioControlClientData = factorioControlClientData;
+
+        //    let services = new ServersPageTestServiceLocator();
+        //    services.register(ServersHubService, () => hubService);
+
+        //    let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+        //    let viewModel = mainViewModel.serverConsoleViewModel;
+
+        //    let statusEvent: FactorioServerStatus = undefined;
+        //    viewModel.status.subscribe(event => statusEvent = event);
+
+        //    let versionEvent: string = undefined;
+        //    viewModel.version.subscribe(event => versionEvent = event);
+
+        //    let messageEvent: CollectionChangedData<MessageData> = undefined;
+        //    viewModel.messages.subscribe(event => messageEvent = event);
+
+        //    // Act.
+
+
+
+        //    // Assert.
+        //    strict.equal(statusEvent, factorioControlClientData.Status);
+        //    strict.equal(versionEvent, '0.0.0');
+        //    strict.equal(messageEvent.Type, CollectionChangeType.Reset);
+        //    strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
+        //});
+
+        it('requests when changing server Id', async function () {
+            // Arrange.
+            let factorioControlClientData: FactorioControlClientData = {
+                Status: FactorioServerStatus.Stopped,
+                Messages: [{ MessageType: MessageType.Control, ServerId: '2', Message: 'message' }]
+            };
+
+            let version = '0.0.2';
+
+            let hubService = new HubServiceMock();
+            hubService._version = version;
+            hubService._factorioControlClientData = factorioControlClientData;
+
+            let services = new ServersPageTestServiceLocator();
+            services.register(ServersHubService, () => hubService);
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let statusEvent: FactorioServerStatus = undefined;
+            viewModel.status.subscribe(event => statusEvent = event);
+
+            let versionEvent: string = undefined;
+            viewModel.version.subscribe(event => versionEvent = event);
+
+            let messageEvent: CollectionChangedData<MessageData> = undefined;
+            viewModel.messages.subscribe(event => messageEvent = event);
+
+            let serverIds = viewModel.serverIds;
+
+            // Act.
+            serverIds.setSingleSelected(serverIds.getBoxByKey('2'));
+            await PromiseHelper.delay(0);
+
+            // Assert.
+            strict.equal(statusEvent, factorioControlClientData.Status);
+            strict.equal(versionEvent, version);
+            strict.equal(messageEvent.Type, CollectionChangeType.Reset);
+            strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
         });
     });
 });
