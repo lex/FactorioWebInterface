@@ -60,7 +60,7 @@ export class ServerConsoleService {
             this.updateVersion();
         });
 
-        serverHubService.onConnection.subscribe(() => {
+        serverHubService.whenConnection(() => {
             this.updateVersion();
         });
     }

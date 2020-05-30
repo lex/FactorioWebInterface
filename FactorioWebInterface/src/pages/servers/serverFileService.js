@@ -41,7 +41,7 @@ export class ServerFileService {
                 this._chatLogsFiles.update(event);
             }
         });
-        serversHubService.onConnection.subscribe(() => {
+        serversHubService.whenConnection(() => {
             this.updateLocalFiles();
             this.updateGlobalFiles();
         });

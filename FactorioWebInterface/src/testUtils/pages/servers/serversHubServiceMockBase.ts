@@ -29,11 +29,6 @@ export class ServersHubServiceMockBase extends InvokeBase<ServersHubService> imp
     _logFiles = new Observable<CollectionChangedDataWithServerId<FileMetaData>>();
     _chatLogsFiles = new Observable<CollectionChangedDataWithServerId<FileMetaData>>();
 
-    get onConnection(): IObservable<void> {
-        this.invoked('onConnection');
-        return this._onConnection;
-    }
-
     get onDeflateFinished(): IObservable<Result<void>> {
         this.invoked('onDeflateFinished');
         return this._onDeflateFinished;
@@ -126,6 +121,11 @@ export class ServersHubServiceMockBase extends InvokeBase<ServersHubService> imp
 
     constructor(strict: boolean = false) {
         super(strict);
+    }
+
+    whenConnection(callback: () => void): () => void {
+        this.invoked('whenConnection');
+        return this._onConnection.subscribe(callback);
     }
 
     requestTempSaveFiles(): void {

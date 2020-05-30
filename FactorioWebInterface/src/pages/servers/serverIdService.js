@@ -14,8 +14,8 @@ export class ServerIdService {
         this._serverId = new ObservableProperty('1');
         this._clientData = new Observable();
         this._serversHubService = serversHubService;
-        serversHubService.onConnection.subscribe(() => {
-            this._serversHubService.setServerId(this.currentServerId);
+        serversHubService.whenConnection(() => {
+            this.updateServerId(this.currentServerId);
         });
     }
     get serverId() {
@@ -28,12 +28,15 @@ export class ServerIdService {
         return this._clientData;
     }
     setServerId(value) {
+        if (this.currentServerId === value) {
+            return;
+        }
+        this._serverId.raise(value);
+        return this.updateServerId(value);
+    }
+    updateServerId(value) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.currentServerId === value) {
-                return;
-            }
             let data = yield this._serversHubService.setServerId(value);
-            this._serverId.raise(value);
             this._clientData.raise(data);
         });
     }

@@ -24,10 +24,6 @@ export class ServersHubServiceMockBase extends InvokeBase {
         this._logFiles = new Observable();
         this._chatLogsFiles = new Observable();
     }
-    get onConnection() {
-        this.invoked('onConnection');
-        return this._onConnection;
-    }
     get onDeflateFinished() {
         this.invoked('onDeflateFinished');
         return this._onDeflateFinished;
@@ -99,6 +95,10 @@ export class ServersHubServiceMockBase extends InvokeBase {
     get chatLogsFiles() {
         this.invoked('chatLogsFiles');
         return this._chatLogsFiles;
+    }
+    whenConnection(callback) {
+        this.invoked('whenConnection');
+        return this._onConnection.subscribe(callback);
     }
     requestTempSaveFiles() {
         this.invoked('requestTempSaveFiles');

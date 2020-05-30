@@ -1005,6 +1005,11 @@ describe('ServerConsoleViewModel', function () {
             _version: string = '0.0.0';
             _factorioControlClientData: FactorioControlClientData = { Status: FactorioServerStatus.Unknown, Messages: [] };
 
+            whenConnection(callback: () => void): () => void {
+                callback();
+                return super.whenConnection(callback);
+            }
+
             getVersion(): Promise<string> {
                 super.getVersion();
                 return Promise.resolve(this._version);
@@ -1016,7 +1021,7 @@ describe('ServerConsoleViewModel', function () {
             }
         }
 
-        it('requests when hub connection starts.', async function () {
+        it('updates when hub connection starts.', async function () {
             // Arrange.
             let factorioControlClientData: FactorioControlClientData = {
                 Status: FactorioServerStatus.Stopped,
@@ -1052,47 +1057,32 @@ describe('ServerConsoleViewModel', function () {
             strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
         });
 
-        //it('request when first loading', async function () {
-        //    // Arrange.
-        //    let factorioControlClientData: FactorioControlClientData = {
-        //        Status: FactorioServerStatus.Stopped,
-        //        Messages: [{ MessageType: MessageType.Control, ServerId: '1', Message: 'message' }]
-        //    };
+        it('updates when first loading', async function () {
+            // Arrange.
+            let factorioControlClientData: FactorioControlClientData = {
+                Status: FactorioServerStatus.Stopped,
+                Messages: [{ MessageType: MessageType.Control, ServerId: '1', Message: 'message' }]
+            };
 
-        //    let hubService = new HubServiceMock();
-        //    hubService._onConnection.raise();
+            let hubService = new HubServiceMock();
+            hubService._version = '0.0.1';
+            hubService._factorioControlClientData = factorioControlClientData;
 
-        //    await PromiseHelper.delay(0);
+            let services = new ServersPageTestServiceLocator();
+            services.register(ServersHubService, () => hubService);
 
-        //    hubService._factorioControlClientData = factorioControlClientData;
+            // Act.
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            await PromiseHelper.delay(0);
 
-        //    let services = new ServersPageTestServiceLocator();
-        //    services.register(ServersHubService, () => hubService);
+            // Assert.
+            strict.equal(viewModel.status.value, factorioControlClientData.Status);
+            strict.equal(viewModel.version.value, hubService._version);
+            strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
+        });
 
-        //    let mainViewModel: ServersViewModel = services.get(ServersViewModel);
-        //    let viewModel = mainViewModel.serverConsoleViewModel;
-
-        //    let statusEvent: FactorioServerStatus = undefined;
-        //    viewModel.status.subscribe(event => statusEvent = event);
-
-        //    let versionEvent: string = undefined;
-        //    viewModel.version.subscribe(event => versionEvent = event);
-
-        //    let messageEvent: CollectionChangedData<MessageData> = undefined;
-        //    viewModel.messages.subscribe(event => messageEvent = event);
-
-        //    // Act.
-
-
-
-        //    // Assert.
-        //    strict.equal(statusEvent, factorioControlClientData.Status);
-        //    strict.equal(versionEvent, '0.0.0');
-        //    strict.equal(messageEvent.Type, CollectionChangeType.Reset);
-        //    strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
-        //});
-
-        it('requests when changing server Id', async function () {
+        it('updates when changing server Id', async function () {
             // Arrange.
             let factorioControlClientData: FactorioControlClientData = {
                 Status: FactorioServerStatus.Stopped,

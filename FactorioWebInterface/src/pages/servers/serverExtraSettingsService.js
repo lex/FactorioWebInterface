@@ -18,7 +18,7 @@ export class ServerExtraSettingsService {
                 this._saved.raise(false);
             }
         });
-        serversHubService.onConnection.subscribe(() => {
+        serversHubService.whenConnection(() => {
             this._serversHubService.requestServerExtraSettings();
         });
         serverIdService.serverId.subscribe(() => {

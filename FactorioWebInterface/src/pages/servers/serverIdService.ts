@@ -24,7 +24,7 @@ export class ServerIdService {
     constructor(serversHubService: ServersHubService) {
         this._serversHubService = serversHubService;
 
-        serversHubService.onConnection.subscribe(() => {
+        serversHubService.whenConnection(() => {
             this.updateServerId(this.currentServerId);
         });
     }

@@ -94,7 +94,7 @@ export class ServerFileService {
             }
         });
 
-        serversHubService.onConnection.subscribe(() => {
+        serversHubService.whenConnection(() => {
             this.updateLocalFiles();
             this.updateGlobalFiles();
         })

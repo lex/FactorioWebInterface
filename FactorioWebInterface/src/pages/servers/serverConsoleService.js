@@ -38,7 +38,7 @@ export class ServerConsoleService {
         serverIdService.serverId.subscribe(event => {
             this.updateVersion();
         });
-        serverHubService.onConnection.subscribe(() => {
+        serverHubService.whenConnection(() => {
             this.updateVersion();
         });
     }

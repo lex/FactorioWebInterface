@@ -18,7 +18,7 @@ export class ServerSettingsService {
                 this._saved.raise(false);
             }
         });
-        serversHubService.onConnection.subscribe(() => {
+        serversHubService.whenConnection(() => {
             this._serversHubService.requestServerSettings();
         });
         serverIdService.serverId.subscribe(() => {

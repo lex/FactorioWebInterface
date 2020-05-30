@@ -11,7 +11,7 @@ export interface CollectionChangedDataWithServerId<T> extends CollectionChangedD
 export class ServersHubService {
     private _connection: signalR.HubConnection;
 
-    private _onConnection = new Observable<void>();
+    private _whenConnection = new Observable<void>();
 
     private _onDeflateFinished = new Observable<Result>();
     private _onMessage = new Observable<MessageData>();
@@ -33,10 +33,6 @@ export class ServersHubService {
     private _modPacks = new Observable<CollectionChangedData<ModPackMetaData>>();
     private _logFiles = new Observable<CollectionChangedDataWithServerId<FileMetaData>>();
     private _chatLogsFiles = new Observable<CollectionChangedDataWithServerId<FileMetaData>>();
-
-    get onConnection(): IObservable<void> {
-        return this._onConnection;
-    }
 
     get onDeflateFinished(): IObservable<Result> {
         return this._onDeflateFinished;
@@ -199,6 +195,14 @@ export class ServersHubService {
         this.startConnection();
     }
 
+    whenConnection(callback: () => void): () => void {
+        if (this._connection.state === signalR.HubConnectionState.Connected) {
+            callback();
+        }
+
+        return this._whenConnection.subscribe(callback);
+    }
+
     requestTempSaveFiles() {
         this._connection.send('RequestTempSaveFiles');
     }
@@ -347,7 +351,7 @@ export class ServersHubService {
         try {
             await this._connection.start();
 
-            this._onConnection.raise();
+            this._whenConnection.raise();
         } catch (ex) {
             console.log(ex.message);
             setTimeout(() => this.startConnection(), 2000);

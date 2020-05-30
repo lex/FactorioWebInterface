@@ -12,7 +12,7 @@ import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { Observable } from "../../utils/observable";
 export class ServersHubService {
     constructor() {
-        this._onConnection = new Observable();
+        this._whenConnection = new Observable();
         this._onDeflateFinished = new Observable();
         this._onMessage = new Observable();
         this._onFactorioStatusChanged = new Observable();
@@ -99,9 +99,6 @@ export class ServersHubService {
         });
         this.startConnection();
     }
-    get onConnection() {
-        return this._onConnection;
-    }
     get onDeflateFinished() {
         return this._onDeflateFinished;
     }
@@ -155,6 +152,12 @@ export class ServersHubService {
     }
     get chatLogsFiles() {
         return this._chatLogsFiles;
+    }
+    whenConnection(callback) {
+        if (this._connection.state === signalR.HubConnectionState.Connected) {
+            callback();
+        }
+        return this._whenConnection.subscribe(callback);
     }
     requestTempSaveFiles() {
         this._connection.send('RequestTempSaveFiles');
@@ -270,7 +273,7 @@ export class ServersHubService {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this._connection.start();
-                this._onConnection.raise();
+                this._whenConnection.raise();
             }
             catch (ex) {
                 console.log(ex.message);
