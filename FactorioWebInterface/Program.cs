@@ -98,66 +98,11 @@ namespace FactorioWebInterface
                 roleManager.CreateAsync(new IdentityRole(Constants.RootRole));
                 roleManager.CreateAsync(new IdentityRole(Constants.AdminRole));
 
-                _ = DefaultUserAsync(services);
+                var defaultAdminAccountOption = services.GetRequiredService<IOptions<DefaultAdminAccountOption>>();
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                
+                _ = new DefaultAdminAccount(defaultAdminAccountOption, userManager).SetupDefaultUserAsync();
             }
-        }
-
-        private static async Task DefaultUserAsync(IServiceProvider services)
-        {
-            DefaultAdminAccountOption option = services.GetRequiredService<IOptions<DefaultAdminAccountOption>>().Value;
-
-
-            String id = DefaultAdminAccountOption.DefaultAdminAccount;
-            var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            ApplicationUser userResult = await _userManager.FindByIdAsync(id);
-
-            if (userResult != null)
-            {
-                var deleteResult = await _userManager.DeleteAsync(userResult);
-                if (!deleteResult.Succeeded)
-                {
-                    var lockoutResult = await _userManager.SetLockoutEnabledAsync(userResult, true);
-                    if (lockoutResult.Succeeded)
-                    {
-                        Log.Information(DefaultAdminAccountOption.DefaultAdminAccount + " couldn't be deleted, locking out account instead");
-                    }
-                    return;
-                }
-                Log.Information(DefaultAdminAccountOption.DefaultAdminAccount + " deleted");
-            }
-
-            if (!option.Enabled)
-            {
-                return;
-            }
-
-            ApplicationUser user = new ApplicationUser()
-            {
-                Id = id,
-                UserName = option.Username
-            };
-
-            var result = await _userManager.CreateAsync(user);
-            if (!result.Succeeded)
-            {
-                Log.Error("Couldn't create " + DefaultAdminAccountOption.DefaultAdminAccount);
-                return;
-            }
-
-            result = await _userManager.AddToRoleAsync(user, Constants.AdminRole);
-            if (!result.Succeeded)
-            {
-                Log.Error("Couldn't add role to " + DefaultAdminAccountOption.DefaultAdminAccount);
-                return;
-            }
-            string unsafePassword = "administrator";
-            result = await _userManager.AddPasswordAsync(user, unsafePassword);
-            if (!result.Succeeded)
-            {
-                Log.Error("Couldn't add password to " + DefaultAdminAccountOption.DefaultAdminAccount);
-                return;
-            }
-            Log.Information(DefaultAdminAccountOption.DefaultAdminAccount + " named \'" + option.Username + "\' created with the unsafe password: " + unsafePassword);
         }
     }
 }
