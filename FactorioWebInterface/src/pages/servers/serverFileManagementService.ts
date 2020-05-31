@@ -65,10 +65,15 @@ export class ServerFileManagementService {
 
     uploadFiles(files: File[]): Promise<Result> {
         let formData = new FormData();
+
+        debugger
+
         formData.append('serverId', this._serverIdService.currentServerId);
         for (let file of files) {
             formData.append('files', file);
         }
+
+        debugger
 
         this._uploading.raise(true);
         this._uploadProgress.raise(0);
