@@ -3,6 +3,7 @@ import { RequestVerificationService } from "./requestVerificationService";
 import { FileSelectionService } from "./fileSelectionservice";
 import { UploadService } from "./uploadService";
 import { ErrorService } from "./errorService";
+import { WindowService } from "./windowService";
 export class BaseServices {
     static register(serviceLocator) {
         serviceLocator.register(CopyToClipboardService, () => new CopyToClipboardService());
@@ -10,6 +11,7 @@ export class BaseServices {
         serviceLocator.register(FileSelectionService, () => new FileSelectionService());
         serviceLocator.register(UploadService, (services) => new UploadService(services.get(RequestVerificationService)));
         serviceLocator.register(ErrorService, () => new ErrorService());
+        serviceLocator.register(WindowService, () => new WindowService());
         return serviceLocator;
     }
 }

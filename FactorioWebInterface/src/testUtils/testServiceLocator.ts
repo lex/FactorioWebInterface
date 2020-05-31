@@ -12,6 +12,8 @@ import { CopyToClipboardServiceMockBase } from "./services/copyToClipboardServic
 import { ServersHubService } from "../pages/servers/serversHubService";
 import { ServersHubServiceMockBase } from "./pages/servers/serversHubServiceMockBase";
 import { registerServices } from "../pages/servers/services";
+import { WindowService } from "../services/windowService";
+import { WindowServiceMockBase } from "./services/windowServiceMockBase";
 
 export class TestServiceLocator extends ServiceLocator {
     static registerBaseServices(serviceLocator: ServiceLocator): ServiceLocator {
@@ -20,6 +22,7 @@ export class TestServiceLocator extends ServiceLocator {
         serviceLocator.register(FileSelectionService, () => new FileSelectionServiceMockBase());
         serviceLocator.register(UploadService, (services) => new UploadServiceMockBase());
         serviceLocator.register(ErrorService, () => new ErrorServiceMockBase());
+        serviceLocator.register(WindowService, () => new WindowServiceMockBase());
 
         return serviceLocator;
     }

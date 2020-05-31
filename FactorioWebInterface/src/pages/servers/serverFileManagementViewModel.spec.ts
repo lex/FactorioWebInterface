@@ -14,6 +14,7 @@ import { UploadServiceMockBase } from "../../testUtils/services/uploadServiceMoc
 import { MethodInvocation } from "../../testUtils/invokeBase";
 import { PromiseHelper } from "../../utils/promiseHelper";
 import { ServerFileManagementService } from "./serverFileManagementService";
+import { WindowServiceMockBase } from "../../testUtils/services/windowServiceMockBase";
 
 const tempFile: FileMetaData = {
     Name: 'file.zip',
@@ -68,8 +69,7 @@ describe('ServerFileManagementViewModel', function () {
         it('can execute when not uploading', async function () {
             // Arrange.          
             let services = new ServersPageTestServiceLocator();
-            debugger
-            let formData = new FormData();
+
             let file: File = {} as File;
             let fileSelectionService: FileSelectionServiceMockBase = services.get(FileSelectionService);
             fileSelectionService._filesToReturn = [file];
@@ -77,7 +77,7 @@ describe('ServerFileManagementViewModel', function () {
             let actualUploadEvent: MethodInvocation = undefined;
             let uploadService: UploadServiceMockBase = services.get(UploadService);
             uploadService.methodCalled.subscribe(event => {
-                if (event.name === 'uploadFiles') {
+                if (event.name === 'uploadFormData') {
                     actualUploadEvent = event;
                 }
             });
@@ -89,13 +89,53 @@ describe('ServerFileManagementViewModel', function () {
 
             // Act.
             viewModel.uploadSavesCommand.execute();
-            await PromiseHelper.delay(100);
-
-            debugger
+            await PromiseHelper.delay(0);
 
             // Assert.
-            strict.equal(actualUploadEvent.args[0], ServerFileManagementService.fileUploadUrl);
-            strict.equal(actualUploadEvent.args[1][0], file);
+            let actaulUrl: string = actualUploadEvent.args[0]
+            strict.equal(actaulUrl, ServerFileManagementService.fileUploadUrl);
+
+            let actualFormData: FormData = actualUploadEvent.args[1];
+            let files = actualFormData.getAll('files') as File[];
+            strict.equal(files[0], file);
+
+            strict.equal(viewModel.isUploading.value, true);
+        });
+
+        it('can not execute when uploading', async function () {
+            // Arrange.          
+            let services = new ServersPageTestServiceLocator();
+
+            let file: File = {} as File;
+            let fileSelectionService: FileSelectionServiceMockBase = services.get(FileSelectionService);
+            fileSelectionService._filesToReturn = [file];
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverFileManagementViewModel;
+
+            strict.equal(viewModel.uploadSavesCommand.canExecute(), true);
+
+            // Execute command to start an upload.
+            viewModel.uploadSavesCommand.execute();
+            await PromiseHelper.delay(0);
+
+            strict.equal(viewModel.isUploading.value, true);
+
+            let actualUploadEvent: MethodInvocation = undefined;
+            let uploadService: UploadServiceMockBase = services.get(UploadService);
+            uploadService.methodCalled.subscribe(event => {
+                if (event.name === 'uploadFormData') {
+                    actualUploadEvent = event;
+                }
+            });
+
+            // Act.
+            viewModel.uploadSavesCommand.execute();
+            await PromiseHelper.delay(0);
+
+            // Assert.
+            strict.equal(viewModel.uploadSavesCommand.canExecute(), false);
+            strict.equal(actualUploadEvent, undefined);
         });
     });
 

@@ -11,6 +11,7 @@ import { FileSelectionService } from "../../services/fileSelectionservice";
 import { UploadService } from "../../services/uploadService";
 import { ServerFileManagementService } from "./serverFileManagementService";
 import { ErrorService } from "../../services/errorService";
+import { WindowService } from "../../services/windowService";
 
 export function registerServices(serviceLocator: ServiceLocator): ServiceLocator {
     serviceLocator.register(ServersHubService, () => new ServersHubService());
@@ -23,7 +24,8 @@ export function registerServices(serviceLocator: ServiceLocator): ServiceLocator
     serviceLocator.register(ServerFileManagementService, (services) => new ServerFileManagementService(
         services.get(ServerIdService),
         services.get(ServersHubService),
-        services.get(UploadService)));
+        services.get(UploadService),
+        services.get(WindowService)));
 
     serviceLocator.register(ServersViewModel, (services) => new ServersViewModel(
         services.get(ServerIdService),

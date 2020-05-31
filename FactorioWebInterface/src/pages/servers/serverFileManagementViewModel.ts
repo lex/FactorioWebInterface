@@ -124,14 +124,10 @@ export class ServerFileManagementViewModel extends ObservableObject {
         this._destinationsCollectionView.setSingleSelected(first);
 
         this._uploadSavesCommand = new DelegateCommand(async () => {
-            debugger
-
             let files = await fileSelectionService.getFiles('.zip');
             if (files.length === 0) {
                 return;
             }
-
-            debugger
 
             let result = await this._serverFileManagementService.uploadFiles(files);
             this._errorService.reportIfError(result);

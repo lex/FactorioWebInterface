@@ -1,8 +1,21 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import { strict } from "assert";
 import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocator";
 import { ServersViewModel } from "./serversViewModel";
 import { ServersHubService } from "./serversHubService";
 import { CollectionChangeType } from "../../ts/utils";
+import { FileSelectionService } from "../../services/fileSelectionservice";
+import { UploadService } from "../../services/uploadService";
+import { PromiseHelper } from "../../utils/promiseHelper";
+import { ServerFileManagementService } from "./serverFileManagementService";
 const tempFile = {
     Name: 'file.zip',
     Size: 0,
@@ -46,6 +59,66 @@ const globalFile2 = {
     LastModifiedTime: '2020-01-01 00:00:00'
 };
 describe('ServerFileManagementViewModel', function () {
+    describe('upload save command', function () {
+        it('can execute when not uploading', function () {
+            return __awaiter(this, void 0, void 0, function* () {
+                // Arrange.          
+                let services = new ServersPageTestServiceLocator();
+                let file = {};
+                let fileSelectionService = services.get(FileSelectionService);
+                fileSelectionService._filesToReturn = [file];
+                let actualUploadEvent = undefined;
+                let uploadService = services.get(UploadService);
+                uploadService.methodCalled.subscribe(event => {
+                    if (event.name === 'uploadFormData') {
+                        actualUploadEvent = event;
+                    }
+                });
+                let mainViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverFileManagementViewModel;
+                strict.equal(viewModel.uploadSavesCommand.canExecute(), true);
+                // Act.
+                viewModel.uploadSavesCommand.execute();
+                yield PromiseHelper.delay(0);
+                // Assert.
+                let actaulUrl = actualUploadEvent.args[0];
+                strict.equal(actaulUrl, ServerFileManagementService.fileUploadUrl);
+                let actualFormData = actualUploadEvent.args[1];
+                let files = actualFormData.getAll('files');
+                strict.equal(files[0], file);
+                strict.equal(viewModel.isUploading.value, true);
+            });
+        });
+        it('can not execute when uploading', function () {
+            return __awaiter(this, void 0, void 0, function* () {
+                // Arrange.          
+                let services = new ServersPageTestServiceLocator();
+                let file = {};
+                let fileSelectionService = services.get(FileSelectionService);
+                fileSelectionService._filesToReturn = [file];
+                let mainViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverFileManagementViewModel;
+                strict.equal(viewModel.uploadSavesCommand.canExecute(), true);
+                // Execute command to start an upload.
+                viewModel.uploadSavesCommand.execute();
+                yield PromiseHelper.delay(0);
+                strict.equal(viewModel.isUploading.value, true);
+                let actualUploadEvent = undefined;
+                let uploadService = services.get(UploadService);
+                uploadService.methodCalled.subscribe(event => {
+                    if (event.name === 'uploadFormData') {
+                        actualUploadEvent = event;
+                    }
+                });
+                // Act.
+                viewModel.uploadSavesCommand.execute();
+                yield PromiseHelper.delay(0);
+                // Assert.
+                strict.equal(viewModel.uploadSavesCommand.canExecute(), false);
+                strict.equal(actualUploadEvent, undefined);
+            });
+        });
+    });
     describe('delete saves command', function () {
         it('can execute when saves are selected.', function () {
             // Arrange.          
@@ -62,6 +135,7 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
             let tempFiles = mainViewModel.tempFileViewModel.files;
             tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            strict.equal(viewModel.deleteSavesCommand.canExecute(), true);
             // Act.
             viewModel.deleteSavesCommand.execute();
             // Assert.
@@ -171,8 +245,7 @@ describe('ServerFileManagementViewModel', function () {
                 // Act.
                 viewModel.deleteSavesCommand.execute();
                 // Assert.
-                strict.
-                    strict.deepEqual(actualFiles.sort(), testCase.expected.sort());
+                strict.deepEqual(actualFiles.sort(), testCase.expected.sort());
             });
         }
     });

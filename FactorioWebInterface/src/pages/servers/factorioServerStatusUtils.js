@@ -15,7 +15,6 @@ export class FactorioServerStatusUtils {
     }
     static IsStoppable(status) {
         switch (status) {
-            case FactorioServerStatus.Unknown:
             case FactorioServerStatus.WrapperStarted:
             case FactorioServerStatus.Starting:
             case FactorioServerStatus.Running:

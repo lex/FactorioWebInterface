@@ -10,13 +10,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { ObservableProperty } from "../../utils/observableProperty";
 import { FileUploadEventType } from "../../services/uploadService";
 export class ServerFileManagementService {
-    constructor(serverIdService, serversHubService, uploadService) {
+    constructor(serverIdService, serversHubService, uploadService, windowService) {
         this._deflating = new ObservableProperty(false);
         this._uploading = new ObservableProperty(false);
         this._uploadProgress = new ObservableProperty(0);
         this._serverIdService = serverIdService;
         this._serversHubService = serversHubService;
         this._uploadService = uploadService;
+        this._windowsService = windowService;
         serversHubService.onDeflateFinished.subscribe((event) => {
             this._deflating.raise(false);
         });
@@ -52,7 +53,7 @@ export class ServerFileManagementService {
         });
     }
     uploadFiles(files) {
-        let formData = new FormData();
+        let formData = this._windowsService.createFormData();
         formData.append('serverId', this._serverIdService.currentServerId);
         for (let file of files) {
             formData.append('files', file);

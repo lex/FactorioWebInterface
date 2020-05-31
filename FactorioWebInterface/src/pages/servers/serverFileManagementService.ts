@@ -3,6 +3,7 @@ import { Result } from "../../ts/utils";
 import { ObservableProperty, IObservableProperty } from "../../utils/observableProperty";
 import { ServerIdService } from "./serverIdService";
 import { UploadService, FileUploadEventType } from "../../services/uploadService";
+import { WindowService } from "../../services/windowService";
 
 export class ServerFileManagementService {
     static readonly fileUploadUrl = '/admin/servers?handler=fileUpload';
@@ -10,6 +11,7 @@ export class ServerFileManagementService {
     private _serverIdService: ServerIdService;
     private _serversHubService: ServersHubService;
     private _uploadService: UploadService;
+    private _windowsService: WindowService;
 
     private _deflating = new ObservableProperty<boolean>(false);
     private _uploading = new ObservableProperty<boolean>(false);
@@ -27,10 +29,11 @@ export class ServerFileManagementService {
         return this._uploadProgress;
     }
 
-    constructor(serverIdService: ServerIdService, serversHubService: ServersHubService, uploadService: UploadService) {
+    constructor(serverIdService: ServerIdService, serversHubService: ServersHubService, uploadService: UploadService, windowService: WindowService) {
         this._serverIdService = serverIdService;
         this._serversHubService = serversHubService;
         this._uploadService = uploadService;
+        this._windowsService = windowService;
 
         serversHubService.onDeflateFinished.subscribe((event: Result) => {
             this._deflating.raise(false);
@@ -64,16 +67,12 @@ export class ServerFileManagementService {
     }
 
     uploadFiles(files: File[]): Promise<Result> {
-        let formData = new FormData();
-
-        debugger
+        let formData = this._windowsService.createFormData();
 
         formData.append('serverId', this._serverIdService.currentServerId);
         for (let file of files) {
             formData.append('files', file);
         }
-
-        debugger
 
         this._uploading.raise(true);
         this._uploadProgress.raise(0);
