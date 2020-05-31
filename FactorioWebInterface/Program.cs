@@ -106,7 +106,6 @@ namespace FactorioWebInterface
         {
             DefaultAdminAccountOption option = services.GetRequiredService<IOptions<DefaultAdminAccountOption>>().Value;
 
-            Console.WriteLine(option.Enabled.ToString());
 
             String id = DefaultAdminAccountOption.DefaultAdminAccount;
             var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
