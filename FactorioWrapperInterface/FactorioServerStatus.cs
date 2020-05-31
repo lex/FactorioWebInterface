@@ -47,7 +47,6 @@
         {
             switch (status)
             {
-                case FactorioServerStatus.Unknown:
                 case FactorioServerStatus.WrapperStarted:
                 case FactorioServerStatus.Starting:
                 case FactorioServerStatus.Running:
