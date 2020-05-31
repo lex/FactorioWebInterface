@@ -1,5 +1,4 @@
-﻿using FactorioWebInterface.Models;
-using FactorioWebInterface.Services;
+﻿using FactorioWebInterface.Services;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -48,7 +47,7 @@ namespace FactorioWebInterface.Hubs
                 _factorioServerManger.FactorioDataReceived(serverId, data, dateTime);
             }
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task SendWrapperDataWithDateTime(string data, DateTime dateTime)
@@ -58,17 +57,17 @@ namespace FactorioWebInterface.Hubs
                 _factorioServerManger.FactorioWrapperDataReceived(serverId, data, dateTime);
             }
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task StatusChangedWithDateTime(FactorioServerStatus newStatus, FactorioServerStatus oldStatus, DateTime dateTime)
         {
             if (Context.TryGetData(out string? serverId) && serverId != null)
             {
-                return _factorioServerManger.StatusChanged(serverId, newStatus, oldStatus, dateTime);
+                _ = _factorioServerManger.StatusChanged(serverId, newStatus, oldStatus, dateTime);
             }
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
     }
 }

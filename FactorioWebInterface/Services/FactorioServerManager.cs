@@ -1179,7 +1179,7 @@ namespace FactorioWebInterface.Services
             }
 
             string safeName = SanitizeGameChat(name);
-            var t1 = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has joined the game**");
+            _ = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has joined the game**");
 
             string topic = await serverData.LockAsync(mutableData =>
             {
@@ -1198,8 +1198,7 @@ namespace FactorioWebInterface.Services
                 return BuildServerTopicFromOnlinePlayers(op, totalCount);
             });
 
-            await _discordService.SetChannelNameAndTopic(serverId, topic: topic);
-            await t1;
+            _ = _discordService.SetChannelNameAndTopic(serverId, topic: topic);
         }
 
         private async Task DoPlayerLeft(string serverId, string name)
@@ -1215,7 +1214,7 @@ namespace FactorioWebInterface.Services
             }
 
             string safeName = SanitizeGameChat(name);
-            var t1 = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has left the game**");
+            _ = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has left the game**");
 
             string? topic = await serverData.LockAsync(md =>
             {
@@ -1247,8 +1246,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            await _discordService.SetChannelNameAndTopic(serverId, topic: topic);
-            await t1;
+            _ = _discordService.SetChannelNameAndTopic(serverId, topic: topic);
         }
 
         private async Task DoPlayerQuery(string serverId, string content)
@@ -1290,7 +1288,7 @@ namespace FactorioWebInterface.Services
                 return BuildServerTopicFromOnlinePlayers(op, players.Length);
             });
 
-            await _discordService.SetChannelNameAndTopic(serverId, topic: topic);
+            _ = _discordService.SetChannelNameAndTopic(serverId, topic: topic);
         }
 
         private async Task DoTrackedData(string serverId, string content)
@@ -1623,7 +1621,7 @@ namespace FactorioWebInterface.Services
         {
             var serverId = serverData.ServerId;
 
-            var t1 = SendToFactorioProcess(serverId, FactorioCommandBuilder.Static.server_started);
+            var processTask = SendToFactorioProcess(serverId, FactorioCommandBuilder.Static.server_started);
 
             var embed = new EmbedBuilder()
             {
@@ -1632,7 +1630,7 @@ namespace FactorioWebInterface.Services
                 Color = DiscordColors.successColor,
                 Timestamp = DateTimeOffset.UtcNow
             };
-            var t2 = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
+            _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
             string? name = await serverData.LockAsync(mutableData =>
             {
@@ -1647,16 +1645,14 @@ namespace FactorioWebInterface.Services
                 return $"s{serverId}-{cleanServerName}-{cleanVersion}";
             });
 
-            var t3 = _discordService.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
+            _ = _discordService.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
 
             LogChat(serverData, "[SERVER-STARTED]", dateTime);
 
             await serverData.LockAsync(md => md.StartTime = DateTime.UtcNow);
 
-            await t1;
+            await processTask;
             await ServerConnected(serverData);
-            await t2;
-            await t3;
         }
 
         private async Task ServerConnected(FactorioServerData serverData)
@@ -1700,7 +1696,7 @@ namespace FactorioWebInterface.Services
                 }
             });
 
-            await _discordService.SetChannelNameAndTopic(serverId, name: name, topic: "Server offline");
+            _ = _discordService.SetChannelNameAndTopic(serverId, name: name, topic: "Server offline");
         }
 
         public async Task StatusChanged(string serverId, FactorioServerStatus newStatus, FactorioServerStatus oldStatus, DateTime dateTime)
@@ -1722,16 +1718,16 @@ namespace FactorioWebInterface.Services
                 return old;
             });
 
-            Task? discordTask = null;
+            Task? serverTask = null;
             bool checkStoppedCallback = false;
 
             if (oldStatus == FactorioServerStatus.Starting && newStatus == FactorioServerStatus.Running)
             {
-                discordTask = ServerStarted(serverData, dateTime);
+                serverTask = ServerStarted(serverData, dateTime);
             }
             else if (newStatus == FactorioServerStatus.Running && recordedOldStatus != FactorioServerStatus.Running)
             {
-                discordTask = ServerConnected(serverData);
+                serverTask = ServerConnected(serverData);
             }
             else if ((oldStatus == FactorioServerStatus.Stopping && newStatus == FactorioServerStatus.Stopped)
                 || (oldStatus == FactorioServerStatus.Killing && newStatus == FactorioServerStatus.Killed))
@@ -1743,7 +1739,7 @@ namespace FactorioWebInterface.Services
                     Color = DiscordColors.infoColor,
                     Timestamp = DateTimeOffset.UtcNow
                 };
-                discordTask = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
+                _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
                 _ = MarkChannelOffline(serverData);
 
@@ -1781,7 +1777,7 @@ namespace FactorioWebInterface.Services
                     mention = _discordService.CrashRoleMention;
                 }
 
-                discordTask = _discordService.SendToConnectedChannel(serverId, mention, embed.Build());
+                _ = _discordService.SendToConnectedChannel(serverId, mention, embed.Build());
                 _ = MarkChannelOffline(serverData);
 
                 LogChat(serverData, "[SERVER-CRASHED]", dateTime);
@@ -1814,8 +1810,8 @@ namespace FactorioWebInterface.Services
                 controlTask2 = groups.SendMessage(messageData);
             }
 
-            if (discordTask != null)
-                await discordTask;
+            if (serverTask != null)
+                await serverTask;
             if (contorlTask1 != null)
                 await contorlTask1;
             if (controlTask2 != null)
