@@ -82,7 +82,7 @@ namespace FactorioWebInterface.Data
                 return;
             }
 
-            result = await _userManager.AddToRoleAsync(user, Constants.AdminRole);
+            result = await _userManager.AddToRoleAsync(user, Constants.RootRole);
             if (!result.Succeeded)
             {
                 Log.Error("Couldn't add role to " + DefaultAdminAccountOption.DefaultAdminAccount);
