@@ -92,6 +92,7 @@ namespace FactorioWebInterface.Services
                     Log.Error("{UserId} couldn't be deleted! This may pose a security risk for your application. Will attempt to delete again at next reboot", Constants.DefaultAdminAccount);
                 }
                 Log.Information("{UserId} deleted", Constants.DefaultAdminAccount);
+                DeleteDefaultAccountFile();
             }
         }
 
@@ -155,11 +156,11 @@ namespace FactorioWebInterface.Services
 
             string warningTag = "! - Warning - !";
             var path = GetDefaultAccountFilePath();
-            RemoveDefaultAccountFile();
+            DeleteDefaultAccountFile();
             File.WriteAllText(path, $"{warningTag}\nThis account is unsecure. Please setup a personal account.\n{warningTag}\nUsername: {userName}\nPassword: {password}");
         }
 
-        private void RemoveDefaultAccountFile()
+        private void DeleteDefaultAccountFile()
         {
             var path = GetDefaultAccountFilePath();
             try
