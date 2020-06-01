@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -35,7 +36,7 @@ namespace FactorioWebInterface.Services
             {
                 case AccountsNumbers.DefaultIsOnlyRootAccount:
                 case AccountsNumbers.OnlyDefaultAccount:
-                    Log.Information(Constants.DefaultAdminAccount + " could not be created, another account already exists");
+                    Log.Information("{UserId} could not be created, another account already exists", Constants.DefaultAdminAccount);
                     return;
                 case AccountsNumbers.MultipleAccounts:
                     await ValidateOrClearDefaultUserAsync(id, true);
@@ -79,7 +80,7 @@ namespace FactorioWebInterface.Services
             ApplicationUser userResult = await _userManager.FindByIdAsync(id);
             if (await ValidateDefaultUserAsync(userResult) && !force)
             {
-                Log.Information("Valid " + Constants.DefaultAdminAccount + " already exists");
+                Log.Information("Valid {UserId} already exists", Constants.DefaultAdminAccount);
                 return;
             }
 
@@ -88,9 +89,9 @@ namespace FactorioWebInterface.Services
                 var deleteResult = await _userManager.DeleteAsync(userResult);
                 if (!deleteResult.Succeeded)
                 {
-                    Log.Error(Constants.DefaultAdminAccount + " couldn't be deleted! This may pose a security risk for your application. Will attempt to delete again at next reboot");
+                    Log.Error("{UserId} couldn't be deleted! This may pose a security risk for your application. Will attempt to delete again at next reboot", Constants.DefaultAdminAccount);
                 }
-                Log.Information(Constants.DefaultAdminAccount + " deleted");
+                Log.Information("{UserId} deleted", Constants.DefaultAdminAccount);
             }
         }
 
@@ -125,21 +126,21 @@ namespace FactorioWebInterface.Services
             var result = await _userManager.CreateAsync(user);
             if (!result.Succeeded)
             {
-                Log.Error("Couldn't create " + Constants.DefaultAdminAccount);
+                Log.Error("Couldn't create {UserId}", Constants.DefaultAdminAccount);
                 return;
             }
 
             result = await _userManager.AddToRoleAsync(user, Constants.RootRole);
             if (!result.Succeeded)
             {
-                Log.Error("Couldn't add role to " + Constants.DefaultAdminAccount);
+                Log.Error("Couldn't add role to {UserId}", Constants.DefaultAdminAccount);
                 return;
             }
 
             result = await _userManager.AddToRoleAsync(user, Constants.AdminRole);
             if (!result.Succeeded)
             {
-                Log.Error("Couldn't add role to " + Constants.DefaultAdminAccount);
+                Log.Error("Couldn't add role to {UserId}", Constants.DefaultAdminAccount);
                 return;
             }
 
@@ -147,10 +148,35 @@ namespace FactorioWebInterface.Services
             result = await _userManager.AddPasswordAsync(user, password);
             if (!result.Succeeded)
             {
-                Log.Error("Couldn't add password to " + Constants.DefaultAdminAccount);
+                Log.Error("Couldn't add password to {UserId} ", Constants.DefaultAdminAccount);
                 return;
             }
-            Log.Warning(Constants.DefaultAdminAccount + " named \'" + userName + "\' created with the password: " + password + "\nThis action potential exposes your interface, creating a new account and restarting this web interface will disable the default admin account");
+            Log.Warning("{UserId} created. This action potential exposes your interface, creating a new account and restarting this web interface will disable the default admin account", Constants.DefaultAdminAccount);
+
+            string warningTag = "! - Warning - !";
+            var path = GetDefaultAccountFilePath();
+            RemoveDefaultAccountFile();
+            File.WriteAllText(path, $"{warningTag}\nThis account is unsecure. Please setup a personal account.\n{warningTag}\nUsername: {userName}\nPassword: {password}");
+        }
+
+        private void RemoveDefaultAccountFile()
+        {
+            var path = GetDefaultAccountFilePath();
+            try
+            {
+                File.Delete(path);
+            } catch {
+                Log.Information("Couldn't delete DefaultAccount file");
+                return;
+            }
+            Log.Information("DefaultAccount file deleted");
+        }
+
+        private string GetDefaultAccountFilePath()
+        {
+            string path = AppDomain.CurrentDomain.BaseDirectory!;
+            path = Path.Combine(path, "logs/DefaultUser.txt");
+            return path;
         }
     }
 }
