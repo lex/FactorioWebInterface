@@ -97,9 +97,7 @@ namespace FactorioWebInterface
                 roleManager.CreateAsync(new IdentityRole(Constants.RootRole));
                 roleManager.CreateAsync(new IdentityRole(Constants.AdminRole));
 
-                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-                
-                _ = new DefaultAdminAccount(userManager).SetupDefaultUserAsync();
+                _ = services.GetService<DefaultAdminAccountService>().SetupDefaultUserAsync();
             }
         }
     }

@@ -1,17 +1,18 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FactorioWebInterface.Data;
+using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FactorioWebInterface.Data
+namespace FactorioWebInterface.Services
 {
-    public class DefaultAdminAccount
+    public class DefaultAdminAccountService
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly string _userName = "Admin";
+        private readonly string userName = "Admin";
 
-        public DefaultAdminAccount(UserManager<ApplicationUser> userManager)
+        public DefaultAdminAccountService(UserManager<ApplicationUser> userManager)
         {
             _userManager = userManager;
         }
@@ -60,11 +61,11 @@ namespace FactorioWebInterface.Data
 
             var users = _userManager.Users;
             int userCount = users.Count();
-            if (userCount == 1 && await ValidateDefaultUserAsync(users.First())) 
+            if (userCount == 1 && await ValidateDefaultUserAsync(users.First()))
             {
                 return AccountsNumbers.OnlyDefaultAccount;
             }
-            
+
             if (userCount > 0 && rootCount > 0)
             {
                 return AccountsNumbers.MultipleAccounts;
@@ -81,7 +82,7 @@ namespace FactorioWebInterface.Data
                 Log.Information("Valid " + Constants.DefaultAdminAccount + " already exists");
                 return;
             }
-            
+
             if (userResult != null)
             {
                 var deleteResult = await _userManager.DeleteAsync(userResult);
@@ -95,7 +96,7 @@ namespace FactorioWebInterface.Data
 
         private async Task<bool> ValidateDefaultUserAsync(ApplicationUser user)
         {
-            if (user == null || user.UserName != _userName)
+            if (user == null || user.UserName != userName)
             {
                 return false;
             }
@@ -118,7 +119,7 @@ namespace FactorioWebInterface.Data
             ApplicationUser user = new ApplicationUser()
             {
                 Id = id,
-                UserName = _userName
+                UserName = userName
             };
 
             var result = await _userManager.CreateAsync(user);
@@ -141,7 +142,7 @@ namespace FactorioWebInterface.Data
                 Log.Error("Couldn't add password to " + Constants.DefaultAdminAccount);
                 return;
             }
-            Log.Warning(Constants.DefaultAdminAccount + " named \'" + _userName + "\' created with the password: " + password + "\nThis action potential exposes your interface, creating a new account and restarting this web interface will disable the default admin account");
+            Log.Warning(Constants.DefaultAdminAccount + " named \'" + userName + "\' created with the password: " + password + "\nThis action potential exposes your interface, creating a new account and restarting this web interface will disable the default admin account");
         }
     }
 }

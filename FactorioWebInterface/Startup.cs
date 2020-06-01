@@ -114,6 +114,7 @@ namespace FactorioWebInterface
             services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();
             services.AddSingleton<FactorioAdminServiceEventHandlerService, FactorioAdminServiceEventHandlerService>();
             services.AddSingleton<IFactorioModPortalService, FactorioModPortalService>();
+            services.AddScoped<DefaultAdminAccountService, DefaultAdminAccountService>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
 
