@@ -1,6 +1,4 @@
-﻿using FactorioWebInterface.Options;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System;
 using System.Linq;
@@ -10,61 +8,97 @@ namespace FactorioWebInterface.Data
 {
     public class DefaultAdminAccount
     {
-        private readonly DefaultAdminAccountOption _accountOption;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly string _userName = "Admin";
 
-        public DefaultAdminAccount(IOptions<DefaultAdminAccountOption> accountOption, UserManager<ApplicationUser> userManager)
+        public DefaultAdminAccount(UserManager<ApplicationUser> userManager)
         {
-            _accountOption = accountOption.Value;
             _userManager = userManager;
+        }
+
+        private enum AccountsNumbers
+        {
+            NoAccounts,
+            OnlyDefaultAccount,
+            MultipleAccounts
         }
 
         public async Task SetupDefaultUserAsync()
         {
-            string id = DefaultAdminAccountOption.DefaultAdminAccount;
+            string id = Constants.DefaultAdminAccount;
 
             await ClearDefaultUserAsync(id);
 
-            if (!OnlyAccount())
+            switch (await OnlyAccount())
             {
-                Log.Information(DefaultAdminAccountOption.DefaultAdminAccount + " was not created, another account already exists");
-            }
-
-            if (!_accountOption.Enabled)
-            {
-                return;
+                case AccountsNumbers.OnlyDefaultAccount:
+                    Log.Information(Constants.DefaultAdminAccount + " could not be created, another account already exists");
+                    return;
+                case AccountsNumbers.MultipleAccounts:
+                    await ClearDefaultUserAsync(id, true);
+                    return;
+                case AccountsNumbers.NoAccounts:
+                    break;
             }
 
             await CreateDefaultUserAsync(id);
         }
 
-        private bool OnlyAccount()
+        private async Task<AccountsNumbers> OnlyAccount()
         {
-            int users = _userManager.Users.Count();
-            if (users > 0)
+            var users = _userManager.Users;
+            int userCount = users.Count();
+            if (userCount == 1 && await ValidateDefaultUserAsync(users.First())) 
             {
-                return false;
+                return AccountsNumbers.OnlyDefaultAccount;
             }
-            return true;
+            
+            if (userCount > 0)
+            {
+                return AccountsNumbers.MultipleAccounts;
+            }
+
+            return AccountsNumbers.NoAccounts;
         }
 
-        private async Task ClearDefaultUserAsync(string id)
+        private async Task ClearDefaultUserAsync(string id, bool force = false)
         {
             ApplicationUser userResult = await _userManager.FindByIdAsync(id);
+            if (await ValidateDefaultUserAsync(userResult) && !force)
+            {
+                Log.Information(Constants.DefaultAdminAccount);
+                return;
+            }
+            
             if (userResult != null)
             {
                 var deleteResult = await _userManager.DeleteAsync(userResult);
                 if (!deleteResult.Succeeded)
                 {
-                    var lockoutResult = await _userManager.SetLockoutEnabledAsync(userResult, true);
-                    if (lockoutResult.Succeeded)
-                    {
-                        Log.Information(DefaultAdminAccountOption.DefaultAdminAccount + " couldn't be deleted, locking out account instead");
-                    }
-                    return;
+                    Log.Error(Constants.DefaultAdminAccount + " couldn't be deleted! This may pose a security risk for your application. Will attempt to delete again at next reboot");
                 }
-                Log.Information(DefaultAdminAccountOption.DefaultAdminAccount + " deleted");
+                Log.Information(Constants.DefaultAdminAccount + " deleted");
             }
+        }
+
+        private async Task<bool> ValidateDefaultUserAsync(ApplicationUser user)
+        {
+            if (user == null || user.UserName != _userName)
+            {
+                return false;
+            }
+
+            if (!await _userManager.HasPasswordAsync(user))
+            {
+                return false;
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, Constants.RootRole))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private async Task CreateDefaultUserAsync(string id)
@@ -72,30 +106,30 @@ namespace FactorioWebInterface.Data
             ApplicationUser user = new ApplicationUser()
             {
                 Id = id,
-                UserName = _accountOption.Username
+                UserName = _userName
             };
 
             var result = await _userManager.CreateAsync(user);
             if (!result.Succeeded)
             {
-                Log.Error("Couldn't create " + DefaultAdminAccountOption.DefaultAdminAccount);
+                Log.Error("Couldn't create " + Constants.DefaultAdminAccount);
                 return;
             }
 
             result = await _userManager.AddToRoleAsync(user, Constants.RootRole);
             if (!result.Succeeded)
             {
-                Log.Error("Couldn't add role to " + DefaultAdminAccountOption.DefaultAdminAccount);
+                Log.Error("Couldn't add role to " + Constants.DefaultAdminAccount);
                 return;
             }
             string password = Guid.NewGuid().ToString();
             result = await _userManager.AddPasswordAsync(user, password);
             if (!result.Succeeded)
             {
-                Log.Error("Couldn't add password to " + DefaultAdminAccountOption.DefaultAdminAccount);
+                Log.Error("Couldn't add password to " + Constants.DefaultAdminAccount);
                 return;
             }
-            Log.Warning(DefaultAdminAccountOption.DefaultAdminAccount + " named \'" + _accountOption.Username + "\' created with the password: " + password + "\nThis action potential exposes your interface, creating a new account and restarting this web interface will disable the default admin account");
+            Log.Warning(Constants.DefaultAdminAccount + " named \'" + _userName + "\' created with the password: " + password + "\nThis action potential exposes your interface, creating a new account and restarting this web interface will disable the default admin account");
         }
     }
 }

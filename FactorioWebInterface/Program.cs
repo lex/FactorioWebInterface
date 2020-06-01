@@ -1,5 +1,4 @@
 ﻿using FactorioWebInterface.Data;
-using FactorioWebInterface.Options;
 using FactorioWebInterface.Services;
 using FactorioWebInterface.Services.Discord;
 using Microsoft.AspNetCore.Hosting;
@@ -98,10 +97,9 @@ namespace FactorioWebInterface
                 roleManager.CreateAsync(new IdentityRole(Constants.RootRole));
                 roleManager.CreateAsync(new IdentityRole(Constants.AdminRole));
 
-                var defaultAdminAccountOption = services.GetRequiredService<IOptions<DefaultAdminAccountOption>>();
                 var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
                 
-                _ = new DefaultAdminAccount(defaultAdminAccountOption, userManager).SetupDefaultUserAsync();
+                _ = new DefaultAdminAccount(userManager).SetupDefaultUserAsync();
             }
         }
     }
