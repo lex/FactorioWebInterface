@@ -62,7 +62,7 @@ namespace FactorioWebInterface.Pages.Admin
                 return false;
             }
 
-            if (!await _userManager.IsInRoleAsync(user, Constants.AdminRole) && !await _userManager.IsInRoleAsync(user, Constants.RootRole))
+            if (!await _userManager.IsInRoleAsync(user, Constants.AdminRole))
             {
                 ModelState.AddModelError(string.Empty, "The account does not have the Admin role.");
                 return false;

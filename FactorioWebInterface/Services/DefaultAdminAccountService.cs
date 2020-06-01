@@ -135,6 +135,14 @@ namespace FactorioWebInterface.Services
                 Log.Error("Couldn't add role to " + Constants.DefaultAdminAccount);
                 return;
             }
+
+            result = await _userManager.AddToRoleAsync(user, Constants.AdminRole);
+            if (!result.Succeeded)
+            {
+                Log.Error("Couldn't add role to " + Constants.DefaultAdminAccount);
+                return;
+            }
+
             string password = Guid.NewGuid().ToString();
             result = await _userManager.AddPasswordAsync(user, password);
             if (!result.Succeeded)
