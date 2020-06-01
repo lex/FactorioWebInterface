@@ -140,7 +140,7 @@ namespace FactorioWebInterface.Services
         {
             var result = new List<string>();
 
-            var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient();
             var download = await client.GetAsync(Constants.DownloadHeadlessExperimentalURL);
 
             if (!download.IsSuccessStatusCode)
@@ -188,7 +188,7 @@ namespace FactorioWebInterface.Services
                     }
                 }
 
-                var client = _httpClientFactory.CreateClient();
+                using var client = _httpClientFactory.CreateClient();
                 string url = $"https://factorio.com/get-download/{version}/headless/linux64";
                 var download = await client.GetAsync(url);
                 if (!download.IsSuccessStatusCode)

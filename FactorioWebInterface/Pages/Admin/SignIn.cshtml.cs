@@ -82,7 +82,7 @@ namespace FactorioWebInterface.Pages.Admin
 
             await _signInManager.SignOutAsync();
 
-            var client = _clientFactory.CreateClient();
+            using var client = _clientFactory.CreateClient();
             string clientID = _configuration[Constants.ClientIDKey];
             string clientSecret = _configuration[Constants.ClientSecretKey];
 
