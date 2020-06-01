@@ -29,7 +29,7 @@ namespace FactorioWebInterface.Services
         {
             string id = Constants.DefaultAdminAccount;
 
-            await ClearDefaultUserAsync(id);
+            await ValidateOrClearDefaultUserAsync(id);
 
             switch (await OnlyAccount())
             {
@@ -38,7 +38,7 @@ namespace FactorioWebInterface.Services
                     Log.Information(Constants.DefaultAdminAccount + " could not be created, another account already exists");
                     return;
                 case AccountsNumbers.MultipleAccounts:
-                    await ClearDefaultUserAsync(id, true);
+                    await ValidateOrClearDefaultUserAsync(id, true);
                     return;
                 case AccountsNumbers.NoAccounts:
                     break;
@@ -47,7 +47,7 @@ namespace FactorioWebInterface.Services
             await CreateDefaultUserAsync(id);
         }
 
-        //Todo: Perform count directly on database
+        //Suggestion: Perform count directly on database (Eg. using LINQ or SQL)
         private async Task<AccountsNumbers> OnlyAccount()
         {
 
@@ -74,7 +74,7 @@ namespace FactorioWebInterface.Services
             return AccountsNumbers.NoAccounts;
         }
 
-        private async Task ClearDefaultUserAsync(string id, bool force = false)
+        private async Task ValidateOrClearDefaultUserAsync(string id, bool force = false)
         {
             ApplicationUser userResult = await _userManager.FindByIdAsync(id);
             if (await ValidateDefaultUserAsync(userResult) && !force)
