@@ -78,7 +78,7 @@ namespace FactorioWebInterface.Data
             ApplicationUser userResult = await _userManager.FindByIdAsync(id);
             if (await ValidateDefaultUserAsync(userResult) && !force)
             {
-                Log.Information(Constants.DefaultAdminAccount);
+                Log.Information("Valid " + Constants.DefaultAdminAccount + " already exists");
                 return;
             }
             
