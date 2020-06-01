@@ -20,6 +20,7 @@ namespace FactorioWebInterface.Data
         {
             NoAccounts,
             OnlyDefaultAccount,
+            DefaultIsOnlyRootAccount,
             MultipleAccounts
         }
 
@@ -31,6 +32,7 @@ namespace FactorioWebInterface.Data
 
             switch (await OnlyAccount())
             {
+                case AccountsNumbers.DefaultIsOnlyRootAccount:
                 case AccountsNumbers.OnlyDefaultAccount:
                     Log.Information(Constants.DefaultAdminAccount + " could not be created, another account already exists");
                     return;
@@ -44,8 +46,18 @@ namespace FactorioWebInterface.Data
             await CreateDefaultUserAsync(id);
         }
 
+        //Todo: Perform count directly on database
         private async Task<AccountsNumbers> OnlyAccount()
         {
+
+            var rootUsers = await _userManager.GetUsersInRoleAsync(Constants.RootRole);
+            int rootCount = rootUsers.Count();
+
+            if (rootCount == 1 && await ValidateDefaultUserAsync(rootUsers.First()))
+            {
+                return AccountsNumbers.DefaultIsOnlyRootAccount;
+            }
+
             var users = _userManager.Users;
             int userCount = users.Count();
             if (userCount == 1 && await ValidateDefaultUserAsync(users.First())) 
@@ -53,7 +65,7 @@ namespace FactorioWebInterface.Data
                 return AccountsNumbers.OnlyDefaultAccount;
             }
             
-            if (userCount > 0)
+            if (userCount > 0 && rootCount > 0)
             {
                 return AccountsNumbers.MultipleAccounts;
             }
