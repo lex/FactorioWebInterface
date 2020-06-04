@@ -27,10 +27,10 @@ namespace FactorioWebInterface.Services
             _fileSystem = fileSystem;
         }
 
-        private enum AccountsNumbers
+        public enum AccountsNumbers
         {
             NoAccounts,
-            OnlyDefaultAccount,
+            NoRootAccount,
             DefaultIsOnlyRootAccount,
             MultipleAccounts
         }
@@ -44,7 +44,6 @@ namespace FactorioWebInterface.Services
             switch (await OnlyAccount())
             {
                 case AccountsNumbers.DefaultIsOnlyRootAccount:
-                case AccountsNumbers.OnlyDefaultAccount:
                     _logger.LogInformation("{UserId} could not be created, another account already exists", Constants.DefaultAdminAccount);
                     return;
                 case AccountsNumbers.MultipleAccounts:
@@ -52,13 +51,15 @@ namespace FactorioWebInterface.Services
                     return;
                 case AccountsNumbers.NoAccounts:
                     break;
+                case AccountsNumbers.NoRootAccount:
+                    break;
             }
 
             await CreateDefaultUserAsync(id);
         }
 
         //Suggestion: Perform count directly on database (Eg. using LINQ or SQL)
-        private async Task<AccountsNumbers> OnlyAccount()
+        public async Task<AccountsNumbers> OnlyAccount()
         {
 
             var rootUsers = await _userManager.GetUsersInRoleAsync(Constants.RootRole);
@@ -71,20 +72,21 @@ namespace FactorioWebInterface.Services
 
             var users = _userManager.Users;
             int userCount = users.Count();
-            if (userCount == 1 && await ValidateDefaultUserAsync(users.First()))
-            {
-                return AccountsNumbers.OnlyDefaultAccount;
-            }
 
             if (userCount > 0 && rootCount > 0)
             {
                 return AccountsNumbers.MultipleAccounts;
             }
 
-            return AccountsNumbers.NoAccounts;
+            if (userCount == 0)
+            {
+                return AccountsNumbers.NoAccounts;
+            }
+
+            return AccountsNumbers.NoRootAccount;
         }
 
-        private async Task ValidateOrClearDefaultUserAsync(string id, bool force = false)
+        public async Task ValidateOrClearDefaultUserAsync(string id, bool force = false)
         {
             ApplicationUser userResult = await _userManager.FindByIdAsync(id);
             if (await ValidateDefaultUserAsync(userResult) && !force)
@@ -105,7 +107,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private async Task<bool> ValidateDefaultUserAsync(ApplicationUser user)
+        public async Task<bool> ValidateDefaultUserAsync(ApplicationUser user)
         {
             if (user == null || user.UserName != Constants.DefaultAdminName)
             {
@@ -169,7 +171,7 @@ namespace FactorioWebInterface.Services
             _fileSystem.File.WriteAllText(path, $"{warningTag}\nThis account is unsecure. Please setup a personal account.\n{warningTag}\nUsername: {Constants.DefaultAdminName}\nPassword: {password}");
         }
 
-        private void DeleteDefaultAccountFile()
+        public void DeleteDefaultAccountFile()
         {
             var path = GetDefaultAccountFilePath();
             try

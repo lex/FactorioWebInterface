@@ -27,7 +27,8 @@ namespace FactorioWebInterfaceTests.Services.DefaultAdminAccountServiceTests
                 .AddSingleton(typeof(ILogger<>), typeof(TestLogger<>))
                 .AddSingleton<IFileSystem, MockFileSystem>()
                 .AddTransient<ApplicationDbContext>(_ => dbContextFactory.Create<ApplicationDbContext>())
-                .AddTransient<DefaultAdminAccountService>();
+                .AddTransient<DefaultAdminAccountService>()
+                .AddTransient<UserManager<ApplicationUser>>();
             Startup.SetupIdentity(serviceCollection);
 
             return serviceCollection.BuildServiceProvider();
