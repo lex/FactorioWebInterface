@@ -32,9 +32,6 @@
     <Content Include="settings.template.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="token.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -51,5 +48,9 @@
     <ProjectReference Include="..\FactorioWrapperInterface\Shared.csproj" />
     <ProjectReference Include="..\RconSharp\RconSharp.csproj" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="if not exist &quot;$(ProjectDir)settings.json&quot; (&#xD;&#xA;    copy &quot;$(ProjectDir)settings.template.json&quot; &quot;$(ProjectDir)settings.json&quot;&#xD;&#xA;)" />
+  </Target>
 
 </Project>

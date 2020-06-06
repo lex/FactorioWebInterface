@@ -141,7 +141,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if not exist $(ProjectDir)appsettings.json (&#xD;&#xA;    copy &quot;$(ProjectDir)appsettings.template.json&quot; &quot;$(ProjectDir)appsettings.json&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if $(ConfigurationName) == Release npm run release&#xD;&#xA;if $(ConfigurationName) == Debug npm run build&#xD;&#xA;if $(ConfigurationName) == Windows npm run build&#xD;&#xA;if $(ConfigurationName) == Wsl npm run build&#xD;&#xA;" />
+    <Exec Command="if not exist &quot;$(ProjectDir)appsettings.json&quot; (&#xD;&#xA;    copy &quot;$(ProjectDir)appsettings.template.json&quot; &quot;$(ProjectDir)appsettings.json&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if $(ConfigurationName) == Release npm run release&#xD;&#xA;if $(ConfigurationName) == Debug npm run build&#xD;&#xA;if $(ConfigurationName) == Windows npm run build&#xD;&#xA;if $(ConfigurationName) == Wsl npm run build&#xD;&#xA;" />
   </Target>
 
   <!--
