@@ -31,8 +31,9 @@ export class ServerIdService {
         if (this.currentServerId === value) {
             return;
         }
+        let promise = this.updateServerId(value);
         this._serverId.raise(value);
-        return this.updateServerId(value);
+        return promise;
     }
     updateServerId(value) {
         return __awaiter(this, void 0, void 0, function* () {

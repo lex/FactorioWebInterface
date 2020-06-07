@@ -34,9 +34,11 @@ export class ServerIdService {
             return;
         }
 
+        let promise = this.updateServerId(value);
+
         this._serverId.raise(value);
 
-        return this.updateServerId(value);
+        return promise
     }
 
     private async updateServerId(value: string): Promise<void> {
