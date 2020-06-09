@@ -94,6 +94,10 @@ export class ServerFileService {
             }
         });
 
+        serversHubService.selectedModPack.subscribe(event => {
+            this._selectedModPack.raise(event);
+        })
+
         serversHubService.whenConnection(() => {
             this.updateLocalFiles();
             this.updateGlobalFiles();

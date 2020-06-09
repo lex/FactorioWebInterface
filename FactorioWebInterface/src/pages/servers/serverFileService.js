@@ -41,6 +41,9 @@ export class ServerFileService {
                 this._chatLogsFiles.update(event);
             }
         });
+        serversHubService.selectedModPack.subscribe(event => {
+            this._selectedModPack.raise(event);
+        });
         serversHubService.whenConnection(() => {
             this.updateLocalFiles();
             this.updateGlobalFiles();
