@@ -159,6 +159,12 @@ export class CollectionView extends Observable {
         }
         this._selectedChanged.raise();
     }
+    setFirstSingleSelected() {
+        let first = this._array[0];
+        if (first != null) {
+            this.setSingleSelected(first);
+        }
+    }
     sortChanged(callback) {
         return this._sortChanged.subscribe(callback);
     }

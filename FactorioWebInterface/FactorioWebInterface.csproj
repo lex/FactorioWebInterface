@@ -41,6 +41,8 @@
     <None Remove="src\components\dateField.ts" />
     <None Remove="src\components\field.ts" />
     <None Remove="src\components\icon.ts" />
+    <None Remove="src\components\modal.ts" />
+    <None Remove="src\components\modalBackground.ts" />
     <None Remove="src\components\progress.ts" />
     <None Remove="src\components\select.ts" />
     <None Remove="src\components\tab.ts" />
@@ -74,6 +76,9 @@
     <None Remove="src\pages\servers\fileViewModel.ts" />
     <None Remove="src\pages\servers\logFileView.ts" />
     <None Remove="src\pages\servers\logFileViewModel.ts" />
+    <None Remove="src\pages\servers\manageVersionService.ts" />
+    <None Remove="src\pages\servers\manageVersionView.ts" />
+    <None Remove="src\pages\servers\manageVersionViewModel.ts" />
     <None Remove="src\pages\servers\modPacksView.ts" />
     <None Remove="src\pages\servers\modPacksViewModel.ts" />
     <None Remove="src\pages\servers\scenariosView.ts" />
@@ -105,8 +110,10 @@
     <None Remove="src\services\copyToClipboardService.ts" />
     <None Remove="src\services\errorService.ts" />
     <None Remove="src\services\fileSelectionservice.ts" />
+    <None Remove="src\services\modalService.ts" />
     <None Remove="src\services\requestVerificationService.ts" />
     <None Remove="src\services\uploadService.ts" />
+    <None Remove="src\services\viewLocator.ts" />
     <None Remove="src\services\windowService.ts" />
     <None Remove="src\testUtils\invokeBase.ts" />
     <None Remove="src\testUtils\models\formDataMock.ts" />
@@ -114,6 +121,7 @@
     <None Remove="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <None Remove="src\testUtils\services\errorServiceMockBase.ts" />
     <None Remove="src\testUtils\services\fileSelectionServiceMockBase.ts" />
+    <None Remove="src\testUtils\services\modalServiceMockBase.ts" />
     <None Remove="src\testUtils\services\requestVerificationServiceMockBase.ts" />
     <None Remove="src\testUtils\services\uploadServiceMockBase.ts" />
     <None Remove="src\testUtils\services\windowServiceMockBase.ts" />
@@ -176,6 +184,7 @@
     <None Remove="src\utils\box.ts" />
     <None Remove="src\utils\circularBuffer.spec.ts" />
     <None Remove="src\utils\circularBuffer.ts" />
+    <None Remove="src\utils\CloseBaseViewModel.ts" />
     <None Remove="src\utils\collectionView.ts" />
     <None Remove="src\utils\commandHistory.spec.ts" />
     <None Remove="src\utils\commandHistory.ts" />
@@ -258,6 +267,8 @@
     <TypeScriptCompile Include="src\components\dateField.ts" />
     <TypeScriptCompile Include="src\components\field.ts" />
     <TypeScriptCompile Include="src\components\icon.ts" />
+    <TypeScriptCompile Include="src\components\modalBackground.ts" />
+    <TypeScriptCompile Include="src\components\modal.ts" />
     <TypeScriptCompile Include="src\components\progress.ts" />
     <TypeScriptCompile Include="src\components\select.ts" />
     <TypeScriptCompile Include="src\components\tab.ts" />
@@ -291,6 +302,9 @@
     <TypeScriptCompile Include="src\pages\servers\fileViewModel.ts" />
     <TypeScriptCompile Include="src\pages\servers\logFileView.ts" />
     <TypeScriptCompile Include="src\pages\servers\logFileViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\servers\manageVersionService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\manageVersionView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\manageVersionViewModel.ts" />
     <TypeScriptCompile Include="src\pages\servers\modPacksView.ts" />
     <TypeScriptCompile Include="src\pages\servers\modPacksViewModel.ts" />
     <TypeScriptCompile Include="src\pages\servers\scenariosView.ts" />
@@ -322,8 +336,10 @@
     <TypeScriptCompile Include="src\services\copyToClipboardService.ts" />
     <TypeScriptCompile Include="src\services\errorService.ts" />
     <TypeScriptCompile Include="src\services\fileSelectionService.ts" />
+    <TypeScriptCompile Include="src\services\modalService.ts" />
     <TypeScriptCompile Include="src\services\uploadService.ts" />
     <TypeScriptCompile Include="src\services\requestVerificationService.ts" />
+    <TypeScriptCompile Include="src\services\viewLocator.ts" />
     <TypeScriptCompile Include="src\services\windowService.ts" />
     <TypeScriptCompile Include="src\testUtils\invokeBase.ts" />
     <TypeScriptCompile Include="src\testUtils\models\formDataMock.ts" />
@@ -331,6 +347,7 @@
     <TypeScriptCompile Include="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\errorServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\fileSelectionServiceMockBase.ts" />
+    <TypeScriptCompile Include="src\testUtils\services\modalServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\requestVerificationServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\uploadServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\windowServiceMockBase.ts" />
@@ -403,6 +420,7 @@
     <TypeScriptCompile Include="src\utils\fieldId.ts" />
     <TypeScriptCompile Include="src\utils\iterableHelper.ts" />
     <TypeScriptCompile Include="src\utils\mathHelper.ts" />
+    <TypeScriptCompile Include="src\utils\closeBaseViewModel.ts" />
     <TypeScriptCompile Include="src\utils\nodeHelper.ts" />
     <TypeScriptCompile Include="src\utils\observable.ts" />
     <TypeScriptCompile Include="src\utils\observableCircularBuffer.ts" />

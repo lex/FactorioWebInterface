@@ -15,6 +15,12 @@ export class Button extends HTMLElement {
         this._command = value;
         this.connectCommand();
     }
+    get commandParameter() {
+        return this._commandParameter;
+    }
+    set commandParameter(value) {
+        this._commandParameter = value;
+    }
     get enabled() {
         return !this.hasAttribute('disabled');
     }
@@ -44,16 +50,20 @@ export class Button extends HTMLElement {
         this.command = command;
         return this;
     }
+    setCommandParameter(value) {
+        this.commandParameter = value;
+        return this;
+    }
     connectCommand() {
         if (this._command == null || !this.isConnected) {
             return;
         }
         let commandExecuteSubscription = EventListener.onClick(this, () => {
-            this._command.execute();
+            this._command.execute(this._commandParameter);
         });
-        this.enabled = this._command.canExecute();
+        this.enabled = this._command.canExecute(this._commandParameter);
         let commnadCanExecuteSubscription = this._command.canExecuteChanged.subscribe(() => {
-            this.enabled = this._command.canExecute();
+            this.enabled = this._command.canExecute(this._commandParameter);
         });
         this._commandSubscription = () => {
             commandExecuteSubscription();
@@ -85,6 +95,7 @@ Button.classes = {
     info: 'is-info',
     warning: 'is-warning',
     danger: 'is-danger',
+    close: 'close-button'
 };
 export function iconButton(icon, content, ...classes) {
     let iconEle = new Icon(icon, Icon.classes.isLeft);

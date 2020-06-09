@@ -39,6 +39,23 @@ export class Select<T = any> extends HTMLElement {
         return this._select.options;
     }
 
+    get selectedIndex(): number {
+        return this._select.selectedIndex;
+    }
+    set selectedIndex(value: number) {
+        let option = this._select.options[value] as Option<T>;
+        if (option == null) {
+            return;
+        }
+
+        if (this._source) {
+            this._source.setSingleSelected(option.box);
+            return;
+        }
+
+        this._select.selectedIndex = value;
+    }
+
     constructor(source?: T[] | ObservableCollection<T> | CollectionView<T>, optionBuilder?: (item: T) => string | Option<T>) {
         super();
 
@@ -74,6 +91,7 @@ export class Select<T = any> extends HTMLElement {
                 this._source.setSingleSelected(selectedBox);
             });
 
+            this._select.selectedIndex = -1;
             this.updateSelected();
         }
     }
@@ -122,11 +140,23 @@ export class Select<T = any> extends HTMLElement {
     }
 
     private doUpdate(items: Box<T>[]) {
+        let options = this._select.options;
         let optionMap = this._optionMap;
 
         for (let item of items) {
-            let option = this.buildOptionElement(item);
-            optionMap.set(item, option);
+            let option = optionMap.get(item);
+
+            if (option != null) {
+                let newOption = this.buildOptionElement(item);
+
+                options.add(newOption, option);
+                option.remove();
+                optionMap.set(item, newOption);
+            } else {
+                option = this.buildOptionElement(item);
+                optionMap.set(item, option);
+                options.add(option);
+            }
         }
     }
 

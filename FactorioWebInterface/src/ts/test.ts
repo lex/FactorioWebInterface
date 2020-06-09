@@ -109,7 +109,7 @@ selectedHeader.addEventListener('input', () => {
         file.selected = selectedHeader.checked;
     }
 
-    source.refresh();
+    source.reset();
 });
 selectedHeader.addEventListener('click', (event) => {
     event.cancelBubble = true;

@@ -51,11 +51,13 @@ export class ServersConsoleView extends VirtualComponent {
             .setCommand(serversConsoleViewModel.startScenarioCommand);
         let saveButton = iconButton(Icon.classes.save, 'Save', Button.classes.success)
             .setCommand(serversConsoleViewModel.saveCommand);
+        let manageVersionButton = iconButton(Icon.classes.download, 'Manage Version', Button.classes.link)
+            .setCommand(serversConsoleViewModel.manageVersionCommand);
         let stopButton = iconButton(Icon.classes.stop, 'Stop', Button.classes.danger)
             .setCommand(serversConsoleViewModel.stopCommand);
         let forceStopButton = iconButton(Icon.classes.bomb, 'Force Stop', Button.classes.danger)
             .setCommand(serversConsoleViewModel.forceStopCommand);
-        topPanel.append(resumeButton, loadButton, saveButton, startScenarioButton, stopButton, forceStopButton);
+        topPanel.append(resumeButton, loadButton, saveButton, startScenarioButton, manageVersionButton, stopButton, forceStopButton);
         let messageView = new ConsoleMessageView(serversConsoleViewModel.messages);
         let bottomPanel = new StackPanel(StackPanel.direction.row);
         let sendInput = new TextInput();

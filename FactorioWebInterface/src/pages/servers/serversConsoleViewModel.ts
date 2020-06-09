@@ -13,10 +13,15 @@ import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
+import { ModalServiceBase } from "../../services/ModalServiceBase";
+import { ManageVersionViewModel } from "./manageVersionViewModel";
+import { ManageVersionService } from "./manageVersionService";
 
 export class ServersConsoleViewModel extends ObservableObject {
     private _serverIdService: ServerIdService;
     private _serverConsoleService: ServerConsoleService;
+    private _manageVersionService: ManageVersionService;
+    private _modalService: ModalServiceBase;
     private _errorService: ErrorService;
 
     private _tempFiles: FileViewModel;
@@ -36,7 +41,7 @@ export class ServersConsoleViewModel extends ObservableObject {
     private _saveCommand: DelegateCommand;
     private _stopCommand: DelegateCommand;
     private _forceStopCommand: DelegateCommand;
-    private _updateCommand: DelegateCommand;
+    private _manageVersionCommand: DelegateCommand;
     private _sendCommand: DelegateCommand;
 
     get serverIds(): CollectionView<string> {
@@ -75,6 +80,10 @@ export class ServersConsoleViewModel extends ObservableObject {
         return this._forceStopCommand;
     }
 
+    get manageVersionCommand(): ICommand {
+        return this._manageVersionCommand;
+    }
+
     get sendCommand(): ICommand {
         return this._sendCommand;
     }
@@ -99,6 +108,8 @@ export class ServersConsoleViewModel extends ObservableObject {
     constructor(
         serverIdService: ServerIdService,
         serverConsoleService: ServerConsoleService,
+        manageVersionService: ManageVersionService,
+        modalService: ModalServiceBase,
         errorService: ErrorService,
         tempFiles: FileViewModel,
         localFiles: FileViewModel,
@@ -109,6 +120,8 @@ export class ServersConsoleViewModel extends ObservableObject {
 
         this._serverIdService = serverIdService;
         this._serverConsoleService = serverConsoleService;
+        this._manageVersionService = manageVersionService;
+        this._modalService = modalService;
         this._errorService = errorService;
 
         this._tempFiles = tempFiles;
@@ -168,6 +181,13 @@ export class ServersConsoleViewModel extends ObservableObject {
         this._forceStopCommand = new DelegateCommand(async () => {
             let result = await this._serverConsoleService.forceStop();
             this._errorService.reportIfError(result);
+        });
+
+        this._manageVersionCommand = new DelegateCommand(async () => {
+            let vm = new ManageVersionViewModel(this._manageVersionService, this.status, this._errorService);
+            await this._modalService.showViewModel(vm);
+
+            vm.dispose();
         });
 
         this._sendCommand = new DelegateCommand(() => {

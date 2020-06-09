@@ -17,10 +17,12 @@ export class Button extends HTMLElement {
         info: 'is-info',
         warning: 'is-warning',
         danger: 'is-danger',
+        close: 'close-button'
     }
 
-    private _command: ICommand;
+    private _command: ICommand<any>;
     private _commandSubscription: () => void;
+    private _commandParameter: any;
 
     get command(): ICommand {
         return this._command;
@@ -31,6 +33,14 @@ export class Button extends HTMLElement {
 
         this._command = value;
         this.connectCommand();
+    }
+
+    get commandParameter(): any {
+        return this._commandParameter;
+    }
+
+    set commandParameter(value: any) {
+        this._commandParameter = value;
     }
 
     get enabled(): boolean {
@@ -69,8 +79,13 @@ export class Button extends HTMLElement {
         return EventListener.onClick(this, callback);
     }
 
-    setCommand(command: ICommand): this {
+    setCommand(command: ICommand<any>): this {
         this.command = command;
+        return this;
+    }
+
+    setCommandParameter(value: any): this {
+        this.commandParameter = value;
         return this;
     }
 
@@ -80,12 +95,12 @@ export class Button extends HTMLElement {
         }
 
         let commandExecuteSubscription = EventListener.onClick(this, () => {
-            this._command.execute();
+            this._command.execute(this._commandParameter);
         });
 
-        this.enabled = this._command.canExecute();
+        this.enabled = this._command.canExecute(this._commandParameter);
         let commnadCanExecuteSubscription = this._command.canExecuteChanged.subscribe(() => {
-            this.enabled = this._command.canExecute();
+            this.enabled = this._command.canExecute(this._commandParameter);
         });
 
         this._commandSubscription = () => {

@@ -15,6 +15,8 @@ import { ServerFileManagementViewModel } from "./serverFileManagementViewModel";
 import { ServerFileManagementService } from "./serverFileManagementService";
 import { FileSelectionService } from "../../services/fileSelectionservice";
 import { ErrorService } from "../../services/errorService";
+import { ModalServiceBase } from "../../services/ModalServiceBase";
+import { ManageVersionService } from "./manageVersionService";
 
 export class ServersViewModel {
     readonly serverConsoleViewModel: ServersConsoleViewModel;
@@ -37,9 +39,11 @@ export class ServersViewModel {
         serverExtraSettingsService: ServerExtraSettingsService,
         serverConsoleService: ServerConsoleService,
         serverFileManagementService: ServerFileManagementService,
+        mangeVersionService: ManageVersionService,
         copyToClipboardService: CopyToClipboardService,
         fileSelectionService: FileSelectionService,
-        errorService: ErrorService
+        errorService: ErrorService,
+        modalService: ModalServiceBase
     ) {
         this.serverSettingsViewModel = new ServerSettingsViewModel(serverSettingsService, copyToClipboardService, errorService);
         this.serverExtraSettingsViewModel = new ServerExtraSettingsViewModel(serverExtraSettingsService, copyToClipboardService, errorService);
@@ -55,6 +59,8 @@ export class ServersViewModel {
         this.serverConsoleViewModel = new ServersConsoleViewModel(
             serverIdService,
             serverConsoleService,
+            mangeVersionService,
+            modalService,
             errorService,
             this.tempFileViewModel,
             this.localFileViewModel,

@@ -15,13 +15,16 @@ import { CollectionView } from "../../utils/collectionView";
 import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
+import { ManageVersionViewModel } from "./manageVersionViewModel";
 export class ServersConsoleViewModel extends ObservableObject {
-    constructor(serverIdService, serverConsoleService, errorService, tempFiles, localFiles, globalFiles, scenarios) {
+    constructor(serverIdService, serverConsoleService, manageVersionService, modalService, errorService, tempFiles, localFiles, globalFiles, scenarios) {
         super();
         this._sendText = '';
         this._commandHistory = new CommandHistory();
         this._serverIdService = serverIdService;
         this._serverConsoleService = serverConsoleService;
+        this._manageVersionService = manageVersionService;
+        this._modalService = modalService;
         this._errorService = errorService;
         this._tempFiles = tempFiles;
         this._localFiles = localFiles;
@@ -64,6 +67,11 @@ export class ServersConsoleViewModel extends ObservableObject {
         this._forceStopCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let result = yield this._serverConsoleService.forceStop();
             this._errorService.reportIfError(result);
+        }));
+        this._manageVersionCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
+            let vm = new ManageVersionViewModel(this._manageVersionService, this.status, this._errorService);
+            yield this._modalService.showViewModel(vm);
+            vm.dispose();
         }));
         this._sendCommand = new DelegateCommand(() => {
             let text = this.sendText;
@@ -116,6 +124,9 @@ export class ServersConsoleViewModel extends ObservableObject {
     }
     get forceStopCommand() {
         return this._forceStopCommand;
+    }
+    get manageVersionCommand() {
+        return this._manageVersionCommand;
     }
     get sendCommand() {
         return this._sendCommand;

@@ -56,8 +56,10 @@ export class ObservableKeyArray extends ObservableKeyCollection {
         };
         this.raise(changeData);
     }
-    refresh() {
-        this.raise({ Type: CollectionChangeType.Reset });
+    reset(...items) {
+        this._map.clear();
+        this.doAdd(items);
+        this.raise({ Type: CollectionChangeType.Reset, NewItems: items });
     }
     doAdd(items) {
         if (items == null) {

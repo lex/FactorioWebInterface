@@ -7,7 +7,7 @@ import { ServerSettingsViewModel } from "./serverSettingsViewModel";
 import { ServerExtraSettingsViewModel } from "./serverExtraSettingsViewModel";
 import { ServerFileManagementViewModel } from "./serverFileManagementViewModel";
 export class ServersViewModel {
-    constructor(serverIdService, serverFileService, serverSettingsService, serverExtraSettingsService, serverConsoleService, serverFileManagementService, copyToClipboardService, fileSelectionService, errorService) {
+    constructor(serverIdService, serverFileService, serverSettingsService, serverExtraSettingsService, serverConsoleService, serverFileManagementService, mangeVersionService, copyToClipboardService, fileSelectionService, errorService, modalService) {
         this.serverSettingsViewModel = new ServerSettingsViewModel(serverSettingsService, copyToClipboardService, errorService);
         this.serverExtraSettingsViewModel = new ServerExtraSettingsViewModel(serverExtraSettingsService, copyToClipboardService, errorService);
         this.tempFileViewModel = new FileViewModel('Temp Files', serverFileService.tempSaveFiles, serverIdService.serverId);
@@ -17,7 +17,7 @@ export class ServersViewModel {
         this.chatLogFileViewModel = new LogFileViewModel('Chat Logs', serverFileService.chatLogsFiles, 'chatLogFile');
         this.scenariosViewModel = new ScenariosViewModel(serverFileService.scenarios);
         this.modPacksViewModel = new ModPacksViewModel(serverFileService);
-        this.serverConsoleViewModel = new ServersConsoleViewModel(serverIdService, serverConsoleService, errorService, this.tempFileViewModel, this.localFileViewModel, this.globalFileViewModel, this.scenariosViewModel);
+        this.serverConsoleViewModel = new ServersConsoleViewModel(serverIdService, serverConsoleService, mangeVersionService, modalService, errorService, this.tempFileViewModel, this.localFileViewModel, this.globalFileViewModel, this.scenariosViewModel);
         this.serverFileManagementViewModel = new ServerFileManagementViewModel(serverFileManagementService, fileSelectionService, errorService, this.tempFileViewModel, this.localFileViewModel, this.globalFileViewModel);
     }
 }

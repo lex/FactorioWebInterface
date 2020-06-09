@@ -43,4 +43,6 @@ export class ComparatorHelper {
         }
     }
 }
+ComparatorHelper.caseInsensitiveStringComparator = ComparatorHelper.buildCaseInsensitiveStringComparator();
+ComparatorHelper.caseSensitiveStringComparator = ComparatorHelper.buildCaseSensitiveStringComparator();
 //# sourceMappingURL=comparatorHelper.js.map

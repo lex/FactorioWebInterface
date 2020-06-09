@@ -12,6 +12,8 @@ import { UploadService } from "../../services/uploadService";
 import { ServerFileManagementService } from "./serverFileManagementService";
 import { ErrorService } from "../../services/errorService";
 import { WindowService } from "../../services/windowService";
+import { ModalServiceBase } from "../../services/ModalServiceBase";
+import { ManageVersionService } from "./manageVersionService";
 
 export function registerServices(serviceLocator: ServiceLocator): ServiceLocator {
     serviceLocator.register(ServersHubService, () => new ServersHubService());
@@ -20,6 +22,7 @@ export function registerServices(serviceLocator: ServiceLocator): ServiceLocator
     serviceLocator.register(ServerSettingsService, (services) => new ServerSettingsService(services.get(ServersHubService), services.get(ServerIdService)));
     serviceLocator.register(ServerExtraSettingsService, (services) => new ServerExtraSettingsService(services.get(ServersHubService), services.get(ServerIdService)));
     serviceLocator.register(ServerConsoleService, (services) => new ServerConsoleService(services.get(ServerIdService), services.get(ServersHubService)));
+    serviceLocator.register(ManageVersionService, (services) => new ManageVersionService(services.get(ServersHubService)));
 
     serviceLocator.register(ServerFileManagementService, (services) => new ServerFileManagementService(
         services.get(ServerIdService),
@@ -34,9 +37,11 @@ export function registerServices(serviceLocator: ServiceLocator): ServiceLocator
         services.get(ServerExtraSettingsService),
         services.get(ServerConsoleService),
         services.get(ServerFileManagementService),
+        services.get(ManageVersionService),
         services.get(CopyToClipboardService),
         services.get(FileSelectionService),
-        services.get(ErrorService)));
+        services.get(ErrorService),
+        services.get(ModalServiceBase)))
 
     return serviceLocator;
 }

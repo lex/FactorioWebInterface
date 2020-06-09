@@ -14,14 +14,17 @@ import { ServersHubServiceMockBase } from "./pages/servers/serversHubServiceMock
 import { registerServices } from "../pages/servers/services";
 import { WindowService } from "../services/windowService";
 import { WindowServiceMockBase } from "./services/windowServiceMockBase";
+import { ModalServiceBase } from "../services/ModalServiceBase";
+import { ModalServiceMockBase } from "./services/modalServiceMockBase";
 export class TestServiceLocator extends ServiceLocator {
     static registerBaseServices(serviceLocator) {
         serviceLocator.register(CopyToClipboardService, () => new CopyToClipboardServiceMockBase());
         serviceLocator.register(RequestVerificationService, () => new RequestVerificationServiceMockBase());
         serviceLocator.register(FileSelectionService, () => new FileSelectionServiceMockBase());
-        serviceLocator.register(UploadService, (services) => new UploadServiceMockBase());
+        serviceLocator.register(UploadService, () => new UploadServiceMockBase());
         serviceLocator.register(ErrorService, () => new ErrorServiceMockBase());
         serviceLocator.register(WindowService, () => new WindowServiceMockBase());
+        serviceLocator.register(ModalServiceBase, () => new ModalServiceMockBase());
         return serviceLocator;
     }
     constructor() {

@@ -38,6 +38,7 @@ export class Select extends HTMLElement {
                 let selectedBox = this.selectedBox;
                 this._source.setSingleSelected(selectedBox);
             });
+            this._select.selectedIndex = -1;
             this.updateSelected();
         }
     }
@@ -54,6 +55,20 @@ export class Select extends HTMLElement {
     }
     get options() {
         return this._select.options;
+    }
+    get selectedIndex() {
+        return this._select.selectedIndex;
+    }
+    set selectedIndex(value) {
+        let option = this._select.options[value];
+        if (option == null) {
+            return;
+        }
+        if (this._source) {
+            this._source.setSingleSelected(option.box);
+            return;
+        }
+        this._select.selectedIndex = value;
     }
     buildOptionElement(item) {
         let option = this._optionBuilder(item.value);
@@ -89,10 +104,21 @@ export class Select extends HTMLElement {
         }
     }
     doUpdate(items) {
+        let options = this._select.options;
         let optionMap = this._optionMap;
         for (let item of items) {
-            let option = this.buildOptionElement(item);
-            optionMap.set(item, option);
+            let option = optionMap.get(item);
+            if (option != null) {
+                let newOption = this.buildOptionElement(item);
+                options.add(newOption, option);
+                option.remove();
+                optionMap.set(item, newOption);
+            }
+            else {
+                option = this.buildOptionElement(item);
+                optionMap.set(item, option);
+                options.add(option);
+            }
         }
     }
     doRemove(items) {

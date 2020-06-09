@@ -232,6 +232,13 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         this._selectedChanged.raise();
     }
 
+    setFirstSingleSelected(): void {
+        let first = this._array[0];
+        if (first != null) {
+            this.setSingleSelected(first);
+        }
+    }
+
     sortChanged(callback: (event: SortSpecification<T>[]) => void): () => void {
         return this._sortChanged.subscribe(callback);
     }

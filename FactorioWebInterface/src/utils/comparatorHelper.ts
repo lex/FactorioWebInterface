@@ -1,4 +1,7 @@
 ﻿export class ComparatorHelper {
+    static readonly caseInsensitiveStringComparator = ComparatorHelper.buildCaseInsensitiveStringComparator();
+    static readonly caseSensitiveStringComparator = ComparatorHelper.buildCaseSensitiveStringComparator();
+
     static FromSelector<T = any>(selector: (T) => any): (left: T, right: T) => number {
         return ((left: T, right: T) => {
             let leftProperty = selector(left);

@@ -124,6 +124,52 @@ h6 {
   flex-grow: 1;
   min-width: 600px;
 }
+.close-button {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  background-color: rgba(10, 10, 10, 0.2);
+  border: none;
+  border-radius: 290486px;
+  cursor: pointer;
+  pointer-events: auto;
+  display: inline-block;
+  flex-grow: 0;
+  flex-shrink: 0;
+  font-size: 0;
+  height: 20px;
+  max-height: 20px;
+  max-width: 20px;
+  min-height: 20px;
+  min-width: 20px;
+  outline: none;
+  position: relative;
+  vertical-align: top;
+  width: 20px;
+}
+.close-button::before,
+.close-button::after {
+  background-color: white;
+  content: "";
+  display: block;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  -webkit-transform-origin: center center;
+  transform-origin: center center;
+}
+.close-button::before {
+  height: 2px;
+  width: 50%;
+}
+.close-button::after {
+  height: 50%;
+  width: 2px;
+}
+.close-button:hover {
+  background-color: rgba(10, 10, 10, 0.3);
+}
 
 .hide-error > div > div {
   display: none;
@@ -716,9 +762,6 @@ a-select {
   position: relative;
   vertical-align: top;
   text-align: left;
-  /*&:nth-child(2) {
-        padding-left: 2.25em;
-    }*/
 }
 a-select select {
   background-color: white;
@@ -748,7 +791,7 @@ a-select select {
 a-select select:hover {
   border-color: #b5b5b5;
 }
-a-select::after {
+a-select:not(.is-loading)::after {
   border: 3px solid #3273dc;
   border-radius: 2px;
   border-right: 0;
@@ -767,6 +810,46 @@ a-select::after {
   transform-origin: center;
   width: 0.625em;
   z-index: 4;
+}
+a-select.is-loading::after {
+  -webkit-animation: spinAround 500ms infinite linear;
+  animation: spinAround 500ms infinite linear;
+  border: 2px solid #dbdbdb;
+  border-radius: 290486px;
+  border-right-color: transparent;
+  border-top-color: transparent;
+  content: "";
+  display: block;
+  height: 1em;
+  position: relative;
+  width: 1em;
+  z-index: 4;
+  margin-top: 0;
+  position: absolute;
+  right: 0.625em;
+  top: 0.625em;
+  -webkit-transform: none;
+  transform: none;
+}
+@-webkit-keyframes spinAround {
+  from {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@keyframes spinAround {
+  from {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
 }
 
 
