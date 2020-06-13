@@ -1,3 +1,4 @@
+import { noop } from "./functions";
 export class Observable {
     constructor() {
         this.callbacks = [];
@@ -36,4 +37,15 @@ export class Observable {
         subscriptions.length = 0;
     }
 }
+export class NullObservable extends Observable {
+    get subscriberCount() {
+        return 0;
+    }
+    subscribe(callback, subscriptions) {
+        return noop;
+    }
+    raise(event) {
+    }
+}
+NullObservable.instance = new NullObservable();
 //# sourceMappingURL=observable.js.map

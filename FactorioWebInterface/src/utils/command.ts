@@ -1,4 +1,4 @@
-﻿import { IObservable, Observable } from "../utils/observable";
+﻿import { IObservable, Observable, NullObservable } from "../utils/observable";
 
 export interface ICommand<T = void> {
     canExecute(arg: T): boolean;
@@ -25,15 +25,25 @@ export abstract class CommandBase<T = void> implements ICommand<T> {
     }
 }
 
-export class DelegateCommand<T = void> extends CommandBase<T>{
+export class DelegateCommand<T = void> implements ICommand<T>{
     private _execute: (arg: T) => void;
     private _canExecute?: (arg: T) => boolean
 
-    constructor(execute: (arg: T) => void, canExecute?: (arg: T) => boolean) {
-        super();
+    private _canExecuteChanged: Observable<void>;
 
+    get canExecuteChanged(): IObservable<void> {
+        return this._canExecuteChanged;
+    }
+
+    constructor(execute: (arg: T) => void, canExecute?: (arg: T) => boolean) {
         this._execute = execute;
         this._canExecute = canExecute;
+
+        if (canExecute == null) {
+            this._canExecuteChanged = NullObservable.instance;
+        } else {
+            this._canExecuteChanged = new Observable();
+        }
     }
 
     canExecute(arg: T) {
@@ -48,5 +58,9 @@ export class DelegateCommand<T = void> extends CommandBase<T>{
         if (this.canExecute(arg)) {
             return this._execute(arg);
         }
+    }
+
+    raiseCanExecuteChanged() {
+        this._canExecuteChanged.raise();
     }
 }

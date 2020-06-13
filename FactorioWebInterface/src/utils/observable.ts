@@ -1,5 +1,7 @@
-﻿export interface IObservable<T> {
-    subscribe(callback: (event: T) => void): () => void;
+﻿import { noop } from "./functions";
+
+export interface IObservable<T> {
+    subscribe(callback: (event: T) => void, subscriptions?: (() => void)[]): () => void;
 }
 
 export class Observable<T> implements IObservable<T> {
@@ -43,5 +45,20 @@ export class Observable<T> implements IObservable<T> {
         }
 
         subscriptions.length = 0;
+    }
+}
+
+export class NullObservable extends Observable<any>{
+    static readonly instance = new NullObservable();
+
+    get subscriberCount(): number {
+        return 0;
+    }
+
+    subscribe(callback: (event: any) => void, subscriptions?: (() => void)[]): () => void {
+        return noop
+    }
+
+    raise(event: any): void {
     }
 }

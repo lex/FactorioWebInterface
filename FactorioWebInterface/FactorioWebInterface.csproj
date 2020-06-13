@@ -191,6 +191,7 @@
     <None Remove="src\utils\comparatorHelper.ts" />
     <None Remove="src\utils\eventListener.ts" />
     <None Remove="src\utils\fieldId.ts" />
+    <None Remove="src\utils\functions.ts" />
     <None Remove="src\utils\iterableHelper.ts" />
     <None Remove="src\utils\mathHelper.ts" />
     <None Remove="src\utils\nodeHelper.ts" />
@@ -418,6 +419,7 @@
     <TypeScriptCompile Include="src\utils\comparatorHelper.ts" />
     <TypeScriptCompile Include="src\utils\eventListener.ts" />
     <TypeScriptCompile Include="src\utils\fieldId.ts" />
+    <TypeScriptCompile Include="src\utils\functions.ts" />
     <TypeScriptCompile Include="src\utils\iterableHelper.ts" />
     <TypeScriptCompile Include="src\utils\mathHelper.ts" />
     <TypeScriptCompile Include="src\utils\closeBaseViewModel.ts" />

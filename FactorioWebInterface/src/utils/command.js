@@ -1,4 +1,4 @@
-import { Observable } from "../utils/observable";
+import { Observable, NullObservable } from "../utils/observable";
 export class CommandBase {
     constructor() {
         this._canExecuteChanged = new Observable();
@@ -15,11 +15,19 @@ export class CommandBase {
         this._canExecuteChanged.raise();
     }
 }
-export class DelegateCommand extends CommandBase {
+export class DelegateCommand {
     constructor(execute, canExecute) {
-        super();
         this._execute = execute;
         this._canExecute = canExecute;
+        if (canExecute == null) {
+            this._canExecuteChanged = NullObservable.instance;
+        }
+        else {
+            this._canExecuteChanged = new Observable();
+        }
+    }
+    get canExecuteChanged() {
+        return this._canExecuteChanged;
     }
     canExecute(arg) {
         if (this._canExecute == null) {
@@ -31,6 +39,9 @@ export class DelegateCommand extends CommandBase {
         if (this.canExecute(arg)) {
             return this._execute(arg);
         }
+    }
+    raiseCanExecuteChanged() {
+        this._canExecuteChanged.raise();
     }
 }
 //# sourceMappingURL=command.js.map
