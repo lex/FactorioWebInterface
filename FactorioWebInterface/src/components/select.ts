@@ -148,9 +148,7 @@ export class Select<T = any> extends HTMLElement {
 
             if (option != null) {
                 let newOption = this.buildOptionElement(item);
-
-                options.add(newOption, option);
-                option.remove();
+                options[option.index] = newOption;
                 optionMap.set(item, newOption);
             } else {
                 option = this.buildOptionElement(item);

@@ -254,7 +254,7 @@ describe('CollectionView', function () {
             // Assert.
             strict.equal(callbackFiredCount, 0);
             // Act remove two items.
-            o.add(1, 3);
+            o.remove(1, 3);
             // Assert.
             strict.equal(callbackFiredCount, 0);
         });

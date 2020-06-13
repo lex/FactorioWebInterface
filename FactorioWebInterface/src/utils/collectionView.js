@@ -15,7 +15,6 @@ export class CollectionView extends Observable {
         super();
         this._sortSpecifications = [];
         this._sortChanged = new Observable();
-        this.selectedSortId = {};
         this._source = source;
         this._selected = new Set();
         this._selectedChanged = new Observable();
@@ -30,6 +29,9 @@ export class CollectionView extends Observable {
         this.doReset();
         this.sort();
         this._source.subscribe((event) => this.update(event));
+    }
+    get selectedSortId() {
+        return CollectionView.selectedSortId;
     }
     get values() {
         return this._array.values();
@@ -94,7 +96,8 @@ export class CollectionView extends Observable {
                 this.sort();
                 this.raise({ type: CollectionViewChangeType.Reorder });
             }
-            this._selectedChanged.raise();
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
             return;
         }
         let removed = [...oldSelected];
@@ -105,7 +108,8 @@ export class CollectionView extends Observable {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
-        this._selectedChanged.raise();
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
     }
     setSelected(item, selected) {
         if (selected) {
@@ -125,7 +129,7 @@ export class CollectionView extends Observable {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
-        this._selectedChanged.raise();
+        this._selectedChanged.raise({ type: selected ? CollectionViewChangeType.Add : CollectionViewChangeType.Remove, items: [item] });
     }
     unSelectAll() {
         let selected = [...this._selected.values()];
@@ -138,7 +142,7 @@ export class CollectionView extends Observable {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
-        this._selectedChanged.raise();
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selected });
     }
     selectAll() {
         let selected = this._selected;
@@ -152,12 +156,13 @@ export class CollectionView extends Observable {
         if (change.length === 0) {
             return;
         }
-        this.raise({ type: CollectionViewChangeType.Add, items: change });
+        let event = { type: CollectionViewChangeType.Add, items: change };
+        this.raise(event);
         if (this.isSortedBySelection()) {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
-        this._selectedChanged.raise();
+        this._selectedChanged.raise(event);
     }
     setFirstSingleSelected() {
         let first = this._array[0];
@@ -285,7 +290,7 @@ export class CollectionView extends Observable {
                 this.sort();
                 this.raise({ type: CollectionViewChangeType.Reset });
                 if (selectedRemoved) {
-                    this._selectedChanged.raise();
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Reset, items: [] });
                 }
                 break;
             case CollectionChangeType.Remove: {
@@ -294,8 +299,8 @@ export class CollectionView extends Observable {
                     return;
                 }
                 this.raise({ type: CollectionViewChangeType.Remove, items: removed });
-                if (selectedRemoved) {
-                    this._selectedChanged.raise();
+                if (selectedRemoved.length > 0) {
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selectedRemoved });
                 }
                 break;
             }
@@ -310,7 +315,7 @@ export class CollectionView extends Observable {
                 let allRemoved = [...removed, ...updateRemoved];
                 this.doAddAndRemovedSortAndRaise(added, allRemoved);
                 if (selectedRemoved) {
-                    this._selectedChanged.raise();
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selectedRemoved });
                 }
                 break;
             }
@@ -415,7 +420,7 @@ export class CollectionView extends Observable {
         let removed = [];
         let array = this._array;
         let keySelector = this._keySelector;
-        let selectedRemoved = false;
+        let selectedRemoved = [];
         if (keySelector === undefined) {
             for (let i = 0; i < items.length; i++) {
                 let item = items[i];
@@ -424,7 +429,9 @@ export class CollectionView extends Observable {
                     if (box.value === item) {
                         array.splice(i, 1);
                         removed.push(box);
-                        selectedRemoved = this._selected.delete(box) || selectedRemoved;
+                        if (this._selected.delete(box)) {
+                            selectedRemoved.push(box);
+                        }
                         break;
                     }
                 }
@@ -440,7 +447,9 @@ export class CollectionView extends Observable {
                     map.delete(key);
                     ArrayHelper.remove(array, box);
                     removed.push(box);
-                    selectedRemoved = this._selected.delete(box) || selectedRemoved;
+                    if (this._selected.delete(box)) {
+                        selectedRemoved.push(box);
+                    }
                 }
             }
         }
@@ -486,4 +495,5 @@ export class CollectionView extends Observable {
         }
     }
 }
+CollectionView.selectedSortId = {};
 //# sourceMappingURL=collectionView.js.map

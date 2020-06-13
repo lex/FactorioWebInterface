@@ -30,6 +30,8 @@ export interface CollectionViewChangedData<T> {
 }
 
 export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> {
+    static readonly selectedSortId = {};
+
     private _source: ObservableCollection<T>;
     private _keySelector: (value: T) => any;
 
@@ -43,9 +45,11 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
     private _filter: (T) => boolean;
 
-    private _selectedChanged: Observable<void>;
+    private _selectedChanged: Observable<CollectionViewChangedData<T>>;
 
-    readonly selectedSortId = {};
+    get selectedSortId(): any {
+        return CollectionView.selectedSortId;
+    }
 
     get values(): IterableIterator<Box<T>> {
         return this._array.values();
@@ -68,7 +72,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return CollectionView.where(iterator, this._filter);
     }
 
-    get selectedChanged(): IObservable<void> {
+    get selectedChanged(): IObservable<CollectionViewChangedData<T>> {
         return this._selectedChanged;
     }
 
@@ -139,7 +143,6 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
             selected.clear();
             selected.add(item);
-
             this.raise({ type: CollectionViewChangeType.Add, items: removed });
 
             if (this.isSortedBySelection()) {
@@ -147,7 +150,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 this.raise({ type: CollectionViewChangeType.Reorder });
             }
 
-            this._selectedChanged.raise();
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
 
             return;
         }
@@ -162,7 +166,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
 
-        this._selectedChanged.raise();
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
     }
 
     setSelected(item: Box<T>, selected: boolean) {
@@ -186,7 +191,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
 
-        this._selectedChanged.raise();
+        this._selectedChanged.raise({ type: selected ? CollectionViewChangeType.Add : CollectionViewChangeType.Remove, items: [item] });
     }
 
     unSelectAll() {
@@ -204,7 +209,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
 
-        this._selectedChanged.raise();
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selected });
     }
 
     selectAll() {
@@ -222,14 +227,15 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             return;
         }
 
-        this.raise({ type: CollectionViewChangeType.Add, items: change });
+        let event = { type: CollectionViewChangeType.Add, items: change };
+        this.raise(event);
 
         if (this.isSortedBySelection()) {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
 
-        this._selectedChanged.raise();
+        this._selectedChanged.raise(event);
     }
 
     setFirstSingleSelected(): void {
@@ -372,7 +378,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 this.sort();
                 this.raise({ type: CollectionViewChangeType.Reset });
                 if (selectedRemoved) {
-                    this._selectedChanged.raise();
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Reset, items: [] });
                 }
                 break;
             case CollectionChangeType.Remove: {
@@ -382,8 +388,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 }
 
                 this.raise({ type: CollectionViewChangeType.Remove, items: removed });
-                if (selectedRemoved) {
-                    this._selectedChanged.raise();
+                if (selectedRemoved.length > 0) {
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selectedRemoved });
                 }
                 break;
             }
@@ -400,7 +406,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
                 this.doAddAndRemovedSortAndRaise(added, allRemoved);
                 if (selectedRemoved) {
-                    this._selectedChanged.raise();
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selectedRemoved });
                 }
                 break;
             }
@@ -518,11 +524,11 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return [added, removed];
     }
 
-    private doRemove(items: T[]): { removed: Box<T>[], selectedRemoved: boolean } {
+    private doRemove(items: T[]): { removed: Box<T>[], selectedRemoved: Box<T>[] } {
         let removed: Box<T>[] = [];
         let array = this._array;
         let keySelector = this._keySelector;
-        let selectedRemoved = false;
+        let selectedRemoved: Box<T>[] = [];
 
         if (keySelector === undefined) {
             for (let i = 0; i < items.length; i++) {
@@ -533,7 +539,11 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                     if (box.value === item) {
                         array.splice(i, 1);
                         removed.push(box);
-                        selectedRemoved = this._selected.delete(box) || selectedRemoved;
+
+                        if (this._selected.delete(box)) {
+                            selectedRemoved.push(box);
+                        }
+
                         break;
                     }
                 }
@@ -551,7 +561,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                     map.delete(key);
                     ArrayHelper.remove(array, box);
                     removed.push(box);
-                    selectedRemoved = this._selected.delete(box) || selectedRemoved;
+
+                    if (this._selected.delete(box)) {
+                        selectedRemoved.push(box);
+                    }
                 }
             }
         }

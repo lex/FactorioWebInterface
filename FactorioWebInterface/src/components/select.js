@@ -110,8 +110,7 @@ export class Select extends HTMLElement {
             let option = optionMap.get(item);
             if (option != null) {
                 let newOption = this.buildOptionElement(item);
-                options.add(newOption, option);
-                option.remove();
+                options[option.index] = newOption;
                 optionMap.set(item, newOption);
             }
             else {

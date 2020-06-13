@@ -1,5 +1,5 @@
 ﻿import { ObservableKeyArray } from "./observableCollection";
-import { CollectionView, CollectionViewChangeType } from "./collectionView";
+import { CollectionView, CollectionViewChangeType, CollectionViewChangedData } from "./collectionView";
 import { strict } from "assert";
 import { CollectionChangeType } from "../ts/utils";
 
@@ -40,11 +40,12 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let callbackFired = false;
-            cv.selectedChanged.subscribe(() => callbackFired = true);
-
-            // Act.
             let one = cv.getBoxByKey(1);
+
+            let actualEvent: CollectionViewChangedData<number>
+            cv.selectedChanged.subscribe(event => actualEvent = event);
+
+            // Act.            
             cv.setSelected(one, true);
 
             // Assert.
@@ -59,25 +60,36 @@ describe('CollectionView', function () {
             strict.equal(viewabledSelected[0], one);
             strict.equal(cv.isSelected(one), true);
 
-            strict.equal(true, callbackFired);
+            strict.equal(actualEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(actualEvent.items, [one]);
         });
 
-        it('should contain items when items is selected.', function () {
+        it('should contain items when items are selected.', function () {
             // Arrange.
             let o = new ObservableKeyArray<number, number>(x => x);
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let callbackFiredCount = 0;
-            cv.selectedChanged.subscribe(() => callbackFiredCount++);
-
-            // Act.
             let one = cv.getBoxByKey(1);
             let two = cv.getBoxByKey(2);
+
+            let actualEvent: CollectionViewChangedData<number>
+            cv.selectedChanged.subscribe(event => actualEvent = event);
+
+            // Act.            
             cv.setSelected(one, true);
+
+            // Assert Event.
+            strict.equal(actualEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(actualEvent.items, [one]);
+
+            // Act.
             cv.setSelected(two, true);
 
             // Assert.
+            strict.equal(actualEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(actualEvent.items, [two]);
+
             let expectedSelected = [one, two];
 
             strict.deepEqual([...cv.selected], expectedSelected);
@@ -86,7 +98,7 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(one), true);
             strict.equal(cv.isSelected(two), true);
 
-            strict.equal(2, callbackFiredCount);
+
         });
 
         it('select all should select all items.', function () {
@@ -95,8 +107,8 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let callbackFiredCount = 0;
-            cv.selectedChanged.subscribe(() => callbackFiredCount++);
+            let actualEvent: CollectionViewChangedData<number>;
+            cv.selectedChanged.subscribe(event => actualEvent = event);
 
             // Act.
             let one = cv.getBoxByKey(1);
@@ -114,7 +126,8 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(two), true);
             strict.equal(cv.isSelected(three), true);
 
-            strict.equal(1, callbackFiredCount);
+            strict.equal(actualEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(actualEvent.items, expectedSelected);
         });
 
         it('unselecting an item removes it from selected items.', function () {
@@ -128,8 +141,8 @@ describe('CollectionView', function () {
 
             strict.equal(cv.isSelected(one), true);
 
-            let callbackFiredCount = 0;
-            cv.selectedChanged.subscribe(() => callbackFiredCount++);
+            let actualEvent: CollectionViewChangedData<number>;
+            cv.selectedChanged.subscribe(event => actualEvent = event);
 
             // Act.            
             cv.setSelected(one, false);
@@ -142,7 +155,8 @@ describe('CollectionView', function () {
 
             strict.equal(cv.isSelected(one), false);
 
-            strict.equal(1, callbackFiredCount);
+            strict.equal(actualEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(actualEvent.items, [one]);
         });
 
         it('removing an item removes it from selected items.', function () {
@@ -156,8 +170,8 @@ describe('CollectionView', function () {
 
             strict.equal(cv.isSelected(one), true);
 
-            let callbackFiredCount = 0;
-            cv.selectedChanged.subscribe(() => callbackFiredCount++);
+            let actualEvent: CollectionViewChangedData<number>;
+            cv.selectedChanged.subscribe(event => actualEvent = event);
 
             // Act.            
             o.remove(1);
@@ -170,7 +184,8 @@ describe('CollectionView', function () {
 
             strict.equal(cv.isSelected(one), false);
 
-            strict.equal(1, callbackFiredCount);
+            strict.equal(actualEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(actualEvent.items, [one]);
         });
 
         it('removing multiple items removes them from selected items.', function () {
@@ -187,8 +202,8 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(one), true);
             strict.equal(cv.isSelected(two), true);
 
-            let callbackFiredCount = 0;
-            cv.selectedChanged.subscribe(() => callbackFiredCount++);
+            let actualEvent: CollectionViewChangedData<number>;
+            cv.selectedChanged.subscribe(event => actualEvent = event);
 
             // Act.            
             o.remove(1, 2);
@@ -202,7 +217,8 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(one), false);
             strict.equal(cv.isSelected(two), false);
 
-            strict.equal(1, callbackFiredCount);
+            strict.equal(actualEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(actualEvent.items, [one, two]);
         });
 
         let resetEventTests = [
@@ -222,8 +238,8 @@ describe('CollectionView', function () {
 
                 strict.equal(cv.isSelected(one), true);
 
-                let callbackFiredCount = 0;
-                cv.selectedChanged.subscribe(() => callbackFiredCount++);
+                let actualEvent: CollectionViewChangedData<number>;
+                cv.selectedChanged.subscribe(event => actualEvent = event);
 
                 // Act.            
                 o.update(test.arg);
@@ -236,7 +252,8 @@ describe('CollectionView', function () {
 
                 strict.equal(cv.isSelected(one), false);
 
-                strict.equal(1, callbackFiredCount);
+                strict.equal(actualEvent.type, CollectionViewChangeType.Reset);
+                strict.deepEqual(actualEvent.items, []);
             });
 
             it(`reset event ${test.name} when no items selected does not raise selected changed.`, function () {
@@ -275,8 +292,8 @@ describe('CollectionView', function () {
 
                 cv.selectAll();
 
-                let callbackFiredCount = 0;
-                cv.selectedChanged.subscribe(() => callbackFiredCount++);
+                let actualEvent: CollectionViewChangedData<number>;
+                cv.selectedChanged.subscribe(event => actualEvent = event);
 
                 strict.equal(cv.isSelected(one), true);
                 strict.equal(cv.isSelected(two), true);
@@ -285,11 +302,13 @@ describe('CollectionView', function () {
                 // Act.
                 o.update(test.arg);
 
-                // Assert.
-                strict.equal(callbackFiredCount, 1);
+                // Assert.                
                 strict.deepEqual([...cv.selected], []);
                 strict.deepEqual([...cv.viewableSelected], []);
                 strict.equal(cv.selectedCount, 0);
+
+                strict.equal(actualEvent.type, CollectionViewChangeType.Reset);
+                strict.deepEqual(actualEvent.items, []);
             });
         }
 
@@ -338,7 +357,7 @@ describe('CollectionView', function () {
             strict.equal(callbackFiredCount, 0);
 
             // Act remove two items.
-            o.add(1, 3);
+            o.remove(1, 3);
 
             // Assert.
             strict.equal(callbackFiredCount, 0);

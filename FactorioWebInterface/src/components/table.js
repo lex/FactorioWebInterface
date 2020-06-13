@@ -172,10 +172,15 @@ export class Table extends HTMLTableElement {
             this.buildRow(row);
         }
     }
-    doReset() {
+    doReset(rowEntries) {
         var _a;
         (_a = this._rowMap) === null || _a === void 0 ? void 0 : _a.clear();
-        this.doAdd();
+        if (rowEntries == null) {
+            this.doAdd();
+        }
+        else {
+            this.doUpdate(rowEntries);
+        }
         this.doReorder();
     }
     doRemove(rowEntries) {
@@ -215,7 +220,7 @@ export class Table extends HTMLTableElement {
     update(collectionChangedData) {
         switch (collectionChangedData.type) {
             case CollectionViewChangeType.Reset:
-                this.doReset();
+                this.doReset(collectionChangedData.items);
                 break;
             case CollectionViewChangeType.Reorder:
                 this.doReorder();

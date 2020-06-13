@@ -237,9 +237,14 @@ export class Table<T = any> extends HTMLTableElement {
         }
     }
 
-    private doReset() {
+    private doReset(rowEntries: Box<T>[]) {
         this._rowMap?.clear();
-        this.doAdd();
+
+        if (rowEntries == null) {
+            this.doAdd();
+        } else {
+            this.doUpdate(rowEntries);
+        }
 
         this.doReorder();
     }
@@ -288,7 +293,7 @@ export class Table<T = any> extends HTMLTableElement {
     update(collectionChangedData: CollectionViewChangedData<T>): void {
         switch (collectionChangedData.type) {
             case CollectionViewChangeType.Reset:
-                this.doReset();
+                this.doReset(collectionChangedData.items);
                 break;
             case CollectionViewChangeType.Reorder:
                 this.doReorder();
