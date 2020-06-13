@@ -12,6 +12,11 @@ export class ObservableCircularBuffer extends ObservableCollection {
     values() {
         return this._buffer.values();
     }
+    bind(callback, subscriptions) {
+        let subscription = this.subscribe(callback, subscriptions);
+        callback({ Type: CollectionChangeType.Reset });
+        return subscription;
+    }
     add(item) {
         let old = this._buffer.add(item);
         if (old != null) {

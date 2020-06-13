@@ -2,6 +2,7 @@
 
 export interface IObservableProperty<T> extends IObservable<T> {
     readonly value: T;
+    bind(callback: (event: T) => void, subscriptions?: (() => void)[]): () => void;
 }
 
 export class ObservableProperty<T> extends Observable<T> implements IObservableProperty<T> {
@@ -15,6 +16,14 @@ export class ObservableProperty<T> extends Observable<T> implements IObservableP
         super();
 
         this._value = value;
+    }
+
+    bind(callback: (event: T) => void, subscriptions?: (() => void)[]): () => void {
+        let subscription = this.subscribe(callback, subscriptions);
+
+        callback(this._value);
+
+        return subscription;
     }
 
     raise(event: T) {

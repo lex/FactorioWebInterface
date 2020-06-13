@@ -19,6 +19,11 @@ export class ObservableKeyArray extends ObservableKeyCollection {
     values() {
         return this._map.values();
     }
+    bind(callback, subscriptions) {
+        let subscription = this.subscribe(callback, subscriptions);
+        callback({ Type: CollectionChangeType.Reset });
+        return subscription;
+    }
     update(changeData) {
         switch (changeData.Type) {
             case CollectionChangeType.Reset:
@@ -92,6 +97,11 @@ export class ObservableArray extends ObservableCollection {
     }
     values() {
         return this._items.values();
+    }
+    bind(callback, subscriptions) {
+        let subscription = this.subscribe(callback, subscriptions);
+        callback({ Type: CollectionChangeType.Reset });
+        return subscription;
     }
     update(changeData) {
         function remove(items, remove) {

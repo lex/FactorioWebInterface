@@ -61,7 +61,7 @@ export class AdminsService {
                 this.requestAdmins();
             }
             catch (ex) {
-                console.log(ex.message);
+                console.log(ex);
                 setTimeout(() => this.startConnection(), 2000);
             }
         });

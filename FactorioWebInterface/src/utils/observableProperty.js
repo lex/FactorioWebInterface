@@ -7,6 +7,11 @@ export class ObservableProperty extends Observable {
     get value() {
         return this._value;
     }
+    bind(callback, subscriptions) {
+        let subscription = this.subscribe(callback, subscriptions);
+        callback(this._value);
+        return subscription;
+    }
     raise(event) {
         this._value = event;
         super.raise(event);

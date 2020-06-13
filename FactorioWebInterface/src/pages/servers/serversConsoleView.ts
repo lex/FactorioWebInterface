@@ -31,9 +31,8 @@ export class ServersConsoleView extends VirtualComponent {
         statusLabel.style.fontWeight = 'bold';
         statusLabel.style.marginLeft = '1em';
 
-        let statusText = document.createElement('label');
-        statusText.textContent = serversConsoleViewModel.status.value;
-        serversConsoleViewModel.status.subscribe(event => statusText.textContent = event);
+        let statusText = document.createElement('label');        
+        serversConsoleViewModel.status.bind(event => statusText.textContent = event);
         statusText.style.fontSize = '1rem';
         statusText.style.fontWeight = 'bold';
         statusText.style.marginLeft = '0.35em';
@@ -44,9 +43,8 @@ export class ServersConsoleView extends VirtualComponent {
         versionLabel.style.fontWeight = 'bold';
         versionLabel.style.marginLeft = '1em';
 
-        let versionText = document.createElement('label');
-        versionText.textContent = serversConsoleViewModel.version.value;
-        serversConsoleViewModel.version.subscribe(event => versionText.textContent = event);
+        let versionText = document.createElement('label');        
+        serversConsoleViewModel.version.bind(event => versionText.textContent = event);
         versionText.style.fontSize = '1rem';
         versionText.style.fontWeight = 'bold';
         versionText.style.marginLeft = '0.35em';

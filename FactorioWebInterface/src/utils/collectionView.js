@@ -55,6 +55,11 @@ export class CollectionView extends Observable {
     get sortSpecifications() {
         return this._sortSpecifications;
     }
+    bind(callback, subscriptions) {
+        let subscription = this.subscribe(callback, subscriptions);
+        callback({ type: CollectionViewChangeType.Reset });
+        return subscription;
+    }
     getBoxByKey(key) {
         var _a;
         return (_a = this._map) === null || _a === void 0 ? void 0 : _a.get(key);

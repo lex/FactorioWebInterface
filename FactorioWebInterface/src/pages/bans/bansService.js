@@ -56,7 +56,7 @@ export class BansService {
                 this.requestBans();
             }
             catch (ex) {
-                console.log(ex.message);
+                console.log(ex);
                 setTimeout(() => this.startConnection(), 2000);
             }
         });

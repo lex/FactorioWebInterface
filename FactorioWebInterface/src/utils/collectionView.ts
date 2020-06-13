@@ -102,6 +102,14 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         this._source.subscribe((event) => this.update(event));
     }
 
+    bind(callback: (event: CollectionViewChangedData<T>) => void, subscriptions?: (() => void)[]): () => void {
+        let subscription = this.subscribe(callback, subscriptions);
+
+        callback({ type: CollectionViewChangeType.Reset });
+
+        return subscription;
+    }
+
     getBoxByKey(key: any): Box<T> {
         return this._map?.get(key);
     }

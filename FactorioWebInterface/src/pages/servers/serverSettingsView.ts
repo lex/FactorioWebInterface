@@ -22,8 +22,7 @@ export class ServerSettingsView extends VirtualComponent {
         this._serverSettingsViewModel = serverSettingsViewModel;
 
         let adminsField = new TextareaField('Admins', 'Admins (if not default)');
-        adminsField.enabled = serverSettingsViewModel.adminsEditEnabled;
-        serverSettingsViewModel.propertyChanged('adminsEditEnabled', event => adminsField.enabled = event);
+        serverSettingsViewModel.bind('adminsEditEnabled', event => adminsField.enabled = event);
 
         let form = new VirtualForm(serverSettingsViewModel, [
             new TextField('Name'),
@@ -61,8 +60,7 @@ export class ServerSettingsView extends VirtualComponent {
         this._collapse.open = true;
         this._collapse.classList.add('is-4', 'border', 'header', 'wide');
         this._collapse.style.marginTop = '1rem';
-        this.setCollapseUnSavedWarning(serverSettingsViewModel.saved);
-        serverSettingsViewModel.propertyChanged('saved', event => this.setCollapseUnSavedWarning(event));
+        serverSettingsViewModel.bind('saved', event => this.setCollapseUnSavedWarning(event));
 
         this._root = this._collapse;
     }
@@ -78,8 +76,7 @@ export class ServerSettingsView extends VirtualComponent {
             .setCommand(this._serverSettingsViewModel.copyCommand);
 
         let pasteSettings = new TextInput();
-        pasteSettings.placeholder = this._serverSettingsViewModel.pasteText;
-        this._serverSettingsViewModel.propertyChanged('pasteText', event => pasteSettings.placeholder = event);
+        this._serverSettingsViewModel.bind('pasteText', event => pasteSettings.placeholder = event);
         pasteSettings.onpaste = (ev: ClipboardEvent) => {
             event.preventDefault();
 

@@ -97,11 +97,8 @@ export class ServerFileManagementView extends VirtualComponent {
             }
         }
 
-        serverFileManagementViewModel.isUploading.subscribe(event => updateUploadButton(event));
-        updateUploadButton(serverFileManagementViewModel.isUploading.value);
-
-        serverFileManagementViewModel.isDeflating.subscribe(event => updateDeflateButton(event));
-        updateDeflateButton(serverFileManagementViewModel.isUploading.value);
+        serverFileManagementViewModel.isUploading.bind(event => updateUploadButton(event));
+        serverFileManagementViewModel.isDeflating.bind(event => updateDeflateButton(event));
 
         this._root = collapse;
     }

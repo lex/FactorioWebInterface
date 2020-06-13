@@ -82,8 +82,7 @@ export class BansView extends VirtualComponent {
 
     private buildTableCollapse(): Node {
         let header = document.createElement('h4');
-        header.innerText = this._bansViewModel.banListHeader;
-        this._bansViewModel.propertyChanged('banListHeader', (text) => header.innerText = text);
+        this._bansViewModel.bind('banListHeader', (text) => header.innerText = text);
 
         let table = this.buildTable();
 

@@ -9,14 +9,20 @@ export class Observable<T> implements IObservable<T> {
         return this.callbacks.length;
     }
 
-    subscribe(callback: (event: T) => void): () => void {
+    subscribe(callback: (event: T) => void, subscriptions?: (() => void)[]): () => void {
         this.callbacks.push(callback);
-        return () => {
+        let subscription = () => {
             let index = this.callbacks.indexOf(callback);
             if (index !== -1) {
                 this.callbacks.splice(index);
             };
         }
+
+        if (subscriptions != null) {
+            subscriptions.push(subscription);
+        }
+
+        return subscription;
     }
 
     raise(event: T) {
@@ -29,5 +35,13 @@ export class Observable<T> implements IObservable<T> {
         if (subscription) {
             subscription();
         }
+    }
+
+    static unSubscribeAll(subscriptions: (() => void)[]): void {
+        for (let i = 0; i < subscriptions.length; i++) {
+            subscriptions[i]();
+        }
+
+        subscriptions.length = 0;
     }
 }

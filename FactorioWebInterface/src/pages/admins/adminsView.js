@@ -33,8 +33,7 @@ export class AdminsView extends VirtualComponent {
     }
     buildTableCollapse() {
         let header = document.createElement('div');
-        header.innerText = this._adminsViewModel.adminListHeader;
-        this._adminsViewModel.propertyChanged('adminListHeader', (text) => header.innerText = text);
+        this._adminsViewModel.bind('adminListHeader', (text) => header.innerText = text);
         let table = this.buildTable();
         let tableCollapse = new Collapse(header, table);
         tableCollapse.open = true;

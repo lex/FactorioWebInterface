@@ -5,15 +5,19 @@ export class Observable {
     get subscriberCount() {
         return this.callbacks.length;
     }
-    subscribe(callback) {
+    subscribe(callback, subscriptions) {
         this.callbacks.push(callback);
-        return () => {
+        let subscription = () => {
             let index = this.callbacks.indexOf(callback);
             if (index !== -1) {
                 this.callbacks.splice(index);
             }
             ;
         };
+        if (subscriptions != null) {
+            subscriptions.push(subscription);
+        }
+        return subscription;
     }
     raise(event) {
         for (var i = 0; i < this.callbacks.length; i++) {
@@ -24,6 +28,12 @@ export class Observable {
         if (subscription) {
             subscription();
         }
+    }
+    static unSubscribeAll(subscriptions) {
+        for (let i = 0; i < subscriptions.length; i++) {
+            subscriptions[i]();
+        }
+        subscriptions.length = 0;
     }
 }
 //# sourceMappingURL=observable.js.map

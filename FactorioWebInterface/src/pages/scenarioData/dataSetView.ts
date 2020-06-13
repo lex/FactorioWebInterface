@@ -23,12 +23,10 @@ export class DataSetView extends VirtualComponent {
         view.append(panel);
 
         let header = document.createElement('h4');
-        header.innerText = dataSetViewModel.header;
-        dataSetViewModel.propertyChanged('header', (value) => header.innerText = value);
+        dataSetViewModel.bind('header', (value) => header.innerText = value);
         panel.appendChild(header);
 
         let select = new Select(this._dataSetViewModel.dataSetsOptions);
-        select.onchange = (() => this._dataSetViewModel.setDataSet(select.selectedItem));
         select.style.marginLeft = 'auto';
         select.style.marginRight = '0.25rem';
         panel.append(select);

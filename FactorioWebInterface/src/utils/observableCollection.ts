@@ -8,6 +8,7 @@ export interface IKeySelector<K, V> {
 export abstract class ObservableCollection<T> extends Observable<CollectionChangedData<T>> {
     abstract get count(): number;
     abstract values(): IterableIterator<T>;
+    abstract bind(callback: (event: CollectionChangedData<T>) => void, subscriptions?: (() => void)[]): () => void;
 }
 
 export abstract class ObservableKeyCollection<K, V> extends ObservableCollection<V> implements IKeySelector<K, V>{
@@ -33,6 +34,14 @@ export class ObservableKeyArray<K, V> extends ObservableKeyCollection<K, V> {
 
     values(): IterableIterator<V> {
         return this._map.values();
+    }
+
+    bind(callback: (event: CollectionChangedData<V>) => void, subscriptions?: (() => void)[]): () => void {
+        let subscription = this.subscribe(callback, subscriptions);
+
+        callback({ Type: CollectionChangeType.Reset });
+
+        return subscription;
     }
 
     update(changeData: CollectionChangedData): void {
@@ -117,6 +126,14 @@ export class ObservableArray<T> extends ObservableCollection<T>{
 
     values(): IterableIterator<T> {
         return this._items.values();
+    }
+
+    bind(callback: (event: CollectionChangedData<T>) => void, subscriptions?: (() => void)[]): () => void {
+        let subscription = this.subscribe(callback, subscriptions);
+
+        callback({ Type: CollectionChangeType.Reset });
+
+        return subscription;
     }
 
     update(changeData: CollectionChangedData<T>): void {

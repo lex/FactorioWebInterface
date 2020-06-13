@@ -47,8 +47,7 @@ export class ServerExtraSettingsView extends VirtualComponent {
         this._collapse.open = true;
         this._collapse.classList.add('is-4', 'border', 'header', 'wide');
         this._collapse.style.marginTop = '1rem';
-        this.setCollapseUnSavedWarning(serverExtraSettingsViewModel.saved);
-        serverExtraSettingsViewModel.propertyChanged('saved', event => this.setCollapseUnSavedWarning(event));
+        serverExtraSettingsViewModel.bind('saved', event => this.setCollapseUnSavedWarning(event));
 
         this._root = this._collapse;
     }
@@ -64,8 +63,7 @@ export class ServerExtraSettingsView extends VirtualComponent {
             .setCommand(this._serverExtraSettingsViewModel.copyCommand);
 
         let pasteSettings = new TextInput();
-        pasteSettings.placeholder = this._serverExtraSettingsViewModel.pasteText;
-        this._serverExtraSettingsViewModel.propertyChanged('pasteText', event => pasteSettings.placeholder = event);
+        this._serverExtraSettingsViewModel.bind('pasteText', event => pasteSettings.placeholder = event);
         pasteSettings.onpaste = (ev: ClipboardEvent) => {
             event.preventDefault();
 

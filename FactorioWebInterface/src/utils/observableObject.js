@@ -3,13 +3,18 @@ export class ObservableObject {
     constructor() {
         this._propertyChangeObservable = new Map();
     }
-    propertyChanged(propertyName, callback) {
+    propertyChanged(propertyName, callback, subscriptions) {
         let observables = this._propertyChangeObservable.get(propertyName);
         if (!observables) {
             observables = new Observable();
             this._propertyChangeObservable.set(propertyName, observables);
         }
-        return observables.subscribe(callback);
+        return observables.subscribe(callback, subscriptions);
+    }
+    bind(propertyName, callback, subscriptions) {
+        let subscription = this.propertyChanged(propertyName, callback, subscriptions);
+        callback(this[propertyName]);
+        return subscription;
     }
     raise(propertyName, value) {
         let observables = this._propertyChangeObservable.get(propertyName);

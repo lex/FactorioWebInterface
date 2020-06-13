@@ -7,14 +7,22 @@ export interface IObservableObject {
 export abstract class ObservableObject implements IObservableObject {
     private _propertyChangeObservable = new Map<string, Observable<any>>();
 
-    propertyChanged(propertyName: string, callback: (event: any) => void): () => void {
+    propertyChanged(propertyName: string, callback: (event: any) => void, subscriptions?: (() => void)[]): () => void {
         let observables = this._propertyChangeObservable.get(propertyName);
         if (!observables) {
             observables = new Observable();
             this._propertyChangeObservable.set(propertyName, observables);
         }
 
-        return observables.subscribe(callback);
+        return observables.subscribe(callback, subscriptions);
+    }
+
+    bind(propertyName: string, callback: (event: any) => void, subscriptions?: (() => void)[]): () => void {
+        let subscription = this.propertyChanged(propertyName, callback, subscriptions);
+
+        callback(this[propertyName]);
+
+        return subscription;
     }
 
     protected raise(propertyName: string, value: any) {

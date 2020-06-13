@@ -46,7 +46,7 @@ export class UpdateDataView extends VirtualComponent {
         collapse.style.marginTop = '2rem';
         toggleButton.onToggle(state => {
             if (state) {
-                collapse.style.top = 3.5 + 'rem';
+                collapse.style.top = '3.5rem';
                 collapse.style.position = 'sticky';
                 collapse.style.zIndex = '20';
             } else {
