@@ -192,6 +192,10 @@ export class ServersHubService {
             this._onServerExtraSettingsUpdate.raise({ data, markUnsaved });
         })
 
+        this._connection.onclose(async () => {
+            await this.startConnection();
+        });
+
         this.startConnection();
     }
 
@@ -353,7 +357,7 @@ export class ServersHubService {
 
             this._whenConnection.raise();
         } catch (ex) {
-            console.log(ex.message);
+            console.log(ex);
             setTimeout(() => this.startConnection(), 2000);
         }
     }

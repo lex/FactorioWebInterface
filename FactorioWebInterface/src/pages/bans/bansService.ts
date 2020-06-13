@@ -64,7 +64,7 @@ export class BansService {
             await this._connection.start();
             this.requestBans();
         } catch (ex) {
-            console.log(ex.message);
+            console.log(ex);
             setTimeout(() => this.startConnection(), 2000);
         }
     }

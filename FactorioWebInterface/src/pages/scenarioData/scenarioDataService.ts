@@ -134,7 +134,7 @@ export class ScenarioDataService extends ObservableObject {
                 this._connection.send('RequestAllDataForDataSet', this.currentDataSet);
             }
         } catch (ex) {
-            console.log(ex.message);
+            console.log(ex);
             setTimeout(() => this.startConnection(), 2000);
         }
     }

@@ -97,6 +97,9 @@ export class ServersHubService {
         this._connection.on('SendServerExtraSettingsUpdate', (data, markUnsaved) => {
             this._onServerExtraSettingsUpdate.raise({ data, markUnsaved });
         });
+        this._connection.onclose(() => __awaiter(this, void 0, void 0, function* () {
+            yield this.startConnection();
+        }));
         this.startConnection();
     }
     get onDeflateFinished() {
@@ -276,7 +279,7 @@ export class ServersHubService {
                 this._whenConnection.raise();
             }
             catch (ex) {
-                console.log(ex.message);
+                console.log(ex);
                 setTimeout(() => this.startConnection(), 2000);
             }
         });
