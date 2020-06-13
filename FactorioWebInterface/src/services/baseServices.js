@@ -5,7 +5,7 @@ import { UploadService } from "./uploadService";
 import { ErrorService } from "./errorService";
 import { WindowService } from "./windowService";
 import { ModalService } from "./modalService";
-import { ModalServiceBase } from "./ModalServiceBase";
+import { IModalService } from "./iModalService";
 import { ViewLocator } from "./viewLocator";
 export class BaseServices {
     static register(serviceLocator) {
@@ -15,7 +15,7 @@ export class BaseServices {
         serviceLocator.register(UploadService, (services) => new UploadService(services.get(RequestVerificationService)));
         serviceLocator.register(ErrorService, () => new ErrorService());
         serviceLocator.register(WindowService, () => new WindowService());
-        serviceLocator.register(ModalServiceBase, (services) => new ModalService(services.get(ViewLocator)));
+        serviceLocator.register(IModalService, (services) => new ModalService(services.get(ViewLocator)));
         return serviceLocator;
     }
 }

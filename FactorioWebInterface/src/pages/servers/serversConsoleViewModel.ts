@@ -13,7 +13,7 @@ import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
-import { ModalServiceBase } from "../../services/ModalServiceBase";
+import { IModalService } from "../../services/iModalService";
 import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { ManageVersionService } from "./manageVersionService";
 
@@ -21,7 +21,7 @@ export class ServersConsoleViewModel extends ObservableObject {
     private _serverIdService: ServerIdService;
     private _serverConsoleService: ServerConsoleService;
     private _manageVersionService: ManageVersionService;
-    private _modalService: ModalServiceBase;
+    private _modalService: IModalService;
     private _errorService: ErrorService;
 
     private _tempFiles: FileViewModel;
@@ -109,7 +109,7 @@ export class ServersConsoleViewModel extends ObservableObject {
         serverIdService: ServerIdService,
         serverConsoleService: ServerConsoleService,
         manageVersionService: ManageVersionService,
-        modalService: ModalServiceBase,
+        modalService: IModalService,
         errorService: ErrorService,
         tempFiles: FileViewModel,
         localFiles: FileViewModel,

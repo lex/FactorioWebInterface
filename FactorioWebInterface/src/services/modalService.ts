@@ -5,13 +5,12 @@ import { ModalBackground } from "../components/modalBackground";
 import { EventListener } from "../utils/eventListener";
 import { VirtualComponent } from "../components/virtualComponent";
 import { Modal } from "../components/modal";
-import { ModalServiceBase } from "./ModalServiceBase";
+import { IModalService } from "./iModalService";
 
-export class ModalService extends ModalServiceBase {
+export class ModalService implements IModalService {
     private _viewLocator: ViewLocator;
 
     constructor(viewLocator: ViewLocator) {
-        super();
         this._viewLocator = viewLocator;
     }
 

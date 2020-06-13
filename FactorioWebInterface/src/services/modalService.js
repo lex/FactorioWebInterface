@@ -4,10 +4,8 @@ import { ModalBackground } from "../components/modalBackground";
 import { EventListener } from "../utils/eventListener";
 import { VirtualComponent } from "../components/virtualComponent";
 import { Modal } from "../components/modal";
-import { ModalServiceBase } from "./ModalServiceBase";
-export class ModalService extends ModalServiceBase {
+export class ModalService {
     constructor(viewLocator) {
-        super();
         this._viewLocator = viewLocator;
     }
     showViewModel(viewModel) {

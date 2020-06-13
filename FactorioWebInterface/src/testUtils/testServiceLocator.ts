@@ -14,7 +14,7 @@ import { ServersHubServiceMockBase } from "./pages/servers/serversHubServiceMock
 import { registerServices } from "../pages/servers/services";
 import { WindowService } from "../services/windowService";
 import { WindowServiceMockBase } from "./services/windowServiceMockBase";
-import { ModalServiceBase } from "../services/ModalServiceBase";
+import { IModalService } from "../services/iModalService";
 import { ModalServiceMockBase } from "./services/modalServiceMockBase";
 
 export class TestServiceLocator extends ServiceLocator {
@@ -25,7 +25,7 @@ export class TestServiceLocator extends ServiceLocator {
         serviceLocator.register(UploadService, () => new UploadServiceMockBase());
         serviceLocator.register(ErrorService, () => new ErrorServiceMockBase());
         serviceLocator.register(WindowService, () => new WindowServiceMockBase());
-        serviceLocator.register(ModalServiceBase, () => new ModalServiceMockBase());
+        serviceLocator.register(IModalService, () => new ModalServiceMockBase());
 
         return serviceLocator;
     }

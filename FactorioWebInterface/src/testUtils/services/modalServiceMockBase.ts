@@ -1,8 +1,8 @@
 ﻿import { PublicPart } from "../../utils/types";
-import { ModalServiceBase } from "../../services/ModalServiceBase";
+import { IModalService } from "../../services/iModalService";
 import { InvokeBase } from "../invokeBase";
 
-export class ModalServiceMockBase extends InvokeBase<ModalServiceBase> implements PublicPart<ModalServiceBase> {
+export class ModalServiceMockBase extends InvokeBase<IModalService> implements PublicPart<IModalService> {
     constructor(strict: boolean = false) {
         super(strict);
     }
