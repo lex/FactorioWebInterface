@@ -14,6 +14,7 @@ import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionChangeType } from "../../ts/utils";
 import { ObservableProperty } from "../../utils/observableProperty";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
+import { Observable } from "../../utils/observable";
 export class ManageVersionViewModel extends CloseBaseViewModel {
     constructor(manageVersionService, status, errorService) {
         super();
@@ -24,12 +25,12 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
         this._errorService = errorService;
         this._downloadableVersions = new CollectionView(manageVersionService.downloadableVersions);
         this.updatedSelected();
-        this._subscriptions.push(manageVersionService.downloadableVersions.subscribe(event => {
+        manageVersionService.downloadableVersions.subscribe(event => {
             if (event.Type === CollectionChangeType.Reset) {
                 this.updatedSelected();
             }
             this._isFetchingVersions.raise(false);
-        }));
+        }, this._subscriptions);
         this._downloadAndUpdateCommand = new DelegateCommand(() => {
             var _a;
             let selected = (_a = IterableHelper.firstOrDefault(this._downloadableVersions.selected)) === null || _a === void 0 ? void 0 : _a.value;
@@ -42,11 +43,11 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
             return selected != null;
         });
         this._updateCommand = new DelegateCommand(version => this.update(version), version => FactorioServerStatusUtils.IsUpdatable(this._status.value));
-        this._downloadableVersions.selectedChanged.subscribe(() => this._downloadAndUpdateCommand.raiseCanExecuteChanged());
-        this._subscriptions.push(this._status.subscribe(event => {
+        this._downloadableVersions.selectedChanged.subscribe(() => this._downloadAndUpdateCommand.raiseCanExecuteChanged(), this._subscriptions);
+        this._status.subscribe(event => {
             this._downloadAndUpdateCommand.raiseCanExecuteChanged();
             this._updateCommand.raiseCanExecuteChanged();
-        }));
+        }, this._subscriptions);
         manageVersionService.requestDownloadableVersion();
         manageVersionService.requestCachedVersions();
     }
@@ -74,11 +75,8 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
     delete(version) {
         this._manageVersionService.deleteCachedVersion(version);
     }
-    dispose() {
-        for (let sub of this._subscriptions) {
-            sub();
-        }
-        this._subscriptions.length = 0;
+    disconnect() {
+        Observable.unSubscribeAll(this._subscriptions);
     }
     updatedSelected() {
         if (this._downloadableVersions.selectedCount === 0) {

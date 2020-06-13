@@ -187,7 +187,7 @@ export class ServersConsoleViewModel extends ObservableObject {
             let vm = new ManageVersionViewModel(this._manageVersionService, this.status, this._errorService);
             await this._modalService.showViewModel(vm);
 
-            vm.dispose();
+            vm.disconnect();
         });
 
         this._sendCommand = new DelegateCommand(() => {
