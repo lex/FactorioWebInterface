@@ -1,10 +1,11 @@
 ﻿a-tooltip {
     visibility: hidden;
-    position: absolute;
+    position: fixed;
     border: 1px solid lightgrey;
     border-radius: 10px;
     background: white;
-    z-index: 1;
+    color: #363636;
+    z-index: 100;
     font-size: 1rem;
     padding: 0.5em;
     width: intrinsic;
@@ -17,9 +18,20 @@
     transition: opacity 0.3s;
     font-weight: normal;
     box-shadow: 0 2px 3px rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.1);
+    animation: show 0.3s;
 }
 
 *:hover > a-tooltip {
     visibility: visible;
     opacity: 1;
+}
+
+@keyframes show {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }

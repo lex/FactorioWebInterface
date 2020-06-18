@@ -8,6 +8,7 @@ import { Progress } from "../../components/progress";
 import { VirtualForm } from "../../components/virtualForm";
 import { TextField } from "../../components/textField";
 import { Select } from "../../components/select";
+import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 
 export class ServerFileManagementView extends VirtualComponent {
     constructor(serverFileManagementViewModel: ServerFileManagementViewModel) {
@@ -31,15 +32,23 @@ export class ServerFileManagementView extends VirtualComponent {
         uploadButtonContent.append(uploadIcon, uploadProgress);
 
         let uploadButton = new Button(uploadButtonContent, Button.classes.link, 'no-spacing')
-            .setCommand(serverFileManagementViewModel.uploadSavesCommand);
+            .setCommand(serverFileManagementViewModel.uploadSavesCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serverFileManagementViewModel, 'uploadSavesTooltip'));
+
         let deleteButton = iconButton(Icon.classes.trash, 'Delete Saves', Button.classes.danger)
-            .setCommand(serverFileManagementViewModel.deleteSavesCommand);
+            .setCommand(serverFileManagementViewModel.deleteSavesCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serverFileManagementViewModel, 'deleteSavesTooltip'));
+
         row1.append(uploadButton, deleteButton);
 
         let moveButton = iconButton(Icon.classes.shareSquare, 'Move Saves', Button.classes.link)
-            .setCommand(serverFileManagementViewModel.moveSavesCommand);
+            .setCommand(serverFileManagementViewModel.moveSavesCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serverFileManagementViewModel, 'moveSavesTooltip'));
+
         let copyButton = iconButton(Icon.classes.clone, 'Copy Saves', Button.classes.link)
-            .setCommand(serverFileManagementViewModel.copySavesCommand);
+            .setCommand(serverFileManagementViewModel.copySavesCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serverFileManagementViewModel, 'copySavesTooltip'));
+
         let destinationLabel = document.createElement('label');
         destinationLabel.innerText = 'Destination:';
         destinationLabel.classList.add('label-text');
@@ -49,7 +58,8 @@ export class ServerFileManagementView extends VirtualComponent {
         row2.append(moveButton, copyButton, destinationLabel, destinationSelect);
 
         let renameButton = iconButton(Icon.classes.edit, 'Rename Save', Button.classes.link)
-            .setCommand(serverFileManagementViewModel.renameSaveCommand);
+            .setCommand(serverFileManagementViewModel.renameSaveCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serverFileManagementViewModel, 'renameSavesTooltip'));
 
         let deflateProgress = new Progress(p => `Deflating`);
         deflateProgress.classList.add('overlay', Progress.classes.indeterminate);
@@ -62,7 +72,8 @@ export class ServerFileManagementView extends VirtualComponent {
         deflateButtonContent.append(deflateIcon, deflateProgress);
 
         let deflateButton = new Button(deflateButtonContent, Button.classes.link, 'no-spacing')
-            .setCommand(serverFileManagementViewModel.deflateSaveCommand);
+            .setCommand(serverFileManagementViewModel.deflateSaveCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serverFileManagementViewModel, 'deflateSavesTooltip'));
 
         let nameInput = new TextField('newFileName', 'New Name:');
         nameInput.style.flexGrow = '1';

@@ -22,4 +22,12 @@
 
         return document.createTextNode(value);
     }
+
+    static FirstChildOfInstance<T, TT extends Function>(node: Node, type: TT): T {
+        for (let child of node.childNodes) {
+            if (child instanceof type) {
+                return child as any as T;
+            }
+        }
+    }
 }

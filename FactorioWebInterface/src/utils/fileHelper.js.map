@@ -1,0 +1,1 @@
+{"version":3,"file":"fileHelper.js","sourceRoot":"","sources":["fileHelper.ts"],"names":[],"mappings":"AAAA,MAAM,OAAO,UAAU;IACnB,MAAM,CAAC,eAAe,CAAC,IAAY,EAAE,SAAiB;QAClD,IAAI,IAAI,CAAC,QAAQ,CAAC,SAAS,CAAC,EAAE;YAC1B,OAAO,IAAI,CAAC;SACf;aAAM;YACH,OAAO,IAAI,GAAG,SAAS,CAAC;SAC3B;IACL,CAAC;CACJ"}

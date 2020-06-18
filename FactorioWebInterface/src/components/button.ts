@@ -2,8 +2,9 @@
 import { EventListener } from "../utils/eventListener";
 import { ICommand } from "../utils/command";
 import { Icon } from "./icon";
+import { BaseElement } from "./baseElement";
 
-export class Button extends HTMLElement {
+export class Button extends BaseElement {
     static classes = {
         //white: 'is-white',
         //light: 'is-light',
@@ -18,7 +19,7 @@ export class Button extends HTMLElement {
         warning: 'is-warning',
         danger: 'is-danger',
         close: 'close-button'
-    }
+    };
 
     private _command: ICommand<any>;
     private _commandSubscription: () => void;
@@ -117,10 +118,12 @@ export class Button extends HTMLElement {
     }
 
     connectedCallback() {
+        super.connectedCallback();
         this.connectCommand();
     }
 
     disconnectedCallback() {
+        super.disconnectedCallback();
         this.disconnectCommand();
     }
 }

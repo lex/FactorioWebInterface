@@ -1,9 +1,10 @@
 ﻿import { FieldBase } from "./fieldBase";
 import { FieldId } from "../utils/fieldId";
 import { Tooltip } from "./tooltip";
+import { Label } from "./label";
 
 export abstract class InputFieldBase extends FieldBase {
-    protected _label: HTMLLabelElement;
+    protected _label: Label;
     protected _fieldBody: HTMLDivElement;
     protected _error: HTMLDivElement;
 
@@ -12,7 +13,7 @@ export abstract class InputFieldBase extends FieldBase {
 
         let id = FieldId.getNextId();
 
-        this._label = document.createElement('label');
+        this._label = new Label();
         this._label.htmlFor = id;
         this.appendChild(this._label);
 
@@ -54,10 +55,8 @@ export abstract class InputFieldBase extends FieldBase {
         this._label.hidden = value;
     }
 
-    setTooltip(content: string | Node) {
-        let tooltip = new Tooltip(content);
-        this._label.appendChild(tooltip);
-
+    setTooltip(content: string | Node | Tooltip): this {
+        this._label.setTooltip(content);
         return this;
     }
 }

@@ -13,7 +13,6 @@ import { Field } from "../../components/field";
 import { TimeField } from "../../components/timeField";
 import { TextareaField } from "../../components/textareaField";
 import { ToggleButton } from "../../components/toggleButton";
-import { Tooltip } from "../../components/tooltip";
 
 export class BansView extends VirtualComponent {
     private _bansViewModel: BansViewModel;
@@ -55,8 +54,8 @@ export class BansView extends VirtualComponent {
         let thumbtack = document.createElement('i');
         thumbtack.classList.add('fas', 'fa-thumbtack');
         let toggleButton = new ToggleButton(thumbtack);
+        toggleButton.setTooltip('Pin the form to keep it in view.');
         toggleButton.style.marginRight = '0.5em';
-        toggleButton.append(new Tooltip('Pin the form to keep it in view.'));
 
         header.append(toggleButton);
         header.append('Add Ban');

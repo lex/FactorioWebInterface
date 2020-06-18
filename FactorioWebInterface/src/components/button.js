@@ -1,7 +1,8 @@
 import "./button.ts.less";
 import { EventListener } from "../utils/eventListener";
 import { Icon } from "./icon";
-export class Button extends HTMLElement {
+import { BaseElement } from "./baseElement";
+export class Button extends BaseElement {
     constructor(content, ...classes) {
         super();
         this.append(content);
@@ -77,9 +78,11 @@ export class Button extends HTMLElement {
         }
     }
     connectedCallback() {
+        super.connectedCallback();
         this.connectCommand();
     }
     disconnectedCallback() {
+        super.disconnectedCallback();
         this.disconnectCommand();
     }
 }

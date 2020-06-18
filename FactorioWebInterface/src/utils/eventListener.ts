@@ -16,4 +16,16 @@
 
         return () => element.removeEventListener('keyup', handler);
     }
+
+    static onMouseEnter(element: HTMLElement, handler: (event?: MouseEvent) => void): () => void {
+        element.addEventListener('mouseenter', handler);
+
+        return () => element.removeEventListener('mouseenter', handler);
+    }
+
+    static onMouseLeave(element: HTMLElement, handler: (event?: MouseEvent) => void): () => void {
+        element.addEventListener('mouseleave', handler);
+
+        return () => element.removeEventListener('mouseleave', handler);
+    }
 }

@@ -40,7 +40,11 @@
     <None Remove="src\components\contentBase.ts" />
     <None Remove="src\components\dateField.ts" />
     <None Remove="src\components\field.ts" />
+    <None Remove="src\components\htmlInputBaseElement.ts" />
+    <None Remove="src\components\htmlLabelBaseElement.ts" />
     <None Remove="src\components\icon.ts" />
+    <None Remove="src\components\input.ts" />
+    <None Remove="src\components\label.ts" />
     <None Remove="src\components\modal.ts" />
     <None Remove="src\components\modalBackground.ts" />
     <None Remove="src\components\progress.ts" />
@@ -112,6 +116,7 @@
     <None Remove="src\services\fileSelectionservice.ts" />
     <None Remove="src\services\modalService.ts" />
     <None Remove="src\services\requestVerificationService.ts" />
+    <None Remove="src\services\tooltipService.ts" />
     <None Remove="src\services\uploadService.ts" />
     <None Remove="src\services\viewLocator.ts" />
     <None Remove="src\services\windowService.ts" />
@@ -180,7 +185,8 @@
     <None Remove="src\ts\utilsOld\observableObject.ts" />
     <None Remove="src\ts\utilsOld\validator.ts" />
     <None Remove="src\utils\arrayHelper.ts" />
-    <None Remove="src\utils\bindingSource.ts" />
+    <None Remove="src\utils\binding.ts" />
+    <None Remove="src\utils\bindingSourceOld.ts" />
     <None Remove="src\utils\box.ts" />
     <None Remove="src\utils\circularBuffer.spec.ts" />
     <None Remove="src\utils\circularBuffer.ts" />
@@ -191,7 +197,9 @@
     <None Remove="src\utils\comparatorHelper.ts" />
     <None Remove="src\utils\eventListener.ts" />
     <None Remove="src\utils\fieldId.ts" />
+    <None Remove="src\utils\fileHelper.ts" />
     <None Remove="src\utils\functions.ts" />
+    <None Remove="src\utils\globalStore.ts" />
     <None Remove="src\utils\iterableHelper.ts" />
     <None Remove="src\utils\mathHelper.ts" />
     <None Remove="src\utils\nodeHelper.ts" />
@@ -267,7 +275,11 @@
     <TypeScriptCompile Include="src\components\contentBase.ts" />
     <TypeScriptCompile Include="src\components\dateField.ts" />
     <TypeScriptCompile Include="src\components\field.ts" />
+    <TypeScriptCompile Include="src\components\htmlInputBaseElement.ts" />
+    <TypeScriptCompile Include="src\components\htmlLabelBaseElement.ts" />
     <TypeScriptCompile Include="src\components\icon.ts" />
+    <TypeScriptCompile Include="src\components\input.ts" />
+    <TypeScriptCompile Include="src\components\label.ts" />
     <TypeScriptCompile Include="src\components\modalBackground.ts" />
     <TypeScriptCompile Include="src\components\modal.ts" />
     <TypeScriptCompile Include="src\components\progress.ts" />
@@ -338,6 +350,7 @@
     <TypeScriptCompile Include="src\services\errorService.ts" />
     <TypeScriptCompile Include="src\services\fileSelectionService.ts" />
     <TypeScriptCompile Include="src\services\modalService.ts" />
+    <TypeScriptCompile Include="src\services\tooltipService.ts" />
     <TypeScriptCompile Include="src\services\uploadService.ts" />
     <TypeScriptCompile Include="src\services\requestVerificationService.ts" />
     <TypeScriptCompile Include="src\services\viewLocator.ts" />
@@ -355,7 +368,8 @@
     <TypeScriptCompile Include="src\testUtils\testServiceLocator.ts" />
     <TypeScriptCompile Include="src\ts\admins.ts" />
     <TypeScriptCompile Include="src\ts\bans.ts" />
-    <TypeScriptCompile Include="src\utils\bindingSource.ts" />
+    <TypeScriptCompile Include="src\utils\binding.ts" />
+    <TypeScriptCompile Include="src\utils\bindingSourceOld.ts" />
     <TypeScriptCompile Include="src\utils\circularBuffer.spec.ts" />
     <TypeScriptCompile Include="src\utils\circularBuffer.ts" />
     <TypeScriptCompile Include="src\utils\command.ts" />
@@ -419,7 +433,9 @@
     <TypeScriptCompile Include="src\utils\comparatorHelper.ts" />
     <TypeScriptCompile Include="src\utils\eventListener.ts" />
     <TypeScriptCompile Include="src\utils\fieldId.ts" />
+    <TypeScriptCompile Include="src\utils\fileHelper.ts" />
     <TypeScriptCompile Include="src\utils\functions.ts" />
+    <TypeScriptCompile Include="src\utils\globalStore.ts" />
     <TypeScriptCompile Include="src\utils\iterableHelper.ts" />
     <TypeScriptCompile Include="src\utils\mathHelper.ts" />
     <TypeScriptCompile Include="src\utils\closeBaseViewModel.ts" />

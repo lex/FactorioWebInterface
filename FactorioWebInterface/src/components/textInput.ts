@@ -1,11 +1,14 @@
 ﻿import "./textInput.ts.less";
 import { EventListener } from "../utils/eventListener";
-import { ObservableObject } from "../utils/observableObject";
-import { BindingSource } from "../utils/bindingSource";
+import { HTMLInputBaseElement } from "./htmlInputBaseElement";
+import { IBindingSource } from "../utils/bindingSource";
+import { ObjectChangeBindingTarget } from "../utils/bindingTarget";
+import { Binding } from "../utils/binding";
 
-export class TextInput extends HTMLInputElement {
-    private _bindingSource: BindingSource;
-    private _subscription: () => void;
+export class TextInput extends HTMLInputBaseElement {
+    static readonly bindingKeys = {
+        value: {}
+    };
 
     get enabled(): boolean {
         return !this.disabled;
@@ -28,46 +31,12 @@ export class TextInput extends HTMLInputElement {
         return EventListener.onKeyUp(this, handler);
     }
 
-    bind(source: ObservableObject, property: string) {
-        this._bindingSource = new BindingSource(source, property);
-        this.connectBinding();
-    }
+    bindValue(source: IBindingSource<string>): this {
+        let target = new ObjectChangeBindingTarget(this, 'value');
+        let binding = new Binding(target, source);
 
-    connectedCallback() {
-        this.connectBinding();
-    }
-
-    disconnectedCallback() {
-        this.disconnectBinding();
-    }
-
-    private connectBinding() {
-        if (!this.isConnected) {
-            return;
-        }
-
-        this.disconnectBinding();
-
-        let binding = this._bindingSource;
-        if (binding == null) {
-            return;
-        }
-
-        this.value = binding.source[binding.property];
-        let sub1 = binding.source.propertyChanged(binding.property, event => this.value = event);
-        let sub2 = this.onChange(event => binding.source[binding.property] = event);
-
-        this._subscription = () => {
-            sub1();
-            sub2();
-        }
-    }
-
-    private disconnectBinding() {
-        if (this._subscription != null) {
-            this._subscription();
-            this._subscription = null;
-        }
+        this.setBinding(TextInput.bindingKeys.value, binding);
+        return this;
     }
 }
 

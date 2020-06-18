@@ -48,9 +48,9 @@ export class ServersViewModel {
         this.serverSettingsViewModel = new ServerSettingsViewModel(serverSettingsService, copyToClipboardService, errorService);
         this.serverExtraSettingsViewModel = new ServerExtraSettingsViewModel(serverExtraSettingsService, copyToClipboardService, errorService);
 
-        this.tempFileViewModel = new FileViewModel('Temp Files', serverFileService.tempSaveFiles, serverIdService.serverId);
-        this.localFileViewModel = new FileViewModel('Local Files', serverFileService.localSaveFiles, serverIdService.serverId);
-        this.globalFileViewModel = new FileViewModel('Global Files', serverFileService.globalSaveFiles, serverIdService.serverId);
+        this.tempFileViewModel = new FileViewModel('Temp Saves', serverFileService.tempSaveFiles, serverIdService.serverId);
+        this.localFileViewModel = new FileViewModel('Local Saves', serverFileService.localSaveFiles, serverIdService.serverId);
+        this.globalFileViewModel = new FileViewModel('Global Saves', serverFileService.globalSaveFiles, serverIdService.serverId);
         this.logFileViewModel = new LogFileViewModel('Logs', serverFileService.logFiles, 'logFile');
         this.chatLogFileViewModel = new LogFileViewModel('Chat Logs', serverFileService.chatLogsFiles, 'chatLogFile');
         this.scenariosViewModel = new ScenariosViewModel(serverFileService.scenarios);

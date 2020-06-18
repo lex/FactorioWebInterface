@@ -3,8 +3,8 @@ import { CollectionView, CollectionViewChangeType } from "../utils/collectionVie
 import { ComparatorHelper } from "../utils/comparatorHelper";
 import { Utils } from "../ts/utils";
 import { EventListener } from "../utils/eventListener";
-import { Tooltip } from "./tooltip";
 import { Observable } from "../utils/observable";
+import { Input } from "./input";
 export class TableRow extends HTMLTableRowElement {
     constructor(_box) {
         super();
@@ -354,8 +354,9 @@ export class MultiSelectColumn extends ColumnTemplate {
     static header(headerCell, table) {
         let source = table.source;
         let container = document.createElement('span');
-        let checkbox = document.createElement('input');
+        let checkbox = new Input();
         checkbox.type = 'checkbox';
+        checkbox.setTooltip('Toggle select all.');
         EventListener.onClick(checkbox, (event) => {
             event.stopPropagation();
             if (checkbox.checked) {
@@ -366,8 +367,6 @@ export class MultiSelectColumn extends ColumnTemplate {
             }
         });
         container.append(checkbox);
-        let tooltip = new Tooltip('Toggle select all.');
-        container.append(tooltip);
         headerCell.style.width = '3.5em';
         return container;
     }
@@ -414,16 +413,15 @@ export class SingleSelectColumn extends ColumnTemplate {
     static header(headerCell, table) {
         let source = table.source;
         let container = document.createElement('span');
-        let radio = document.createElement('input');
+        let radio = new Input();
         radio.type = 'radio';
+        radio.setTooltip('Clear selection.');
         EventListener.onClick(radio, (event) => {
             event.stopPropagation();
             radio.checked = false;
             source.unSelectAll();
         });
         container.append(radio);
-        let tooltip = new Tooltip('Clear selection.');
-        container.append(tooltip);
         headerCell.style.width = '3.5em';
         return container;
     }

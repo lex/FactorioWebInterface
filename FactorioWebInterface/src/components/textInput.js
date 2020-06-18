@@ -1,7 +1,9 @@
 import "./textInput.ts.less";
 import { EventListener } from "../utils/eventListener";
-import { BindingSource } from "../utils/bindingSource";
-export class TextInput extends HTMLInputElement {
+import { HTMLInputBaseElement } from "./htmlInputBaseElement";
+import { ObjectChangeBindingTarget } from "../utils/bindingTarget";
+import { Binding } from "../utils/binding";
+export class TextInput extends HTMLInputBaseElement {
     constructor() {
         super();
     }
@@ -18,39 +20,15 @@ export class TextInput extends HTMLInputElement {
     onKeyUp(handler) {
         return EventListener.onKeyUp(this, handler);
     }
-    bind(source, property) {
-        this._bindingSource = new BindingSource(source, property);
-        this.connectBinding();
-    }
-    connectedCallback() {
-        this.connectBinding();
-    }
-    disconnectedCallback() {
-        this.disconnectBinding();
-    }
-    connectBinding() {
-        if (!this.isConnected) {
-            return;
-        }
-        this.disconnectBinding();
-        let binding = this._bindingSource;
-        if (binding == null) {
-            return;
-        }
-        this.value = binding.source[binding.property];
-        let sub1 = binding.source.propertyChanged(binding.property, event => this.value = event);
-        let sub2 = this.onChange(event => binding.source[binding.property] = event);
-        this._subscription = () => {
-            sub1();
-            sub2();
-        };
-    }
-    disconnectBinding() {
-        if (this._subscription != null) {
-            this._subscription();
-            this._subscription = null;
-        }
+    bindValue(source) {
+        let target = new ObjectChangeBindingTarget(this, 'value');
+        let binding = new Binding(target, source);
+        this.setBinding(TextInput.bindingKeys.value, binding);
+        return this;
     }
 }
+TextInput.bindingKeys = {
+    value: {}
+};
 customElements.define('a-text-input', TextInput, { extends: 'input' });
 //# sourceMappingURL=textInput.js.map

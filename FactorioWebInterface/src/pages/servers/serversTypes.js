@@ -25,4 +25,21 @@ export var FactorioServerStatus;
     FactorioServerStatus["Prepared"] = "Prepared";
     FactorioServerStatus["Errored"] = "Errored";
 })(FactorioServerStatus || (FactorioServerStatus = {}));
+export class FileMetaData {
+    static FriendlyDirectoryName(file) {
+        switch (file.Directory) {
+            case 'saves': return 'Temp Saves';
+            case 'local_saves': return 'Local Saves';
+            case 'global_saves': return 'Global Saves';
+            default: return file.Directory;
+        }
+    }
+    static defaltedName(file) {
+        let name = file.Name;
+        if (name.endsWith('.zip')) {
+            name = name.substring(0, name.length - 4);
+        }
+        return name + '-deflated.zip';
+    }
+}
 //# sourceMappingURL=serversTypes.js.map

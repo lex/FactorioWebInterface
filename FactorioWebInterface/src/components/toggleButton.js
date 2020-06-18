@@ -1,6 +1,7 @@
 import "./toggleButton.ts.less";
 import { EventListener } from "../utils/eventListener";
-export class ToggleButton extends HTMLElement {
+import { BaseElement } from "./baseElement";
+export class ToggleButton extends BaseElement {
     constructor(content) {
         super();
         if (typeof content === 'string') {

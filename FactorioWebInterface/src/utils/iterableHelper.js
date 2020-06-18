@@ -17,5 +17,17 @@ export class IterableHelper {
             yield mapper(value);
         }
     }
+    static max(iterator, selector) {
+        let maxValue = undefined;
+        let maxItem = undefined;
+        for (let item of iterator) {
+            let value = selector(item);
+            if (maxValue === undefined || value > maxValue) {
+                maxValue = value;
+                maxItem = item;
+            }
+        }
+        return maxItem;
+    }
 }
 //# sourceMappingURL=iterableHelper.js.map

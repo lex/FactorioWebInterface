@@ -18,5 +18,12 @@ export class NodeHelper {
         }
         return document.createTextNode(value);
     }
+    static FirstChildOfInstance(node, type) {
+        for (let child of node.childNodes) {
+            if (child instanceof type) {
+                return child;
+            }
+        }
+    }
 }
 //# sourceMappingURL=nodeHelper.js.map

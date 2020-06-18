@@ -11,5 +11,13 @@ export class EventListener {
         element.addEventListener('keyup', handler);
         return () => element.removeEventListener('keyup', handler);
     }
+    static onMouseEnter(element, handler) {
+        element.addEventListener('mouseenter', handler);
+        return () => element.removeEventListener('mouseenter', handler);
+    }
+    static onMouseLeave(element, handler) {
+        element.addEventListener('mouseleave', handler);
+        return () => element.removeEventListener('mouseleave', handler);
+    }
 }
 //# sourceMappingURL=eventListener.js.map

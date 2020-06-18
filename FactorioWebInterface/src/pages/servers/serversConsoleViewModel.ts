@@ -18,6 +18,16 @@ import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { ManageVersionService } from "./manageVersionService";
 
 export class ServersConsoleViewModel extends ObservableObject {
+    static readonly resumeTooltipDisabledMessage = 'Can only resume when there is a save in Temp Saves and the server is stopped.';
+    static readonly loadTooltipDisabledMessage = 'Can only load when a single save is selected and server is stopped.';
+    static readonly startScenarioTooltipDisabledMessage = 'Can only start a sceanrio when a single scenario is selected and the server is stopped.';
+    static readonly saveTooltipEnabledMessage = 'Saves the game, file will be written to Temp Saves/currently_running.zip.';
+    static readonly saveTooltipDisabledMessage = 'Can only save when the server is running.';
+    static readonly manageVersionTooltipMessage = 'Opens up the Version Manager, use to change the server\'s version.';
+    static readonly stopTooltipEnabledMessage = 'Stops the server.';
+    static readonly stopTooltipDisabledMessage = 'Can only stop when the server is running.';
+    static readonly forceStopTooltipMessage = 'Forcefully stops the server, or any rogue Factorio processes.';
+
     private _serverIdService: ServerIdService;
     private _serverConsoleService: ServerConsoleService;
     private _manageVersionService: ManageVersionService;
@@ -34,6 +44,12 @@ export class ServersConsoleViewModel extends ObservableObject {
 
     private _sendText = '';
     private _commandHistory = new CommandHistory();
+
+    private _resumeTooltip: string = null;
+    private _loadTooltip: string = null;
+    private _startScenarioTooltip: string = null;
+    private _saveTooltip: string = null;
+    private _stopTooltip: string = null;
 
     private _resumeCommand: DelegateCommand;
     private _loadCommand: DelegateCommand;
@@ -54,6 +70,74 @@ export class ServersConsoleViewModel extends ObservableObject {
 
     get version(): IObservableProperty<string> {
         return this._serverConsoleService.version;
+    }
+
+    get resumeTooltip(): string {
+        return this._resumeTooltip;
+    }
+    set resumeTooltip(value: string) {
+        if (value === this._resumeTooltip) {
+            return;
+        }
+
+        this._resumeTooltip = value;
+        this.raise('resumeTooltip', value);
+    }
+
+    get loadTooltip(): string {
+        return this._loadTooltip;
+    }
+    set loadTooltip(value: string) {
+        if (value === this._loadTooltip) {
+            return;
+        }
+
+        this._loadTooltip = value;
+        this.raise('loadTooltip', value);
+    }
+
+    get startScenarioTooltip(): string {
+        return this._startScenarioTooltip;
+    }
+    set startScenarioTooltip(value: string) {
+        if (value === this._startScenarioTooltip) {
+            return;
+        }
+
+        this._startScenarioTooltip = value;
+        this.raise('startScenarioTooltip', value);
+    }
+
+    get saveTooltip(): string {
+        return this._saveTooltip;
+    }
+    set saveTooltip(value: string) {
+        if (value === this._saveTooltip) {
+            return;
+        }
+
+        this._saveTooltip = value;
+        this.raise('saveTooltip', value);
+    }
+
+    get manageVersionTooltip(): string {
+        return ServersConsoleViewModel.manageVersionTooltipMessage;
+    }
+
+    get stopTooltip(): string {
+        return this._stopTooltip;
+    }
+    set stopTooltip(value: string) {
+        if (value === this._stopTooltip) {
+            return;
+        }
+
+        this._stopTooltip = value;
+        this.raise('stopTooltip', value);
+    }
+
+    get forceStopTooltip(): string {
+        return ServersConsoleViewModel.forceStopTooltipMessage;
     }
 
     get resumeCommand(): ICommand {
@@ -204,14 +288,29 @@ export class ServersConsoleViewModel extends ObservableObject {
             this.sendText = '';
         });
 
-        let selectedSaveFilesChanged = () => this._loadCommand.raiseCanExecuteChanged();
+        this.updateResumeTooltip();
+        this.updateLoadTooltip();
+        this.updateStartScenarioTooltip();
+        this.updateSaveTooltip();
+        this.updateStopTooltip();
+
+        let selectedSaveFilesChanged = (() => {
+            this._loadCommand.raiseCanExecuteChanged();
+            this.updateLoadTooltip();
+        });
         tempFiles.files.selectedChanged.subscribe(selectedSaveFilesChanged);
         localFiles.files.selectedChanged.subscribe(selectedSaveFilesChanged);
         globalFiles.files.selectedChanged.subscribe(selectedSaveFilesChanged);
 
-        scenarios.scenarios.selectedChanged.subscribe(() => this._startScenarioCommand.raiseCanExecuteChanged());
+        scenarios.scenarios.selectedChanged.subscribe(() => {
+            this._startScenarioCommand.raiseCanExecuteChanged();
+            this.updateStartScenarioTooltip();
+        });
 
-        tempFiles.files.subscribe(() => this._resumeCommand.raiseCanExecuteChanged());
+        tempFiles.files.subscribe(() => {
+            this._resumeCommand.raiseCanExecuteChanged();
+            this.updateResumeTooltip();
+        });
 
         serverConsoleService.status.subscribe(event => {
             this._resumeCommand.raiseCanExecuteChanged();
@@ -219,7 +318,12 @@ export class ServersConsoleViewModel extends ObservableObject {
             this._startScenarioCommand.raiseCanExecuteChanged();
             this._saveCommand.raiseCanExecuteChanged();
             this._stopCommand.raiseCanExecuteChanged();
-            //this._forceStopCommand.raiseCanExecuteChanged();
+
+            this.updateResumeTooltip();
+            this.updateLoadTooltip();
+            this.updateStartScenarioTooltip();
+            this.updateSaveTooltip();
+            this.updateStopTooltip();
         });
     }
 
@@ -263,5 +367,40 @@ export class ServersConsoleViewModel extends ObservableObject {
 
     private getSelectedScenario(): ScenarioMetaData {
         return IterableHelper.firstOrDefault(this._scenarios.scenarios.selected).value;
+    }
+
+    private updateResumeTooltip() {
+        if (this._resumeCommand.canExecute()) {
+            let newFile = IterableHelper.max(this._tempFiles.files.values, f => f.value.LastModifiedTime);
+            this.resumeTooltip = `Start server with latest Temp save: ${newFile.value.Name}.`;
+        } else {
+            this.resumeTooltip = ServersConsoleViewModel.resumeTooltipDisabledMessage;
+        }
+    }
+
+    private updateLoadTooltip() {
+        if (this._loadCommand.canExecute()) {
+            let saveFile = this.getSelectedSaveFile();
+            this.loadTooltip = `Start server with selected save: ${FileMetaData.FriendlyDirectoryName(saveFile)}/${saveFile.Name}.`;
+        } else {
+            this.loadTooltip = ServersConsoleViewModel.loadTooltipDisabledMessage;
+        }
+    }
+
+    private updateStartScenarioTooltip() {
+        if (this._startScenarioCommand.canExecute()) {
+            let scenario = this.getSelectedScenario();
+            this.startScenarioTooltip = `Start server with selected scenario: ${scenario.Name}.`;
+        } else {
+            this.startScenarioTooltip = ServersConsoleViewModel.startScenarioTooltipDisabledMessage;
+        }
+    }
+
+    private updateSaveTooltip() {
+        this.saveTooltip = this._saveCommand.canExecute() ? ServersConsoleViewModel.saveTooltipEnabledMessage : ServersConsoleViewModel.saveTooltipDisabledMessage;
+    }
+
+    private updateStopTooltip() {
+        this.stopTooltip = this._stopCommand.canExecute() ? ServersConsoleViewModel.stopTooltipEnabledMessage : ServersConsoleViewModel.stopTooltipDisabledMessage;
     }
 }

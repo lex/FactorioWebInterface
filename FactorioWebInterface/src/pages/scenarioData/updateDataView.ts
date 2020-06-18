@@ -5,7 +5,6 @@ import { TextareaField } from "../../components/textareaField";
 import { VirtualComponent } from "../../components/virtualComponent";
 import { Collapse } from "../../components/collapse";
 import { ToggleButton } from "../../components/toggleButton";
-import { Tooltip } from "../../components/tooltip";
 import { Button } from "../../components/button";
 import { Field } from "../../components/field";
 
@@ -34,9 +33,8 @@ export class UpdateDataView extends VirtualComponent {
         let thumbtack = document.createElement('i');
         thumbtack.classList.add('fas', 'fa-thumbtack');
         let toggleButton = new ToggleButton(thumbtack);
+        toggleButton.setTooltip('Pin the form to keep it in view.');
         toggleButton.style.marginRight = '0.5em';
-        toggleButton.appendChild(new Tooltip('Pin the form to keep it in view.'));
-        header.appendChild(toggleButton);
 
         let text = document.createTextNode('Update Data');
         header.appendChild(text);

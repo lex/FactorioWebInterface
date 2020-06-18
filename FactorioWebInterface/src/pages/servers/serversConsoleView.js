@@ -6,6 +6,7 @@ import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { ConsoleMessageView } from "./consoleMessageView";
 import { TextInput } from "../../components/textInput";
+import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel) {
         super();
@@ -42,26 +43,33 @@ export class ServersConsoleView extends VirtualComponent {
         let mainPanel = new StackPanel(StackPanel.direction.column);
         let topPanel = new StackPanel(StackPanel.direction.row);
         let resumeButton = iconButton(Icon.classes.play, 'Resume', Button.classes.success)
-            .setCommand(serversConsoleViewModel.resumeCommand);
+            .setCommand(serversConsoleViewModel.resumeCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serversConsoleViewModel, 'resumeTooltip'));
         let loadButton = iconButton(Icon.classes.play, 'Load', Button.classes.success)
-            .setCommand(serversConsoleViewModel.loadCommand);
+            .setCommand(serversConsoleViewModel.loadCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serversConsoleViewModel, 'loadTooltip'));
         let startScenarioButton = iconButton(Icon.classes.play, 'Start Scenario', Button.classes.success)
-            .setCommand(serversConsoleViewModel.startScenarioCommand);
+            .setCommand(serversConsoleViewModel.startScenarioCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serversConsoleViewModel, 'startScenarioTooltip'));
         let saveButton = iconButton(Icon.classes.save, 'Save', Button.classes.success)
-            .setCommand(serversConsoleViewModel.saveCommand);
+            .setCommand(serversConsoleViewModel.saveCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serversConsoleViewModel, 'saveTooltip'));
         let manageVersionButton = iconButton(Icon.classes.download, 'Manage Version', Button.classes.link)
-            .setCommand(serversConsoleViewModel.manageVersionCommand);
+            .setCommand(serversConsoleViewModel.manageVersionCommand)
+            .setTooltip(serversConsoleViewModel.manageVersionTooltip);
         let stopButton = iconButton(Icon.classes.stop, 'Stop', Button.classes.danger)
-            .setCommand(serversConsoleViewModel.stopCommand);
+            .setCommand(serversConsoleViewModel.stopCommand)
+            .bindTooltip(new ObservableObjectBindingSource(serversConsoleViewModel, 'stopTooltip'));
         let forceStopButton = iconButton(Icon.classes.bomb, 'Force Stop', Button.classes.danger)
-            .setCommand(serversConsoleViewModel.forceStopCommand);
+            .setCommand(serversConsoleViewModel.forceStopCommand)
+            .setTooltip(serversConsoleViewModel.forceStopTooltip);
         topPanel.append(resumeButton, loadButton, saveButton, startScenarioButton, manageVersionButton, stopButton, forceStopButton);
         let messageView = new ConsoleMessageView(serversConsoleViewModel.messages);
         let bottomPanel = new StackPanel(StackPanel.direction.row);
         let sendInput = new TextInput();
         sendInput.placeholder = 'Message or Command';
         sendInput.onKeyUp(event => serversConsoleViewModel.sendInputKey(event.keyCode));
-        sendInput.bind(serversConsoleViewModel, 'sendText');
+        sendInput.bindValue(new ObservableObjectBindingSource(serversConsoleViewModel, 'sendText'));
         let sendButton = new Button('Send')
             .setCommand(serversConsoleViewModel.sendCommand);
         bottomPanel.append(sendInput, sendButton);

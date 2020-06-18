@@ -2,6 +2,7 @@
 
 export interface IObservableObject {
     propertyChanged(propertyName: string, callback: (event) => void): () => void;
+    bind(propertyName: string, callback: (event: any) => void, subscriptions?: (() => void)[]): () => void;
 }
 
 export abstract class ObservableObject implements IObservableObject {

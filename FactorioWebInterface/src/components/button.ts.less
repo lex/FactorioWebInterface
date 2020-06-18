@@ -6,6 +6,13 @@
     &:hover {
         background-color: @hover-color;
     }
+    /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
 }
 
 .button-spacing {
@@ -16,7 +23,7 @@
 }
 
 a-button {
-    background-color: white;    
+    background-color: white;
     border: 1px solid #dbdbdb;
     border-radius: 4px;
     color: #363636;
@@ -36,7 +43,6 @@ a-button {
     margin: 0;
     font-size: 1rem;
     font-weight: 400;
-    overflow: hidden;
     .button-spacing();
 
     &[disabled] {

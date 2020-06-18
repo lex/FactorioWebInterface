@@ -206,6 +206,41 @@ a-stack-panel.spacing-none {
   margin: 0;
 }
 
+a-tooltip {
+  visibility: hidden;
+  position: fixed;
+  border: 1px solid lightgrey;
+  border-radius: 10px;
+  background: white;
+  color: #363636;
+  z-index: 100;
+  font-size: 1rem;
+  padding: 0.5em;
+  width: intrinsic;
+  width: -moz-max-content;
+  width: -webkit-max-content;
+  width: max-content;
+  top: 100%;
+  left: 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-weight: normal;
+  box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+  animation: show 0.3s;
+}
+*:hover > a-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+@keyframes show {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 table {
   background-color: white;
   color: #363636;
@@ -253,31 +288,6 @@ table > thead > tr > th[sort='descending']:after {
 }
 .th-min-width-normal th {
   min-width: 8rem;
-}
-
-a-tooltip {
-  visibility: hidden;
-  position: absolute;
-  border: 1px solid lightgrey;
-  border-radius: 10px;
-  background: white;
-  z-index: 1;
-  font-size: 1rem;
-  padding: 0.5em;
-  width: intrinsic;
-  width: -moz-max-content;
-  width: -webkit-max-content;
-  width: max-content;
-  top: 100%;
-  left: 100%;
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-weight: normal;
-  box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
-}
-*:hover > a-tooltip {
-  visibility: visible;
-  opacity: 1;
 }
 
 a-select {
@@ -404,7 +414,6 @@ a-button {
   margin: 0;
   font-size: 1rem;
   font-weight: 400;
-  overflow: hidden;
   padding-bottom: calc(0.375em - 1px);
   padding-left: 0.75em;
   padding-right: 0.75em;
@@ -421,6 +430,13 @@ a-button.is-primary {
   background-color: #00d1b2;
   border-color: transparent;
   color: #fff;
+  /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
 }
 a-button.is-primary:hover {
   background-color: #00c4a7;
@@ -429,6 +445,13 @@ a-button.is-success {
   background-color: #23d160;
   border-color: transparent;
   color: #fff;
+  /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
 }
 a-button.is-success:hover {
   background-color: #22c65b;
@@ -437,6 +460,13 @@ a-button.is-danger {
   background-color: #ff3860;
   border-color: transparent;
   color: #fff;
+  /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
 }
 a-button.is-danger:hover {
   background-color: #ff2b56;
@@ -445,6 +475,13 @@ a-button.is-info {
   background-color: #209cee;
   border-color: transparent;
   color: #fff;
+  /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
 }
 a-button.is-info:hover {
   background-color: #1496ed;
@@ -453,6 +490,13 @@ a-button.is-link {
   background-color: #3273dc;
   border-color: transparent;
   color: #fff;
+  /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
 }
 a-button.is-link:hover {
   background-color: #276cda;
@@ -461,6 +505,13 @@ a-button.is-warning {
   background-color: #ffdd57;
   border-color: transparent;
   color: #fff;
+  /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
 }
 a-button.is-warning:hover {
   background-color: #ffdb4a;

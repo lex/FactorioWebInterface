@@ -20,4 +20,18 @@
             yield mapper(value);
         }
     }
+
+    static max<T, U>(iterator: IterableIterator<T>, selector: (item: T) => U): T {
+        let maxValue: U = undefined;
+        let maxItem: T = undefined;
+        for (let item of iterator) {
+            let value = selector(item);
+            if (maxValue === undefined || value > maxValue) {
+                maxValue = value;
+                maxItem = item;
+            }
+        }
+
+        return maxItem;
+    }
 }

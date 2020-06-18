@@ -15,6 +15,7 @@ import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/servers
 import { CollectionChangeType } from "../../ts/utils";
 import { FactorioServerStatus, MessageType } from "./serversTypes";
 import { PromiseHelper } from "../../utils/promiseHelper";
+import { ServersConsoleViewModel } from "./serversConsoleViewModel";
 const tempFile = {
     Name: 'file.zip',
     Size: 0,
@@ -27,7 +28,7 @@ const tempFile2 = {
     Size: 0,
     Directory: 'temp_saves',
     CreatedTime: '2020-01-01 00:00:00',
-    LastModifiedTime: '2020-01-01 00:00:00'
+    LastModifiedTime: '2020-01-02 00:00:00'
 };
 const localFile = {
     Name: 'local_file.zip',
@@ -743,6 +744,372 @@ describe('ServerConsoleViewModel', function () {
             // Assert.
             viewModel.sendInputKey(38); // up
             strict.equal(viewModel.sendText, message3);
+        });
+    });
+    describe('resumeTooltip', function () {
+        it('disabled message shows when server is running.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            // Act.
+            hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.resumeTooltip, ServersConsoleViewModel.resumeTooltipDisabledMessage);
+        });
+        it('disabled message shows when no temp saves', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.resumeTooltip, ServersConsoleViewModel.resumeTooltipDisabledMessage);
+        });
+        it('when can resume message shows save that will be loaded.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            // Act.
+            hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile, tempFile2] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.resumeTooltip, 'Start server with latest Temp save: file2.zip.');
+        });
+        it('is initially set.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            // Assert.
+            strict.notEqual(viewModel.resumeTooltip, undefined);
+        });
+        it('raised when server status changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            let raisedCount = 0;
+            viewModel.propertyChanged('resumeTooltip', event => raisedCount++);
+            // Act.
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+        it('raised when temp saves changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            let raisedCount = 0;
+            viewModel.propertyChanged('resumeTooltip', event => raisedCount++);
+            // Act.
+            hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+    });
+    describe('loadTooltip', function () {
+        it('disabled message shows when server is running.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
+            let localFiles = mainViewModel.localFileViewModel.files;
+            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.loadTooltip, ServersConsoleViewModel.loadTooltipDisabledMessage);
+        });
+        it('disabled message shows when no file selected.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.loadTooltip, ServersConsoleViewModel.loadTooltipDisabledMessage);
+        });
+        it('disabled message shows when multiple files selected.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile, localFile2] });
+            let localFiles = mainViewModel.localFileViewModel.files;
+            localFiles.selectAll();
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.loadTooltip, ServersConsoleViewModel.loadTooltipDisabledMessage);
+        });
+        it('when can load message shows save that will be loaded.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
+            let localFiles = mainViewModel.localFileViewModel.files;
+            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.loadTooltip, 'Start server with selected save: Local Saves/local_file.zip.');
+        });
+        it('is initially set.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            // Assert.
+            strict.notEqual(viewModel.loadTooltip, undefined);
+        });
+        it('raised when server status changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            let localFiles = mainViewModel.localFileViewModel.files;
+            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            let raisedCount = 0;
+            viewModel.propertyChanged('loadTooltip', event => raisedCount++);
+            // Act.
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+        it('raised when temp saves changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            let raisedCount = 0;
+            viewModel.propertyChanged('loadTooltip', event => raisedCount++);
+            // Act.
+            let localFiles = mainViewModel.localFileViewModel.files;
+            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+    });
+    describe('startScenarioTooltip', function () {
+        it('disabled message shows when server is running.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
+            let scenarios = mainViewModel.scenariosViewModel.scenarios;
+            scenarios.setFirstSingleSelected();
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.startScenarioTooltip, ServersConsoleViewModel.startScenarioTooltipDisabledMessage);
+        });
+        it('disabled message shows when no scenario selected.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.startScenarioTooltip, ServersConsoleViewModel.startScenarioTooltipDisabledMessage);
+        });
+        it('when can start scenario message shows scenario that will be started.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            let scenarios = mainViewModel.scenariosViewModel.scenarios;
+            // Act.            
+            scenarios.setFirstSingleSelected();
+            // Assert.
+            strict.equal(viewModel.startScenarioTooltip, 'Start server with selected scenario: scenario.');
+        });
+        it('is initially set.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            // Assert.
+            strict.notEqual(viewModel.startScenarioTooltip, undefined);
+        });
+        it('raised when server status changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            let scenarios = mainViewModel.scenariosViewModel.scenarios;
+            scenarios.setFirstSingleSelected();
+            let raisedCount = 0;
+            viewModel.propertyChanged('startScenarioTooltip', event => raisedCount++);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+        it('raised when selected scenarios changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            let scenarios = mainViewModel.scenariosViewModel.scenarios;
+            let raisedCount = 0;
+            viewModel.propertyChanged('startScenarioTooltip', event => raisedCount++);
+            // Act.            
+            scenarios.setFirstSingleSelected();
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+    });
+    describe('saveTooltip', function () {
+        it('disabled message shows when server is not running.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.saveTooltip, ServersConsoleViewModel.saveTooltipDisabledMessage);
+        });
+        it('enabled message shows when server is running.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.saveTooltip, ServersConsoleViewModel.saveTooltipEnabledMessage);
+        });
+        it('is initially set.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            // Assert.
+            strict.notEqual(viewModel.saveTooltip, undefined);
+        });
+        it('raised when server status changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            let raisedCount = 0;
+            viewModel.propertyChanged('saveTooltip', event => raisedCount++);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+    });
+    describe('manageVersionTooltip', function () {
+        it('is initially set.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            // Assert.
+            strict.equal(viewModel.manageVersionTooltip, ServersConsoleViewModel.manageVersionTooltipMessage);
+        });
+    });
+    describe('stopTooltip', function () {
+        it('disabled message shows when server is not running.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.stopTooltip, ServersConsoleViewModel.stopTooltipDisabledMessage);
+        });
+        it('enabled message shows when server is running.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(viewModel.stopTooltip, ServersConsoleViewModel.stopTooltipEnabledMessage);
+        });
+        it('is initially set.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            // Assert.
+            strict.notEqual(viewModel.stopTooltip, undefined);
+        });
+        it('raised when server status changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            let hubService = services.get(ServersHubService);
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            let raisedCount = 0;
+            viewModel.propertyChanged('stopTooltip', event => raisedCount++);
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+    });
+    describe('forceStopTooltip', function () {
+        it('is initially set.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+            // Assert.
+            strict.equal(viewModel.forceStopTooltip, ServersConsoleViewModel.forceStopTooltipMessage);
         });
     });
     describe('messages', function () {
