@@ -1,5 +1,6 @@
 ﻿import { Tooltip } from "../components/tooltip";
 import { EventListener } from "../utils/eventListener";
+import { TooltipBackground } from "../components/tooltipBackground";
 
 interface TooltipInfo {
     isActive?: boolean;
@@ -9,17 +10,17 @@ interface TooltipInfo {
 }
 
 export class TooltipService {
-    private static _lastTooltip: Tooltip;
+    private static _tooltipBackground: TooltipBackground;
 
     private static _registeredTooltips = new WeakMap<HTMLElement, TooltipInfo>();
 
     private static removeLastTooltip() {
-        if (TooltipService._lastTooltip == null) {
+        if (TooltipService._tooltipBackground == null) {
             return;
         }
 
-        TooltipService._lastTooltip.remove();
-        TooltipService._lastTooltip = undefined;
+        TooltipService._tooltipBackground.remove();
+        TooltipService._tooltipBackground = undefined;
     }
 
     static showTooltip(parent: HTMLElement, tooltip: string | Node | Tooltip): Tooltip {
@@ -29,17 +30,26 @@ export class TooltipService {
             return;
         }
 
-        let t = Tooltip.toTooltip(tooltip);
-
         let pos = parent.getBoundingClientRect();
         let x = (pos.left + pos.right) / 2;
         let y = pos.bottom;
 
-        document.body.append(t);
-        t.style.left = x + 'px';
+        let t = Tooltip.toTooltip(tooltip);
         t.style.top = y + 'px';
 
-        TooltipService._lastTooltip = t;
+        let spacer = document.createElement('div');
+        spacer.classList.add('spacer');
+        spacer.style.flexBasis = x + 'px';
+
+        let tooltipContainer = document.createElement('div');
+        tooltipContainer.classList.add('tooltip-container');
+        tooltipContainer.append(t);
+
+        let tooltipBackground = new TooltipBackground();
+        tooltipBackground.append(spacer, tooltipContainer);
+        TooltipService._tooltipBackground = tooltipBackground;
+        document.body.append(tooltipBackground);
+
         return t;
     }
 
@@ -76,7 +86,7 @@ export class TooltipService {
                     return;
                 }
 
-                (info.tooltip as Tooltip).remove()
+                TooltipService._tooltipBackground?.remove();
                 info.isActive = false;
             });
 
@@ -87,8 +97,6 @@ export class TooltipService {
         }
 
         if (info.isActive) {
-            (info.tooltip as Tooltip).remove();
-
             let newTooltip = TooltipService.showTooltip(parent, tooltip);
             info.tooltip = newTooltip;
 

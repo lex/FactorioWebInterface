@@ -1,26 +1,34 @@
 import { Tooltip } from "../components/tooltip";
 import { EventListener } from "../utils/eventListener";
+import { TooltipBackground } from "../components/tooltipBackground";
 export class TooltipService {
     static removeLastTooltip() {
-        if (TooltipService._lastTooltip == null) {
+        if (TooltipService._tooltipBackground == null) {
             return;
         }
-        TooltipService._lastTooltip.remove();
-        TooltipService._lastTooltip = undefined;
+        TooltipService._tooltipBackground.remove();
+        TooltipService._tooltipBackground = undefined;
     }
     static showTooltip(parent, tooltip) {
         TooltipService.removeLastTooltip();
         if (tooltip == null) {
             return;
         }
-        let t = Tooltip.toTooltip(tooltip);
         let pos = parent.getBoundingClientRect();
         let x = (pos.left + pos.right) / 2;
         let y = pos.bottom;
-        document.body.append(t);
-        t.style.left = x + 'px';
+        let t = Tooltip.toTooltip(tooltip);
         t.style.top = y + 'px';
-        TooltipService._lastTooltip = t;
+        let spacer = document.createElement('div');
+        spacer.classList.add('spacer');
+        spacer.style.flexBasis = x + 'px';
+        let tooltipContainer = document.createElement('div');
+        tooltipContainer.classList.add('tooltip-container');
+        tooltipContainer.append(t);
+        let tooltipBackground = new TooltipBackground();
+        tooltipBackground.append(spacer, tooltipContainer);
+        TooltipService._tooltipBackground = tooltipBackground;
+        document.body.append(tooltipBackground);
         return t;
     }
     static setTooltip(parent, tooltip) {
@@ -45,10 +53,11 @@ export class TooltipService {
                 info.isActive = true;
             });
             let leaveSubscription = EventListener.onMouseLeave(parent, () => {
+                var _a;
                 if (!info.isActive) {
                     return;
                 }
-                info.tooltip.remove();
+                (_a = TooltipService._tooltipBackground) === null || _a === void 0 ? void 0 : _a.remove();
                 info.isActive = false;
             });
             info = { tooltip: tooltip, enterSubscription: enterSubscription, leaveSubscription: leaveSubscription };
@@ -56,7 +65,6 @@ export class TooltipService {
             return;
         }
         if (info.isActive) {
-            info.tooltip.remove();
             let newTooltip = TooltipService.showTooltip(parent, tooltip);
             info.tooltip = newTooltip;
             return;

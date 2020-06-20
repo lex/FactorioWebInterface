@@ -56,6 +56,7 @@
     <None Remove="src\components\textInput.ts" />
     <None Remove="src\components\timeField.ts" />
     <None Remove="src\components\tooltip.ts" />
+    <None Remove="src\components\tooltipBackground.ts" />
     <None Remove="src\pages\admins\adminsPage.ts" />
     <None Remove="src\pages\admins\adminsService.ts" />
     <None Remove="src\pages\admins\adminsView.ts" />
@@ -291,6 +292,7 @@
     <TypeScriptCompile Include="src\components\textInput.ts" />
     <TypeScriptCompile Include="src\components\timeField.ts" />
     <TypeScriptCompile Include="src\components\tooltip.ts" />
+    <TypeScriptCompile Include="src\components\tooltipBackground.ts" />
     <TypeScriptCompile Include="src\pages\admins\adminsPage.ts" />
     <TypeScriptCompile Include="src\pages\admins\adminsService.ts" />
     <TypeScriptCompile Include="src\pages\admins\adminsView.ts" />
