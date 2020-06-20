@@ -70,6 +70,9 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
         return __awaiter(this, void 0, void 0, function* () {
             let result = yield this._manageVersionService.update(version);
             this._errorService.reportIfError(result);
+            if (result.Success) {
+                this.close();
+            }
         });
     }
     delete(version) {

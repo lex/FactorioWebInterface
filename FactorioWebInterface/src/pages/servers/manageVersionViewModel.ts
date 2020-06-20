@@ -93,6 +93,10 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
     async update(version: string): Promise<void> {
         let result = await this._manageVersionService.update(version);
         this._errorService.reportIfError(result);
+
+        if (result.Success) {
+            this.close();
+        }
     }
 
     delete(version: string): void {
