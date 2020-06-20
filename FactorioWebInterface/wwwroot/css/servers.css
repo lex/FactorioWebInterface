@@ -170,6 +170,9 @@ h6 {
 .close-button:hover {
   background-color: rgba(10, 10, 10, 0.3);
 }
+.has-icon-left {
+  padding-left: 2.25em;
+}
 
 a-collapse {
   display: flex;
@@ -402,6 +405,28 @@ a-select.is-loading::after {
   }
 }
 
+a-icon {
+  font-weight: 900;
+  font-family: "Font Awesome 5 Free";
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+  pointer-events: none;
+}
+a-icon.is-left {
+  margin-right: 0.3em;
+}
+a-icon.is-left-absolute {
+  position: absolute;
+  display: block;
+  left: 0.625em;
+  top: 0.625em;
+}
+
 .button-spacing {
   padding-bottom: calc(0.375em - 1px);
   padding-left: 0.75em;
@@ -530,21 +555,6 @@ a-button.is-warning {
 }
 a-button.is-warning:hover {
   background-color: #ffdb4a;
-}
-
-a-icon {
-  font-weight: 900;
-  font-family: "Font Awesome 5 Free";
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  display: inline-block;
-  font-style: normal;
-  font-variant: normal;
-  text-rendering: auto;
-  line-height: 1;
-}
-a-icon.is-left {
-  margin-right: 0.3em;
 }
 
 .console-message-list {

@@ -3,6 +3,7 @@
 export class Icon extends HTMLElement {
     static readonly classes = {
         isLeft: 'is-left',
+        isLeftAbsolute: 'is-left-absolute',
         upload: 'fa-upload',
         server: 'fa-server',
         play: 'fa-play',

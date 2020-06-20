@@ -4,6 +4,7 @@ import { CollectionView, CollectionViewChangeType, CollectionViewChangedData } f
 import { Box } from "../utils/box";
 import { EventListener } from "../utils/eventListener";
 import { IterableHelper } from "../utils/iterableHelper";
+import { Icon } from "./icon";
 
 export class Option<T> extends HTMLOptionElement {
     box: Box<T>;
@@ -56,6 +57,32 @@ export class Select<T = any> extends HTMLElement {
         this._select.selectedIndex = value;
     }
 
+    get icon(): Icon {
+        let icon = this.lastChild;
+
+        if (icon === this._select) {
+            return undefined;
+        }
+
+        return icon as Icon;
+    }
+    set icon(value: Icon) {
+        let oldIcon = this.icon;
+        if (oldIcon === value) {
+            return;
+        }
+
+        oldIcon?.remove();
+
+        if (value != null) {
+            value.classList.add(Icon.classes.isLeftAbsolute);
+            this.append(value);
+            this._select.classList.add('has-icon-left');
+        } else {
+            this._select.classList.remove('has-icon-left');
+        }
+    }
+
     constructor(source?: T[] | ObservableCollection<T> | CollectionView<T>, optionBuilder?: (item: T) => string | Option<T>) {
         super();
 
@@ -94,6 +121,11 @@ export class Select<T = any> extends HTMLElement {
             this._select.selectedIndex = -1;
             this.updateSelected();
         }
+    }
+
+    setIcon(icon: Icon): this {
+        this.icon = icon;
+        return this;
     }
 
     private buildOptionElement(item: Box<T>): Option<T> {

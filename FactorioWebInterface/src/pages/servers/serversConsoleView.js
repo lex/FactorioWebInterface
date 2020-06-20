@@ -14,6 +14,7 @@ export class ServersConsoleView extends VirtualComponent {
         headerPanel.classList.add('no-spacing');
         headerPanel.style.alignItems = 'center';
         let serverIdSelect = new Select(serversConsoleViewModel.serverIds);
+        serverIdSelect.icon = new Icon(Icon.classes.server);
         serverIdSelect.style.fontSize = '1rem';
         serverIdSelect.style.fontWeight = 'normal';
         serverIdSelect.style.margin = '-0.3em 0em -0.3em 1em';

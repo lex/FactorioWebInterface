@@ -170,6 +170,9 @@ h6 {
 .close-button:hover {
   background-color: rgba(10, 10, 10, 0.3);
 }
+.has-icon-left {
+  padding-left: 2.25em;
+}
 
 .hide-error > div > div {
   display: none;
@@ -669,9 +672,16 @@ a-icon {
   font-variant: normal;
   text-rendering: auto;
   line-height: 1;
+  pointer-events: none;
 }
 a-icon.is-left {
   margin-right: 0.3em;
+}
+a-icon.is-left-absolute {
+  position: absolute;
+  display: block;
+  left: 0.625em;
+  top: 0.625em;
 }
 
 .hide-error > div > div {
