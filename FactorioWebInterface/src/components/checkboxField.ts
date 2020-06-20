@@ -3,10 +3,11 @@ import { FieldBase } from "./fieldBase";
 import { EventListener } from "../utils/eventListener";
 import { FieldId } from "../utils/fieldId";
 import { Tooltip } from "./tooltip";
+import { Label } from "./label";
 
 export class CheckboxField extends FieldBase {
     private _input: HTMLInputElement;
-    private _label: HTMLLabelElement;
+    private _label: Label;
     private _container: HTMLElement;
 
     constructor(property?: string, header?: string) {
@@ -24,7 +25,7 @@ export class CheckboxField extends FieldBase {
         this._input.id = id;
         this._container.append(this._input);
 
-        this._label = document.createElement('label');
+        this._label = new Label();
         this._label.htmlFor = id;
         this._label.innerText = header;
         this._container.append(this._label);
@@ -63,10 +64,8 @@ export class CheckboxField extends FieldBase {
         return EventListener.onChange(this._input, callback);
     }
 
-    setTooltip(content: string | Node) {
-        let tooltip = new Tooltip(content);
-        this._label.appendChild(tooltip);
-
+    setTooltip(content: string | Node | Tooltip) {
+        this._label.setTooltip(content);
         return this;
     }
 }
