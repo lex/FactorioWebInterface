@@ -25,7 +25,7 @@ export class ModPacksView extends VirtualComponent {
         let table = new Table(modPacksViewModel.modPacks, [
             new TextColumn('Name'),
             new DateTimeColumn('LastModifiedTime')
-                .setHeader(() => 'Modified Time'),
+                .setHeader(() => 'Last Modified Time'),
             new ColumnTemplate()
                 .setHeader(headerCell => {
                     headerCell.style.minWidth = '0px';
@@ -49,6 +49,7 @@ export class ModPacksView extends VirtualComponent {
                         .setCommandParameter(modPack))
                 .setSortingDisabled(true)
         ]);
+        table.onRowClick(event => modPacksViewModel.setSelectModPack(event.item));
         table.classList.add('th-min-width-normal');
         table.style.fontSize = '1rem';
         table.style.fontWeight = 'normal';

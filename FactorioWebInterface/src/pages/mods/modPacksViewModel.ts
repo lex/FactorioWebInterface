@@ -58,4 +58,8 @@ export class ModPacksViewModel {
             this._modalService.showViewModel(vm);
         });
     }
+
+    setSelectModPack(modPack: ModPackMetaData): void {
+        this._modsService.setSelectedModPack(modPack.Name);
+    }
 }

@@ -60,7 +60,13 @@ export class ModsService {
         return this._onEndDownloadResult;
     }
     setSelectedModPack(modPack) {
+        let old = this._selectedModPack.value;
+        if (old === modPack) {
+            return;
+        }
+        this._modsHubService.requestModPackFiles(modPack);
         this._selectedModPack.raise(modPack);
+        this._selectedModPackFiles.reset();
     }
     deleteModPack(modPack) {
         return this._modsHubService.deleteModPack(modPack);

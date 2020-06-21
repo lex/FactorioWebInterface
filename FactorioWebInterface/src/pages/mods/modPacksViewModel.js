@@ -35,5 +35,8 @@ export class ModPacksViewModel {
     get modPacks() {
         return this._modPacks;
     }
+    setSelectModPack(modPack) {
+        this._modsService.setSelectedModPack(modPack.Name);
+    }
 }
 //# sourceMappingURL=modPacksViewModel.js.map

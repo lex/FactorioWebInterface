@@ -484,6 +484,7 @@ export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
         container.append(checkbox);
 
         headerCell.style.width = '3.5em'
+        headerCell.style.minWidth = '0px';
 
         return container;
     }
@@ -556,6 +557,7 @@ export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
         container.append(radio);
 
         headerCell.style.width = '3.5em'
+        headerCell.style.minWidth = '0px';
 
         return container;
     }

@@ -77,7 +77,15 @@ export class ModsService {
     }
 
     setSelectedModPack(modPack: string): void {
+        let old = this._selectedModPack.value;
+        if (old === modPack) {
+            return;
+        }
+
+        this._modsHubService.requestModPackFiles(modPack);
+
         this._selectedModPack.raise(modPack);
+        this._selectedModPackFiles.reset();
     }
 
     deleteModPack(modPack: string): Promise<Result> {

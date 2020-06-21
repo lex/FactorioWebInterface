@@ -21,7 +21,7 @@ export class DeleteModPackView extends VirtualComponent {
         mainPanel.append(label, buttonsPanel);
         let modal = new Modal(mainPanel)
             .setHeader(title);
-        modal.style.minWidth = '480px';
+        modal.style.minWidth = '600px';
         this._root = modal;
     }
 }

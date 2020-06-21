@@ -28,7 +28,7 @@ export class NewModPackView extends VirtualComponent {
 
         let modal = new Modal(form.root)
             .setHeader(title);
-        modal.style.minWidth = '480px';
+        modal.style.minWidth = '600px';
 
         this._root = modal;
     }

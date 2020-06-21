@@ -2,6 +2,7 @@
 import { ModsViewModel } from "./modsViewModel";
 import { ModPacksView } from "./ModPacksView";
 import { HelpSectionView } from "./helpSectionView";
+import { ModPackFilesView } from "./modPackFilesView";
 
 export class ModsView extends VirtualComponent {
     constructor(modsViewModel: ModsViewModel) {
@@ -15,9 +16,9 @@ export class ModsView extends VirtualComponent {
         header.textContent = 'Mod Packs';
 
         let helpSection = new HelpSectionView();
-
         let modPacksView = new ModPacksView(modsViewModel.modPacksViewModel);
+        let modPackFilesView = new ModPackFilesView(modsViewModel.modPackFilesViewModel);
 
-        root.append(header, helpSection.root, modPacksView.root);
+        root.append(header, helpSection.root, modPacksView.root, modPackFilesView.root);
     }
 }

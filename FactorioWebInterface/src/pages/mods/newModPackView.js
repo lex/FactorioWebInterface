@@ -22,7 +22,7 @@ export class NewModPackView extends VirtualComponent {
         form.isHorizontal = true;
         let modal = new Modal(form.root)
             .setHeader(title);
-        modal.style.minWidth = '480px';
+        modal.style.minWidth = '600px';
         this._root = modal;
     }
 }

@@ -368,6 +368,7 @@ export class MultiSelectColumn extends ColumnTemplate {
         });
         container.append(checkbox);
         headerCell.style.width = '3.5em';
+        headerCell.style.minWidth = '0px';
         return container;
     }
     connectedCallback(table) {
@@ -423,6 +424,7 @@ export class SingleSelectColumn extends ColumnTemplate {
         });
         container.append(radio);
         headerCell.style.width = '3.5em';
+        headerCell.style.minWidth = '0px';
         return container;
     }
     connectedCallback(table) {

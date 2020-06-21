@@ -72,6 +72,8 @@
     <None Remove="src\pages\mods\deleteModPackView.ts" />
     <None Remove="src\pages\mods\DeleteModPackViewModel.ts" />
     <None Remove="src\pages\mods\helpSectionView.ts" />
+    <None Remove="src\pages\mods\modPackFilesView.ts" />
+    <None Remove="src\pages\mods\modPackFilesViewModel.ts" />
     <None Remove="src\pages\mods\ModPacksView.ts" />
     <None Remove="src\pages\mods\modPacksViewModel.ts" />
     <None Remove="src\pages\mods\modsHubService.ts" />
@@ -323,6 +325,8 @@
     <TypeScriptCompile Include="src\pages\mods\deleteModPackView.ts" />
     <TypeScriptCompile Include="src\pages\mods\deleteModPackViewModel.ts" />
     <TypeScriptCompile Include="src\pages\mods\helpSectionView.ts" />
+    <TypeScriptCompile Include="src\pages\mods\modPackFilesView.ts" />
+    <TypeScriptCompile Include="src\pages\mods\modPackFilesViewModel.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPacksView.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPacksViewModel.ts" />
     <TypeScriptCompile Include="src\pages\mods\modsHubService.ts" />

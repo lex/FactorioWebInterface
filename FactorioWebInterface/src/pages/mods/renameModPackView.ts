@@ -6,6 +6,7 @@ import { TextField } from "../../components/textField";
 import { Button } from "../../components/button";
 import { Field } from "../../components/field";
 import { RenameModPackViewModel } from "./renameModPackViewModel";
+import { Label } from "../../components/label";
 
 export class RenameModPackView extends VirtualComponent {
     constructor(renameModPackViewModel: RenameModPackViewModel) {
@@ -14,6 +15,10 @@ export class RenameModPackView extends VirtualComponent {
         let title = document.createElement('h4');
         title.textContent = 'Rename Mod Pack';
 
+        let label = new Label();
+        label.innerText = `Old Name: ${renameModPackViewModel.name}`;
+        label.style.fontWeight = 'bold';
+
         let buttonsPanel = new StackPanel(StackPanel.direction.row);
         buttonsPanel.classList.add('no-spacing');
         let createButton = new Button('Rename', Button.classes.success).setCommand(renameModPackViewModel.renameCommand);
@@ -21,14 +26,15 @@ export class RenameModPackView extends VirtualComponent {
         buttonsPanel.append(createButton, cancelButton);
 
         let form = new VirtualForm(renameModPackViewModel, [
-            new TextField('name', 'Name'),
+            new Field(label),
+            new TextField('name', 'New Name'),
             new Field(buttonsPanel)
         ]);
         form.isHorizontal = true;
 
         let modal = new Modal(form.root)
             .setHeader(title);
-        modal.style.minWidth = '480px';
+        modal.style.minWidth = '600px';
 
         this._root = modal;
     }
