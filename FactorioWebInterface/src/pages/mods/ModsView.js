@@ -1,5 +1,6 @@
 import { VirtualComponent } from "../../components/virtualComponent";
 import { ModPacksView } from "./ModPacksView";
+import { HelpSectionView } from "./helpSectionView";
 export class ModsView extends VirtualComponent {
     constructor(modsViewModel) {
         super();
@@ -8,8 +9,9 @@ export class ModsView extends VirtualComponent {
         this._root = root;
         let header = document.createElement('h2');
         header.textContent = 'Mod Packs';
+        let helpSection = new HelpSectionView();
         let modPacksView = new ModPacksView(modsViewModel.modPacksViewModel);
-        root.append(header, modPacksView.root);
+        root.append(header, helpSection.root, modPacksView.root);
     }
 }
 //# sourceMappingURL=ModsView.js.map
