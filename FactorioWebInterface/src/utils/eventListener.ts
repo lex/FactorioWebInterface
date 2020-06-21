@@ -11,6 +11,12 @@
         return () => element.removeEventListener('click', handler);
     }
 
+    static onMouseDown(element: Node, handler: (event?: MouseEvent) => void): () => void {
+        element.addEventListener('mousedown', handler);
+
+        return () => element.removeEventListener('mousedown', handler);
+    }
+
     static onKeyUp(element: Node, handler: (event?: KeyboardEvent) => void): () => void {
         element.addEventListener('keyup', handler);
 

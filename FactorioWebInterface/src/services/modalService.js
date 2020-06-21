@@ -18,6 +18,8 @@ export class ModalService {
             let backgroundSubscription;
             let closeButtonSubscription;
             let modalBackground = new ModalBackground();
+            let background = document.createElement('div');
+            background.classList.add('background');
             function close() {
                 Observable.unSubscribe(subscription);
                 Observable.unSubscribe(backgroundSubscription);
@@ -25,10 +27,10 @@ export class ModalService {
                 modalBackground.remove();
                 resolve();
             }
-            backgroundSubscription = EventListener.onClick(modalBackground, (event) => {
-                if (event.target !== modalBackground) {
-                    return;
-                }
+            backgroundSubscription = EventListener.onClick(background, (event) => {
+                //if (event.target !== modalBackground) {
+                //    return;
+                //}
                 event.stopPropagation();
                 close();
             });
@@ -49,7 +51,7 @@ export class ModalService {
                     close();
                 });
             }
-            modalBackground.append(viewNode);
+            modalBackground.append(background, viewNode);
         });
     }
 }

@@ -7,6 +7,10 @@ export class EventListener {
         element.addEventListener('click', handler);
         return () => element.removeEventListener('click', handler);
     }
+    static onMouseDown(element, handler) {
+        element.addEventListener('mousedown', handler);
+        return () => element.removeEventListener('mousedown', handler);
+    }
     static onKeyUp(element, handler) {
         element.addEventListener('keyup', handler);
         return () => element.removeEventListener('keyup', handler);

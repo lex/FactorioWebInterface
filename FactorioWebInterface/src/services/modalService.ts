@@ -6,6 +6,7 @@ import { EventListener } from "../utils/eventListener";
 import { VirtualComponent } from "../components/virtualComponent";
 import { Modal } from "../components/modal";
 import { IModalService } from "./iModalService";
+import { BaseElement } from "../components/baseElement";
 
 export class ModalService implements IModalService {
     private _viewLocator: ViewLocator;
@@ -27,6 +28,8 @@ export class ModalService implements IModalService {
             let closeButtonSubscription: () => void;
 
             let modalBackground = new ModalBackground();
+            let background = document.createElement('div');
+            background.classList.add('background');
 
             function close() {
                 Observable.unSubscribe(subscription);
@@ -36,14 +39,15 @@ export class ModalService implements IModalService {
                 resolve();
             }
 
-            backgroundSubscription = EventListener.onClick(modalBackground, (event: MouseEvent) => {
-                if (event.target !== modalBackground) {
-                    return;
-                }
+            backgroundSubscription = EventListener.onClick(background, (event: MouseEvent) => {
+                //if (event.target !== modalBackground) {
+                //    return;
+                //}
 
                 event.stopPropagation();
                 close()
             });
+
             document.body.append(modalBackground);
 
             if (IClose.isType(viewModel)) {
@@ -65,7 +69,7 @@ export class ModalService implements IModalService {
                 });
             }
 
-            modalBackground.append(viewNode);
+            modalBackground.append(background, viewNode)
         });
     }
 }
