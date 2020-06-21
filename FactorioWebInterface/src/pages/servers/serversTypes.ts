@@ -71,6 +71,13 @@ export interface ModPackMetaData {
     LastModifiedTime: string;
 }
 
+export interface ModPackFileMetaData {
+    Name: string;
+    CreatedTime: string;
+    LastModifiedTime: string;
+    Size: number;
+}
+
 export interface FactorioControlClientData {
     Status: FactorioServerStatus;
     Messages: MessageData[];

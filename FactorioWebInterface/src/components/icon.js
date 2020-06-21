@@ -19,7 +19,8 @@ Icon.classes = {
     shareSquare: 'fa-share-square',
     clone: 'fa-clone',
     edit: 'fa-edit',
-    compressArrowsAlt: 'fa-compress-arrows-alt'
+    compressArrowsAlt: 'fa-compress-arrows-alt',
+    folderPlus: 'fa-folder-plus'
 };
 export function leftIconWithContent(icon, content) {
     let iconEle = new Icon(icon, Icon.classes.isLeft);

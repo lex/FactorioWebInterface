@@ -69,6 +69,8 @@ export class Button extends BaseElement {
 
         this.append(content);
         this.classList.add(...classes);
+
+        this.onClick((event: MouseEvent) => event.stopPropagation());
     }
 
     addClasses(...classes: string[]): Button {

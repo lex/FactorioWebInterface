@@ -7,6 +7,7 @@ export class Button extends BaseElement {
         super();
         this.append(content);
         this.classList.add(...classes);
+        this.onClick((event) => event.stopPropagation());
     }
     get command() {
         return this._command;

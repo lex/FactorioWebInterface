@@ -1,4 +1,4 @@
-import { CloseBaseViewModel } from "../utils/CloseBaseViewModel";
+import { IClose } from "../utils/CloseBaseViewModel";
 import { Observable } from "../utils/observable";
 import { ModalBackground } from "../components/modalBackground";
 import { EventListener } from "../utils/eventListener";
@@ -33,7 +33,7 @@ export class ModalService {
                 close();
             });
             document.body.append(modalBackground);
-            if (viewModel instanceof CloseBaseViewModel) {
+            if (IClose.isType(viewModel)) {
                 subscription = viewModel.closeObservable.subscribe(close);
             }
             let viewNode;

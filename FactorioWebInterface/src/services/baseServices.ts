@@ -17,7 +17,8 @@ export class BaseServices {
         serviceLocator.register(UploadService, (services) => new UploadService(services.get(RequestVerificationService)));
         serviceLocator.register(ErrorService, () => new ErrorService());
         serviceLocator.register(WindowService, () => new WindowService());
-        serviceLocator.register(IModalService, (services) => new ModalService(services.get(ViewLocator)));
+        serviceLocator.register(ViewLocator, () => new ViewLocator());
+        serviceLocator.register(IModalService, (services) => new ModalService(services.get(ViewLocator)));        
 
         return serviceLocator;
     }

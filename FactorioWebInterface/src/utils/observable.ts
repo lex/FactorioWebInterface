@@ -1,7 +1,11 @@
 ﻿import { noop } from "./functions";
 
-export interface IObservable<T> {
-    subscribe(callback: (event: T) => void, subscriptions?: (() => void)[]): () => void;
+export abstract class IObservable<T> {
+    static isType<T>(obj: object): obj is IObservable<T> {
+        return typeof (obj as IObservable<T>).subscribe === 'function';
+    }
+
+    abstract subscribe(callback: (event: T) => void, subscriptions?: (() => void)[]): () => void;
 }
 
 export class Observable<T> implements IObservable<T> {

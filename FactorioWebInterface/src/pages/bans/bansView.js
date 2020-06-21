@@ -76,10 +76,7 @@ export class BansView extends VirtualComponent {
     buildTable() {
         let removeCellBuilder = (ban) => {
             let button = new Button('Remove', Button.classes.danger);
-            button.onClick((event) => {
-                event.stopPropagation();
-                this._bansViewModel.removeAdmin(ban);
-            });
+            button.onClick(() => this._bansViewModel.removeAdmin(ban));
             return button;
         };
         let dateTimeColumn = new ColumnTemplate()

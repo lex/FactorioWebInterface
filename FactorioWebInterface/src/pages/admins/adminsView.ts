@@ -61,10 +61,7 @@ export class AdminsView extends VirtualComponent {
     private buildTable(): Table<Admin> {
         let removeCellBuilder = (admin: Admin) => {
             let button = new Button('Remove', Button.classes.danger);
-            button.onClick((event: MouseEvent) => {
-                event.stopPropagation();
-                this._adminsViewModel.removeAdmin(admin)
-            });
+            button.onClick(() => this._adminsViewModel.removeAdmin(admin));
 
             return button;
         }

@@ -10,7 +10,6 @@ import { ManageVersionView } from "./manageVersionView";
 let serviceLocator = new ServiceLocator();
 BaseServices.register(serviceLocator);
 registerServices(serviceLocator);
-serviceLocator.register(ViewLocator, () => new ViewLocator());
 let viewLocator = serviceLocator.get(ViewLocator);
 viewLocator.registerViewModel(ManageVersionViewModel, (vm) => new ManageVersionView(vm));
 let app = document.getElementById('app');

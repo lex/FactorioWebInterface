@@ -1,4 +1,9 @@
 import { noop } from "./functions";
+export class IObservable {
+    static isType(obj) {
+        return typeof obj.subscribe === 'function';
+    }
+}
 export class Observable {
     constructor() {
         this.callbacks = [];

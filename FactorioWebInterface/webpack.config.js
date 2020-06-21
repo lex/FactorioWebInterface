@@ -18,13 +18,14 @@ module.exports = {
         saves: "./src/ts/saves.ts",
         scenarioDataOld: "./src/ts/scenarioData.ts",
         plaguesplayground: "./src/ts/plaguesPlayground.ts",
-        mods: "./src/ts/mods.ts",
+        modsOld: "./src/ts/mods.ts",
         //test: "./src/ts/test.ts",
         //testOld: "./src/ts/testOld.ts"
         servers: "./src/pages/servers/serversPage.ts",
         admins: "./src/pages/admins/adminsPage.ts",
         bans: "./src/pages/bans/bansPage.ts",
-        scenarioData: "./src/pages/scenarioData/scenarioDataPage.ts"
+        scenarioData: "./src/pages/scenarioData/scenarioDataPage.ts",
+        mods: "./src/pages/mods/modsPage.ts"
     },
     output: {
         path: path.resolve(__dirname, "wwwroot"),

@@ -15,7 +15,8 @@ export class Icon extends HTMLElement {
         shareSquare: 'fa-share-square',
         clone: 'fa-clone',
         edit: 'fa-edit',
-        compressArrowsAlt: 'fa-compress-arrows-alt'
+        compressArrowsAlt: 'fa-compress-arrows-alt',
+        folderPlus:'fa-folder-plus'
     }
 
     constructor(...classes: string[]) {

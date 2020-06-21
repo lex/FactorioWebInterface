@@ -96,10 +96,7 @@ export class BansView extends VirtualComponent {
     private buildTable(): Node {
         let removeCellBuilder = (ban: Ban) => {
             let button = new Button('Remove', Button.classes.danger);
-            button.onClick((event: MouseEvent) => {
-                event.stopPropagation();
-                this._bansViewModel.removeAdmin(ban)
-            });
+            button.onClick(() => this._bansViewModel.removeAdmin(ban));
 
             return button;
         }
@@ -117,7 +114,7 @@ export class BansView extends VirtualComponent {
             new ColumnTemplate()
                 .setHeader((headerCell) => {
                     headerCell.style.minWidth = '0';
-                    return 'Remove'
+                    return 'Remove';
                 })
                 .setCell(removeCellBuilder)
                 .setSortingDisabled(true)

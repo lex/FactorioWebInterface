@@ -64,8 +64,6 @@ export class ServerFileManagementService {
             this._uploadService.uploadFormData(ServerFileManagementService.fileUploadUrl, formData, (event) => {
                 switch (event.type) {
                     case FileUploadEventType.start:
-                        //this._uploading.raise(true);
-                        //this._uploadProgress.raise(0);
                         break;
                     case FileUploadEventType.progress:
                         let progress = event.loaded / event.total;

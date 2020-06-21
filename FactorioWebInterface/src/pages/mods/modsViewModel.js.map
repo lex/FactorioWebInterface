@@ -1,0 +1,1 @@
+{"version":3,"file":"modsViewModel.js","sourceRoot":"","sources":["modsViewModel.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,iBAAiB,EAAE,MAAM,qBAAqB,CAAC;AAIxD,MAAM,OAAO,aAAa;IAGtB,YAAY,WAAwB,EAAE,YAA2B,EAAE,YAA0B;QACzF,IAAI,CAAC,iBAAiB,GAAG,IAAI,iBAAiB,CAAC,WAAW,EAAE,YAAY,EAAE,YAAY,CAAC,CAAC;IAC5F,CAAC;CACJ"}

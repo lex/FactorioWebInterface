@@ -12,7 +12,6 @@ let serviceLocator = new ServiceLocator();
 BaseServices.register(serviceLocator);
 registerServices(serviceLocator);
 
-serviceLocator.register(ViewLocator, () => new ViewLocator());
 let viewLocator: ViewLocator = serviceLocator.get(ViewLocator);
 viewLocator.registerViewModel(ManageVersionViewModel, (vm: ManageVersionViewModel) => new ManageVersionView(vm));
 
