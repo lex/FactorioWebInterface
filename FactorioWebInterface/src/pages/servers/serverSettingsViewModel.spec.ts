@@ -5,7 +5,7 @@ import { FactorioServerSettings } from "./serversTypes";
 import { IObservable, Observable } from "../../utils/observable";
 import { KeyValueCollectionChangedData, Result, CollectionChangeType } from "../../ts/utils";
 import { IObservableProperty, ObservableProperty } from "../../utils/observableProperty";
-import { PublicPart } from "../../utils/types";
+import { PublicPart, propertyOf } from "../../utils/types";
 import { InvokeBase } from "../../testUtils/invokeBase";
 import { CopyToClipboardService } from "../../services/copyToClipboardService";
 import { ErrorService } from "../../services/errorService";
@@ -58,7 +58,7 @@ describe('ServerSettingsViewModel', function () {
         return new ServerSettingsViewModel(serverSettingsService, copyToClipoardService, errorService)
     }
 
-    let serverSettingsTestCases = [
+    let serverSettingsTestCases: { property: propertyOf<ServerSettingsViewModel>, value: any, settingValue: any }[] = [
         { property: 'Name', value: 'new value', settingValue: 'new value' },
         { property: 'Description', value: 'new value', settingValue: 'new value' },
         { property: 'Tags', value: 'new value', settingValue: ['new value'] },
@@ -101,7 +101,7 @@ describe('ServerSettingsViewModel', function () {
                 serverSettingsViewModel.propertyChanged('saved', event => saved = event);
 
                 // Act.
-                serverSettingsViewModel[testCase.property] = testCase.value;
+                serverSettingsViewModel[testCase.property as string] = testCase.value;
 
                 // Assert.            
                 strict.equal(actaulPropertyValue, testCase.value);

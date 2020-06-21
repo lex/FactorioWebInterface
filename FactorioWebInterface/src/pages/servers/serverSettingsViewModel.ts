@@ -8,6 +8,7 @@ import { CollectionChangeType, Utils } from "../../ts/utils";
 import { CopyToClipboardService } from "../../services/copyToClipboardService";
 import { MathHelper } from "../../utils/mathHelper";
 import { ErrorService } from "../../services/errorService";
+import { propertyOf } from "../../utils/types";
 
 interface FormFields {
     Name: string;
@@ -25,7 +26,7 @@ interface FormFields {
     PublicVisible: boolean;
 }
 
-export class ServerSettingsViewModel extends ObservableObject implements IObservableErrors {
+export class ServerSettingsViewModel extends ObservableObject<ServerSettingsViewModel> implements IObservableErrors {
     static readonly normalPasteText = 'Paste settings here';
     static readonly errorPasteText = 'Invalid settings';
     static readonly appliedPasteText = 'Settings applied';
@@ -250,7 +251,7 @@ export class ServerSettingsViewModel extends ObservableObject implements IObserv
         this._copyCommand = new DelegateCommand(() => this.copySettings());
     }
 
-    private setAndDoValidation(propertyName: string, value: any): boolean {
+    private setAndDoValidation(propertyName: propertyOf<ServerSettingsViewModel>, value: any): boolean {
         if (this.setAndRaise(this._formFields, propertyName, value)) {
             let validationResult = this._validator.validate(propertyName);
             this.errors.setError(propertyName, validationResult);
@@ -263,13 +264,13 @@ export class ServerSettingsViewModel extends ObservableObject implements IObserv
     private update(settings: FactorioServerSettings) {
         for (let propertyName in settings) {
             let value = ServerSettingsViewModel.convertToFormField(propertyName as FactorioServerSettingsType, settings[propertyName])
-            if (this.setAndDoValidation(propertyName, value) && propertyName === 'UseDefaultAdmins') {
+            if (this.setAndDoValidation(propertyName as propertyOf<ServerSettingsViewModel>, value) && propertyName === 'UseDefaultAdmins') {
                 this.raise('adminsEditEnabled', this.adminsEditEnabled);
             }
         }
     }
 
-    private setField(propertyName: string, value: any, forceRaise?: boolean): boolean {
+    private setField(propertyName: propertyOf<ServerSettingsViewModel>, value: any, forceRaise?: boolean): boolean {
         if (this.setAndDoValidation(propertyName, value)) {
             this.setSaved(false);
 

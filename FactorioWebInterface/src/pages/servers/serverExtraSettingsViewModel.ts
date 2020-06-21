@@ -6,8 +6,9 @@ import { DelegateCommand, ICommand } from "../../utils/command";
 import { ServerSettingsViewModel } from "./serverSettingsViewModel";
 import { CollectionChangeType, Utils } from "../../ts/utils";
 import { ErrorService } from "../../services/errorService";
+import { propertyOf } from "../../utils/types";
 
-export class ServerExtraSettingsViewModel extends ObservableObject {
+export class ServerExtraSettingsViewModel extends ObservableObject<ServerExtraSettingsViewModel> {
     private static readonly formFieldsDefaultValues: FactorioServerExtraSettings = {
         SyncBans: true,
         BuildBansFromDatabaseOnStart: true,
@@ -134,11 +135,11 @@ export class ServerExtraSettingsViewModel extends ObservableObject {
     private update(settings: FactorioServerExtraSettings) {
         for (let propertyName in settings) {
             let value = ServerExtraSettingsViewModel.getOrDefault(propertyName as FactorioServerExtraSettingsType, settings[propertyName])
-            this.setAndRaise(this._formFields, propertyName, value);
+            this.setAndRaise(this._formFields, propertyName as propertyOf<ServerExtraSettingsViewModel>, value);
         }
     }
 
-    private set(propertyName: string, value: any) {
+    private set(propertyName: propertyOf<ServerExtraSettingsViewModel>, value: any) {
         if (this.setAndRaise(this._formFields, propertyName, value)) {
             this.setSaved(false);
 
