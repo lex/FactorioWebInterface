@@ -1,6 +1,5 @@
 ﻿import { VirtualComponent } from "../../components/virtualComponent";
 import { Collapse } from "../../components/collapse";
-import { StackPanel } from "../../components/stackPanel";
 import { ToggleButton } from "../../components/toggleButton";
 import { Table, TextColumn, DateTimeColumn, ColumnTemplate } from "../../components/table";
 import { ModPackMetaData } from "../servers/serversTypes";
@@ -33,7 +32,7 @@ export class ModPacksView extends VirtualComponent {
                     return 'Rename';
                 })
                 .setCell((modPack: ModPackMetaData) =>
-                    new Button('Rename', Button.classes.link)
+                    iconButton(Icon.classes.edit, 'Rename', Button.classes.link)
                         .setCommand(modPacksViewModel.renameCommand)
                         .setCommandParameter(modPack))
                 .setSortingDisabled(true),
@@ -44,7 +43,7 @@ export class ModPacksView extends VirtualComponent {
                     return 'Delete';
                 })
                 .setCell((modPack: ModPackMetaData) =>
-                    new Button('Delete', Button.classes.danger)
+                    iconButton(Icon.classes.trash, 'Delete', Button.classes.danger)
                         .setCommand(modPacksViewModel.deleteCommand)
                         .setCommandParameter(modPack))
                 .setSortingDisabled(true)

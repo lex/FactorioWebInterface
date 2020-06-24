@@ -3,6 +3,7 @@ import { Box } from "./box";
 import { CollectionChangeType } from "../ts/utils";
 import { ArrayHelper } from "./arrayHelper";
 import { Observable } from "./observable";
+import { ObservableProperty } from "./observableProperty";
 export var CollectionViewChangeType;
 (function (CollectionViewChangeType) {
     CollectionViewChangeType["Reset"] = "Reset";
@@ -13,8 +14,7 @@ export var CollectionViewChangeType;
 export class CollectionView extends Observable {
     constructor(source, keySelector) {
         super();
-        this._sortSpecifications = [];
-        this._sortChanged = new Observable();
+        this._sortSpecifications = new ObservableProperty([]);
         this._source = source;
         this._selected = new Set();
         this._selectedChanged = new Observable();
@@ -53,6 +53,9 @@ export class CollectionView extends Observable {
         return this._selectedChanged;
     }
     get sortSpecifications() {
+        return this._sortSpecifications.value;
+    }
+    get sortChanged() {
         return this._sortSpecifications;
     }
     bind(callback, subscriptions) {
@@ -175,16 +178,13 @@ export class CollectionView extends Observable {
             this.setSingleSelected(first);
         }
     }
-    sortChanged(callback) {
-        return this._sortChanged.subscribe(callback);
-    }
     sortBy(sortSpecifications) {
         if (!Array.isArray(sortSpecifications)) {
             sortSpecifications = [sortSpecifications];
         }
         if (sortSpecifications.length === 0 || sortSpecifications[0] == null) {
             this._comparator = undefined;
-            this._sortChanged.raise([]);
+            this._sortSpecifications.raise([]);
             return;
         }
         let comp;
@@ -209,8 +209,7 @@ export class CollectionView extends Observable {
             });
         }
         this._comparator = comp;
-        this._sortSpecifications = sortSpecifications;
-        this._sortChanged.raise(sortSpecifications);
+        this._sortSpecifications.raise(sortSpecifications);
         this.sort();
         this.raise({ type: CollectionViewChangeType.Reorder });
     }
@@ -291,11 +290,18 @@ export class CollectionView extends Observable {
     update(changeData) {
         switch (changeData.Type) {
             case CollectionChangeType.Reset:
-                let selectedRemoved = this.doReset(changeData.NewItems);
+                let selectedChanged = this.doReset(changeData.NewItems);
                 this.sort();
-                this.raise({ type: CollectionViewChangeType.Reset });
-                if (selectedRemoved) {
-                    this._selectedChanged.raise({ type: CollectionViewChangeType.Reset, items: [] });
+                if (selectedChanged) {
+                    this.raise({ type: CollectionViewChangeType.Reset });
+                }
+                else {
+                    let sub = this.selectedChanged.subscribe(() => selectedChanged = true);
+                    this.raise({ type: CollectionViewChangeType.Reset });
+                    sub();
+                }
+                if (selectedChanged) {
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Reset });
                 }
                 break;
             case CollectionChangeType.Remove: {
@@ -485,7 +491,7 @@ export class CollectionView extends Observable {
         this._array.sort(comparator);
     }
     isSortedBySelection() {
-        for (let sortSpecification of this._sortSpecifications) {
+        for (let sortSpecification of this._sortSpecifications.value) {
             if (sortSpecification.sortId === this.selectedSortId) {
                 return true;
             }

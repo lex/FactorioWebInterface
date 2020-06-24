@@ -3,6 +3,7 @@ import { Box } from "./box";
 import { CollectionChangedData, CollectionChangeType } from "../ts/utils";
 import { ArrayHelper } from "./arrayHelper";
 import { Observable, IObservable } from "./observable";
+import { ObservableProperty, IObservableProperty } from "./observableProperty";
 
 export interface SortSpecification<T> {
     // Comparator that sorts T in ascending order, if not set, ascendingBoxComparator or property should be set.
@@ -39,9 +40,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
     private _array: Box<T>[];
     private _selected: Set<Box<T>>;
 
-    private _sortSpecifications: SortSpecification<T>[] = [];
+    private _sortSpecifications: ObservableProperty<SortSpecification<T>[]> = new ObservableProperty([]);
     private _comparator: (left: Box<T>, right: Box<T>) => number;
-    private _sortChanged = new Observable<SortSpecification<T>[]>();
 
     private _filter: (T) => boolean;
 
@@ -76,8 +76,12 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return this._selectedChanged;
     }
 
-    get sortSpecifications() {
-        return this._sortSpecifications;
+    get sortSpecifications(): SortSpecification<T>[] {
+        return this._sortSpecifications.value;
+    }
+
+    get sortChanged(): IObservableProperty<SortSpecification<T>[]> {
+        return this._sortSpecifications
     }
 
     constructor(source: ObservableCollection<T>, keySelector?: (value: T) => any) {
@@ -253,10 +257,6 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         }
     }
 
-    sortChanged(callback: (event: SortSpecification<T>[]) => void): () => void {
-        return this._sortChanged.subscribe(callback);
-    }
-
     sortBy(sortSpecifications: SortSpecification<T> | SortSpecification<T>[]): void {
         if (!Array.isArray(sortSpecifications)) {
             sortSpecifications = [sortSpecifications];
@@ -264,7 +264,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
         if (sortSpecifications.length === 0 || sortSpecifications[0] == null) {
             this._comparator = undefined;
-            this._sortChanged.raise([]);
+            this._sortSpecifications.raise([]);
             return;
         }
 
@@ -292,9 +292,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         }
 
         this._comparator = comp;
-
-        this._sortSpecifications = sortSpecifications;
-        this._sortChanged.raise(sortSpecifications);
+        this._sortSpecifications.raise(sortSpecifications);
 
         this.sort();
         this.raise({ type: CollectionViewChangeType.Reorder });
@@ -382,11 +380,19 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
     private update(changeData: CollectionChangedData): void {
         switch (changeData.Type) {
             case CollectionChangeType.Reset:
-                let selectedRemoved = this.doReset(changeData.NewItems);
+                let selectedChanged = this.doReset(changeData.NewItems);
                 this.sort();
-                this.raise({ type: CollectionViewChangeType.Reset });
-                if (selectedRemoved) {
-                    this._selectedChanged.raise({ type: CollectionViewChangeType.Reset, items: [] });
+
+                if (selectedChanged) {
+                    this.raise({ type: CollectionViewChangeType.Reset });
+                } else {
+                    let sub = this.selectedChanged.subscribe(() => selectedChanged = true);
+                    this.raise({ type: CollectionViewChangeType.Reset });
+                    sub();
+                }
+
+                if (selectedChanged) {
+                    this._selectedChanged.raise({ type: CollectionViewChangeType.Reset });
                 }
                 break;
             case CollectionChangeType.Remove: {
@@ -612,7 +618,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
     }
 
     private isSortedBySelection(): boolean {
-        for (let sortSpecification of this._sortSpecifications) {
+        for (let sortSpecification of this._sortSpecifications.value) {
             if (sortSpecification.sortId === this.selectedSortId) {
                 return true;
             }

@@ -120,14 +120,23 @@ export class Select extends HTMLElement {
         this._optionMap.clear();
         this._select.options.length = 0;
         this.buildOptions(this._source.values);
+        this._select.selectedIndex = -1;
+        this.updateSelected();
     }
     doReorder() {
         let options = this._select.options;
         let optionMap = this._optionMap;
+        let option = this._select.selectedOptions[0];
         options.length = 0;
         for (let item of this._source.values) {
             let option = optionMap.get(item);
             options.add(option);
+        }
+        if (option != null) {
+            option.selected = true;
+        }
+        else {
+            this._select.selectedIndex = -1;
         }
     }
     doUpdate(items) {

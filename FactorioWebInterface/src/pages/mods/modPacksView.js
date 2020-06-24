@@ -24,7 +24,7 @@ export class ModPacksView extends VirtualComponent {
                 headerCell.style.width = '6em';
                 return 'Rename';
             })
-                .setCell((modPack) => new Button('Rename', Button.classes.link)
+                .setCell((modPack) => iconButton(Icon.classes.edit, 'Rename', Button.classes.link)
                 .setCommand(modPacksViewModel.renameCommand)
                 .setCommandParameter(modPack))
                 .setSortingDisabled(true),
@@ -34,7 +34,7 @@ export class ModPacksView extends VirtualComponent {
                 headerCell.style.width = '6em';
                 return 'Delete';
             })
-                .setCell((modPack) => new Button('Delete', Button.classes.danger)
+                .setCell((modPack) => iconButton(Icon.classes.trash, 'Delete', Button.classes.danger)
                 .setCommand(modPacksViewModel.deleteCommand)
                 .setCommandParameter(modPack))
                 .setSortingDisabled(true)

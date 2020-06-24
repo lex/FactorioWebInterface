@@ -30,7 +30,7 @@ export class Table extends HTMLTableElement {
         else {
             this._source = new CollectionView(source);
         }
-        this._source.sortChanged((event) => this.updateHeaderSortDisplay(event));
+        this._source.sortChanged.subscribe((event) => this.updateHeaderSortDisplay(event));
         this._columns = columns;
         let rowClickObservable = new Observable();
         this._rowClickObservable = rowClickObservable;

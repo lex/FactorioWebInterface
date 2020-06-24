@@ -23,7 +23,12 @@ export class ModsService {
         this._modsHubService = modsHubService;
         this._uploadService = uploadService;
         this._windowsService = windowService;
-        modsHubService.onSendModPacks.subscribe(event => this._modPacks.update(event));
+        modsHubService.onSendModPacks.subscribe(event => {
+            this._modPacks.update(event);
+            if (!this._modPacks.has(this._selectedModPack.value)) {
+                this._selectedModPack.raise(undefined);
+            }
+        });
         modsHubService.onSendModPackFiles.subscribe(event => {
             if (event.modPack !== this._selectedModPack.value) {
                 return;
@@ -79,7 +84,14 @@ export class ModsService {
         return this._modsHubService.createModPack(name);
     }
     renameModPack(oldName, newName) {
-        return this._modsHubService.renameModPack(oldName, newName);
+        return __awaiter(this, void 0, void 0, function* () {
+            let oldSelectedModPack = this._selectedModPack.value;
+            let result = yield this._modsHubService.renameModPack(oldName, newName);
+            if (result.Success && oldSelectedModPack === oldName) {
+                this._selectedModPack.raise(newName);
+            }
+            return result;
+        });
     }
     copyModPackFiles(targetModPack, fileNames) {
         let modPack = this._selectedModPack.value;

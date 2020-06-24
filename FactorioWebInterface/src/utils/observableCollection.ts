@@ -36,6 +36,10 @@ export class ObservableKeyArray<K, V> extends ObservableKeyCollection<K, V> {
         return this._map.values();
     }
 
+    has(key: K): boolean {
+        return this._map.has(key);
+    }
+
     bind(callback: (event: CollectionChangedData<V>) => void, subscriptions?: (() => void)[]): () => void {
         let subscription = this.subscribe(callback, subscriptions);
 

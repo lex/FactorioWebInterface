@@ -24,7 +24,7 @@ export class ServerFileManagementView extends VirtualComponent {
         uploadProgress.classList.add('overlay');
         serverFileManagementViewModel.uploadProgress.subscribe(progress => uploadProgress.value = progress);
 
-        let uploadIcon = leftIconWithContent(Icon.classes.upload, 'Upload Saves')
+        let uploadIcon = leftIconWithContent(Icon.classes.upload, 'Upload Saves');
 
         let uploadButtonContent = document.createElement('div');
         uploadButtonContent.classList.add('button-spacing');

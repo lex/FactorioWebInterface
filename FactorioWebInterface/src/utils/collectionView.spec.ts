@@ -228,6 +228,7 @@ describe('CollectionView', function () {
 
         for (let test of resetEventTests) {
             it(`reset event ${test.name} removes selected items.`, function () {
+                debugger;
                 // Arrange.
                 let o = new ObservableKeyArray<number, number>(x => x);
                 o.add(1, 2, 3);
@@ -253,7 +254,6 @@ describe('CollectionView', function () {
                 strict.equal(cv.isSelected(one), false);
 
                 strict.equal(actualEvent.type, CollectionViewChangeType.Reset);
-                strict.deepEqual(actualEvent.items, []);
             });
 
             it(`reset event ${test.name} when no items selected does not raise selected changed.`, function () {
@@ -308,7 +308,6 @@ describe('CollectionView', function () {
                 strict.equal(cv.selectedCount, 0);
 
                 strict.equal(actualEvent.type, CollectionViewChangeType.Reset);
-                strict.deepEqual(actualEvent.items, []);
             });
         }
 
@@ -476,7 +475,7 @@ describe('CollectionView', function () {
             o.add(3, 2, 1);
 
             let callbackFiredCount = 0;
-            cv.sortChanged(event => callbackFiredCount++);
+            cv.sortChanged.subscribe(event => callbackFiredCount++);
 
             // Act.
             cv.sortBy({ ascendingComparator: (a, b) => a - b });

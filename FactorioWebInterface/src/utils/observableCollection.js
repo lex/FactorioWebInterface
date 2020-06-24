@@ -19,6 +19,9 @@ export class ObservableKeyArray extends ObservableKeyCollection {
     values() {
         return this._map.values();
     }
+    has(key) {
+        return this._map.has(key);
+    }
     bind(callback, subscriptions) {
         let subscription = this.subscribe(callback, subscriptions);
         callback({ Type: CollectionChangeType.Reset });

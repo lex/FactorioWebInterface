@@ -41,10 +41,9 @@ export class DataSetViewModel extends ObservableObject {
         this._dataSetOptionsView = new CollectionView(this._dataSetOptions);
         this._dataSetOptionsView.selectedChanged.subscribe(() => this.setDataSet())
 
-        scenarioDataService.dataSets.subscribe(event => {
+        scenarioDataService.dataSets.bind(event => {
             this.buildDataSetOptions();
         });
-        this.buildDataSetOptions();
 
         scenarioDataService.entries.subscribe(event => {
             if (scenarioDataService.fetchingEntries) {
@@ -56,14 +55,11 @@ export class DataSetViewModel extends ObservableObject {
             this.raise('header', this._header);
         });
 
-        scenarioDataService.propertyChanged('fetchingDataSets', value => {
+        scenarioDataService.bind('fetchingDataSets', value => {
             if (value) {
                 this.setFetchingDataSetOptions();
             }
         });
-        if (scenarioDataService.fetchingDataSets) {
-            this.setFetchingDataSetOptions();
-        }
     }
 
     refreshDataSets() {

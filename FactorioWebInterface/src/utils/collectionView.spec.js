@@ -356,7 +356,7 @@ describe('CollectionView', function () {
             let cv = new CollectionView(o);
             o.add(3, 2, 1);
             let callbackFiredCount = 0;
-            cv.sortChanged(event => callbackFiredCount++);
+            cv.sortChanged.subscribe(event => callbackFiredCount++);
             // Act.
             cv.sortBy({ ascendingComparator: (a, b) => a - b });
             // Assert.

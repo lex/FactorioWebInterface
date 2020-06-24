@@ -56,7 +56,13 @@ export class ModsService {
         this._uploadService = uploadService;
         this._windowsService = windowService;
 
-        modsHubService.onSendModPacks.subscribe(event => this._modPacks.update(event));
+        modsHubService.onSendModPacks.subscribe(event => {
+            this._modPacks.update(event);
+
+            if (!this._modPacks.has(this._selectedModPack.value)) {
+                this._selectedModPack.raise(undefined);
+            }
+        });
 
         modsHubService.onSendModPackFiles.subscribe(event => {
             if (event.modPack !== this._selectedModPack.value) {
@@ -101,8 +107,16 @@ export class ModsService {
         return this._modsHubService.createModPack(name);
     }
 
-    renameModPack(oldName: string, newName: string): Promise<Result> {
-        return this._modsHubService.renameModPack(oldName, newName);
+    async renameModPack(oldName: string, newName: string): Promise<Result> {
+        let oldSelectedModPack = this._selectedModPack.value;
+
+        let result = await this._modsHubService.renameModPack(oldName, newName);
+
+        if (result.Success && oldSelectedModPack === oldName) {
+            this._selectedModPack.raise(newName);
+        }
+
+        return result;
     }
 
     copyModPackFiles(targetModPack: string, fileNames: string[]): Promise<Result> {

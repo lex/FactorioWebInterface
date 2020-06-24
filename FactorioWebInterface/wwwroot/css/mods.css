@@ -539,6 +539,154 @@ table > thead > tr > th[sort='descending']:after {
   min-width: 8rem;
 }
 
+a-progress {
+  width: 6em;
+  height: 2.25em;
+  font-size: 1rem;
+}
+a-progress > div {
+  height: 100%;
+  background-color: limegreen;
+}
+a-progress > a-stack-panel {
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+a-progress > a-stack-panel > div {
+  margin: auto;
+}
+a-progress.indeterminate {
+  -webkit-animation-duration: 1.5s;
+  animation-duration: 1.5s;
+  -webkit-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+  -webkit-animation-name: moveIndeterminate;
+  animation-name: moveIndeterminate;
+  -webkit-animation-timing-function: linear;
+  animation-timing-function: linear;
+  background-image: linear-gradient(to right, limegreen 30%, rgba(0, 0, 0, 0) 30%);
+  background-position: top left;
+  background-repeat: no-repeat;
+  background-size: 150% 150%;
+}
+@-webkit-keyframes moveIndeterminate {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes moveIndeterminate {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+a-select {
+  height: 2.25em;
+  display: inline-block;
+  max-width: 100%;
+  position: relative;
+  vertical-align: top;
+  text-align: left;
+}
+a-select select {
+  background-color: white;
+  color: #363636;
+  cursor: pointer;
+  display: block;
+  font-size: 1em;
+  max-width: 100%;
+  outline: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  align-items: center;
+  border: 1px solid #dbdbdb;
+  border-radius: 4px;
+  box-shadow: none;
+  height: 2.25em;
+  justify-content: flex-start;
+  line-height: 1.5;
+  padding-bottom: calc(0.375em - 1px);
+  padding-top: calc(0.375em - 1px);
+  padding-left: calc(0.625em - 1px);
+  padding-right: 2.5em;
+  position: relative;
+  vertical-align: top;
+  margin: 0;
+}
+a-select select:hover {
+  border-color: #b5b5b5;
+}
+a-select:not(.is-loading)::after {
+  border: 3px solid #3273dc;
+  border-radius: 2px;
+  border-right: 0;
+  border-top: 0;
+  content: " ";
+  display: block;
+  height: 0.625em;
+  margin-top: -0.4375em;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  right: 1.125em;
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  -webkit-transform-origin: center;
+  transform-origin: center;
+  width: 0.625em;
+  z-index: 4;
+}
+a-select.is-loading::after {
+  -webkit-animation: spinAround 500ms infinite linear;
+  animation: spinAround 500ms infinite linear;
+  border: 2px solid #dbdbdb;
+  border-radius: 290486px;
+  border-right-color: transparent;
+  border-top-color: transparent;
+  content: "";
+  display: block;
+  height: 1em;
+  position: relative;
+  width: 1em;
+  z-index: 4;
+  margin-top: 0;
+  position: absolute;
+  right: 0.625em;
+  top: 0.625em;
+  -webkit-transform: none;
+  transform: none;
+}
+@-webkit-keyframes spinAround {
+  from {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@keyframes spinAround {
+  from {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+
 .hide-error > div > div {
   display: none;
 }

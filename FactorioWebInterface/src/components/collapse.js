@@ -2,6 +2,9 @@
 import "./collapse.ts.less";
 import { StackPanel } from "./stackPanel";
 import { HideableContent } from "./hideableContent";
+import { ObjectBindingTarget } from "../utils/bindingTarget";
+import { Binding } from "../utils/binding";
+import { BaseElement } from "./baseElement";
 let collapseButtonTemplate = document.createElement('template');
 collapseButtonTemplate.innerHTML = `
 <svg width="100%" viewbox="-50 -50 100 100">  
@@ -14,7 +17,7 @@ export class CollapseButton extends HTMLElement {
     }
 }
 customElements.define('a-collapse-button', CollapseButton);
-export class Collapse extends HTMLElement {
+export class Collapse extends BaseElement {
     constructor(header, content) {
         super();
         let toggler = (event) => {
@@ -72,9 +75,20 @@ export class Collapse extends HTMLElement {
     setContent(value) {
         this._contentPresenter.setContent(value);
     }
+    setOpen(value) {
+        this.open = value;
+        return this;
+    }
+    bindOpen(source) {
+        let target = new ObjectBindingTarget(this, 'open');
+        let binding = new Binding(target, source);
+        this.setBinding(Collapse.bindingKeys.open, binding);
+        return this;
+    }
     get contentPresenter() {
         return this._contentPresenter;
     }
 }
+Collapse.bindingKeys = Object.assign({ open: {} }, BaseElement.bindingKeys);
 customElements.define('a-collapse', Collapse);
 //# sourceMappingURL=collapse.js.map

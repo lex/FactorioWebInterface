@@ -3,6 +3,10 @@
 import "./collapse.ts.less";
 import { StackPanel } from "./stackPanel";
 import { HideableContent } from "./hideableContent";
+import { IBindingSource } from "../utils/bindingSource";
+import { ObjectBindingTarget } from "../utils/bindingTarget";
+import { Binding } from "../utils/binding";
+import { BaseElement } from "./baseElement";
 
 let collapseButtonTemplate = document.createElement('template');
 collapseButtonTemplate.innerHTML = `
@@ -20,7 +24,12 @@ export class CollapseButton extends HTMLElement {
 
 customElements.define('a-collapse-button', CollapseButton);
 
-export class Collapse extends HTMLElement {
+export class Collapse extends BaseElement {
+    static readonly bindingKeys = {
+        open: {},
+        ...BaseElement.bindingKeys
+    };
+
     private _top: StackPanel;
     private _button: CollapseButton;
     private _contentPresenter: HideableContent;
@@ -98,6 +107,19 @@ export class Collapse extends HTMLElement {
 
     setContent(value: Node | string) {
         this._contentPresenter.setContent(value);
+    }
+
+    setOpen(value: boolean): this {
+        this.open = value;
+        return this;
+    }
+
+    bindOpen(source: IBindingSource<boolean>): this {
+        let target = new ObjectBindingTarget(this, 'open');
+        let binding = new Binding(target, source);
+
+        this.setBinding(Collapse.bindingKeys.open, binding);
+        return this;
     }
 
     get contentPresenter(): HideableContent {
