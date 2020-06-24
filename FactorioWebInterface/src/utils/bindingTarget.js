@@ -1,4 +1,18 @@
 import { EventListener } from "./eventListener";
+export class BindingTargetDelegate {
+    constructor(setter, getter) {
+        this.setter = setter;
+        this.getter = getter;
+    }
+    get() {
+        return this.getter && this.getter();
+    }
+    set(value) {
+        this.setter(value);
+    }
+    connected(source) { }
+    disconnected(source) { }
+}
 export class ObjectBindingTarget {
     constructor(object, propertyName) {
         this.object = object;

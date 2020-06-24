@@ -60,7 +60,9 @@ export class ModPackFilesView extends VirtualComponent {
         destinationLabel.textContent = 'Copy/Move Destination';
         destinationLabel.classList.add('label-text');
         destinationLabel.style.margin = '0.35em 0.5em';
-        let destinationSelect = new Select(modPackFilesViewModel.modPacks, item => item.Name);
+        let destinationSelect = new Select(modPackFilesViewModel.modPacks, item => item.Name)
+            .setPlaceholder('No Mod Packs');
+        destinationSelect.style.minWidth = '10em';
         buttonsPanel.append(uploadButton, downloadButton, deleteButton, copyButton, moveButton, destinationLabel, destinationSelect);
         let table = new Table(modPackFilesViewModel.files, [
             new MultiSelectColumn(),

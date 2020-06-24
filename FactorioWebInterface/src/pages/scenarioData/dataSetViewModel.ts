@@ -1,29 +1,31 @@
 ﻿import { ScenarioDataService, Entry } from "./scenarioDataService";
-import { ObservableCollection, ObservableArray } from "../../utils/observableCollection";
+import { ObservableCollection } from "../../utils/observableCollection";
 import { ObservableObject } from "../../utils/observableObject";
 import { UpdateDataViewModel } from "./updateDataViewModel";
-import { CollectionChangeType } from "../../ts/utils";
-import { DataSetOption } from "./dataSetOption";
 import { CollectionView } from "../../utils/collectionView";
 import { IterableHelper } from "../../utils/iterableHelper";
 
-export class DataSetViewModel extends ObservableObject {
-    private static placeHolderOption = new DataSetOption('Select Data Set');
-    private static fetchingOption = new DataSetOption('Fetching...');
+export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
+    private static defaultPlaceholder = 'Select Data Set';
+    private static fetchingPlaceholder = 'Fetching...';
 
     private _scenarioDataService: ScenarioDataService;
     private _updateDataViewModel: UpdateDataViewModel;
 
     private _header: string;
-    private _dataSetOptions: ObservableArray<DataSetOption>;
-    private _dataSetOptionsView: CollectionView<DataSetOption>;
+    private _placeholder: string;
+    private _dataSets: CollectionView<string>;
 
     get header(): string {
         return this._header || 'No Data Set selected';
     }
 
-    get dataSetsOptions(): CollectionView<DataSetOption> {
-        return this._dataSetOptionsView;
+    get placeholder(): string {
+        return this._placeholder;
+    }
+
+    get dataSets(): CollectionView<string> {
+        return this._dataSets;
     }
 
     get entries(): ObservableCollection<Entry> {
@@ -37,13 +39,8 @@ export class DataSetViewModel extends ObservableObject {
         this._updateDataViewModel = updateDataViewModel;
         this._header = scenarioDataService.currentDataSet;
 
-        this._dataSetOptions = new ObservableArray();
-        this._dataSetOptionsView = new CollectionView(this._dataSetOptions);
-        this._dataSetOptionsView.selectedChanged.subscribe(() => this.setDataSet())
-
-        scenarioDataService.dataSets.bind(event => {
-            this.buildDataSetOptions();
-        });
+        this._dataSets = new CollectionView(scenarioDataService.dataSets);
+        this._dataSets.selectedChanged.subscribe(() => this.setDataSet())
 
         scenarioDataService.entries.subscribe(event => {
             if (scenarioDataService.fetchingEntries) {
@@ -56,14 +53,12 @@ export class DataSetViewModel extends ObservableObject {
         });
 
         scenarioDataService.bind('fetchingDataSets', value => {
-            if (value) {
-                this.setFetchingDataSetOptions();
-            }
+            this.setPlaceholder(value ? DataSetViewModel.fetchingPlaceholder : DataSetViewModel.defaultPlaceholder);
         });
     }
 
     refreshDataSets() {
-        this._dataSetOptions.update({ Type: CollectionChangeType.Reset, NewItems: [DataSetViewModel.fetchingOption] });
+        this._scenarioDataService.clearDataSets();
         this._scenarioDataService.requestDataSets();
     }
 
@@ -73,29 +68,22 @@ export class DataSetViewModel extends ObservableObject {
         this._updateDataViewModel.Value = entry.Value;
     }
 
-    private setDataSet() {
-        let dataSetOption: DataSetOption = IterableHelper.firstOrDefault(this._dataSetOptionsView.selected)?.value;
-
-        if (dataSetOption == null || dataSetOption === DataSetViewModel.placeHolderOption || dataSetOption === DataSetViewModel.fetchingOption) {
+    private setPlaceholder(value: string) {
+        if (value === this._placeholder) {
             return;
         }
 
-        this._dataSetOptions.update({ Type: CollectionChangeType.Remove, OldItems: [DataSetViewModel.placeHolderOption] })
-
-        this._scenarioDataService.setCurrentDataSet(dataSetOption.value);
+        this._placeholder = value;
+        this.raise('placeholder', value);
     }
 
-    private buildDataSetOptions() {
-        let newOptions = [DataSetViewModel.placeHolderOption];
+    private setDataSet() {
+        let selectedDataSet: string = IterableHelper.firstOrDefault(this._dataSets.selected)?.value;
 
-        for (let dataSet of this._scenarioDataService.dataSets.values()) {
-            newOptions.push(new DataSetOption(dataSet));
+        if (selectedDataSet == null) {
+            return;
         }
 
-        this._dataSetOptions.update({ Type: CollectionChangeType.Reset, NewItems: newOptions });
-    }
-
-    private setFetchingDataSetOptions() {
-        this._dataSetOptions.update({ Type: CollectionChangeType.Reset, NewItems: [DataSetViewModel.fetchingOption] });
+        this._scenarioDataService.setCurrentDataSet(selectedDataSet);
     }
 }

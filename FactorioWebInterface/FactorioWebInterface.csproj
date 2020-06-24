@@ -47,6 +47,7 @@
     <None Remove="src\components\label.ts" />
     <None Remove="src\components\modal.ts" />
     <None Remove="src\components\modalBackground.ts" />
+    <None Remove="src\components\placeholder.ts" />
     <None Remove="src\components\progress.ts" />
     <None Remove="src\components\select.ts" />
     <None Remove="src\components\tab.ts" />
@@ -86,7 +87,6 @@
     <None Remove="src\pages\mods\renameModPackView.ts" />
     <None Remove="src\pages\mods\renameModPackViewModel.ts" />
     <None Remove="src\pages\mods\services.ts" />
-    <None Remove="src\pages\scenarioData\dataSetOption.ts" />
     <None Remove="src\pages\scenarioData\dataSetView.ts" />
     <None Remove="src\pages\scenarioData\dataSetViewModel.ts" />
     <None Remove="src\pages\scenarioData\helpSectionView.ts" />
@@ -300,6 +300,7 @@
     <TypeScriptCompile Include="src\components\label.ts" />
     <TypeScriptCompile Include="src\components\modalBackground.ts" />
     <TypeScriptCompile Include="src\components\modal.ts" />
+    <TypeScriptCompile Include="src\components\placeholder.ts" />
     <TypeScriptCompile Include="src\components\progress.ts" />
     <TypeScriptCompile Include="src\components\select.ts" />
     <TypeScriptCompile Include="src\components\tab.ts" />
@@ -339,7 +340,6 @@
     <TypeScriptCompile Include="src\pages\mods\renameModPackView.ts" />
     <TypeScriptCompile Include="src\pages\mods\renameModPackViewModel.ts" />
     <TypeScriptCompile Include="src\pages\mods\services.ts" />
-    <TypeScriptCompile Include="src\pages\scenarioData\dataSetOption.ts" />
     <TypeScriptCompile Include="src\pages\scenarioData\dataSetView.ts" />
     <TypeScriptCompile Include="src\pages\scenarioData\dataSetViewModel.ts" />
     <TypeScriptCompile Include="src\pages\scenarioData\helpSectionView.ts" />

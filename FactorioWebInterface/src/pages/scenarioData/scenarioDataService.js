@@ -86,6 +86,9 @@ export class ScenarioDataService extends ObservableObject {
         this.setFetchingEntries(true);
         this._entries.update({ Type: CollectionChangeType.Reset, NewItems: [] });
     }
+    clearDataSets() {
+        this._dataSets.reset();
+    }
     requestDataSets() {
         this._connection.send('RequestAllDataSets');
         this.setFetchingDataSets(true);

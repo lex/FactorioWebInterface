@@ -8,6 +8,20 @@ export interface IBindingTarget<T = any> {
     disconnected(source: IBindingSource<T>): void;
 }
 
+export class BindingTargetDelegate<T = any> implements IBindingTarget<T>{
+    constructor(private readonly setter: (value: T) => void, private readonly getter?: () => T) { }
+
+    get(): T {
+        return this.getter && this.getter();
+    }
+    set(value: T) {
+        this.setter(value);
+    }
+
+    connected(source: IBindingSource<T>): void { }
+    disconnected(source: IBindingSource<T>): void { }
+}
+
 export class ObjectBindingTarget<T = any> implements IBindingTarget<T> {
     constructor(public readonly object: object, public readonly propertyName: string) { }
 

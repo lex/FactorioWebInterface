@@ -4,6 +4,7 @@ import { Table, TextColumn } from "../../components/table";
 import { StackPanel } from "../../components/stackPanel";
 import { Select } from "../../components/select";
 import { Button } from "../../components/button";
+import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 
 export class DataSetView extends VirtualComponent {
     private _dataSetViewModel: DataSetViewModel;
@@ -26,9 +27,11 @@ export class DataSetView extends VirtualComponent {
         dataSetViewModel.bind('header', (value) => header.innerText = value);
         panel.appendChild(header);
 
-        let select = new Select(this._dataSetViewModel.dataSetsOptions);
+        let select = new Select(this._dataSetViewModel.dataSets)
+            .bindPlaceholder(new ObservableObjectBindingSource(dataSetViewModel, 'placeholder'));
         select.style.marginLeft = 'auto';
         select.style.marginRight = '0.25rem';
+        select.style.minWidth = '10em';
         panel.append(select);
 
         let button = new Button('Refresh Data Sets', Button.classes.link);

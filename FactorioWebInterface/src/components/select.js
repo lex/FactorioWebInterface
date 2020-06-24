@@ -5,13 +5,17 @@ import { Box } from "../utils/box";
 import { EventListener } from "../utils/eventListener";
 import { IterableHelper } from "../utils/iterableHelper";
 import { Icon } from "./icon";
+import { Placeholder } from "./placeholder";
+import { BaseElement } from "./baseElement";
+import { BindingTargetDelegate } from "../utils/bindingTarget";
+import { Binding } from "../utils/binding";
 export class Option extends HTMLOptionElement {
     get item() {
         return this.box.value;
     }
 }
 customElements.define('a-option', Option, { extends: 'option' });
-export class Select extends HTMLElement {
+export class Select extends BaseElement {
     constructor(source, optionBuilder) {
         super();
         this._select = document.createElement('select');
@@ -29,6 +33,14 @@ export class Select extends HTMLElement {
                 let option = this.buildOptionElement(new Box(item));
                 options.add(option);
             }
+            EventListener.onChange(this._select, () => {
+                if (this._select.selectedIndex >= 0) {
+                    this.removePlaceholder();
+                }
+                else {
+                    this.addPlaceHolder();
+                }
+            });
         }
         if (this._source) {
             this._optionMap = new Map();
@@ -72,13 +84,10 @@ export class Select extends HTMLElement {
         this._select.selectedIndex = value;
     }
     get icon() {
-        let icon = this.lastChild;
-        if (icon === this._select) {
-            return undefined;
-        }
-        return icon;
+        return this._icon;
     }
     set icon(value) {
+        var _a, _b;
         let oldIcon = this.icon;
         if (oldIcon === value) {
             return;
@@ -87,14 +96,44 @@ export class Select extends HTMLElement {
         if (value != null) {
             value.classList.add(Icon.classes.isLeftAbsolute);
             this.append(value);
+            this._icon = value;
             this._select.classList.add('has-icon-left');
+            (_a = this._placeholder) === null || _a === void 0 ? void 0 : _a.classList.add('has-icon-left');
         }
         else {
             this._select.classList.remove('has-icon-left');
+            (_b = this._placeholder) === null || _b === void 0 ? void 0 : _b.classList.remove('has-icon-left');
         }
+    }
+    get placeholder() {
+        return this._placeholder;
+    }
+    set placeholder(value) {
+        let old = this._placeholder;
+        if (old === value) {
+            return;
+        }
+        old === null || old === void 0 ? void 0 : old.remove();
+        if (value == null) {
+            return;
+        }
+        value.classList.toggle('has-icon-left', this.icon != null);
+        this._placeholder = value;
+        this.addPlaceHolder();
     }
     setIcon(icon) {
         this.icon = icon;
+        return this;
+    }
+    setPlaceholder(value) {
+        let placeholder = Placeholder.toPlaceholder(value);
+        this.placeholder = placeholder;
+        return this;
+    }
+    bindPlaceholder(source) {
+        let target = new BindingTargetDelegate(value => this.setPlaceholder(value));
+        let binding = new Binding(target, source);
+        this.setBinding(Select.bindingKeys.placeholder, binding);
         return this;
     }
     buildOptionElement(item) {
@@ -187,19 +226,39 @@ export class Select extends HTMLElement {
     updateSelected() {
         let box = IterableHelper.firstOrDefault(this._source.selected);
         if (box == this.selectedBox) {
+            if (box == null) {
+                this.addPlaceHolder();
+            }
+            else {
+                this.removePlaceholder();
+            }
             return;
         }
         if (box == null) {
             this._select.selectedIndex = -1;
+            this.addPlaceHolder();
             return;
         }
         let option = this._optionMap.get(box);
         if (option == null) {
             this._select.selectedIndex = -1;
+            this.addPlaceHolder();
             return;
         }
         option.selected = true;
+        this.removePlaceholder();
+    }
+    removePlaceholder() {
+        var _a;
+        (_a = this._placeholder) === null || _a === void 0 ? void 0 : _a.remove();
+    }
+    addPlaceHolder() {
+        if (this._placeholder == null || this._placeholder.parentElement === this) {
+            return;
+        }
+        this.append(this._placeholder);
     }
 }
+Select.bindingKeys = Object.assign({ placeholder: {} }, BaseElement.bindingKeys);
 customElements.define('a-select', Select);
 //# sourceMappingURL=select.js.map

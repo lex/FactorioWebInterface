@@ -3,7 +3,7 @@ import { propertyOf } from "./types";
 
 export interface IObservableObject<T = any> {
     propertyChanged(propertyName: propertyOf<T>, callback: (event) => void): () => void;
-    bind(propertyName: string, callback: (event: any) => void, subscriptions?: (() => void)[]): () => void;
+    bind(propertyName: propertyOf<T>, callback: (event: any) => void, subscriptions?: (() => void)[]): () => void;
 }
 
 export abstract class ObservableObject<T = any> implements IObservableObject<T> {

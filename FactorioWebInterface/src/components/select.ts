@@ -5,6 +5,11 @@ import { Box } from "../utils/box";
 import { EventListener } from "../utils/eventListener";
 import { IterableHelper } from "../utils/iterableHelper";
 import { Icon } from "./icon";
+import { Placeholder } from "./placeholder";
+import { BaseElement } from "./baseElement";
+import { IBindingSource } from "../utils/bindingSource";
+import { BindingTargetDelegate } from "../utils/bindingTarget";
+import { Binding } from "../utils/binding";
 
 export class Option<T> extends HTMLOptionElement {
     box: Box<T>;
@@ -16,12 +21,20 @@ export class Option<T> extends HTMLOptionElement {
 
 customElements.define('a-option', Option, { extends: 'option' });
 
-export class Select<T = any> extends HTMLElement {
+export class Select<T = any> extends BaseElement {
+    static readonly bindingKeys = {
+        placeholder: {},
+        ...BaseElement.bindingKeys
+    };
+
     private _select: HTMLSelectElement;
 
     private _source: CollectionView<T>;
     private _optionBuilder: (item: T) => string | Option<T>;
     private _optionMap: Map<Box<T>, HTMLOptionElement>;
+
+    private _icon: Icon;
+    private _placeholder: Placeholder;
 
     get value(): string {
         return this._select.value;
@@ -58,13 +71,7 @@ export class Select<T = any> extends HTMLElement {
     }
 
     get icon(): Icon {
-        let icon = this.lastChild;
-
-        if (icon === this._select) {
-            return undefined;
-        }
-
-        return icon as Icon;
+        return this._icon;
     }
     set icon(value: Icon) {
         let oldIcon = this.icon;
@@ -77,10 +84,34 @@ export class Select<T = any> extends HTMLElement {
         if (value != null) {
             value.classList.add(Icon.classes.isLeftAbsolute);
             this.append(value);
+            this._icon = value;
+
             this._select.classList.add('has-icon-left');
+            this._placeholder?.classList.add('has-icon-left');
         } else {
             this._select.classList.remove('has-icon-left');
+            this._placeholder?.classList.remove('has-icon-left');
         }
+    }
+
+    get placeholder(): Placeholder {
+        return this._placeholder;
+    }
+    set placeholder(value: Placeholder) {
+        let old = this._placeholder;
+        if (old === value) {
+            return;
+        }
+
+        old?.remove();
+
+        if (value == null) {
+            return;
+        }
+
+        value.classList.toggle('has-icon-left', this.icon != null);
+        this._placeholder = value;
+        this.addPlaceHolder();
     }
 
     constructor(source?: T[] | ObservableCollection<T> | CollectionView<T>, optionBuilder?: (item: T) => string | Option<T>) {
@@ -104,6 +135,14 @@ export class Select<T = any> extends HTMLElement {
                 let option = this.buildOptionElement(new Box(item));
                 options.add(option);
             }
+
+            EventListener.onChange(this._select, () => {
+                if (this._select.selectedIndex >= 0) {
+                    this.removePlaceholder();
+                } else {
+                    this.addPlaceHolder();
+                }
+            });
         }
 
         if (this._source) {
@@ -125,6 +164,20 @@ export class Select<T = any> extends HTMLElement {
 
     setIcon(icon: Icon): this {
         this.icon = icon;
+        return this;
+    }
+
+    setPlaceholder(value: string | Node | Placeholder): this {
+        let placeholder = Placeholder.toPlaceholder(value);
+        this.placeholder = placeholder;
+        return this;
+    }
+
+    bindPlaceholder(source: IBindingSource<string | Node | Placeholder>): this {
+        let target = new BindingTargetDelegate(value => this.setPlaceholder(value));
+        let binding = new Binding(target, source);
+
+        this.setBinding(Select.bindingKeys.placeholder, binding);
         return this;
     }
 
@@ -235,21 +288,41 @@ export class Select<T = any> extends HTMLElement {
         let box = IterableHelper.firstOrDefault(this._source.selected);
 
         if (box == this.selectedBox) {
+            if (box == null) {
+                this.addPlaceHolder();
+            } else {
+                this.removePlaceholder();
+            }
             return;
         }
 
         if (box == null) {
             this._select.selectedIndex = -1;
+            this.addPlaceHolder();
             return;
         }
 
         let option = this._optionMap.get(box);
         if (option == null) {
             this._select.selectedIndex = -1;
+            this.addPlaceHolder();
             return;
         }
 
         option.selected = true;
+        this.removePlaceholder();
+    }
+
+    private removePlaceholder(): void {
+        this._placeholder?.remove();
+    }
+
+    private addPlaceHolder(): void {
+        if (this._placeholder == null || this._placeholder.parentElement === this) {
+            return;
+        }
+
+        this.append(this._placeholder);
     }
 }
 
