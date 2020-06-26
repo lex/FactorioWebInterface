@@ -21,6 +21,14 @@
         }
     }
 
+    static *where<T>(it: IterableIterator<T>, predicate: (item: T) => boolean): IterableIterator<T> {
+        for (let item of it) {
+            if (predicate(item)) {
+                yield item;
+            }
+        }
+    }
+
     static max<T, U>(iterator: IterableIterator<T>, selector: (item: T) => U): T {
         let maxValue: U = undefined;
         let maxItem: T = undefined;

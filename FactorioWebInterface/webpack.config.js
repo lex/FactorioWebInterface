@@ -19,7 +19,7 @@ module.exports = {
         scenarioDataOld: "./src/ts/scenarioData.ts",
         plaguesplayground: "./src/ts/plaguesPlayground.ts",
         modsOld: "./src/ts/mods.ts",
-        //test: "./src/ts/test.ts",
+        test: "./src/ts/test.ts",
         //testOld: "./src/ts/testOld.ts"
         servers: "./src/pages/servers/serversPage.ts",
         admins: "./src/pages/admins/adminsPage.ts",

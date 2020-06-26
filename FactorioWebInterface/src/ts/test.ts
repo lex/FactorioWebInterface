@@ -135,7 +135,7 @@ let collectionView = new CollectionView(source);
 //    ascending: true,
 //    property: 'selected'
 //});
-collectionView.filterBy(file => file.selected);
+collectionView.filterBy({ predicate: file => file.selected });
 
 for (let i = 0; i < 100; i++) {
     let file: File = { name: 'name' + i, selected: i % 2 === 0, size: 10 * i, date: new Date(2020, 0, i) };
@@ -161,11 +161,13 @@ app.appendChild(button);
 let textField = document.createElement('input');
 textField.oninput = (() => {
     console.log(textField.value);
-    collectionView.filterBy(file => {
-        let text = textField.value.toLowerCase();
-        return (file.date + '').toLowerCase().includes(text) ||
-            (file.name + '').toLowerCase().includes(text) ||
-            (file.size + '').toLowerCase().includes(text);
+    collectionView.filterBy({
+        predicate: file => {
+            let text = textField.value.toLowerCase();
+            return (file.date + '').toLowerCase().includes(text) ||
+                (file.name + '').toLowerCase().includes(text) ||
+                (file.size + '').toLowerCase().includes(text);
+        }
     });
 });
 app.appendChild(textField);

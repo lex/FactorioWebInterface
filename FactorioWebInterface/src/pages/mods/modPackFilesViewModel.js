@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { ObservableObject } from "../../utils/observableObject";
-import { CollectionView, CollectionViewChangeType } from "../../utils/collectionView";
+import { CollectionView } from "../../utils/collectionView";
 import { DelegateCommand } from "../../utils/command";
 import { IterableHelper } from "../../utils/iterableHelper";
 export class ModPackFilesViewModel extends ObservableObject {
@@ -22,7 +22,7 @@ export class ModPackFilesViewModel extends ObservableObject {
         this._files.sortBy({ property: 'Name' });
         this._modPacks = new CollectionView(modsService.modPacks);
         this._modPacks.bind(event => {
-            if (event.type === CollectionViewChangeType.Reset) {
+            if (this._modPacks.selectedCount === 0) {
                 this._modPacks.setFirstSingleSelected();
             }
         });
@@ -62,6 +62,7 @@ export class ModPackFilesViewModel extends ObservableObject {
             this.title = event ? event : ModPackFilesViewModel.defaultTitle;
             this.raise('selectedModPack', this.selectedModPack);
             this.raise('isModPackSelected', this.isModPackSelected);
+            this._modPacks.filterBy({ predicate: modPack => modPack.Name !== event });
             this._uploadFilesCommand.raiseCanExecuteChanged();
             this._downloadFilesCommand.raiseCanExecuteChanged();
             this._deleteFilesCommand.raiseCanExecuteChanged();

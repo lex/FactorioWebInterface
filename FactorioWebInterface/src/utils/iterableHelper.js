@@ -17,6 +17,13 @@ export class IterableHelper {
             yield mapper(value);
         }
     }
+    static *where(it, predicate) {
+        for (let item of it) {
+            if (predicate(item)) {
+                yield item;
+            }
+        }
+    }
     static max(iterator, selector) {
         let maxValue = undefined;
         let maxItem = undefined;

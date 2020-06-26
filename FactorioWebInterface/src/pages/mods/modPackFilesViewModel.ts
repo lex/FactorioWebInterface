@@ -98,7 +98,7 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
 
         this._modPacks = new CollectionView(modsService.modPacks);
         this._modPacks.bind(event => {
-            if (event.type === CollectionViewChangeType.Reset) {
+            if (this._modPacks.selectedCount === 0) {
                 this._modPacks.setFirstSingleSelected();
             }
         });
@@ -155,6 +155,8 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
 
             this.raise('selectedModPack', this.selectedModPack);
             this.raise('isModPackSelected', this.isModPackSelected);
+
+            this._modPacks.filterBy({ predicate: modPack => modPack.Name !== event });
 
             this._uploadFilesCommand.raiseCanExecuteChanged();
             this._downloadFilesCommand.raiseCanExecuteChanged();

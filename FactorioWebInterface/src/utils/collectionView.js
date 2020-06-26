@@ -4,6 +4,7 @@ import { CollectionChangeType } from "../ts/utils";
 import { ArrayHelper } from "./arrayHelper";
 import { Observable } from "./observable";
 import { ObservableProperty } from "./observableProperty";
+import { IterableHelper } from "./iterableHelper";
 export var CollectionViewChangeType;
 (function (CollectionViewChangeType) {
     CollectionViewChangeType["Reset"] = "Reset";
@@ -15,6 +16,7 @@ export class CollectionView extends Observable {
     constructor(source, keySelector) {
         super();
         this._sortSpecifications = new ObservableProperty([]);
+        this._filterSpecifications = new ObservableProperty([]);
         this._source = source;
         this._selected = new Set();
         this._selectedChanged = new Observable();
@@ -44,10 +46,10 @@ export class CollectionView extends Observable {
     }
     get viewableSelected() {
         let iterator = this._selected.values();
-        if (this._filter == null) {
+        if (this._predicate == null) {
             return iterator;
         }
-        return CollectionView.where(iterator, this._filter);
+        return IterableHelper.where(iterator, this._predicate);
     }
     get selectedChanged() {
         return this._selectedChanged;
@@ -96,7 +98,7 @@ export class CollectionView extends Observable {
             if (selected.size === 1) {
                 return;
             }
-            let removed = [...CollectionView.where(oldSelected, x => x !== item)];
+            let removed = [...IterableHelper.where(oldSelected, x => x !== item)];
             selected.clear();
             selected.add(item);
             this.raise({ type: CollectionViewChangeType.Add, items: removed });
@@ -229,12 +231,6 @@ export class CollectionView extends Observable {
             }
         });
     }
-    filterBy(predicate) {
-        this._filter = predicate;
-        this.doReset();
-        this.sort();
-        this.raise({ type: CollectionViewChangeType.Reset });
-    }
     buildComparator(sortSpecification) {
         let comp;
         if (sortSpecification.ascendingComparator != null) {
@@ -286,6 +282,39 @@ export class CollectionView extends Observable {
             comp = (left, right) => oldComp(right, left);
         }
         return comp;
+    }
+    filterBy(filterSpecifications) {
+        if (!Array.isArray(filterSpecifications)) {
+            filterSpecifications = [filterSpecifications];
+        }
+        this._predicate = CollectionView.buildPredicate(filterSpecifications);
+        this.doReset();
+        this.sort();
+        this.raise({ type: CollectionViewChangeType.Reset });
+        this._filterSpecifications.raise(filterSpecifications);
+    }
+    static buildPredicate(filterSpecifications) {
+        if (filterSpecifications.length === 0 || filterSpecifications[0] == null) {
+            return undefined;
+        }
+        let predicates = [...IterableHelper.map(filterSpecifications.values(), f => {
+                if (f.boxPredicate) {
+                    return f.boxPredicate;
+                }
+                let p = f.predicate;
+                if (p) {
+                    return (item) => p(item.value);
+                }
+                return () => true;
+            })];
+        return ((item) => {
+            for (let i = 0; i < predicates.length; i++) {
+                if (!predicates[i](item)) {
+                    return false;
+                }
+            }
+            return true;
+        });
     }
     update(changeData) {
         switch (changeData.Type) {
@@ -340,24 +369,45 @@ export class CollectionView extends Observable {
         let iterator = (items == null)
             ? this._source.values()
             : items.values();
-        let filter = this._filter;
+        let filter = this._predicate;
         if (filter != null) {
-            iterator = CollectionView.where(iterator, filter);
-        }
-        if (this._keySelector === undefined) {
-            for (let item of iterator) {
-                let box = new Box(item);
-                this._array.push(box);
+            if (this._keySelector === undefined) {
+                for (let item of iterator) {
+                    let box = new Box(item);
+                    if (filter(box)) {
+                        this._array.push(box);
+                    }
+                }
+            }
+            else {
+                let map = this._map;
+                map.clear();
+                for (let item of iterator) {
+                    let key = this._keySelector(item);
+                    let box = new Box(item);
+                    if (filter(box)) {
+                        this._map.set(key, box);
+                        this._array.push(box);
+                    }
+                }
             }
         }
         else {
-            let map = this._map;
-            map.clear();
-            for (let item of iterator) {
-                let key = this._keySelector(item);
-                let box = new Box(item);
-                this._map.set(key, box);
-                this._array.push(box);
+            if (this._keySelector === undefined) {
+                for (let item of iterator) {
+                    let box = new Box(item);
+                    this._array.push(box);
+                }
+            }
+            else {
+                let map = this._map;
+                map.clear();
+                for (let item of iterator) {
+                    let key = this._keySelector(item);
+                    let box = new Box(item);
+                    this._map.set(key, box);
+                    this._array.push(box);
+                }
             }
         }
         let selected = this._selected;
@@ -370,18 +420,28 @@ export class CollectionView extends Observable {
     doAdd(items) {
         let added = [];
         let removed = [];
+        if (items == null) {
+            return [added, removed];
+        }
         let array = this._array;
         let keySelector = this._keySelector;
-        let filter = this._filter;
+        let filter = this._predicate;
         if (keySelector === undefined) {
-            let iterable = items.values();
-            if (this._filter != null) {
-                iterable = CollectionView.where(iterable, this._filter);
+            if (filter == null) {
+                for (let item of items) {
+                    let box = new Box(item);
+                    array.push(box);
+                    added.push(box);
+                }
             }
-            for (let item of iterable) {
-                let box = new Box(item);
-                array.push(box);
-                added.push(box);
+            else {
+                for (let item of items) {
+                    let box = new Box(item);
+                    if (filter(box)) {
+                        array.push(box);
+                        added.push(box);
+                    }
+                }
             }
             return [added, removed];
         }
@@ -406,16 +466,16 @@ export class CollectionView extends Observable {
             let key = keySelector(item);
             let box = map.get(key);
             if (box == null) {
-                if (filter(item)) {
-                    box = new Box(item);
+                box = new Box(item);
+                if (filter(box)) {
                     map.set(key, box);
                     array.push(box);
                     added.push(box);
                 }
             }
             else {
-                if (filter(item)) {
-                    box.value = item;
+                box.value = item;
+                if (filter(box)) {
                     added.push(box);
                 }
                 else {
@@ -497,13 +557,6 @@ export class CollectionView extends Observable {
             }
         }
         return false;
-    }
-    static *where(it, predicate) {
-        for (let item of it) {
-            if (predicate(item)) {
-                yield item;
-            }
-        }
     }
 }
 CollectionView.selectedSortId = {};
