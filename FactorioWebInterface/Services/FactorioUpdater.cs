@@ -141,7 +141,7 @@ namespace FactorioWebInterface.Services
             var result = new List<string>();
 
             using var client = _httpClientFactory.CreateClient();
-            var download = await client.GetAsync(Constants.DownloadHeadlessExperimentalURL);
+            var download = await client.GetAsync(Constants.DownloadArchiveURL);
 
             if (!download.IsSuccessStatusCode)
             {

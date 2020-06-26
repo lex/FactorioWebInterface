@@ -56,7 +56,7 @@ namespace FactorioWebInterface
 #elif WSL
         public const string DotNetPath = "/usr/bin/dotnet";            
 #else
-        public const string DotNetPath = "/usr/bin/dotnet";            
+        public const string DotNetPath = "/usr/bin/dotnet";
 #endif
 
         public const string WindowsPublicStartSavesDirectoryName = "public\\start";
@@ -67,8 +67,7 @@ namespace FactorioWebInterface
         public const string PublicOldSavesDirectoryName = "public/old";
         public const string UpdateCacheDirectoryName = "update_cache";
 
-        public const string DownloadHeadlessURL = @"https://factorio.com/download-headless";
-        public const string DownloadHeadlessExperimentalURL = @"https://factorio.com/download-headless/experimental";
+        public const string DownloadArchiveURL = @"https://factorio.com/download/archive";
         public const string GetDownloadURL = @"https://factorio.com/get-download/";
         public const string ModPortalApi = @"https://mods.factorio.com/api/mods";
         public const string ModPortalUrl = @" https://mods.factorio.com";
