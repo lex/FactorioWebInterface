@@ -49,6 +49,31 @@ export class ObservablePropertyBindingSource<T = any> implements IBindingSource<
     }
 }
 
+export class ReadonlyObservablePropertyBindingSource<T = any> implements IBindingSource<T>{
+    private _subscription: () => void;
+
+    constructor(public readonly property: IObservableProperty<T>) { }
+
+    get(): T {
+        return this.property.value;
+    }
+    set(value: T): void {
+    }
+
+    connected(target: IBindingTarget<T>): void {
+        this._subscription = this.property.bind(event => target.set(event));
+    }
+
+    disconnected(target: IBindingTarget<T>): void {
+        if (this._subscription == null) {
+            return;
+        }
+
+        this._subscription();
+        this._subscription = undefined;
+    }
+}
+
 export class ObjectBindingSource<T = any> implements IBindingSource<T>{
     constructor(public readonly object: object, public readonly propertyName: string) { }
 

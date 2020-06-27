@@ -8,7 +8,7 @@ export interface IBindingTarget<T = any> {
     disconnected(source: IBindingSource<T>): void;
 }
 
-export class BindingTargetDelegate<T = any> implements IBindingTarget<T>{
+export class DelegateBindingTarget<T = any> implements IBindingTarget<T>{
     constructor(private readonly setter: (value: T) => void, private readonly getter?: () => T) { }
 
     get(): T {

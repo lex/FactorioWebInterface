@@ -20,6 +20,7 @@ export class DataSetViewModel extends ObservableObject {
         });
         scenarioDataService.bind('fetchingDataSets', value => {
             this.setPlaceholder(value ? DataSetViewModel.fetchingPlaceholder : DataSetViewModel.defaultPlaceholder);
+            this.raise('fetchingDataSets', value);
         });
     }
     get header() {
@@ -27,6 +28,9 @@ export class DataSetViewModel extends ObservableObject {
     }
     get placeholder() {
         return this._placeholder;
+    }
+    get fetchingDataSets() {
+        return this._scenarioDataService.fetchingDataSets;
     }
     get dataSets() {
         return this._dataSets;

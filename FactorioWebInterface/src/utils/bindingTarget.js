@@ -1,5 +1,5 @@
 import { EventListener } from "./eventListener";
-export class BindingTargetDelegate {
+export class DelegateBindingTarget {
     constructor(setter, getter) {
         this.setter = setter;
         this.getter = getter;

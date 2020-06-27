@@ -7,7 +7,7 @@ import { IterableHelper } from "../utils/iterableHelper";
 import { Icon } from "./icon";
 import { Placeholder } from "./placeholder";
 import { BaseElement } from "./baseElement";
-import { BindingTargetDelegate } from "../utils/bindingTarget";
+import { ObjectBindingTarget } from "../utils/bindingTarget";
 import { Binding } from "../utils/binding";
 export class Option extends HTMLOptionElement {
     get item() {
@@ -117,23 +117,39 @@ export class Select extends BaseElement {
         if (value == null) {
             return;
         }
-        value.classList.toggle('has-icon-left', this.icon != null);
-        this._placeholder = value;
+        let placeholder = Placeholder.toPlaceholder(value);
+        placeholder.classList.toggle('has-icon-left', this.icon != null);
+        this._placeholder = placeholder;
         this.addPlaceHolder();
+    }
+    get isLoading() {
+        return this.classList.contains('is-loading');
+    }
+    set isLoading(value) {
+        this.classList.toggle('is-loading', value);
     }
     setIcon(icon) {
         this.icon = icon;
         return this;
     }
     setPlaceholder(value) {
-        let placeholder = Placeholder.toPlaceholder(value);
-        this.placeholder = placeholder;
+        this.placeholder = value;
         return this;
     }
     bindPlaceholder(source) {
-        let target = new BindingTargetDelegate(value => this.setPlaceholder(value));
+        let target = new ObjectBindingTarget(this, 'placeholder');
         let binding = new Binding(target, source);
         this.setBinding(Select.bindingKeys.placeholder, binding);
+        return this;
+    }
+    setIsLoading(value) {
+        this.isLoading = value;
+        return this;
+    }
+    bindIsLoading(source) {
+        let target = new ObjectBindingTarget(this, 'isLoading');
+        let binding = new Binding(target, source);
+        this.setBinding(Select.bindingKeys.isLoading, binding);
         return this;
     }
     buildOptionElement(item) {
@@ -259,6 +275,6 @@ export class Select extends BaseElement {
         this.append(this._placeholder);
     }
 }
-Select.bindingKeys = Object.assign({ placeholder: {} }, BaseElement.bindingKeys);
+Select.bindingKeys = Object.assign({ placeholder: {}, isLoading: {} }, BaseElement.bindingKeys);
 customElements.define('a-select', Select);
 //# sourceMappingURL=select.js.map

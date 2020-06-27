@@ -8,7 +8,7 @@ import { Icon } from "./icon";
 import { Placeholder } from "./placeholder";
 import { BaseElement } from "./baseElement";
 import { IBindingSource } from "../utils/bindingSource";
-import { BindingTargetDelegate } from "../utils/bindingTarget";
+import { DelegateBindingTarget, ObjectBindingTarget } from "../utils/bindingTarget";
 import { Binding } from "../utils/binding";
 
 export class Option<T> extends HTMLOptionElement {
@@ -24,6 +24,7 @@ customElements.define('a-option', Option, { extends: 'option' });
 export class Select<T = any> extends BaseElement {
     static readonly bindingKeys = {
         placeholder: {},
+        isLoading: {},
         ...BaseElement.bindingKeys
     };
 
@@ -94,10 +95,10 @@ export class Select<T = any> extends BaseElement {
         }
     }
 
-    get placeholder(): Placeholder {
+    get placeholder(): string | Node | Placeholder {
         return this._placeholder;
     }
-    set placeholder(value: Placeholder) {
+    set placeholder(value: string | Node | Placeholder) {
         let old = this._placeholder;
         if (old === value) {
             return;
@@ -109,9 +110,19 @@ export class Select<T = any> extends BaseElement {
             return;
         }
 
-        value.classList.toggle('has-icon-left', this.icon != null);
-        this._placeholder = value;
+        let placeholder = Placeholder.toPlaceholder(value);
+
+        placeholder.classList.toggle('has-icon-left', this.icon != null);
+        this._placeholder = placeholder;
         this.addPlaceHolder();
+    }
+
+    get isLoading(): boolean {
+        return this.classList.contains('is-loading');
+    }
+
+    set isLoading(value: boolean) {
+        this.classList.toggle('is-loading', value);
     }
 
     constructor(source?: T[] | ObservableCollection<T> | CollectionView<T>, optionBuilder?: (item: T) => string | Option<T>) {
@@ -168,16 +179,28 @@ export class Select<T = any> extends BaseElement {
     }
 
     setPlaceholder(value: string | Node | Placeholder): this {
-        let placeholder = Placeholder.toPlaceholder(value);
-        this.placeholder = placeholder;
+        this.placeholder = value;
         return this;
     }
 
     bindPlaceholder(source: IBindingSource<string | Node | Placeholder>): this {
-        let target = new BindingTargetDelegate(value => this.setPlaceholder(value));
+        let target = new ObjectBindingTarget(this, 'placeholder');
         let binding = new Binding(target, source);
 
         this.setBinding(Select.bindingKeys.placeholder, binding);
+        return this;
+    }
+
+    setIsLoading(value: boolean): this {
+        this.isLoading = value;
+        return this;
+    }
+
+    bindIsLoading(source: IBindingSource<boolean>): this {
+        let target = new ObjectBindingTarget(this, 'isLoading');
+        let binding = new Binding(target, source);
+
+        this.setBinding(Select.bindingKeys.isLoading, binding);
         return this;
     }
 

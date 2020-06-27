@@ -6,6 +6,7 @@ import { StackPanel } from "../../components/stackPanel";
 import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { Table, TextColumn, ColumnTemplate } from "../../components/table";
+import { ReadonlyObservablePropertyBindingSource } from "../../utils/bindingSource";
 
 export class ManageVersionView extends VirtualComponent {
     constructor(manageVersionViewModel: ManageVersionViewModel) {
@@ -27,9 +28,9 @@ export class ManageVersionView extends VirtualComponent {
 
         let topPanel = new StackPanel(StackPanel.direction.row);
 
-        let versionSelect = new Select(manageVersionViewModel.downloadableVersions);
-        versionSelect.classList.add('is-loading');
-        manageVersionViewModel.isFetchingVersions.subscribe(event => versionSelect.classList.toggle('is-loading', event));
+        let versionSelect = new Select(manageVersionViewModel.downloadableVersions)
+            .bindIsLoading(new ReadonlyObservablePropertyBindingSource(manageVersionViewModel.isFetchingVersions));
+
         let downlaodAndUpdateButton = iconButton(Icon.classes.download, 'Download and Update', Button.classes.link)
             .setCommand(manageVersionViewModel.downloadAndUpdateCommand);
 

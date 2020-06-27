@@ -28,7 +28,8 @@ export class DataSetView extends VirtualComponent {
         panel.appendChild(header);
 
         let select = new Select(this._dataSetViewModel.dataSets)
-            .bindPlaceholder(new ObservableObjectBindingSource(dataSetViewModel, 'placeholder'));
+            .bindPlaceholder(new ObservableObjectBindingSource(dataSetViewModel, 'placeholder'))
+            .bindIsLoading(new ObservableObjectBindingSource(dataSetViewModel, 'fetchingDataSets'));
         select.style.marginLeft = 'auto';
         select.style.marginRight = '0.25rem';
         select.style.minWidth = '10em';

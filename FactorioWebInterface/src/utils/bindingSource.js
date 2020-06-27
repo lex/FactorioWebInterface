@@ -32,6 +32,26 @@ export class ObservablePropertyBindingSource {
         this._subscription = undefined;
     }
 }
+export class ReadonlyObservablePropertyBindingSource {
+    constructor(property) {
+        this.property = property;
+    }
+    get() {
+        return this.property.value;
+    }
+    set(value) {
+    }
+    connected(target) {
+        this._subscription = this.property.bind(event => target.set(event));
+    }
+    disconnected(target) {
+        if (this._subscription == null) {
+            return;
+        }
+        this._subscription();
+        this._subscription = undefined;
+    }
+}
 export class ObjectBindingSource {
     constructor(object, propertyName) {
         this.object = object;
