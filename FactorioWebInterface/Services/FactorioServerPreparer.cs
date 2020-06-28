@@ -1,15 +1,10 @@
-﻿using FactorioWebInterface.Data;
-using FactorioWebInterface.Hubs;
+﻿using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Shared;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -219,6 +214,20 @@ namespace FactorioWebInterface.Services
             return result;
         }
 
+        internal Result BuildServerRunningSettings(FactorioServerMutableData mutableData)
+        {
+            _ = FactorioServerUtils.SendOutputMessage(mutableData, _factorioControlHub, "Building server running settings.");
+
+            var result = _factorioFileManager.BuildServerRunningSettings(mutableData.Constants);
+
+            if (!result.Success)
+            {
+                _ = FactorioServerUtils.SendErrorMessage(mutableData, _factorioControlHub, $"Error building server running settings: {result}");
+            }
+
+            return result;
+        }
+
         internal async Task<Result> RotateLogs(FactorioServerMutableData mutableData)
         {
             _ = FactorioServerUtils.SendOutputMessage(mutableData, _factorioControlHub, "Rotating logs.");
@@ -279,10 +288,15 @@ namespace FactorioWebInterface.Services
             var adminTask = BuildAdminList(mutableData);
             var logTask = RotateLogs(mutableData);
 
+            var runningSettingsResult = BuildServerRunningSettings(mutableData);
+
             ResetData(mutableData);
+            mutableData.ServerRunningSettings = mutableData.ServerSettings;
+
             var startInfo = MakeStartInfo(mutableData, startTypeArguments);
 
-            var results = await Task.WhenAll(banTask, adminTask, logTask);
+            var results = (await Task.WhenAll(banTask, adminTask, logTask)).ToList();
+            results.Add(runningSettingsResult);
             if (results.Any(x => !x.Success))
             {
                 return Result<ProcessStartInfo>.FromResult(Result.Combine(results));

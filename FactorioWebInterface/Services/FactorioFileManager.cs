@@ -48,6 +48,7 @@ namespace FactorioWebInterface.Services
         Task<Result> UploadFiles(string serverId, IList<IFormFile> files);
         void EnsureScenarioDirectoryRemoved(string localScenarioDirectoryPath);
         void EnsureScenarioDirectoryCreated(string localScenarioDirectoryPath);
+        Result BuildServerRunningSettings(FactorioServerConstantData serverData);
     }
 
     public class FactorioFileManager : IFactorioFileManager
@@ -1289,6 +1290,20 @@ namespace FactorioWebInterface.Services
             _ = Task.Run(() => ChatLogFilesChanged?.Invoke(this, ev));
 
             return result;
+        }
+
+        public Result BuildServerRunningSettings(FactorioServerConstantData serverData)
+        {
+            try
+            {
+                _fileSystem.File.Copy(serverData.ServerSettingsPath, serverData.ServerRunningSettingsPath, true);
+                return Result.OK;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, nameof(BuildServerRunningSettings));
+                return Result.Failure(Constants.UnexpectedErrorKey, ex.Message);
+            }
         }
 
         public void EnsureScenarioDirectoryRemoved(string localScenarioDirectoryPath) => DirectoryHelpers.DeleteIfExists(localScenarioDirectoryPath);

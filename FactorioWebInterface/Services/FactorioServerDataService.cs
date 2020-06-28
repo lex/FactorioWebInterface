@@ -113,13 +113,15 @@ namespace FactorioWebInterface.Services
                     try
                     {
                         var extraSettingsTask = GetFactorioServerExtraSettings(serverData);
+                        var runningSettingsTask = GetFactorioServerRunningSettings(serverData);
                         var versionTask = GetVersion(serverData);
 
-                        await Task.WhenAll(extraSettingsTask, versionTask);
+                        await Task.WhenAll(extraSettingsTask, runningSettingsTask, versionTask);
 
                         serverData.Lock(md =>
                         {
                             md.ServerExtraSettings = extraSettingsTask.Result;
+                            md.ServerRunningSettings = runningSettingsTask.Result;
                             md.Version = versionTask.Result;
                         });
                     }
@@ -166,6 +168,24 @@ namespace FactorioWebInterface.Services
             }
 
             return FactorioServerExtraSettings.MakeDefault();
+        }
+
+        private async Task<FactorioServerSettings?> GetFactorioServerRunningSettings(FactorioServerData serverData)
+        {
+            try
+            {
+                var fi = new FileInfo(serverData.Constants.ServerRunningSettingsPath);
+                if (fi.Exists)
+                {
+                    var data = await File.ReadAllTextAsync(fi.FullName);
+                    return JsonConvert.DeserializeObject<FactorioServerSettings>(data);
+                }
+            }
+            catch
+            {
+            }
+
+            return null;
         }
 
         private Task<string> GetVersion(FactorioServerData serverData)

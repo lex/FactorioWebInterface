@@ -20,7 +20,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelStatusProviderTests
             data.Status = status;
             data.Version = "0.0.0";
             data.ServerExtraSettings.SetDiscordChannelName = true;
-            data.ServerSettings = new FactorioServerSettings() { Name = "name" };
+            data.ServerRunningSettings = new FactorioServerSettings() { Name = "name" };
 
             // Act.
             var channelStatus = ChannelStatusProvider.GetStatus(data);
@@ -39,13 +39,47 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelStatusProviderTests
             data.Status = status;
             data.Version = "0.0.0";
             data.ServerExtraSettings.SetDiscordChannelName = false;
-            data.ServerSettings = new FactorioServerSettings() { Name = "name" };
+            data.ServerRunningSettings = new FactorioServerSettings() { Name = "name" };
 
             // Act.
             var channelStatus = ChannelStatusProvider.GetStatus(data);
 
             // Assert.
             Assert.Null(channelStatus.Name);
+        }
+
+        [Fact]
+        public void WhenServerRunning_AndServerRunningSettingsIsNull_NameIsNull()
+        {
+            // Arrange.
+            var data = ServerDataHelper.MakeMutableData();
+            data.Status = FactorioServerStatus.Running;
+            data.Version = "0.0.0";
+            data.ServerExtraSettings.SetDiscordChannelName = true;
+            data.ServerRunningSettings = null;
+
+            // Act.
+            var channelStatus = ChannelStatusProvider.GetStatus(data);
+
+            // Assert.
+            Assert.Null(channelStatus.Name);
+        }
+
+        [Fact]
+        public void WhenServerStopped_AndServerRunningSettingsIsNull_NameIsOffline()
+        {
+            // Arrange.
+            var data = ServerDataHelper.MakeMutableData();
+            data.Status = FactorioServerStatus.Stopped;
+            data.Version = "0.0.0";
+            data.ServerExtraSettings.SetDiscordChannelName = true;
+            data.ServerRunningSettings = null;
+
+            // Act.
+            var channelStatus = ChannelStatusProvider.GetStatus(data);
+
+            // Assert.
+            Assert.Equal("s1-offline", channelStatus.Name);
         }
 
         [Theory]
@@ -94,7 +128,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelStatusProviderTests
             data.Status = FactorioServerStatus.Running;
             data.Version = version;
             data.ServerExtraSettings.SetDiscordChannelName = true;
-            data.ServerSettings = new FactorioServerSettings() { Name = name };
+            data.ServerRunningSettings = new FactorioServerSettings() { Name = name };
 
             // Act.
             var channelStatus = ChannelStatusProvider.GetStatus(data);

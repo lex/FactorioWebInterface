@@ -28,9 +28,9 @@ namespace FactorioWebInterface.Services.Discord
             if (mutableData.Status == FactorioServerStatus.Running)
             {
                 string? name = null;
-                if (mutableData.ServerExtraSettings.SetDiscordChannelName)
+                if (mutableData.ServerExtraSettings.SetDiscordChannelName && mutableData.ServerRunningSettings is FactorioServerSettings settings)
                 {
-                    string cleanServerName = serverTagRegex.Replace(mutableData.ServerSettings?.Name ?? "", "");
+                    string cleanServerName = serverTagRegex.Replace(settings.Name ?? "", "");
                     string cleanVersion = mutableData.Version.Replace('.', '_');
 
                     name = $"s{mutableData.ServerId}-{cleanServerName}-{cleanVersion}";

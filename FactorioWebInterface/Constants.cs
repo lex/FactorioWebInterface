@@ -74,6 +74,7 @@ namespace FactorioWebInterface
 
         //public const string DefaultFileName = "current_map.zip";
         public const string ServerSettingsFileName = "server-settings.json";
+        public const string ServerRunningSettingsFileName = "server-running-settings.json";
         public const string ServerExtraSettingsFileName = "server-extra-settings.json";
         public const string ServerBanListFileName = "server-banlist.json";
         public const string ServerAdminListFileName = "server-adminlist.json";

@@ -14,6 +14,7 @@ namespace FactorioWebInterface.Models
         public string CurrentLogPath { get; }
         public string ExecutablePath { get; }
         public string ServerSettingsPath { get; }
+        public string ServerRunningSettingsPath { get; }
         public string ServerExtraSettingsPath { get; }
         public string ServerBanListPath { get; }
         public string ServerAdminListPath { get; }
@@ -34,6 +35,7 @@ namespace FactorioWebInterface.Models
             TempSavesDirectoryPath = Path.Combine(basePath, Constants.TempSavesDirectoryName);
             LocalSavesDirectoroyPath = Path.Combine(basePath, Constants.LocalSavesDirectoryName);
             ServerSettingsPath = Path.Combine(basePath, Constants.ServerSettingsFileName);
+            ServerRunningSettingsPath = Path.Combine(basePath, Constants.ServerRunningSettingsFileName);
             ServerExtraSettingsPath = Path.Combine(basePath, Constants.ServerExtraSettingsFileName);
             LocalScenarioDirectoryPath = Path.Combine(basePath, Constants.ScenarioDirectoryName);
 
