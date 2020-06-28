@@ -1,7 +1,7 @@
 ﻿using Xunit;
 using FactorioWebInterface.Models;
 
-namespace FactorioWebInterfaceTests.Models.ModeParserTests
+namespace FactorioWebInterfaceTests.Models.ModParserTests
 {
     public class TryGetNameAndVersion
     {
