@@ -21,6 +21,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
         public IFactorioServerDataService FactorioServerDataService { get; protected set; }
         public ILogger<DiscordService> Logger { get; }
         public IMessageQueueFactory MessageQueueFactory { get; protected set; }
+        public IChannelUpdaterFactory ChannelUpdaterFactory { get; protected set; }
 
         private DiscordService? discordService;
         public DiscordService DiscordService => discordService ?? (discordService = MakeDiscordService());
@@ -32,7 +33,8 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
             IDbContextFactory? dbContextFactory = null,
             IFactorioServerDataService? factorioServerDataService = null,
             ILogger<DiscordService>? logger = null,
-            IMessageQueueFactory? messageQueueFactory = null)
+            IMessageQueueFactory? messageQueueFactory = null,
+            IChannelUpdaterFactory? channelUpdaterFactory = null)
         {
             Configuration = configuration ?? new DiscordServiceConfiguration(0, new HashSet<ulong>());
             Client = client ?? new Mock<IDiscordClientWrapper>(MockBehavior.Strict).Object;
@@ -41,6 +43,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
             FactorioServerDataService = factorioServerDataService ?? new Mock<IFactorioServerDataService>(MockBehavior.Strict).Object;
             Logger = logger ?? new TestLogger<DiscordService>();
             MessageQueueFactory = messageQueueFactory ?? new Mock<IMessageQueueFactory>(MockBehavior.Strict).Object;
+            ChannelUpdaterFactory = channelUpdaterFactory ?? new Mock<IChannelUpdaterFactory>(MockBehavior.Strict).Object;
         }
 
         public DiscordService MakeDiscordService()
@@ -52,7 +55,8 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
                 DbContextFactory,
                 FactorioServerDataService,
                 Logger,
-                MessageQueueFactory);
+                MessageQueueFactory,
+                ChannelUpdaterFactory);
         }
 
         public void Dispose()
@@ -68,6 +72,18 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
 
             var factory = new Mock<IMessageQueueFactory>(MockBehavior.Strict);
             factory.Setup(x => x.Create(It.IsAny<IMessageChannel>())).Returns(queue.Object);
+
+            return factory.Object;
+        }
+
+        public static IChannelUpdaterFactory MakeChannelUpdaterFactory(Action? enqueueCallback = null, Action? disposeCallback = null)
+        {
+            var update = new Mock<IChannelUpdater>(MockBehavior.Strict);
+            update.Setup(x => x.ScheduleUpdate()).Callback(enqueueCallback ?? (() => { }));
+            update.Setup(x => x.Dispose()).Callback(disposeCallback ?? (() => { }));
+
+            var factory = new Mock<IChannelUpdaterFactory>(MockBehavior.Strict);
+            factory.Setup(x => x.Create(It.IsAny<ITextChannel>(), It.IsAny<string>())).Returns(update.Object);
 
             return factory.Object;
         }

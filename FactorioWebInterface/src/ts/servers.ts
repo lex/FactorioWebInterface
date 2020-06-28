@@ -67,6 +67,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         SyncBans: boolean;
         BuildBansFromDatabaseOnStart: boolean;
         SetDiscordChannelName: boolean;
+        SetDiscordChannelTopic: boolean;
         GameChatToDiscord: boolean;
         GameShoutToDiscord: boolean;
         DiscordToGameChat: boolean;
@@ -140,6 +141,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
     const configSyncBans = document.getElementById('configSyncBans') as HTMLInputElement;
     const configBuildBansFromDb = document.getElementById('configBuildBansFromDb') as HTMLInputElement;
     const configSetDiscordChannelName = document.getElementById('configSetDiscordChannelName') as HTMLInputElement;
+    const configSetDiscordChannelTopic = document.getElementById('configSetDiscordChannelTopic') as HTMLInputElement;
     const configSaveButton = document.getElementById('configSaveButton') as HTMLButtonElement;
     const undoSettingsButton = document.getElementById('undoSettingsButton') as HTMLButtonElement;
     const copySettingsButton = document.getElementById('copySettingsButton') as HTMLButtonElement;
@@ -1092,6 +1094,10 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
             settings.SetDiscordChannelName = true;
         configSetDiscordChannelName.checked = settings.SetDiscordChannelName;
 
+        if (settings.SetDiscordChannelTopic === undefined)
+            settings.SetDiscordChannelTopic = true;
+        configSetDiscordChannelTopic.checked = settings.SetDiscordChannelTopic;
+
         if (settings.GameChatToDiscord === undefined)
             settings.GameChatToDiscord = true;
         configSetGameChatToDiscord.checked = settings.GameChatToDiscord;
@@ -1325,6 +1331,7 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
             SyncBans: configSyncBans.checked,
             BuildBansFromDatabaseOnStart: configBuildBansFromDb.checked,
             SetDiscordChannelName: configSetDiscordChannelName.checked,
+            SetDiscordChannelTopic: configSetDiscordChannelTopic.checked,
             GameChatToDiscord: configSetGameChatToDiscord.checked,
             GameShoutToDiscord: configSetGameShoutToDiscord.checked,
             DiscordToGameChat: configSetDiscordToGameChat.checked,
@@ -1360,6 +1367,16 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
         let data: KeyValueCollectionChangedData = {
             Type: CollectionChangeType.Add,
             NewItems: { SetDiscordChannelName: configSetDiscordChannelName.checked }
+        };
+        connection.send('UpdateServerExtraSettings', data);
+    }
+
+    configSetDiscordChannelTopic.onchange = () => {
+        markExtraSettingsUnsaved();
+
+        let data: KeyValueCollectionChangedData = {
+            Type: CollectionChangeType.Add,
+            NewItems: { SetDiscordChannelTopic: configSetDiscordChannelTopic.checked }
         };
         connection.send('UpdateServerExtraSettings', data);
     }
@@ -1759,6 +1776,11 @@ import { Error, Result, Utils, CollectionChangedData, CollectionChangeType, KeyV
                     if (value === undefined)
                         value = true;
                     configSetDiscordChannelName.checked = value;
+                    break;
+                case "SetDiscordChannelTopic":
+                    if (value === undefined)
+                        value = true;
+                    configSetDiscordChannelTopic.checked = value;
                     break;
                 case "GameChatToDiscord":
                     if (value === undefined)

@@ -22,6 +22,11 @@ namespace FactorioWebInterface.Models
         public bool SetDiscordChannelName { get; set; } = true;
 
         [DefaultValue(true)]
+        [JsonProperty(PropertyName = "SetDiscordChannelTopic", DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonPropertyName("SetDiscordChannelTopic")]
+        public bool SetDiscordChannelTopic { get; set; } = true;
+
+        [DefaultValue(true)]
         [JsonProperty(PropertyName = "GameChatToDiscord", DefaultValueHandling = DefaultValueHandling.Populate)]
         [JsonPropertyName("GameChatToDiscord")]
         public bool GameChatToDiscord { get; set; } = true;
@@ -48,6 +53,7 @@ namespace FactorioWebInterface.Models
                 SyncBans = true,
                 BuildBansFromDatabaseOnStart = true,
                 SetDiscordChannelName = true,
+                SetDiscordChannelTopic = true,
                 GameChatToDiscord = true,
                 GameShoutToDiscord = true,
                 DiscordToGameChat = true,
@@ -62,6 +68,7 @@ namespace FactorioWebInterface.Models
                 SyncBans = SyncBans,
                 BuildBansFromDatabaseOnStart = BuildBansFromDatabaseOnStart,
                 SetDiscordChannelName = SetDiscordChannelName,
+                SetDiscordChannelTopic = SetDiscordChannelTopic,
                 GameChatToDiscord = GameChatToDiscord,
                 GameShoutToDiscord = GameShoutToDiscord,
                 DiscordToGameChat = DiscordToGameChat,

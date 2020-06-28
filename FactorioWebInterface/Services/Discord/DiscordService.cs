@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.WebSocket;
 using FactorioWebInterface.Data;
 using FactorioWebInterface.Models;
 using FactorioWebInterface.Utils;
@@ -24,7 +23,7 @@ namespace FactorioWebInterface.Services.Discord
         Task<Result<string?>> UnSetServer(ulong channelId);
         Task SendToConnectedChannel(string serverId, string? text = null, Embed? embed = null);
         Task SendToAdminChannel(string? text = null, Embed? embed = null);
-        Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null);
+        Task ScheduleUpdateChannelNameAndTopic(string serverId);
 
         Task Init();
 
@@ -38,6 +37,7 @@ namespace FactorioWebInterface.Services.Discord
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly ILogger<DiscordService> _logger;
         private readonly IMessageQueueFactory _messageQueueFactory;
+        private readonly IChannelUpdaterFactory _channelUpdaterFactory;
 
         private readonly ulong guildId;
         private readonly HashSet<ulong> validAdminRoleIds = new HashSet<ulong>();
@@ -46,7 +46,8 @@ namespace FactorioWebInterface.Services.Discord
         private readonly Dictionary<ulong, string> discordToServer = new Dictionary<ulong, string>();
         private readonly Dictionary<string, ulong> serverdToDiscord = new Dictionary<string, ulong>();
 
-        private Dictionary<ulong, IMessageQueue> MessageQueues = new Dictionary<ulong, IMessageQueue>();
+        private readonly Dictionary<ulong, IMessageQueue> messageQueues = new Dictionary<ulong, IMessageQueue>();
+        private readonly Dictionary<ulong, IChannelUpdater> channelUpdaters = new Dictionary<ulong, IChannelUpdater>();
 
         public string? CrashRoleMention { get; }
 
@@ -58,13 +59,15 @@ namespace FactorioWebInterface.Services.Discord
             IDbContextFactory dbContextFactory,
             IFactorioServerDataService factorioServerDataService,
             ILogger<DiscordService> logger,
-            IMessageQueueFactory messageQueueFactory)
+            IMessageQueueFactory messageQueueFactory,
+            IChannelUpdaterFactory channelUpdaterFactory)
         {
             _client = client;
             _dbContextFactory = dbContextFactory;
             _factorioServerDataService = factorioServerDataService;
             _logger = logger;
             _messageQueueFactory = messageQueueFactory;
+            _channelUpdaterFactory = channelUpdaterFactory;
 
             guildId = configuration.GuildId;
             validAdminRoleIds = configuration.AdminRoleIds;
@@ -148,7 +151,7 @@ namespace FactorioWebInterface.Services.Discord
 
                 using (var context = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var query = await context.DiscordServers.AsQueryable().Where(x => x.DiscordChannelId == channelId).ToArrayAsync();
+                    DiscordServers[] query = await context.DiscordServers.AsQueryable().Where(x => x.DiscordChannelId == channelId).ToArrayAsync();
 
                     string? serverId = null;
 
@@ -158,9 +161,16 @@ namespace FactorioWebInterface.Services.Discord
                         discordToServer.Remove(ds.DiscordChannelId);
                         context.DiscordServers.Remove(ds);
 
-                        if (MessageQueues.TryGetValue(channelId, out var messageQueue))
+                        if (messageQueues.TryGetValue(ds.DiscordChannelId, out var messageQueue))
                         {
+                            messageQueues.Remove(ds.DiscordChannelId);
                             messageQueue.Dispose();
+                        }
+
+                        if (channelUpdaters.TryGetValue(ds.DiscordChannelId, out var channelUpdater))
+                        {
+                            channelUpdaters.Remove(ds.DiscordChannelId);
+                            channelUpdater.Dispose();
                         }
 
                         serverId = ds.ServerId;
@@ -208,42 +218,15 @@ namespace FactorioWebInterface.Services.Discord
             return SendToConnectedChannel(Constants.AdminChannelID, text, embed);
         }
 
-        public async Task SetChannelNameAndTopic(string serverId, string? name = null, string? topic = null)
+        public async Task ScheduleUpdateChannelNameAndTopic(string serverId)
         {
-            ulong channelId;
-            try
-            {
-                await discordLock.WaitAsync();
-                if (!serverdToDiscord.TryGetValue(serverId, out channelId))
-                {
-                    return;
-                }
-            }
-            finally
-            {
-                discordLock.Release();
-            }
-
-            var channel = _client.GetChannel(channelId) as ITextChannel;
-            if (channel == null)
+            var channelUpdater = await GetChannelUpdater(serverId);
+            if (channelUpdater == null)
             {
                 return;
             }
 
-            void Modify(TextChannelProperties props)
-            {
-                if (name != null)
-                {
-                    props.Name = name;
-                }
-
-                if (topic != null)
-                {
-                    props.Topic = topic;
-                }
-            }
-
-            await channel.ModifyAsync(Modify);
+            channelUpdater.ScheduleUpdate();
         }
 
         private async Task<Result> SetServerInner(string serverId, ulong channelId)
@@ -254,7 +237,7 @@ namespace FactorioWebInterface.Services.Discord
 
                 using (var context = _dbContextFactory.Create<ApplicationDbContext>())
                 {
-                    var query = await context.DiscordServers.AsQueryable().Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId).ToArrayAsync();
+                    DiscordServers[] query = await context.DiscordServers.AsQueryable().Where(x => x.DiscordChannelId == channelId || x.ServerId == serverId).ToArrayAsync();
 
                     foreach (var ds in query)
                     {
@@ -262,9 +245,16 @@ namespace FactorioWebInterface.Services.Discord
                         discordToServer.Remove(ds.DiscordChannelId);
                         context.DiscordServers.Remove(ds);
 
-                        if (MessageQueues.TryGetValue(channelId, out var messageQueue))
+                        if (messageQueues.TryGetValue(ds.DiscordChannelId, out var messageQueue))
                         {
+                            messageQueues.Remove(ds.DiscordChannelId);
                             messageQueue.Dispose();
+                        }
+
+                        if (channelUpdaters.TryGetValue(ds.DiscordChannelId, out var channelUpdater))
+                        {
+                            channelUpdaters.Remove(ds.DiscordChannelId);
+                            channelUpdater.Dispose();
                         }
                     }
 
@@ -305,13 +295,43 @@ namespace FactorioWebInterface.Services.Discord
                     return null;
                 }
 
-                if (!MessageQueues.TryGetValue(channelId, out IMessageQueue? queue))
+                if (!messageQueues.TryGetValue(channelId, out IMessageQueue? queue))
                 {
                     queue = _messageQueueFactory.Create(channel);
-                    MessageQueues.Add(channelId, queue);
+                    messageQueues.Add(channelId, queue);
                 }
 
                 return queue;
+            }
+            finally
+            {
+                discordLock.Release();
+            }
+        }
+
+        private async ValueTask<IChannelUpdater?> GetChannelUpdater(string serverId)
+        {
+            try
+            {
+                await discordLock.WaitAsync();
+                if (!serverdToDiscord.TryGetValue(serverId, out ulong channelId))
+                {
+                    return null;
+                }
+
+                var channel = _client.GetChannel(channelId) as ITextChannel;
+                if (channel == null)
+                {
+                    return null;
+                }
+
+                if (!channelUpdaters.TryGetValue(channelId, out IChannelUpdater? updater))
+                {
+                    updater = _channelUpdaterFactory.Create(channel, serverId);
+                    channelUpdaters.Add(channelId, updater);
+                }
+
+                return updater;
             }
             finally
             {

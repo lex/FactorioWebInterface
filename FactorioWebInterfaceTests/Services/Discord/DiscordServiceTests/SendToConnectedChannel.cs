@@ -1,6 +1,7 @@
 ﻿using Discord;
 using FactorioWebInterface;
 using FactorioWebInterface.Data;
+using FactorioWebInterface.Services;
 using FactorioWebInterface.Services.Discord;
 using FactorioWebInterface.Utils;
 using Moq;
@@ -69,6 +70,52 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
             // Assert.
             Assert.Equal(message, actualMessage);
             clientMock.Verify();
+        }
+
+        [Fact]
+        public async Task AfterRemoveAndSet_CreatesNewMessageQueue()
+        {
+            // Arrange.
+            const string serverId = "serverId";
+            const ulong channelId = 1;
+
+            var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
+            factorioServerDataService.Setup(x => x.IsValidServerId(It.Is<string>(x => x == serverId))).Returns(true);
+            FactorioServerDataService = factorioServerDataService.Object;
+
+            var clientMock = MakeMockClientThatExpectGetChannel(channelId);
+            Client = clientMock.Object;
+
+            var queueMock = new Mock<IMessageQueue>(MockBehavior.Loose);
+
+            int createCount = 0;
+            var factoryMock = new Mock<IMessageQueueFactory>(MockBehavior.Strict);
+            factoryMock.Setup(x => x.Create(It.IsAny<IMessageChannel>()))
+                .Returns(queueMock.Object)
+                .Callback((IMessageChannel _) => createCount++);
+            MessageQueueFactory = factoryMock.Object;
+
+            await DiscordService.Init();
+
+            var resultSet = await DiscordService.SetServer(serverId, channelId);
+            Assert.True(resultSet.Success);
+
+            // Send dummy message to activate queue.
+            await DiscordService.SendToConnectedChannel(serverId, "dummy message");
+            Assert.Equal(1, createCount);
+
+            var resultUnset = await DiscordService.UnSetServer(channelId);
+            Assert.True(resultUnset.Success);
+
+            var resultSet2 = await DiscordService.SetServer(serverId, channelId);
+            Assert.True(resultSet2.Success);
+
+            // Act.
+            // Send dummy message to activate queue.
+            await DiscordService.SendToConnectedChannel(serverId, "dummy message");
+
+            // Assert.
+            Assert.Equal(2, createCount);
         }
 
         [Fact]
