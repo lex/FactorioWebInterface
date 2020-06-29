@@ -291,7 +291,7 @@ namespace FactorioWebInterface.Services
             var runningSettingsResult = BuildServerRunningSettings(mutableData);
 
             ResetData(mutableData);
-            mutableData.ServerRunningSettings = mutableData.ServerSettings;
+            mutableData.ServerRunningSettings = FactorioServerSettings.Copy(mutableData.ServerSettings);
 
             var startInfo = MakeStartInfo(mutableData, startTypeArguments);
 

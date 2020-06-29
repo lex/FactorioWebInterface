@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
@@ -18,7 +18,7 @@ namespace FactorioWebInterface.Models
 
         [JsonProperty(PropertyName = "tags")]
         [JsonPropertyName("tags")]
-        public string[] Tags { get; set; } = default!;
+        public string[] Tags { get; set; } = Array.Empty<string>();
 
         [JsonProperty(PropertyName = "max_players")]
         [JsonPropertyName("max_players")]
@@ -26,7 +26,7 @@ namespace FactorioWebInterface.Models
 
         [JsonProperty(PropertyName = "visibility")]
         [JsonPropertyName("visibility")]
-        public FactorioServerSettingsConfigVisibility Visibility { get; set; } = default!;
+        public FactorioServerSettingsConfigVisibility Visibility { get; set; } = new FactorioServerSettingsConfigVisibility();
 
         [JsonProperty(PropertyName = "username")]
         [JsonPropertyName("username")]
@@ -123,17 +123,57 @@ namespace FactorioWebInterface.Models
             AutosaveOnlyOnServer = true,
             NonBlockingSaving = false
         };
+
+        public static FactorioServerSettings? Copy(FactorioServerSettings? settings)
+        {
+            if (settings == null)
+            {
+                return null;
+            }
+
+            var visibility = new FactorioServerSettingsConfigVisibility()
+            {
+                Lan = settings.Visibility.Lan,
+                Public = settings.Visibility.Public
+            };
+
+            return new FactorioServerSettings()
+            {
+                Name = settings.Name,
+                Description = settings.Description,
+                Tags = (string[])settings.Tags.Clone(),
+                MaxPlayers = settings.MaxPlayers,
+                Visibility = visibility,
+                Username = settings.Username,
+                Token = settings.Token,
+                GamePassword = settings.GamePassword,
+                RequireUserVerification = settings.RequireUserVerification,
+                MaxUploadInKilobytesPerSecond = settings.MaxUploadInKilobytesPerSecond,
+                MaxUploadSlots = settings.MaxUploadSlots,
+                MinimumLatencyInTicks = settings.MinimumLatencyInTicks,
+                IgnorePlayerLimitForReturningPlayers = settings.IgnorePlayerLimitForReturningPlayers,
+                AllowCommands = settings.AllowCommands,
+                AutosaveInterval = settings.AutosaveInterval,
+                AutosaveSlots = settings.AutosaveSlots,
+                AfkAutokickInterval = settings.AfkAutokickInterval,
+                AutoPause = settings.AutoPause,
+                UseDefaultAdmins = settings.UseDefaultAdmins,
+                OnlyAdminsCanPauseTheGame = settings.OnlyAdminsCanPauseTheGame,
+                AutosaveOnlyOnServer = settings.AutosaveOnlyOnServer,
+                NonBlockingSaving = settings.NonBlockingSaving
+            };
+        }
     }
 
     public class FactorioServerSettingsConfigVisibility
     {
         [JsonProperty(PropertyName = "public")]
         [JsonPropertyName("public")]
-        public bool Public { get; set; }
+        public bool Public { get; set; } = true;
 
         [JsonProperty(PropertyName = "lan")]
         [JsonPropertyName("lan")]
-        public bool Lan { get; set; }
+        public bool Lan { get; set; } = true;
     }
 
     public static class FactorioServerSettingsConfigAllowCommands
