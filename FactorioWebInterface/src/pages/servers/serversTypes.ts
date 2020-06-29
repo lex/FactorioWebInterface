@@ -105,9 +105,11 @@ export interface FactorioServerExtraSettings {
     SyncBans: boolean;
     BuildBansFromDatabaseOnStart: boolean;
     SetDiscordChannelName: boolean;
+    SetDiscordChannelTopic: boolean;
     GameChatToDiscord: boolean;
     GameShoutToDiscord: boolean;
     DiscordToGameChat: boolean;
+    PingDiscordCrashRole: boolean;
 }
 
 export type FactorioServerExtraSettingsType = keyof FactorioServerExtraSettings;

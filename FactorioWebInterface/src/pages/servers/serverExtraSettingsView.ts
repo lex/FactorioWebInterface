@@ -22,9 +22,11 @@ export class ServerExtraSettingsView extends VirtualComponent {
             new CheckboxField('SyncBans', 'Sync bans - Synchronize bans to and from this server and with the ban database'),
             new CheckboxField('BuildBansFromDatabaseOnStart', 'Sync banlist - Overwrite server-banlist.json from ban database when server starts'),
             new CheckboxField('SetDiscordChannelName', 'Sync Discord channel name - Update linked channel with server name and version when server starts/stops'),
+            new CheckboxField('SetDiscordChannelTopic', 'Sync Discord channel topic - Update linked channel with online players'),
             new CheckboxField('GameChatToDiscord', 'Player chat to Discord - Send player chat to the linked Discord channel'),
-            new CheckboxField('GameShoutToDiscord', 'Player shout to Discrod - Send player shout to the linked Discord channel'),
+            new CheckboxField('GameShoutToDiscord', 'Player shout to Discord - Send player shout to the linked Discord channel'),
             new CheckboxField('DiscordToGameChat', 'Discord to game - Send linked Discord channel messages to game chat'),
+            new CheckboxField('PingDiscordCrashRole', 'Crash pings - Pings Discord Crash role when server crashes'),
             new Field(this.builldFormButtons()),
         ]);
 

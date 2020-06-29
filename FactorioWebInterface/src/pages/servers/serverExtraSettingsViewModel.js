@@ -46,6 +46,12 @@ export class ServerExtraSettingsViewModel extends ObservableObject {
     set SetDiscordChannelName(value) {
         this.set('SetDiscordChannelName', value);
     }
+    get SetDiscordChannelTopic() {
+        return this._formFields.SetDiscordChannelTopic;
+    }
+    set SetDiscordChannelTopic(value) {
+        this.set('SetDiscordChannelTopic', value);
+    }
     get GameChatToDiscord() {
         return this._formFields.GameChatToDiscord;
     }
@@ -63,6 +69,12 @@ export class ServerExtraSettingsViewModel extends ObservableObject {
     }
     set DiscordToGameChat(value) {
         this.set('DiscordToGameChat', value);
+    }
+    get PingDiscordCrashRole() {
+        return this._formFields.PingDiscordCrashRole;
+    }
+    set PingDiscordCrashRole(value) {
+        this.set('PingDiscordCrashRole', value);
     }
     get saved() {
         return this._saved;
@@ -180,8 +192,10 @@ ServerExtraSettingsViewModel.formFieldsDefaultValues = {
     SyncBans: true,
     BuildBansFromDatabaseOnStart: true,
     SetDiscordChannelName: true,
+    SetDiscordChannelTopic: true,
     GameChatToDiscord: true,
     GameShoutToDiscord: true,
     DiscordToGameChat: true,
+    PingDiscordCrashRole: true,
 };
 //# sourceMappingURL=serverExtraSettingsViewModel.js.map
