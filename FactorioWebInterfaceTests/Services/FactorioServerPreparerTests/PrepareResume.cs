@@ -41,6 +41,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             fileManagerMock.Setup(x => x.EnsureScenarioDirectoryRemoved(data.LocalScenarioDirectoryPath)).Verifiable();
             fileManagerMock.Setup(x => x.RotateFactorioLogs(data)).Returns(Result.OK).Verifiable();
             fileManagerMock.Setup(x => x.RotateChatLogs(data)).Returns(Result.OK).Verifiable();
+            fileManagerMock.Setup(x => x.BuildServerRunningSettings(data.Constants)).Returns(Result.OK).Verifiable();
 
             var factorioControlHub = new TestFactorioControlHub();
 
@@ -77,6 +78,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Output, "Building Ban list.");
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Output, "Building Admin list.");
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Output, "Rotating logs.");
+            factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Output, "Building server running settings.");
         }
 
         [Fact]
@@ -94,6 +96,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             Result banResult = Result.Failure("Ban");
             Result adminResult = Result.Failure("Admin");
             Result logResult = Result.Failure("Log");
+            Result settingsResult = Result.Failure("settings");
 
             var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
             factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath).Verifiable();
@@ -112,6 +115,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             fileManagerMock.Setup(x => x.EnsureScenarioDirectoryRemoved(data.LocalScenarioDirectoryPath)).Verifiable();
             fileManagerMock.Setup(x => x.RotateFactorioLogs(data)).Returns(logResult).Verifiable();
             fileManagerMock.Setup(x => x.RotateChatLogs(data)).Returns(logResult).Verifiable();
+            fileManagerMock.Setup(x => x.BuildServerRunningSettings(data.Constants)).Returns(settingsResult).Verifiable();
 
             var factorioControlHub = new TestFactorioControlHub();
 
@@ -145,6 +149,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error building Ban list: {banResult}");
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error building Admin list: {adminResult}");
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error rotating logs: {Result.Combine(logResult, logResult)}");
+            factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error building server running settings: {settingsResult}");
         }
     }
 }

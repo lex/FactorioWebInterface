@@ -1181,7 +1181,7 @@ namespace FactorioWebInterface.Services
             string safeName = SanitizeGameChat(name);
             _ = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has joined the game**");
 
-            string topic = await serverData.LockAsync(mutableData =>
+            await serverData.LockAsync(mutableData =>
             {
                 var op = mutableData.OnlinePlayers;
                 if (op.TryGetValue(name, out int count))
@@ -1193,12 +1193,10 @@ namespace FactorioWebInterface.Services
                     op.Add(name, 1);
                 }
 
-                int totalCount = mutableData.OnlinePlayerCount + 1;
-                mutableData.OnlinePlayerCount = totalCount;
-                return BuildServerTopicFromOnlinePlayers(op, totalCount);
+                mutableData.OnlinePlayerCount++;
             });
 
-            _ = _discordService.SetChannelNameAndTopic(serverId, topic: topic);
+            _ = _discordService.ScheduleUpdateChannelNameAndTopic(serverId);
         }
 
         private async Task DoPlayerLeft(string serverId, string name)
@@ -1216,7 +1214,7 @@ namespace FactorioWebInterface.Services
             string safeName = SanitizeGameChat(name);
             _ = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has left the game**");
 
-            string? topic = await serverData.LockAsync(md =>
+            bool shouldUpdateChannel = await serverData.LockAsync(md =>
             {
                 var op = md.OnlinePlayers;
                 if (op.TryGetValue(name, out int count))
@@ -1233,20 +1231,17 @@ namespace FactorioWebInterface.Services
                 else
                 {
                     _ = SendToFactorioProcess(serverId, FactorioCommandBuilder.Static.query_online_players);
-                    return null;
+                    return false;
                 }
 
-                int totalCount = md.OnlinePlayerCount - 1;
-                md.OnlinePlayerCount = totalCount;
-                return BuildServerTopicFromOnlinePlayers(op, totalCount);
+                md.OnlinePlayerCount--;
+                return true;
             });
 
-            if (topic == null)
+            if (shouldUpdateChannel)
             {
-                return;
+                _ = _discordService.ScheduleUpdateChannelNameAndTopic(serverId);
             }
-
-            _ = _discordService.SetChannelNameAndTopic(serverId, topic: topic);
         }
 
         private async Task DoPlayerQuery(string serverId, string content)
@@ -1267,7 +1262,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            string topic = await serverData.LockAsync(mutableData =>
+            await serverData.LockAsync(mutableData =>
             {
                 var op = mutableData.OnlinePlayers;
                 op.Clear();
@@ -1285,10 +1280,9 @@ namespace FactorioWebInterface.Services
                 }
 
                 mutableData.OnlinePlayerCount = players.Length;
-                return BuildServerTopicFromOnlinePlayers(op, players.Length);
             });
 
-            _ = _discordService.SetChannelNameAndTopic(serverId, topic: topic);
+            _ = _discordService.ScheduleUpdateChannelNameAndTopic(serverId);
         }
 
         private async Task DoTrackedData(string serverId, string content)
@@ -1632,20 +1626,7 @@ namespace FactorioWebInterface.Services
             };
             _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
-            string? name = await serverData.LockAsync(mutableData =>
-            {
-                if (!mutableData.ServerExtraSettings.SetDiscordChannelName)
-                {
-                    return null;
-                }
-
-                string cleanServerName = serverTagRegex.Replace(mutableData.ServerSettings?.Name ?? "", "");
-                string cleanVersion = serverData.Version.Replace('.', '_');
-
-                return $"s{serverId}-{cleanServerName}-{cleanVersion}";
-            });
-
-            _ = _discordService.SetChannelNameAndTopic(serverData.ServerId, name: name, topic: "Players online 0");
+            _ = _discordService.ScheduleUpdateChannelNameAndTopic(serverData.ServerId);
 
             LogChat(serverData, "[SERVER-STARTED]", dateTime);
 
@@ -1682,21 +1663,7 @@ namespace FactorioWebInterface.Services
 
         private async Task MarkChannelOffline(FactorioServerData serverData)
         {
-            string serverId = serverData.ServerId;
-
-            string? name = await serverData.LockAsync(md =>
-            {
-                if (md.ServerExtraSettings.SetDiscordChannelName)
-                {
-                    return $"s{serverId}-offline";
-                }
-                else
-                {
-                    return null;
-                }
-            });
-
-            _ = _discordService.SetChannelNameAndTopic(serverId, name: name, topic: "Server offline");
+            _ = _discordService.ScheduleUpdateChannelNameAndTopic(serverData.ServerId);
         }
 
         public async Task StatusChanged(string serverId, FactorioServerStatus newStatus, FactorioServerStatus oldStatus, DateTime dateTime)
@@ -2223,6 +2190,9 @@ namespace FactorioWebInterface.Services
                             break;
                         case nameof(FactorioServerExtraSettings.SetDiscordChannelName):
                             settings.SetDiscordChannelName = value;
+                            break;
+                        case nameof(FactorioServerExtraSettings.SetDiscordChannelTopic):
+                            settings.SetDiscordChannelTopic = value;
                             break;
                         case nameof(FactorioServerExtraSettings.GameChatToDiscord):
                             settings.GameChatToDiscord = value;

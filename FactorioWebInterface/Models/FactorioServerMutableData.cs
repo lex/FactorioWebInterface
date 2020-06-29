@@ -21,6 +21,7 @@ namespace FactorioWebInterface.Models
         public string CurrentLogPath => Constants.CurrentLogPath;
         public string ExecutablePath => Constants.ExecutablePath;
         public string ServerSettingsPath => Constants.ServerSettingsPath;
+        public string ServerRunningSettingsPath => Constants.ServerRunningSettingsPath;
         public string ServerExtraSettingsPath => Constants.ServerExtraSettingsPath;
         public string ServerBanListPath => Constants.ServerBanListPath;
         public string ServerAdminListPath => Constants.ServerAdminListPath;
@@ -33,6 +34,7 @@ namespace FactorioWebInterface.Models
         public string Version { get; set; } = "";
         public CircularBuffer<MessageData> ControlMessageBuffer { get; set; }
         public FactorioServerSettings? ServerSettings { get; set; }
+        public FactorioServerSettings? ServerRunningSettings { get; set; }
         public string[]? ServerAdminList { get; set; }
         public FactorioServerSettingsWebEditable? ServerWebEditableSettings { get; set; }
         public bool ServerSettingsSaved { get; set; } = true;
