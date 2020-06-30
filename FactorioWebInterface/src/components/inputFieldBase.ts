@@ -8,12 +8,18 @@ export abstract class InputFieldBase extends FieldBase {
     protected _fieldBody: HTMLDivElement;
     protected _error: HTMLDivElement;
 
-    constructor(property?: string, header?: string) {
+    constructor(property?: string, header?: string | Label) {
         super();
 
         let id = FieldId.getNextId();
 
-        this._label = new Label();
+        if (header instanceof Label) {
+            this._label = header;
+        } else {
+            this._label = new Label();
+            this._label.innerText = header ?? property;
+        }
+
         this._label.htmlFor = id;
         this.appendChild(this._label);
 
@@ -24,7 +30,6 @@ export abstract class InputFieldBase extends FieldBase {
         this._fieldBody.appendChild(this._error);
 
         this._property = property;
-        this.header = header ?? property;
     }
 
     get header() {

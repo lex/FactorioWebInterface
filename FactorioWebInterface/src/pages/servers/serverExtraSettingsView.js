@@ -6,19 +6,20 @@ import { Field } from "../../components/field";
 import { StackPanel } from "../../components/stackPanel";
 import { Button } from "../../components/button";
 import { TextInput } from "../../components/textInput";
+import { headedLabel } from "../../components/label";
 export class ServerExtraSettingsView extends VirtualComponent {
     constructor(serverExtraSettingsViewModel) {
         super();
         this._serverExtraSettingsViewModel = serverExtraSettingsViewModel;
         let form = new VirtualForm(serverExtraSettingsViewModel, [
-            new CheckboxField('SyncBans', 'Sync bans - Synchronize bans to and from this server and with the ban database'),
-            new CheckboxField('BuildBansFromDatabaseOnStart', 'Sync banlist - Overwrite server-banlist.json from ban database when server starts'),
-            new CheckboxField('SetDiscordChannelName', 'Sync Discord channel name - Update linked channel with server name and version when server starts/stops'),
-            new CheckboxField('SetDiscordChannelTopic', 'Sync Discord channel topic - Update linked channel with online players'),
-            new CheckboxField('GameChatToDiscord', 'Player chat to Discord - Send player chat to the linked Discord channel'),
-            new CheckboxField('GameShoutToDiscord', 'Player shout to Discord - Send player shout to the linked Discord channel'),
-            new CheckboxField('DiscordToGameChat', 'Discord to game - Send linked Discord channel messages to game chat'),
-            new CheckboxField('PingDiscordCrashRole', 'Crash pings - Pings Discord Crash role when server crashes'),
+            new CheckboxField('SyncBans', headedLabel('Sync bans - ', 'Synchronize bans to and from this server and with the ban database')),
+            new CheckboxField('BuildBansFromDatabaseOnStart', headedLabel('Sync banlist - ', 'Overwrite server-banlist.json from ban database when server starts')),
+            new CheckboxField('SetDiscordChannelName', headedLabel('Sync Discord channel name - ', 'Update linked channel with server name and version when server starts/stops')),
+            new CheckboxField('SetDiscordChannelTopic', headedLabel('Sync Discord channel topic - ', 'Update linked channel with online players')),
+            new CheckboxField('GameChatToDiscord', headedLabel('Player chat to Discord - ', 'Send player chat to the linked Discord channel')),
+            new CheckboxField('GameShoutToDiscord', headedLabel('Player shout to Discord - ', 'Send player shout to the linked Discord channel')),
+            new CheckboxField('DiscordToGameChat', headedLabel('Discord to game - ', 'Send linked Discord channel messages to game chat')),
+            new CheckboxField('PingDiscordCrashRole', headedLabel('Crash pings - ', 'Pings Discord Crash role when server crashes')),
             new Field(this.builldFormButtons()),
         ]);
         this._unsavedWarning = document.createElement('div');

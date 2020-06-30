@@ -1,10 +1,17 @@
 import "./field.ts.less";
 import { FieldBase } from "./fieldBase";
 import { Tooltip } from "./tooltip";
+import { Label } from "./label";
 export class Field extends FieldBase {
     constructor(content, header) {
         super();
-        this._label = document.createElement('label');
+        if (header instanceof Label) {
+            this._label = header;
+        }
+        else {
+            this._label = new Label();
+            this._label.innerText = header !== null && header !== void 0 ? header : '';
+        }
         this.appendChild(this._label);
         if (header != null) {
             this._label.append(header);

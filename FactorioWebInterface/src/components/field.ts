@@ -1,6 +1,7 @@
 ﻿import "./field.ts.less";
 import { FieldBase } from "./fieldBase";
 import { Tooltip } from "./tooltip";
+import { Label } from "./label";
 
 export class Field extends FieldBase {
     protected _fieldBody: HTMLDivElement;
@@ -10,10 +11,16 @@ export class Field extends FieldBase {
     value: any;
     error: string;
 
-    constructor(content?: Node | string, header?: Node | string) {
+    constructor(content?: Node | string, header?: string | Label) {
         super();
 
-        this._label = document.createElement('label');
+        if (header instanceof Label) {
+            this._label = header;
+        } else {
+            this._label = new Label();
+            this._label.innerText = header ?? '';
+        }
+
         this.appendChild(this._label);
 
         if (header != null) {

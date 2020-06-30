@@ -1,11 +1,12 @@
 ﻿import "./numberField.ts.less";
 import { EventListener } from "../utils/eventListener";
 import { InputFieldBase } from "./inputFieldBase";
+import { Label } from "./label";
 
 export class NumberField extends InputFieldBase {
     private _input: HTMLInputElement;
 
-    constructor(property?: string, header?: string) {
+    constructor(property?: string, header?: string | Label) {
         super(property, header);
 
         this._input = document.createElement('input');

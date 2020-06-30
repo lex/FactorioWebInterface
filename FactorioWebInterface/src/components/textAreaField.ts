@@ -1,11 +1,12 @@
 ﻿import "./textareaField.ts.less";
 import { InputFieldBase } from "./inputFieldBase";
 import { EventListener } from "../utils/eventListener";
+import { Label } from "./label";
 
 export class TextareaField extends InputFieldBase {
     private _input: HTMLTextAreaElement;
 
-    constructor(property?: string, header?: string) {
+    constructor(property?: string, header?: string | Label) {
         super(property, header);
 
         this._input = document.createElement('textarea');

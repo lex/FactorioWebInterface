@@ -10,7 +10,7 @@ export class CheckboxField extends FieldBase {
     private _label: Label;
     private _container: HTMLElement;
 
-    constructor(property?: string, header?: string) {
+    constructor(property?: string, header?: string | Label) {
         super();
 
         this._property = property;
@@ -25,9 +25,14 @@ export class CheckboxField extends FieldBase {
         this._input.id = id;
         this._container.append(this._input);
 
-        this._label = new Label();
+        if (header instanceof Label) {
+            this._label = header;
+        } else {
+            this._label = new Label();
+            this._label.innerText = header ?? property;
+        }
+
         this._label.htmlFor = id;
-        this._label.innerText = header;
         this._container.append(this._label);
     }
 

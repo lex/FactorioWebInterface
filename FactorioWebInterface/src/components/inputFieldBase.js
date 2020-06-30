@@ -5,7 +5,13 @@ export class InputFieldBase extends FieldBase {
     constructor(property, header) {
         super();
         let id = FieldId.getNextId();
-        this._label = new Label();
+        if (header instanceof Label) {
+            this._label = header;
+        }
+        else {
+            this._label = new Label();
+            this._label.innerText = header !== null && header !== void 0 ? header : property;
+        }
         this._label.htmlFor = id;
         this.appendChild(this._label);
         this._fieldBody = document.createElement('div');
@@ -13,7 +19,6 @@ export class InputFieldBase extends FieldBase {
         this._error = document.createElement('div');
         this._fieldBody.appendChild(this._error);
         this._property = property;
-        this.header = header !== null && header !== void 0 ? header : property;
     }
     get header() {
         return this._label.innerText;

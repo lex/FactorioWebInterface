@@ -14,9 +14,14 @@ export class CheckboxField extends FieldBase {
         this._input.type = 'checkbox';
         this._input.id = id;
         this._container.append(this._input);
-        this._label = new Label();
+        if (header instanceof Label) {
+            this._label = header;
+        }
+        else {
+            this._label = new Label();
+            this._label.innerText = header !== null && header !== void 0 ? header : property;
+        }
         this._label.htmlFor = id;
-        this._label.innerText = header;
         this._container.append(this._label);
     }
     get header() {
