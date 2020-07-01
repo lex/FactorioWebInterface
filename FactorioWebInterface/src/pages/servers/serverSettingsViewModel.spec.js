@@ -64,7 +64,7 @@ describe('ServerSettingsViewModel', function () {
         { property: 'NonBlockingSaving', value: false, settingValue: false },
         { property: 'PublicVisible', value: false, settingValue: false },
     ];
-    describe('setting form property triggers updates:', function () {
+    describe('setting form property triggers updates', function () {
         for (let testCase of serverSettingsTestCases) {
             it(testCase.property, function () {
                 // Arrange.
@@ -93,7 +93,7 @@ describe('ServerSettingsViewModel', function () {
             });
         }
     });
-    describe('setting from update triggers property:', function () {
+    describe('setting from update triggers property', function () {
         for (let testCase of serverSettingsTestCases) {
             it(testCase.property, function () {
                 // Arrange.

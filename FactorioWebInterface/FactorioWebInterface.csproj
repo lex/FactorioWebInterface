@@ -108,6 +108,7 @@
     <None Remove="src\pages\servers\serverConsoleService.ts" />
     <None Remove="src\pages\servers\serverExtraSettingsService.ts" />
     <None Remove="src\pages\servers\serverExtraSettingsView.ts" />
+    <None Remove="src\pages\servers\serverExtraSettingsViewModel.spec.ts" />
     <None Remove="src\pages\servers\serverExtraSettingsViewModel.ts" />
     <None Remove="src\pages\servers\serverFileManagementService.ts" />
     <None Remove="src\pages\servers\serverFileManagementView.ts" />
@@ -361,6 +362,7 @@
     <TypeScriptCompile Include="src\pages\servers\serverConsoleService.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverExtraSettingsService.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverExtraSettingsView.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverExtraSettingsViewModel.spec.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverExtraSettingsViewModel.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverFileManagementService.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverFileManagementViewModel.spec.ts" />
