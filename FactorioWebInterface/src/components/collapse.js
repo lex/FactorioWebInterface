@@ -1,6 +1,6 @@
 'use strict';
 import "./collapse.ts.less";
-import { StackPanel } from "./stackPanel";
+import { FlexPanel } from "./flexPanel";
 import { HideableContent } from "./hideableContent";
 import { ObjectBindingTarget } from "../utils/bindingTarget";
 import { Binding } from "../utils/binding";
@@ -24,7 +24,7 @@ export class Collapse extends BaseElement {
             event.stopPropagation();
             this.open = !this.open;
         };
-        this._top = new StackPanel(StackPanel.direction.row);
+        this._top = new FlexPanel(FlexPanel.direction.row);
         this._top.addEventListener('click', toggler);
         this.appendChild(this._top);
         this._button = new CollapseButton();

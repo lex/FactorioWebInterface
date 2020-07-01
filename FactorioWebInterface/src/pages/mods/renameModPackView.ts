@@ -1,6 +1,6 @@
 ﻿import { VirtualComponent } from "../../components/virtualComponent";
 import { Modal } from "../../components/modal";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { VirtualForm } from "../../components/virtualForm";
 import { TextField } from "../../components/textField";
 import { Button } from "../../components/button";
@@ -19,7 +19,7 @@ export class RenameModPackView extends VirtualComponent {
         label.innerText = `Old Name: ${renameModPackViewModel.name}`;
         label.style.fontWeight = 'bold';
 
-        let buttonsPanel = new StackPanel(StackPanel.direction.row);
+        let buttonsPanel = new FlexPanel(FlexPanel.direction.row);
         buttonsPanel.classList.add('no-spacing');
         let createButton = new Button('Rename', Button.classes.success).setCommand(renameModPackViewModel.renameCommand);
         let cancelButton = new Button('Cancel', Button.classes.primary).setCommand(renameModPackViewModel.cancelCommand);

@@ -3,7 +3,7 @@ import { FieldBase } from "./fieldBase";
 import { ObservableErrors } from "../utils/observableErrors";
 import { BaseElement, Lifecycle } from "./baseElement";
 import { VirtualComponent } from "./virtualComponent";
-import { StackPanel } from "./stackPanel";
+import { FlexPanel } from "./flexPanel";
 import { NodeHelper } from "../utils/nodeHelper";
 
 export class VirtualForm extends VirtualComponent {
@@ -16,9 +16,9 @@ export class VirtualForm extends VirtualComponent {
         let parent: BaseElement;
 
         if (fieldsOrBaseElement == null) {
-            parent = new StackPanel(StackPanel.direction.column);
+            parent = new FlexPanel(FlexPanel.direction.column);
         } else if (Array.isArray(fieldsOrBaseElement)) {
-            parent = new StackPanel(StackPanel.direction.column);
+            parent = new FlexPanel(FlexPanel.direction.column);
             this._fields = fieldsOrBaseElement;
             parent.append(...this._fields);
         } else {

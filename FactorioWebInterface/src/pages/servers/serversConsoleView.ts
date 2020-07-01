@@ -2,7 +2,7 @@
 import { Collapse } from "../../components/collapse";
 import { Select } from "../../components/select";
 import { ServersConsoleViewModel } from "./serversConsoleViewModel";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { ConsoleMessageView } from "./consoleMessageView";
@@ -13,7 +13,7 @@ export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel: ServersConsoleViewModel) {
         super();
 
-        let headerPanel = new StackPanel(StackPanel.direction.row);
+        let headerPanel = new FlexPanel(FlexPanel.direction.row);
         headerPanel.classList.add('no-spacing');
         headerPanel.style.alignItems = 'center';
 
@@ -50,9 +50,9 @@ export class ServersConsoleView extends VirtualComponent {
 
         headerPanel.append('Console', serverIdSelect, statusLabel, statusText, versionLabel, versionText);;
 
-        let mainPanel = new StackPanel(StackPanel.direction.column);
+        let mainPanel = new FlexPanel(FlexPanel.direction.column);
 
-        let topPanel = new StackPanel(StackPanel.direction.row);
+        let topPanel = new FlexPanel(FlexPanel.direction.row);
 
         let resumeButton = iconButton(Icon.classes.play, 'Resume', Button.classes.success)
             .setCommand(serversConsoleViewModel.resumeCommand)
@@ -86,7 +86,7 @@ export class ServersConsoleView extends VirtualComponent {
 
         let messageView = new ConsoleMessageView(serversConsoleViewModel.messages);
 
-        let bottomPanel = new StackPanel(StackPanel.direction.row);
+        let bottomPanel = new FlexPanel(FlexPanel.direction.row);
 
         let sendInput = new TextInput();
         sendInput.placeholder = 'Message or Command';

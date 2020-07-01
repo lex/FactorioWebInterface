@@ -1,6 +1,6 @@
 ﻿import { VirtualComponent } from "../../components/virtualComponent";
 import { ServerFileManagementViewModel, Destination } from "./serverFileManagementViewModel";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { Collapse } from "../../components/collapse";
 import { iconButton, Button } from "../../components/button";
 import { Icon, leftIconWithContent } from "../../components/icon";
@@ -14,10 +14,10 @@ export class ServerFileManagementView extends VirtualComponent {
     constructor(serverFileManagementViewModel: ServerFileManagementViewModel) {
         super();
 
-        let rows = new StackPanel(StackPanel.direction.column);
-        let row1 = new StackPanel(StackPanel.direction.row);
-        let row2 = new StackPanel(StackPanel.direction.row);
-        let row3 = new StackPanel(StackPanel.direction.row);
+        let rows = new FlexPanel(FlexPanel.direction.column);
+        let row1 = new FlexPanel(FlexPanel.direction.row);
+        let row2 = new FlexPanel(FlexPanel.direction.row);
+        let row3 = new FlexPanel(FlexPanel.direction.row);
         rows.append(row1, row2, row3);
 
         let uploadProgress = new Progress(p => `Uploading (${p.percentText})`);

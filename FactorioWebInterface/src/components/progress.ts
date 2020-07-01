@@ -1,5 +1,5 @@
 ﻿import "./progress.ts.less";
-import { StackPanel } from "./stackPanel";
+import { FlexPanel } from "./flexPanel";
 
 export class Progress extends HTMLElement {
     static readonly classes = {
@@ -7,7 +7,7 @@ export class Progress extends HTMLElement {
     }
 
     private _bar: HTMLDivElement;
-    private _panel: StackPanel;
+    private _panel: FlexPanel;
     private _contentHolder: HTMLDivElement;
 
     private _value = 0;
@@ -65,7 +65,7 @@ export class Progress extends HTMLElement {
         this._contentTemplate = contentTemplate;
 
         this._bar = document.createElement('div');
-        this._panel = new StackPanel(StackPanel.direction.row);
+        this._panel = new FlexPanel(FlexPanel.direction.row);
 
         this._contentHolder = document.createElement('div');
         this._panel.append(this._contentHolder);

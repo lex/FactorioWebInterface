@@ -1,6 +1,6 @@
 import { VirtualComponent } from "../../components/virtualComponent";
 import { Table, TextColumn } from "../../components/table";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { Select } from "../../components/select";
 import { Button } from "../../components/button";
 import { ObservableObjectBindingSource } from "../../utils/bindingSource";
@@ -13,7 +13,7 @@ export class DataSetView extends VirtualComponent {
         view.style.marginTop = '2rem';
         view.style.padding = '1rem 2rem';
         this._root = view;
-        let panel = new StackPanel(StackPanel.direction.row);
+        let panel = new FlexPanel(FlexPanel.direction.row);
         view.append(panel);
         let header = document.createElement('h4');
         dataSetViewModel.bind('header', (value) => header.innerText = value);

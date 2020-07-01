@@ -5,7 +5,7 @@ import { ServersConsoleView } from "./serversConsoleView";
 import { LogFileView } from "./logFileView";
 import { ScenariosView } from "./scenariosView";
 import { ModPacksView } from "./modPacksView";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { ServerSettingsView } from "./serverSettingsView";
 import { ServerExtraSettingsView } from "./serverExtraSettingsView";
 import { ServerFileManagementView } from "./serverFileManagementView";
@@ -14,13 +14,13 @@ export class ServersView extends VirtualComponent {
     constructor(serversViewModel: ServersViewModel) {
         super();
 
-        let mainPanel = new StackPanel(StackPanel.direction.row);
+        let mainPanel = new FlexPanel(FlexPanel.direction.row);
         mainPanel.classList.add('columns');
         this._root = mainPanel;
 
-        let leftPanel = new StackPanel(StackPanel.direction.column);
+        let leftPanel = new FlexPanel(FlexPanel.direction.column);
         leftPanel.classList.add('column');
-        let rightPanel = new StackPanel(StackPanel.direction.column);
+        let rightPanel = new FlexPanel(FlexPanel.direction.column);
         rightPanel.classList.add('column');
         mainPanel.append(leftPanel, rightPanel);
 

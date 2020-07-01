@@ -6,7 +6,7 @@ import { TextareaField } from "../../components/textareaField";
 import { NumberField } from "../../components/numberField";
 import { CheckboxField } from "../../components/checkboxField";
 import { Field } from "../../components/field";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { Button } from "../../components/button";
 import { TextInput } from "../../components/textInput";
 export class ServerSettingsView extends VirtualComponent {
@@ -40,7 +40,7 @@ export class ServerSettingsView extends VirtualComponent {
         icon.classList.add('fas', 'fa-exclamation-triangle');
         icon.style.marginRight = '0.35em';
         this._unsavedWarning.append(icon, 'There are unsaved changes.');
-        let header = new StackPanel(StackPanel.direction.row);
+        let header = new FlexPanel(FlexPanel.direction.row);
         header.classList.add('spacing-none');
         header.style.flexGrow = '1';
         header.append('Server Settings', this._unsavedWarning);
@@ -52,7 +52,7 @@ export class ServerSettingsView extends VirtualComponent {
         this._root = this._collapse;
     }
     builldFormButtons() {
-        let panel = new StackPanel(StackPanel.direction.row);
+        let panel = new FlexPanel(FlexPanel.direction.row);
         let saveButton = new Button('Save Changes', Button.classes.success)
             .setCommand(this._serverSettingsViewModel.saveCommand);
         let undoButton = new Button('Undo Changes', Button.classes.danger)

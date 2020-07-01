@@ -1,7 +1,7 @@
 ﻿import "../components/component.less";
 import { ViewModel } from "./test/vm";
 import { TextField } from "../components/textField";
-import { StackPanel } from "../components/stackPanel";
+import { FlexPanel } from "../components/flexPanel";
 import { VirtualForm } from "../components/virtualForm";
 import { NumberField } from "../components/numberField";
 import { TextareaField } from "../components/textareaField";
@@ -76,7 +76,7 @@ let tabSet = new TabSet([
 tabSet.classList.add('border');
 //app.appendChild(tabSet);
 
-let left = new StackPanel();
+let left = new FlexPanel();
 left.style.justifySelf = 'flex-start';
 left.appendChild(new Tab('left1').setContent('left one'));
 left.appendChild(new Tab('left2').setContent('left two'));
@@ -84,7 +84,7 @@ left.appendChild(new Tab('left2').setContent('left two'));
 let middle = document.createElement('div');
 middle.style.flexBasis = '50%';
 
-let right = new StackPanel();
+let right = new FlexPanel();
 right.style.justifySelf = 'flex-end';
 right.appendChild(new Tab('right1').setContentFunc(() => 'right one'));
 right.appendChild(new Tab('right2').setContentFunc(() => 'right two'));

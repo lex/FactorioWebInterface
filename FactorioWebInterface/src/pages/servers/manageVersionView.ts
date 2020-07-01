@@ -2,7 +2,7 @@
 import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { Modal } from "../../components/modal";
 import { Select } from "../../components/select";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { Table, TextColumn, ColumnTemplate } from "../../components/table";
@@ -23,10 +23,10 @@ export class ManageVersionView extends VirtualComponent {
     }
 
     private content(manageVersionViewModel: ManageVersionViewModel): Node {
-        let mainPanel = new StackPanel(StackPanel.direction.column);
+        let mainPanel = new FlexPanel(FlexPanel.direction.column);
         mainPanel.style.alignItems = 'center';
 
-        let topPanel = new StackPanel(StackPanel.direction.row);
+        let topPanel = new FlexPanel(FlexPanel.direction.row);
 
         let versionSelect = new Select(manageVersionViewModel.downloadableVersions)
             .bindIsLoading(new ReadonlyObservablePropertyBindingSource(manageVersionViewModel.isFetchingVersions));

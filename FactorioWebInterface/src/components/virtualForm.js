@@ -1,7 +1,7 @@
 import { FieldBase } from "./fieldBase";
 import { ObservableErrors } from "../utils/observableErrors";
 import { VirtualComponent } from "./virtualComponent";
-import { StackPanel } from "./stackPanel";
+import { FlexPanel } from "./flexPanel";
 import { NodeHelper } from "../utils/nodeHelper";
 export class VirtualForm extends VirtualComponent {
     constructor(dataContext, fieldsOrBaseElement) {
@@ -10,10 +10,10 @@ export class VirtualForm extends VirtualComponent {
         this.subscriptions = [];
         let parent;
         if (fieldsOrBaseElement == null) {
-            parent = new StackPanel(StackPanel.direction.column);
+            parent = new FlexPanel(FlexPanel.direction.column);
         }
         else if (Array.isArray(fieldsOrBaseElement)) {
-            parent = new StackPanel(StackPanel.direction.column);
+            parent = new FlexPanel(FlexPanel.direction.column);
             this._fields = fieldsOrBaseElement;
             parent.append(...this._fields);
         }

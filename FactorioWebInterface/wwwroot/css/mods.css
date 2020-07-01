@@ -460,12 +460,12 @@ a-collapse.wide > a-stack-panel {
   align-self: stretch;
 }
 
-a-stack-panel {
+a-flex-panel {
   display: flex;
   padding: 0.25em;
   margin: 0.25em;
 }
-a-stack-panel.spacing-none {
+a-flex-panel.spacing-none {
   padding: 0;
   margin: 0;
 }

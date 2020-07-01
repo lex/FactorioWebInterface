@@ -1,7 +1,7 @@
 import { VirtualComponent } from "../../components/virtualComponent";
 import { Collapse } from "../../components/collapse";
 import { Select } from "../../components/select";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { ConsoleMessageView } from "./consoleMessageView";
@@ -10,7 +10,7 @@ import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel) {
         super();
-        let headerPanel = new StackPanel(StackPanel.direction.row);
+        let headerPanel = new FlexPanel(FlexPanel.direction.row);
         headerPanel.classList.add('no-spacing');
         headerPanel.style.alignItems = 'center';
         let serverIdSelect = new Select(serversConsoleViewModel.serverIds);
@@ -41,8 +41,8 @@ export class ServersConsoleView extends VirtualComponent {
         versionText.style.marginLeft = '0.35em';
         headerPanel.append('Console', serverIdSelect, statusLabel, statusText, versionLabel, versionText);
         ;
-        let mainPanel = new StackPanel(StackPanel.direction.column);
-        let topPanel = new StackPanel(StackPanel.direction.row);
+        let mainPanel = new FlexPanel(FlexPanel.direction.column);
+        let topPanel = new FlexPanel(FlexPanel.direction.row);
         let resumeButton = iconButton(Icon.classes.play, 'Resume', Button.classes.success)
             .setCommand(serversConsoleViewModel.resumeCommand)
             .bindTooltip(new ObservableObjectBindingSource(serversConsoleViewModel, 'resumeTooltip'));
@@ -66,7 +66,7 @@ export class ServersConsoleView extends VirtualComponent {
             .setTooltip(serversConsoleViewModel.forceStopTooltip);
         topPanel.append(resumeButton, loadButton, saveButton, startScenarioButton, manageVersionButton, stopButton, forceStopButton);
         let messageView = new ConsoleMessageView(serversConsoleViewModel.messages);
-        let bottomPanel = new StackPanel(StackPanel.direction.row);
+        let bottomPanel = new FlexPanel(FlexPanel.direction.row);
         let sendInput = new TextInput();
         sendInput.placeholder = 'Message or Command';
         sendInput.onKeyUp(event => serversConsoleViewModel.sendInputKey(event.keyCode));

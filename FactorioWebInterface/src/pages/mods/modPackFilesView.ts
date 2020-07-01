@@ -5,7 +5,7 @@ import { Table, DateTimeColumn, MultiSelectColumn, ColumnTemplate } from "../../
 import { Utils } from "../../ts/utils";
 import { ModPackFileMetaData } from "../servers/serversTypes";
 import { ComparatorHelper } from "../../utils/comparatorHelper";
-import { StackPanel } from "../../components/stackPanel";
+import { FlexPanel } from "../../components/flexPanel";
 import { Progress } from "../../components/progress";
 import { leftIconWithContent, Icon } from "../../components/icon";
 import { Button, iconButton } from "../../components/button";
@@ -39,9 +39,9 @@ export class ModPackFilesView extends VirtualComponent {
         let header = document.createElement('h4');
         modPackFilesViewModel.bind('title', text => header.textContent = text);
 
-        let mainPanel = new StackPanel(StackPanel.direction.column);
+        let mainPanel = new FlexPanel(FlexPanel.direction.column);
 
-        let buttonsPanel = new StackPanel(StackPanel.direction.row);
+        let buttonsPanel = new FlexPanel(FlexPanel.direction.row);
         buttonsPanel.style.fontSize = '1rem';
 
         let uploadProgress = new Progress(p => `Uploading (${p.percentText})`);

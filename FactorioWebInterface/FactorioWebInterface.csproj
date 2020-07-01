@@ -40,6 +40,7 @@
     <None Remove="src\components\contentBase.ts" />
     <None Remove="src\components\dateField.ts" />
     <None Remove="src\components\field.ts" />
+    <None Remove="src\components\flexPanel.ts" />
     <None Remove="src\components\htmlInputBaseElement.ts" />
     <None Remove="src\components\htmlLabelBaseElement.ts" />
     <None Remove="src\components\icon.ts" />
@@ -177,7 +178,6 @@
     <None Remove="src\components\hideableContent.ts" />
     <None Remove="src\components\inputFieldBase.ts" />
     <None Remove="src\components\numberField.ts" />
-    <None Remove="src\components\stackPanel.ts" />
     <None Remove="src\components\textAreaField.ts" />
     <None Remove="src\components\textField.ts" />
     <None Remove="src\components\virtualComponent.ts" />
@@ -437,7 +437,7 @@
     <TypeScriptCompile Include="src\components\hideableContent.ts" />
     <TypeScriptCompile Include="src\components\inputFieldBase.ts" />
     <TypeScriptCompile Include="src\components\numberField.ts" />
-    <TypeScriptCompile Include="src\components\stackPanel.ts" />
+    <TypeScriptCompile Include="src\components\flexPanel.ts" />
     <TypeScriptCompile Include="src\components\textareaField.ts" />
     <TypeScriptCompile Include="src\components\textField.ts" />
     <TypeScriptCompile Include="src\components\virtualComponent.ts" />

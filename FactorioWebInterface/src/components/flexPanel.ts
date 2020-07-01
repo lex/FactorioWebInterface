@@ -1,7 +1,7 @@
-﻿import "./stackPanel.ts.less";
+﻿import "./flexPanel.ts.less";
 import { BaseElement } from "./baseElement";
 
-export class StackPanel extends BaseElement {
+export class FlexPanel extends BaseElement {
     static direction = {
         row: 'row',
         rowReverse: 'row-reverse',
@@ -12,8 +12,8 @@ export class StackPanel extends BaseElement {
     constructor(direction?: string) {
         super();
 
-        this.style.flexDirection = direction || StackPanel.direction.row;
+        this.style.flexDirection = direction || FlexPanel.direction.row;
     }
 }
 
-customElements.define('a-stack-panel', StackPanel);
+customElements.define('a-flex-panel', FlexPanel);

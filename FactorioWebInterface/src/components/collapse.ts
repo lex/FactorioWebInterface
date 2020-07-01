@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 import "./collapse.ts.less";
-import { StackPanel } from "./stackPanel";
+import { FlexPanel } from "./flexPanel";
 import { HideableContent } from "./hideableContent";
 import { IBindingSource } from "../utils/bindingSource";
 import { ObjectBindingTarget } from "../utils/bindingTarget";
@@ -30,7 +30,7 @@ export class Collapse extends BaseElement {
         ...BaseElement.bindingKeys
     };
 
-    private _top: StackPanel;
+    private _top: FlexPanel;
     private _button: CollapseButton;
     private _contentPresenter: HideableContent;
     private _content: Node;
@@ -43,7 +43,7 @@ export class Collapse extends BaseElement {
             this.open = !this.open;
         }
 
-        this._top = new StackPanel(StackPanel.direction.row);
+        this._top = new FlexPanel(FlexPanel.direction.row);
         this._top.addEventListener('click', toggler);
         this.appendChild(this._top);
 
