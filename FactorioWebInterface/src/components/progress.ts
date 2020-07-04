@@ -65,7 +65,7 @@ export class Progress extends HTMLElement {
         this._contentTemplate = contentTemplate;
 
         this._bar = document.createElement('div');
-        this._panel = new FlexPanel(FlexPanel.direction.row);
+        this._panel = new FlexPanel(FlexPanel.classes.horizontal);
 
         this._contentHolder = document.createElement('div');
         this._panel.append(this._contentHolder);

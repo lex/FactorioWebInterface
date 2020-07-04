@@ -20,7 +20,7 @@ export class DataSetView extends VirtualComponent {
         view.style.padding = '1rem 2rem';
         this._root = view;
 
-        let panel = new FlexPanel(FlexPanel.direction.row);
+        let panel = new FlexPanel(FlexPanel.classes.horizontal);
         view.append(panel);
 
         let header = document.createElement('h4');

@@ -39,9 +39,9 @@ export class ModPackFilesView extends VirtualComponent {
         let header = document.createElement('h4');
         modPackFilesViewModel.bind('title', text => header.textContent = text);
 
-        let mainPanel = new FlexPanel(FlexPanel.direction.column);
+        let mainPanel = new FlexPanel(FlexPanel.classes.vertical);
 
-        let buttonsPanel = new FlexPanel(FlexPanel.direction.row);
+        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal);
         buttonsPanel.style.fontSize = '1rem';
 
         let uploadProgress = new Progress(p => `Uploading (${p.percentText})`);

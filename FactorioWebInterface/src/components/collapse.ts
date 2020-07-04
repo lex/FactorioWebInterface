@@ -43,7 +43,7 @@ export class Collapse extends BaseElement {
             this.open = !this.open;
         }
 
-        this._top = new FlexPanel(FlexPanel.direction.row);
+        this._top = new FlexPanel(FlexPanel.classes.horizontal);
         this._top.addEventListener('click', toggler);
         this.appendChild(this._top);
 

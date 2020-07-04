@@ -10,7 +10,7 @@ import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel) {
         super();
-        let headerPanel = new FlexPanel(FlexPanel.direction.row);
+        let headerPanel = new FlexPanel(FlexPanel.classes.horizontal);
         headerPanel.classList.add('no-spacing');
         headerPanel.style.alignItems = 'center';
         let serverIdSelect = new Select(serversConsoleViewModel.serverIds);
@@ -41,8 +41,8 @@ export class ServersConsoleView extends VirtualComponent {
         versionText.style.marginLeft = '0.35em';
         headerPanel.append('Console', serverIdSelect, statusLabel, statusText, versionLabel, versionText);
         ;
-        let mainPanel = new FlexPanel(FlexPanel.direction.column);
-        let topPanel = new FlexPanel(FlexPanel.direction.row);
+        let mainPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing);
+        let topPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacingSmall, FlexPanel.classes.warp, FlexPanel.classes.spacingNone);
         let resumeButton = iconButton(Icon.classes.play, 'Resume', Button.classes.success)
             .setCommand(serversConsoleViewModel.resumeCommand)
             .bindTooltip(new ObservableObjectBindingSource(serversConsoleViewModel, 'resumeTooltip'));
@@ -66,7 +66,7 @@ export class ServersConsoleView extends VirtualComponent {
             .setTooltip(serversConsoleViewModel.forceStopTooltip);
         topPanel.append(resumeButton, loadButton, saveButton, startScenarioButton, manageVersionButton, stopButton, forceStopButton);
         let messageView = new ConsoleMessageView(serversConsoleViewModel.messages);
-        let bottomPanel = new FlexPanel(FlexPanel.direction.row);
+        let bottomPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
         let sendInput = new TextInput();
         sendInput.placeholder = 'Message or Command';
         sendInput.onKeyUp(event => serversConsoleViewModel.sendInputKey(event.keyCode));
@@ -78,7 +78,6 @@ export class ServersConsoleView extends VirtualComponent {
         let collapse = new Collapse(headerPanel, mainPanel);
         collapse.open = true;
         collapse.classList.add('is-4', 'border', 'header');
-        collapse.style.marginTop = '1rem';
         this._root = collapse;
     }
 }

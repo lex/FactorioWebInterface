@@ -11,13 +11,10 @@ import { ServerFileManagementView } from "./serverFileManagementView";
 export class ServersView extends VirtualComponent {
     constructor(serversViewModel) {
         super();
-        let mainPanel = new FlexPanel(FlexPanel.direction.row);
-        mainPanel.classList.add('columns');
+        let mainPanel = new FlexPanel(FlexPanel.classes.largeColumns);
         this._root = mainPanel;
-        let leftPanel = new FlexPanel(FlexPanel.direction.column);
-        leftPanel.classList.add('column');
-        let rightPanel = new FlexPanel(FlexPanel.direction.column);
-        rightPanel.classList.add('column');
+        let leftPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingInclusive);
+        let rightPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingInclusive);
         mainPanel.append(leftPanel, rightPanel);
         let serversConsoleView = new ServersConsoleView(serversViewModel.serverConsoleViewModel);
         let serverSettingsView = new ServerSettingsView(serversViewModel.serverSettingsViewModel);

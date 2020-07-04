@@ -41,7 +41,7 @@ export class ServerExtraSettingsView extends VirtualComponent {
         icon.style.marginRight = '0.35em';
         this._unsavedWarning.append(icon, 'There are unsaved changes.');
 
-        let header = new FlexPanel(FlexPanel.direction.row);
+        let header = new FlexPanel(FlexPanel.classes.horizontal);
         header.classList.add('spacing-none');
         header.style.flexGrow = '1';
         header.append('Server Settings', this._unsavedWarning);
@@ -49,14 +49,13 @@ export class ServerExtraSettingsView extends VirtualComponent {
         this._collapse = new Collapse(header, form.root);
         this._collapse.open = true;
         this._collapse.classList.add('is-4', 'border', 'header', 'wide');
-        this._collapse.style.marginTop = '1rem';
         serverExtraSettingsViewModel.bind('saved', event => this.setCollapseUnSavedWarning(event));
 
         this._root = this._collapse;
     }
 
     private builldFormButtons(): Node {
-        let panel = new FlexPanel(FlexPanel.direction.row);
+        let panel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing);
 
         let saveButton = new Button('Save Changes', Button.classes.success)
             .setCommand(this._serverExtraSettingsViewModel.saveCommand);

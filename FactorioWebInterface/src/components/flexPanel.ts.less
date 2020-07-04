@@ -1,11 +1,104 @@
-﻿a-flex-panel {
+﻿.child-spacing(@margin) {
+    &.horizontal > * {
+        margin-right: @margin;
+
+        &:last-child {
+            margin-right: 0em;
+        }
+    }
+
+    &.vertical > * {
+        margin-bottom: @margin;
+
+        &:last-child {
+            margin-bottom: 0em;
+        }
+    }
+}
+
+.child-spacing-inclusive(@margin) {
+    &.horizontal > * {
+        margin-right: @margin;
+    }
+
+    &.vertical > * {
+        margin-bottom: @margin;
+    }
+}
+
+.large-column {
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+}
+
+a-flex-panel {
     display: flex;
     padding: 0.25em;
     margin: 0.25em;
-}
 
-a-flex-panel.spacing-none {
-    padding: 0;
-    margin: 0;
-}
+    &.horizontal {
+        flex-direction: row;
 
+        &.reverse {
+            flex-direction: row-reverse;
+        }
+    }
+
+    &.vertical {
+        flex-direction: column;
+
+        &.reverse {
+            flex-direction: column-reverse;
+        }
+    }
+
+    &.warp {
+        flex-wrap: wrap;
+
+        &.reverse {
+            flex-wrap: wrap-reverse;
+        }
+    }
+
+    &.spacing-none {
+        padding: 0;
+        margin: 0;
+    }
+
+    &.child-spacing-small {
+        .child-spacing(0.25em);
+    }
+
+    &.child-spacing {
+        .child-spacing(0.5em);
+    }
+
+    &.child-spacing-large {
+        .child-spacing-inclusive(1em);
+    }
+
+    &.child-spacing-small-inclusive {
+        .child-spacing(0.25em);
+    }
+
+    &.child-spacing-inclusive {
+        .child-spacing-inclusive(0.5em);
+    }
+
+    &.child-spacing-large-inclusive {
+        .child-spacing-inclusive(1em);
+    }
+
+    &.large-columns {
+        flex-direction: row;
+        flex-wrap: wrap;
+        //margin-left: -0.25em;
+        //margin-right: -0.25em;
+        & > * {
+            flex-basis: 0;
+            flex-grow: 1;
+            min-width: 600px;
+            .large-column();
+        }
+    }
+}

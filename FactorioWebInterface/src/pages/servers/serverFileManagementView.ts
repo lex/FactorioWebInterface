@@ -14,10 +14,10 @@ export class ServerFileManagementView extends VirtualComponent {
     constructor(serverFileManagementViewModel: ServerFileManagementViewModel) {
         super();
 
-        let rows = new FlexPanel(FlexPanel.direction.column);
-        let row1 = new FlexPanel(FlexPanel.direction.row);
-        let row2 = new FlexPanel(FlexPanel.direction.row);
-        let row3 = new FlexPanel(FlexPanel.direction.row);
+        let rows = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing);
+        let row1 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
+        let row2 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
+        let row3 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
         rows.append(row1, row2, row3);
 
         let uploadProgress = new Progress(p => `Uploading (${p.percentText})`);
@@ -86,7 +86,6 @@ export class ServerFileManagementView extends VirtualComponent {
         let collapse = new Collapse('File Management', rows);
         collapse.open = true;
         collapse.classList.add('is-4', 'border', 'header');
-        collapse.style.marginTop = '1rem';
 
         function updateUploadButton(isUploading: boolean) {
             if (isUploading) {

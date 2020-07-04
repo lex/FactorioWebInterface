@@ -17,9 +17,9 @@ export class ManageVersionView extends VirtualComponent {
         this._root = modal;
     }
     content(manageVersionViewModel) {
-        let mainPanel = new FlexPanel(FlexPanel.direction.column);
+        let mainPanel = new FlexPanel(FlexPanel.classes.vertical);
         mainPanel.style.alignItems = 'center';
-        let topPanel = new FlexPanel(FlexPanel.direction.row);
+        let topPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing);
         let versionSelect = new Select(manageVersionViewModel.downloadableVersions)
             .bindIsLoading(new ReadonlyObservablePropertyBindingSource(manageVersionViewModel.isFetchingVersions));
         let downlaodAndUpdateButton = iconButton(Icon.classes.download, 'Download and Update', Button.classes.link)

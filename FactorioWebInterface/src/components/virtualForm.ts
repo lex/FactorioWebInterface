@@ -16,9 +16,9 @@ export class VirtualForm extends VirtualComponent {
         let parent: BaseElement;
 
         if (fieldsOrBaseElement == null) {
-            parent = new FlexPanel(FlexPanel.direction.column);
+            parent = new FlexPanel(FlexPanel.classes.vertical);
         } else if (Array.isArray(fieldsOrBaseElement)) {
-            parent = new FlexPanel(FlexPanel.direction.column);
+            parent = new FlexPanel(FlexPanel.classes.vertical);
             this._fields = fieldsOrBaseElement;
             parent.append(...this._fields);
         } else {

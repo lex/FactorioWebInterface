@@ -116,14 +116,6 @@ h6 {
   width: 85%;
   margin: auto;
 }
-.columns {
-  flex-wrap: wrap;
-}
-.column {
-  flex-basis: 0;
-  flex-grow: 1;
-  min-width: 600px;
-}
 .close-button {
   -moz-appearance: none;
   -webkit-appearance: none;
@@ -199,14 +191,101 @@ a-collapse.wide > a-stack-panel {
   align-self: stretch;
 }
 
+.large-column {
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+}
 a-flex-panel {
   display: flex;
   padding: 0.25em;
   margin: 0.25em;
 }
+a-flex-panel.horizontal {
+  flex-direction: row;
+}
+a-flex-panel.horizontal.reverse {
+  flex-direction: row-reverse;
+}
+a-flex-panel.vertical {
+  flex-direction: column;
+}
+a-flex-panel.vertical.reverse {
+  flex-direction: column-reverse;
+}
+a-flex-panel.warp {
+  flex-wrap: wrap;
+}
+a-flex-panel.warp.reverse {
+  flex-wrap: wrap-reverse;
+}
 a-flex-panel.spacing-none {
   padding: 0;
   margin: 0;
+}
+a-flex-panel.child-spacing-small.horizontal > * {
+  margin-right: 0.25em;
+}
+a-flex-panel.child-spacing-small.horizontal > *:last-child {
+  margin-right: 0em;
+}
+a-flex-panel.child-spacing-small.vertical > * {
+  margin-bottom: 0.25em;
+}
+a-flex-panel.child-spacing-small.vertical > *:last-child {
+  margin-bottom: 0em;
+}
+a-flex-panel.child-spacing.horizontal > * {
+  margin-right: 0.5em;
+}
+a-flex-panel.child-spacing.horizontal > *:last-child {
+  margin-right: 0em;
+}
+a-flex-panel.child-spacing.vertical > * {
+  margin-bottom: 0.5em;
+}
+a-flex-panel.child-spacing.vertical > *:last-child {
+  margin-bottom: 0em;
+}
+a-flex-panel.child-spacing-large.horizontal > * {
+  margin-right: 1em;
+}
+a-flex-panel.child-spacing-large.vertical > * {
+  margin-bottom: 1em;
+}
+a-flex-panel.child-spacing-small-inclusive.horizontal > * {
+  margin-right: 0.25em;
+}
+a-flex-panel.child-spacing-small-inclusive.horizontal > *:last-child {
+  margin-right: 0em;
+}
+a-flex-panel.child-spacing-small-inclusive.vertical > * {
+  margin-bottom: 0.25em;
+}
+a-flex-panel.child-spacing-small-inclusive.vertical > *:last-child {
+  margin-bottom: 0em;
+}
+a-flex-panel.child-spacing-inclusive.horizontal > * {
+  margin-right: 0.5em;
+}
+a-flex-panel.child-spacing-inclusive.vertical > * {
+  margin-bottom: 0.5em;
+}
+a-flex-panel.child-spacing-large-inclusive.horizontal > * {
+  margin-right: 1em;
+}
+a-flex-panel.child-spacing-large-inclusive.vertical > * {
+  margin-bottom: 1em;
+}
+a-flex-panel.large-columns {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+a-flex-panel.large-columns > * {
+  flex-basis: 0;
+  flex-grow: 1;
+  min-width: 600px;
+  margin-left: 0.25em;
+  margin-right: 0.25em;
 }
 
 a-tooltip {
@@ -732,14 +811,6 @@ h6 {
   max-width: 1800px;
   width: 85%;
   margin: auto;
-}
-.columns {
-  flex-wrap: wrap;
-}
-.column {
-  flex-basis: 0;
-  flex-grow: 1;
-  min-width: 600px;
 }
 .close-button {
   -moz-appearance: none;

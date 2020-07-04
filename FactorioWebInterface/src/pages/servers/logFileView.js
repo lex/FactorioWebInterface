@@ -35,7 +35,6 @@ export class LogFileView extends VirtualComponent {
         logFileViewModel.propertyChanged('header', text => collapse.setHeader(text));
         collapse.open = true;
         collapse.classList.add('is-4', 'border', 'header');
-        collapse.style.marginTop = '1rem';
         this._root = collapse;
     }
 }

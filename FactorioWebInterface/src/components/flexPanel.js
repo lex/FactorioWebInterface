@@ -1,16 +1,24 @@
 import "./flexPanel.ts.less";
 import { BaseElement } from "./baseElement";
 export class FlexPanel extends BaseElement {
-    constructor(direction) {
+    constructor(...classes) {
         super();
-        this.style.flexDirection = direction || FlexPanel.direction.row;
+        this.classList.add(...classes);
     }
 }
-FlexPanel.direction = {
-    row: 'row',
-    rowReverse: 'row-reverse',
-    column: 'column',
-    columnReverse: 'column-reverse'
+FlexPanel.classes = {
+    horizontal: 'horizontal',
+    vertical: 'vertical',
+    warp: 'warp',
+    reverse: 'reverse',
+    spacingNone: 'spacing-none',
+    childSpacingSmall: 'child-spacing-small',
+    childSpacing: 'child-spacing',
+    childSpacingLarge: 'child-spacing-large',
+    childSpacingSmallInclusive: 'child-spacing-small-inclusive',
+    childSpacingInclusive: 'child-spacing-inclusive',
+    childSpacingLargeInclusive: 'child-spacing-large-inclusive',
+    largeColumns: 'large-columns'
 };
 customElements.define('a-flex-panel', FlexPanel);
 //# sourceMappingURL=flexPanel.js.map

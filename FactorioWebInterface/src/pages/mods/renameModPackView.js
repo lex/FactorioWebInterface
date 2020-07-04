@@ -14,7 +14,7 @@ export class RenameModPackView extends VirtualComponent {
         let label = new Label();
         label.innerText = `Old Name: ${renameModPackViewModel.name}`;
         label.style.fontWeight = 'bold';
-        let buttonsPanel = new FlexPanel(FlexPanel.direction.row);
+        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal);
         buttonsPanel.classList.add('no-spacing');
         let createButton = new Button('Rename', Button.classes.success).setCommand(renameModPackViewModel.renameCommand);
         let cancelButton = new Button('Cancel', Button.classes.primary).setCommand(renameModPackViewModel.cancelCommand);

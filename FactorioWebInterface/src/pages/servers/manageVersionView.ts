@@ -23,10 +23,10 @@ export class ManageVersionView extends VirtualComponent {
     }
 
     private content(manageVersionViewModel: ManageVersionViewModel): Node {
-        let mainPanel = new FlexPanel(FlexPanel.direction.column);
+        let mainPanel = new FlexPanel(FlexPanel.classes.vertical);
         mainPanel.style.alignItems = 'center';
 
-        let topPanel = new FlexPanel(FlexPanel.direction.row);
+        let topPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing);
 
         let versionSelect = new Select(manageVersionViewModel.downloadableVersions)
             .bindIsLoading(new ReadonlyObservablePropertyBindingSource(manageVersionViewModel.isFetchingVersions));

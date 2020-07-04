@@ -8,12 +8,12 @@ export class DeleteModPackView extends VirtualComponent {
         super();
         let title = document.createElement('h4');
         title.textContent = 'Confirm Delete Mod Pack';
-        let mainPanel = new FlexPanel(FlexPanel.direction.column);
+        let mainPanel = new FlexPanel(FlexPanel.classes.vertical);
         let label = new Label();
         label.textContent = `Delete Mod Pack ${deleteModPackViewModel.name}?`;
         label.style.fontWeight = 'bold';
         label.style.marginBottom = '1em';
-        let buttonsPanel = new FlexPanel(FlexPanel.direction.row);
+        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal);
         buttonsPanel.classList.add('no-spacing');
         let createButton = new Button('Delete', Button.classes.danger).setCommand(deleteModPackViewModel.deleteCommand);
         let cancelButton = new Button('Cancel', Button.classes.primary).setCommand(deleteModPackViewModel.cancelCommand);
