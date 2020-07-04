@@ -165,6 +165,10 @@ h6 {
 .has-icon-left {
   padding-left: 2.25em;
 }
+.vertical-margins-small {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
 
 a-collapse {
   display: flex;
@@ -183,6 +187,7 @@ a-collapse-button {
   display: flex;
   align-self: center;
   margin-right: 0.5em;
+  min-width: 1em;
 }
 a-collapse[open] a-collapse-button {
   transform: rotate(90deg);
@@ -212,10 +217,10 @@ a-flex-panel.vertical {
 a-flex-panel.vertical.reverse {
   flex-direction: column-reverse;
 }
-a-flex-panel.warp {
+a-flex-panel.wrap {
   flex-wrap: wrap;
 }
-a-flex-panel.warp.reverse {
+a-flex-panel.wrap.reverse {
   flex-wrap: wrap-reverse;
 }
 a-flex-panel.spacing-none {
@@ -283,7 +288,7 @@ a-flex-panel.large-columns {
 a-flex-panel.large-columns > * {
   flex-basis: 0;
   flex-grow: 1;
-  min-width: 600px;
+  min-width: min(600px, 100%);
   margin-left: 0.25em;
   margin-right: 0.25em;
 }
@@ -727,108 +732,6 @@ input[type=text]:hover {
   border-color: #b5b5b5;
 }
 
-.hide-error > div > div {
-  display: none;
-}
-
-.hide-error > div > div {
-  display: none;
-}
-a-text-field {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0.1em;
-}
-a-text-field > label {
-  color: #363636;
-  display: block;
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.25em;
-  position: relative;
-  align-self: flex-start;
-}
-a-text-field > div {
-  flex-grow: 5;
-  flex-basis: 0;
-}
-a-text-field > div > input {
-  align-items: center;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  display: inline-flex;
-  flex-grow: 1;
-  font-size: 1rem;
-  height: 2.25em;
-  justify-content: flex-start;
-  line-height: 1.5;
-  padding-bottom: calc(0.375em - 1px);
-  padding-left: calc(0.625em - 1px);
-  padding-right: calc(0.625em - 1px);
-  padding-top: calc(0.375em - 1px);
-  vertical-align: top;
-  background-color: white;
-  border-color: #dbdbdb;
-  color: #363636;
-  box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
-  max-width: 100%;
-  width: 100%;
-  clear: both;
-  position: relative;
-  text-align: left;
-}
-a-text-field > div > input:focus {
-  outline: none;
-  border-color: #3273dc;
-  box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
-}
-a-text-field > div > input[disabled] {
-  cursor: not-allowed;
-  background-color: whitesmoke;
-  border-color: whitesmoke;
-  box-shadow: none;
-  color: #7a7a7a;
-}
-a-text-field > div > input[readonly] {
-  box-shadow: none;
-}
-a-text-field > div > input:hover {
-  border-color: #b5b5b5;
-}
-a-text-field > div > div {
-  display: block;
-  font-size: 0.75rem;
-  margin: 0.25em 0em;
-  height: 1rem;
-  color: red;
-  visibility: hidden;
-}
-a-text-field[invalid] > div > input {
-  border-color: red;
-}
-a-text-field[invalid] > div > input:hover {
-  border-color: #ff8080;
-}
-a-text-field[invalid] > div > div {
-  visibility: visible;
-}
-@media screen and (min-width: 769px) {
-  a-text-field.is-horizontal {
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-  a-text-field.is-horizontal > label {
-    margin-top: 0.35em;
-    margin-right: 0.5em;
-    min-width: 5em;
-    max-width: 15em;
-    text-align: right;
-    flex-grow: 1;
-    flex-basis: 0;
-  }
-}
-
 *,
 *::before,
 *::after {
@@ -996,6 +899,16 @@ h6 {
 .has-icon-left {
   padding-left: 2.25em;
 }
+.vertical-margins-small {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+.label-text {
+  color: #363636;
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+}
 .headed-label {
   color: #363636;
   font-size: 1rem;
@@ -1004,6 +917,108 @@ h6 {
 .headed-label > header {
   font-weight: bold;
   display: inline;
+}
+
+.hide-error > div > div {
+  display: none;
+}
+
+.hide-error > div > div {
+  display: none;
+}
+a-text-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.1em;
+}
+a-text-field > label {
+  color: #363636;
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25em;
+  position: relative;
+  align-self: flex-start;
+}
+a-text-field > div {
+  flex-grow: 5;
+  flex-basis: 0;
+}
+a-text-field > div > input {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  display: inline-flex;
+  flex-grow: 1;
+  font-size: 1rem;
+  height: 2.25em;
+  justify-content: flex-start;
+  line-height: 1.5;
+  padding-bottom: calc(0.375em - 1px);
+  padding-left: calc(0.625em - 1px);
+  padding-right: calc(0.625em - 1px);
+  padding-top: calc(0.375em - 1px);
+  vertical-align: top;
+  background-color: white;
+  border-color: #dbdbdb;
+  color: #363636;
+  box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
+  max-width: 100%;
+  width: 100%;
+  clear: both;
+  position: relative;
+  text-align: left;
+}
+a-text-field > div > input:focus {
+  outline: none;
+  border-color: #3273dc;
+  box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+}
+a-text-field > div > input[disabled] {
+  cursor: not-allowed;
+  background-color: whitesmoke;
+  border-color: whitesmoke;
+  box-shadow: none;
+  color: #7a7a7a;
+}
+a-text-field > div > input[readonly] {
+  box-shadow: none;
+}
+a-text-field > div > input:hover {
+  border-color: #b5b5b5;
+}
+a-text-field > div > div {
+  display: block;
+  font-size: 0.75rem;
+  margin: 0.25em 0em;
+  height: 1rem;
+  color: red;
+  visibility: hidden;
+}
+a-text-field[invalid] > div > input {
+  border-color: red;
+}
+a-text-field[invalid] > div > input:hover {
+  border-color: #ff8080;
+}
+a-text-field[invalid] > div > div {
+  visibility: visible;
+}
+@media screen and (min-width: 769px) {
+  a-text-field.is-horizontal {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  a-text-field.is-horizontal > label {
+    margin-top: 0.35em;
+    margin-right: 0.5em;
+    min-width: 5em;
+    max-width: 15em;
+    text-align: right;
+    flex-grow: 1;
+    flex-basis: 0;
+  }
 }
 
 .hide-error > div > div {

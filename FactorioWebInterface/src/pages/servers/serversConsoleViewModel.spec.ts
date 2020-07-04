@@ -4,7 +4,7 @@ import { ServersViewModel } from "./serversViewModel";
 import { ServersHubService } from "./serversHubService";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
 import { CollectionChangeType, CollectionChangedData } from "../../ts/utils";
-import { FileMetaData, FactorioServerStatus, ScenarioMetaData, MessageData, MessageType, FactorioControlClientData } from "./serversTypes";
+import { FileMetaData, FactorioServerStatus, ScenarioMetaData, MessageData, MessageType, FactorioControlClientData, FactorioServerSettings } from "./serversTypes";
 import { PromiseHelper } from "../../utils/promiseHelper";
 import { ServersConsoleViewModel } from "./serversConsoleViewModel";
 
@@ -1514,13 +1514,36 @@ describe('ServerConsoleViewModel', function () {
     });
 
     describe('Server Console data', function () {
+        const defaultFactorioServerSettings: FactorioServerSettings = {
+            Name: 'Name',
+            Description: 'Description',
+            Tags: ['Tags'],
+            MaxPlayers: 0,
+            GamePassword: 'GamePassword',
+            MaxUploadSlots: 0,
+            AutoPause: true,
+            UseDefaultAdmins: true,
+            Admins: ['Admins'],
+            AutosaveInterval: 0,
+            AutosaveSlots: 0,
+            NonBlockingSaving: true,
+            PublicVisible: true
+        };
+
         class HubServiceMock extends ServersHubServiceMockBase {
+            _connected = true;
             _version: string = '0.0.0';
             _factorioControlClientData: FactorioControlClientData = { Status: FactorioServerStatus.Unknown, Messages: [] };
+            _serverSettings: FactorioServerSettings = defaultFactorioServerSettings;
 
             whenConnection(callback: () => void): () => void {
-                callback();
-                return super.whenConnection(callback);
+                let sub = super.whenConnection(callback);
+
+                if (this._connected) {
+                    callback();
+                }
+
+                return sub;
             }
 
             getVersion(): Promise<string> {
@@ -1532,6 +1555,11 @@ describe('ServerConsoleViewModel', function () {
                 super.setServerId(value);
                 return Promise.resolve(this._factorioControlClientData);
             }
+
+            requestServerSettings() {
+                setInterval(() => this._onServerSettings.raise({ settings: this._serverSettings, saved: true }), 0);
+                super.requestServerSettings();
+            }
         }
 
         it('updates when hub connection starts.', async function () {
@@ -1542,6 +1570,7 @@ describe('ServerConsoleViewModel', function () {
             };
 
             let hubService = new HubServiceMock();
+            hubService._connected = false;
             hubService._factorioControlClientData = factorioControlClientData;
 
             let services = new ServersPageTestServiceLocator();
@@ -1550,11 +1579,16 @@ describe('ServerConsoleViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverConsoleViewModel;
 
-            let statusEvent: FactorioServerStatus = undefined;
-            viewModel.status.subscribe(event => statusEvent = event);
+            await PromiseHelper.delay(0);
+
+            let nameEvent: string = undefined;
+            viewModel.propertyChanged('nameText', event => nameEvent = event);
+
+            let statusEvent: string = undefined;
+            viewModel.propertyChanged('statusText', event => statusEvent = event);
 
             let versionEvent: string = undefined;
-            viewModel.version.subscribe(event => versionEvent = event);
+            viewModel.propertyChanged('versionText', event => versionEvent = event);
 
             let messageEvent: CollectionChangedData<MessageData> = undefined;
             viewModel.messages.subscribe(event => messageEvent = event);
@@ -1564,8 +1598,9 @@ describe('ServerConsoleViewModel', function () {
             await PromiseHelper.delay(0);
 
             // Assert.
-            strict.equal(statusEvent, factorioControlClientData.Status);
-            strict.equal(versionEvent, '0.0.0');
+            strict.equal(nameEvent, 'Name: Name');
+            strict.equal(statusEvent, 'Status: Stopped');
+            strict.equal(versionEvent, 'Version: 0.0.0');
             strict.equal(messageEvent.Type, CollectionChangeType.Reset);
             strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
         });
@@ -1590,19 +1625,20 @@ describe('ServerConsoleViewModel', function () {
             await PromiseHelper.delay(0);
 
             // Assert.
-            strict.equal(viewModel.status.value, factorioControlClientData.Status);
-            strict.equal(viewModel.version.value, hubService._version);
+            strict.equal(viewModel.nameText, 'Name: Name');
+            strict.equal(viewModel.statusText, 'Status: Stopped');
+            strict.equal(viewModel.versionText, 'Version: 0.0.1');
             strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
         });
 
         it('updates when changing server Id', async function () {
             // Arrange.
             let factorioControlClientData: FactorioControlClientData = {
-                Status: FactorioServerStatus.Stopped,
+                Status: FactorioServerStatus.Unknown,
                 Messages: [{ MessageType: MessageType.Control, ServerId: '2', Message: 'message' }]
             };
 
-            let version = '0.0.2';
+            let version = '0.0.1';
 
             let hubService = new HubServiceMock();
             hubService._version = version;
@@ -1614,24 +1650,34 @@ describe('ServerConsoleViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverConsoleViewModel;
 
-            let statusEvent: FactorioServerStatus = undefined;
-            viewModel.status.subscribe(event => statusEvent = event);
+            await PromiseHelper.delay(0);
+
+            let nameEvent: string = undefined;
+            viewModel.propertyChanged('nameText', event => nameEvent = event);
+
+            let statusEvent: string = undefined;
+            viewModel.propertyChanged('statusText', event => statusEvent = event);
 
             let versionEvent: string = undefined;
-            viewModel.version.subscribe(event => versionEvent = event);
+            viewModel.propertyChanged('versionText', event => versionEvent = event);
 
             let messageEvent: CollectionChangedData<MessageData> = undefined;
             viewModel.messages.subscribe(event => messageEvent = event);
 
+            hubService._serverSettings.Name = 'Name2';
+            factorioControlClientData.Status = FactorioServerStatus.Stopped;
+            hubService._version = '0.0.2';
+
             let serverIds = viewModel.serverIds;
 
-            // Act.
+            // Act.            
             serverIds.setSingleSelected(serverIds.getBoxByKey('2'));
             await PromiseHelper.delay(0);
 
             // Assert.
-            strict.equal(statusEvent, factorioControlClientData.Status);
-            strict.equal(versionEvent, version);
+            strict.equal(nameEvent, 'Name: Name2');
+            strict.equal(statusEvent, 'Status: Stopped');
+            strict.equal(versionEvent, 'Version: 0.0.2');
             strict.equal(messageEvent.Type, CollectionChangeType.Reset);
             strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
         });

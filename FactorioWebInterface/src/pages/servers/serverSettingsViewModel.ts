@@ -236,12 +236,6 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
         this._copyToClipoardService = copyToClipoardService;
         this._errorService = errorService;
 
-        this.update(serverSettingsService.settings);
-        serverSettingsService.settingsChanged.subscribe(event => this.update(event.NewItems as FactorioServerSettings));
-
-        this._saved = serverSettingsService.saved;
-        serverSettingsService.savedChanged.subscribe(event => this.setSaved(event));
-
         this._validator = new Validator(this, [
             new MaxStringLength<this>('Name', 49)
         ]);
@@ -249,6 +243,12 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
         this._saveCommand = new DelegateCommand(() => this.saveSettings(), () => !this.saved);
         this._undoCommand = new DelegateCommand(() => this._serverSettingsService.undoSettings(), () => !this.saved);
         this._copyCommand = new DelegateCommand(() => this.copySettings());
+
+        this.update(serverSettingsService.settings);
+        serverSettingsService.settingsChanged.subscribe(event => this.update(event.NewItems as FactorioServerSettings));
+
+        this._saved = serverSettingsService.saved;
+        serverSettingsService.savedChanged.subscribe(event => this.setSaved(event));
     }
 
     private setAndDoValidation(propertyName: propertyOf<ServerSettingsViewModel>, value: any): boolean {

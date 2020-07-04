@@ -23,6 +23,16 @@ export class HTMLLabelBaseElement extends HTMLLabelElement {
     onLifecycle(callback) {
         return this.lifecycleObservable.subscribe(callback);
     }
+    set content(value) {
+        BaseElement.setContent(this, value);
+    }
+    setContent(value) {
+        this.content = value;
+        return this;
+    }
+    bindContent(source) {
+        return BaseElement.bindContent(this, source);
+    }
     set tooltip(value) {
         TooltipService.setTooltip(this, value);
     }
@@ -35,6 +45,10 @@ export class HTMLLabelBaseElement extends HTMLLabelElement {
     }
     setBinding(key, binding) {
         BaseElement.setBinding(this, key, binding);
+    }
+    addClasses(...classes) {
+        this.classList.add(...classes);
+        return this;
     }
 }
 //# sourceMappingURL=htmlLabelBaseElement.js.map

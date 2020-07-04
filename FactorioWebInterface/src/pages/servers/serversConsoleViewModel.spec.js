@@ -1131,15 +1131,35 @@ describe('ServerConsoleViewModel', function () {
         });
     });
     describe('Server Console data', function () {
+        const defaultFactorioServerSettings = {
+            Name: 'Name',
+            Description: 'Description',
+            Tags: ['Tags'],
+            MaxPlayers: 0,
+            GamePassword: 'GamePassword',
+            MaxUploadSlots: 0,
+            AutoPause: true,
+            UseDefaultAdmins: true,
+            Admins: ['Admins'],
+            AutosaveInterval: 0,
+            AutosaveSlots: 0,
+            NonBlockingSaving: true,
+            PublicVisible: true
+        };
         class HubServiceMock extends ServersHubServiceMockBase {
             constructor() {
                 super(...arguments);
+                this._connected = true;
                 this._version = '0.0.0';
                 this._factorioControlClientData = { Status: FactorioServerStatus.Unknown, Messages: [] };
+                this._serverSettings = defaultFactorioServerSettings;
             }
             whenConnection(callback) {
-                callback();
-                return super.whenConnection(callback);
+                let sub = super.whenConnection(callback);
+                if (this._connected) {
+                    callback();
+                }
+                return sub;
             }
             getVersion() {
                 super.getVersion();
@@ -1148,6 +1168,10 @@ describe('ServerConsoleViewModel', function () {
             setServerId(value) {
                 super.setServerId(value);
                 return Promise.resolve(this._factorioControlClientData);
+            }
+            requestServerSettings() {
+                setInterval(() => this._onServerSettings.raise({ settings: this._serverSettings, saved: true }), 0);
+                super.requestServerSettings();
             }
         }
         it('updates when hub connection starts.', function () {
@@ -1158,23 +1182,28 @@ describe('ServerConsoleViewModel', function () {
                     Messages: [{ MessageType: MessageType.Control, ServerId: '1', Message: 'message' }]
                 };
                 let hubService = new HubServiceMock();
+                hubService._connected = false;
                 hubService._factorioControlClientData = factorioControlClientData;
                 let services = new ServersPageTestServiceLocator();
                 services.register(ServersHubService, () => hubService);
                 let mainViewModel = services.get(ServersViewModel);
                 let viewModel = mainViewModel.serverConsoleViewModel;
+                yield PromiseHelper.delay(0);
+                let nameEvent = undefined;
+                viewModel.propertyChanged('nameText', event => nameEvent = event);
                 let statusEvent = undefined;
-                viewModel.status.subscribe(event => statusEvent = event);
+                viewModel.propertyChanged('statusText', event => statusEvent = event);
                 let versionEvent = undefined;
-                viewModel.version.subscribe(event => versionEvent = event);
+                viewModel.propertyChanged('versionText', event => versionEvent = event);
                 let messageEvent = undefined;
                 viewModel.messages.subscribe(event => messageEvent = event);
                 // Act.
                 hubService._onConnection.raise();
                 yield PromiseHelper.delay(0);
                 // Assert.
-                strict.equal(statusEvent, factorioControlClientData.Status);
-                strict.equal(versionEvent, '0.0.0');
+                strict.equal(nameEvent, 'Name: Name');
+                strict.equal(statusEvent, 'Status: Stopped');
+                strict.equal(versionEvent, 'Version: 0.0.0');
                 strict.equal(messageEvent.Type, CollectionChangeType.Reset);
                 strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
             });
@@ -1196,8 +1225,9 @@ describe('ServerConsoleViewModel', function () {
                 let viewModel = mainViewModel.serverConsoleViewModel;
                 yield PromiseHelper.delay(0);
                 // Assert.
-                strict.equal(viewModel.status.value, factorioControlClientData.Status);
-                strict.equal(viewModel.version.value, hubService._version);
+                strict.equal(viewModel.nameText, 'Name: Name');
+                strict.equal(viewModel.statusText, 'Status: Stopped');
+                strict.equal(viewModel.versionText, 'Version: 0.0.1');
                 strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
             });
         });
@@ -1205,10 +1235,10 @@ describe('ServerConsoleViewModel', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 // Arrange.
                 let factorioControlClientData = {
-                    Status: FactorioServerStatus.Stopped,
+                    Status: FactorioServerStatus.Unknown,
                     Messages: [{ MessageType: MessageType.Control, ServerId: '2', Message: 'message' }]
                 };
-                let version = '0.0.2';
+                let version = '0.0.1';
                 let hubService = new HubServiceMock();
                 hubService._version = version;
                 hubService._factorioControlClientData = factorioControlClientData;
@@ -1216,19 +1246,26 @@ describe('ServerConsoleViewModel', function () {
                 services.register(ServersHubService, () => hubService);
                 let mainViewModel = services.get(ServersViewModel);
                 let viewModel = mainViewModel.serverConsoleViewModel;
+                yield PromiseHelper.delay(0);
+                let nameEvent = undefined;
+                viewModel.propertyChanged('nameText', event => nameEvent = event);
                 let statusEvent = undefined;
-                viewModel.status.subscribe(event => statusEvent = event);
+                viewModel.propertyChanged('statusText', event => statusEvent = event);
                 let versionEvent = undefined;
-                viewModel.version.subscribe(event => versionEvent = event);
+                viewModel.propertyChanged('versionText', event => versionEvent = event);
                 let messageEvent = undefined;
                 viewModel.messages.subscribe(event => messageEvent = event);
+                hubService._serverSettings.Name = 'Name2';
+                factorioControlClientData.Status = FactorioServerStatus.Stopped;
+                hubService._version = '0.0.2';
                 let serverIds = viewModel.serverIds;
-                // Act.
+                // Act.            
                 serverIds.setSingleSelected(serverIds.getBoxByKey('2'));
                 yield PromiseHelper.delay(0);
                 // Assert.
-                strict.equal(statusEvent, factorioControlClientData.Status);
-                strict.equal(versionEvent, version);
+                strict.equal(nameEvent, 'Name: Name2');
+                strict.equal(statusEvent, 'Status: Stopped');
+                strict.equal(versionEvent, 'Version: 0.0.2');
                 strict.equal(messageEvent.Type, CollectionChangeType.Reset);
                 strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
             });

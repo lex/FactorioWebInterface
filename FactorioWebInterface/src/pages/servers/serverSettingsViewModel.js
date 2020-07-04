@@ -23,16 +23,16 @@ export class ServerSettingsViewModel extends ObservableObject {
         this._serverSettingsService = serverSettingsService;
         this._copyToClipoardService = copyToClipoardService;
         this._errorService = errorService;
-        this.update(serverSettingsService.settings);
-        serverSettingsService.settingsChanged.subscribe(event => this.update(event.NewItems));
-        this._saved = serverSettingsService.saved;
-        serverSettingsService.savedChanged.subscribe(event => this.setSaved(event));
         this._validator = new Validator(this, [
             new MaxStringLength('Name', 49)
         ]);
         this._saveCommand = new DelegateCommand(() => this.saveSettings(), () => !this.saved);
         this._undoCommand = new DelegateCommand(() => this._serverSettingsService.undoSettings(), () => !this.saved);
         this._copyCommand = new DelegateCommand(() => this.copySettings());
+        this.update(serverSettingsService.settings);
+        serverSettingsService.settingsChanged.subscribe(event => this.update(event.NewItems));
+        this._saved = serverSettingsService.saved;
+        serverSettingsService.savedChanged.subscribe(event => this.setSaved(event));
     }
     get Name() {
         return this._formFields.Name;

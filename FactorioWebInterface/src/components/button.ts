@@ -73,11 +73,6 @@ export class Button extends BaseElement {
         this.onClick((event: MouseEvent) => event.stopPropagation());
     }
 
-    addClasses(...classes: string[]): Button {
-        this.classList.add(...classes);
-        return this;
-    }
-
     onClick(callback: (event: MouseEvent) => void): () => void {
         return EventListener.onClick(this, callback);
     }

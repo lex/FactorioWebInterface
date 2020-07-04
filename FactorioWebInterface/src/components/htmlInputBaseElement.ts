@@ -27,6 +27,19 @@ export class HTMLInputBaseElement extends HTMLInputElement implements IBaseEleme
         return this.lifecycleObservable.subscribe(callback);
     }
 
+    set content(value: string | Node) {
+        BaseElement.setContent(this, value);
+    }
+
+    setContent(value: string | Node): this {
+        this.content = value;
+        return this;
+    }
+
+    bindContent(source: IBindingSource<string | Node>): this {
+        return BaseElement.bindContent(this, source);
+    }
+
     set tooltip(value: string | Node | Tooltip) {
         TooltipService.setTooltip(this, value);
     }
@@ -42,5 +55,10 @@ export class HTMLInputBaseElement extends HTMLInputElement implements IBaseEleme
 
     setBinding(key: any, binding: Binding): void {
         BaseElement.setBinding(this as any, key, binding);
+    }
+
+    addClasses(...classes: string[]): this {
+        this.classList.add(...classes);
+        return this;
     }
 }

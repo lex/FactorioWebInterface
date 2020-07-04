@@ -17,7 +17,7 @@ export class ServersViewModel {
         this.chatLogFileViewModel = new LogFileViewModel('Chat Logs', serverFileService.chatLogsFiles, 'chatLogFile');
         this.scenariosViewModel = new ScenariosViewModel(serverFileService.scenarios);
         this.modPacksViewModel = new ModPacksViewModel(serverFileService);
-        this.serverConsoleViewModel = new ServersConsoleViewModel(serverIdService, serverConsoleService, mangeVersionService, modalService, errorService, this.tempFileViewModel, this.localFileViewModel, this.globalFileViewModel, this.scenariosViewModel);
+        this.serverConsoleViewModel = new ServersConsoleViewModel(serverIdService, serverConsoleService, mangeVersionService, serverSettingsService, modalService, errorService, this.tempFileViewModel, this.localFileViewModel, this.globalFileViewModel, this.scenariosViewModel);
         this.serverFileManagementViewModel = new ServerFileManagementViewModel(serverFileManagementService, fileSelectionService, errorService, this.tempFileViewModel, this.localFileViewModel, this.globalFileViewModel);
     }
 }

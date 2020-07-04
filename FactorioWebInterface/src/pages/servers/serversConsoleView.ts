@@ -8,51 +8,43 @@ import { Icon } from "../../components/icon";
 import { ConsoleMessageView } from "./consoleMessageView";
 import { TextInput } from "../../components/textInput";
 import { ObservableObjectBindingSource } from "../../utils/bindingSource";
+import { Label } from "../../components/label";
 
 export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel: ServersConsoleViewModel) {
         super();
 
-        let headerPanel = new FlexPanel(FlexPanel.classes.horizontal);
-        headerPanel.classList.add('no-spacing');
+        let headerPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge);
         headerPanel.style.alignItems = 'center';
 
         let serverIdSelect = new Select(serversConsoleViewModel.serverIds);
         serverIdSelect.icon = new Icon(Icon.classes.server);
         serverIdSelect.style.fontSize = '1rem';
         serverIdSelect.style.fontWeight = 'normal';
-        serverIdSelect.style.margin = '-0.3em 0em -0.3em 1em';
+        serverIdSelect.style.margin = '-0.3em 1em -0.3em 1em';
         serverIdSelect.onclick = event => event.stopPropagation();
 
-        let statusLabel = document.createElement('label');
-        statusLabel.textContent = 'Status:';
-        statusLabel.style.fontSize = '1rem';
-        statusLabel.style.fontWeight = 'bold';
-        statusLabel.style.marginLeft = '1em';
+        let labelPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge, FlexPanel.classes.wrap);
 
-        let statusText = document.createElement('label');
-        serversConsoleViewModel.status.bind(event => statusText.textContent = event);
-        statusText.style.fontSize = '1rem';
-        statusText.style.fontWeight = 'bold';
-        statusText.style.marginLeft = '0.35em';
+        let nameText = new Label()
+            .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'nameText'))
+            .addClasses(Label.classes.labelText, 'vertical-margins-small');
 
-        let versionLabel = document.createElement('label');
-        versionLabel.textContent = 'Version:';
-        versionLabel.style.fontSize = '1rem';
-        versionLabel.style.fontWeight = 'bold';
-        versionLabel.style.marginLeft = '1em';
+        let statusText = new Label()
+            .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'statusText'))
+            .addClasses(Label.classes.labelText, 'vertical-margins-small');
 
-        let versionText = document.createElement('label');
-        serversConsoleViewModel.version.bind(event => versionText.textContent = event);
-        versionText.style.fontSize = '1rem';
-        versionText.style.fontWeight = 'bold';
-        versionText.style.marginLeft = '0.35em';
+        let versionText = new Label()
+            .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'versionText'))
+            .addClasses(Label.classes.labelText, 'vertical-margins-small');
 
-        headerPanel.append('Console', serverIdSelect, statusLabel, statusText, versionLabel, versionText);;
+        labelPanel.append(nameText, statusText, versionText);
+
+        headerPanel.append('Console', serverIdSelect, labelPanel);
 
         let mainPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing);
 
-        let topPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacingSmall, FlexPanel.classes.warp, FlexPanel.classes.spacingNone);
+        let topPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacingSmall, FlexPanel.classes.wrap, FlexPanel.classes.spacingNone);
 
         let resumeButton = iconButton(Icon.classes.play, 'Resume', Button.classes.success)
             .setCommand(serversConsoleViewModel.resumeCommand)

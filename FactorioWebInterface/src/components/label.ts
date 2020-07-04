@@ -3,8 +3,14 @@ import { HTMLLabelBaseElement } from "./htmlLabelBaseElement";
 
 export class Label extends HTMLLabelBaseElement {
     static readonly classes = {
-        headedLabel: 'headed-label'
+        headedLabel: 'headed-label',
+        labelText: 'label-text'
     };
+
+    constructor(content?: string | Node) {
+        super();
+        this.append(content);
+    }
 }
 
 customElements.define('a-label', Label, { extends: 'label' })

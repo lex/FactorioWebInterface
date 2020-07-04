@@ -1,9 +1,14 @@
 import "./label.ts.less";
 import { HTMLLabelBaseElement } from "./htmlLabelBaseElement";
 export class Label extends HTMLLabelBaseElement {
+    constructor(content) {
+        super();
+        this.append(content);
+    }
 }
 Label.classes = {
-    headedLabel: 'headed-label'
+    headedLabel: 'headed-label',
+    labelText: 'label-text'
 };
 customElements.define('a-label', Label, { extends: 'label' });
 export function headedLabel(header, text) {

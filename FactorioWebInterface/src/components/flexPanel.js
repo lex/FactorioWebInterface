@@ -9,7 +9,7 @@ export class FlexPanel extends BaseElement {
 FlexPanel.classes = {
     horizontal: 'horizontal',
     vertical: 'vertical',
-    warp: 'warp',
+    wrap: 'wrap',
     reverse: 'reverse',
     spacingNone: 'spacing-none',
     childSpacingSmall: 'child-spacing-small',

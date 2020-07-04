@@ -8,6 +8,18 @@ export class BaseElement extends HTMLElement {
         super();
         this.lifecycleObservable = new Observable();
     }
+    static setContent(self, content) {
+        self.innerHTML = '';
+        if (content != null) {
+            self.append(content);
+        }
+    }
+    static bindContent(self, source) {
+        let target = new ObjectBindingTarget(self, 'content');
+        let binding = new Binding(target, source);
+        BaseElement.setBinding(self, BaseElement.bindingKeys.content, binding);
+        return self;
+    }
     static bindTooltip(self, source) {
         let target = new ObjectBindingTarget(self, 'tooltip');
         let binding = new Binding(target, source);
@@ -40,6 +52,16 @@ export class BaseElement extends HTMLElement {
     onLifecycle(callback) {
         return this.lifecycleObservable.subscribe(callback);
     }
+    set content(value) {
+        BaseElement.setContent(this, value);
+    }
+    setContent(value) {
+        this.content = value;
+        return this;
+    }
+    bindContent(source) {
+        return BaseElement.bindContent(this, source);
+    }
     set tooltip(value) {
         TooltipService.setTooltip(this, value);
     }
@@ -53,8 +75,13 @@ export class BaseElement extends HTMLElement {
     setBinding(key, binding) {
         BaseElement.setBinding(this, key, binding);
     }
+    addClasses(...classes) {
+        this.classList.add(...classes);
+        return this;
+    }
 }
 BaseElement.bindingKeys = {
+    content: {},
     tooltip: {}
 };
 //# sourceMappingURL=baseElement.js.map

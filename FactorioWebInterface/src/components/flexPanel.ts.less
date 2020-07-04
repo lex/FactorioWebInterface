@@ -52,7 +52,7 @@ a-flex-panel {
         }
     }
 
-    &.warp {
+    &.wrap {
         flex-wrap: wrap;
 
         &.reverse {
@@ -97,7 +97,7 @@ a-flex-panel {
         & > * {
             flex-basis: 0;
             flex-grow: 1;
-            min-width: 600px;
+            min-width: ~"min(600px, 100%)";
             .large-column();
         }
     }

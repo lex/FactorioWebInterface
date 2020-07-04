@@ -2,7 +2,7 @@
 import { ServerIdService } from "./serverIdService";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ServerConsoleService } from "./serverConsoleService";
-import { Result } from "../../ts/utils";
+import { Result, CollectionChangeType } from "../../ts/utils";
 import { FileViewModel } from "./fileViewModel";
 import { FileMetaData, ScenarioMetaData, MessageData, FactorioServerStatus } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
@@ -11,16 +11,16 @@ import { ErrorService } from "../../services/errorService";
 import { CollectionView } from "../../utils/collectionView";
 import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
-import { IObservableProperty } from "../../utils/observableProperty";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 import { IModalService } from "../../services/iModalService";
 import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { ManageVersionService } from "./manageVersionService";
+import { ServerSettingsService } from "./serverSettingsService";
 
-export class ServersConsoleViewModel extends ObservableObject {
+export class ServersConsoleViewModel extends ObservableObject<ServersConsoleViewModel> {
     static readonly resumeTooltipDisabledMessage = 'Can only resume when there is a save in Temp Saves and the server is stopped.';
     static readonly loadTooltipDisabledMessage = 'Can only load when a single save is selected and server is stopped.';
-    static readonly startScenarioTooltipDisabledMessage = 'Can only start a sceanrio when a single scenario is selected and the server is stopped.';
+    static readonly startScenarioTooltipDisabledMessage = 'Can only start a scenario when a single scenario is selected and the server is stopped.';
     static readonly saveTooltipEnabledMessage = 'Saves the game, file will be written to Temp Saves/currently_running.zip.';
     static readonly saveTooltipDisabledMessage = 'Can only save when the server is running.';
     static readonly manageVersionTooltipMessage = 'Opens up the Version Manager, use to change the server\'s version.';
@@ -28,20 +28,24 @@ export class ServersConsoleViewModel extends ObservableObject {
     static readonly stopTooltipDisabledMessage = 'Can only stop when the server is running.';
     static readonly forceStopTooltipMessage = 'Forcefully stops the server, or any rogue Factorio processes.';
 
-    private _serverIdService: ServerIdService;
-    private _serverConsoleService: ServerConsoleService;
-    private _manageVersionService: ManageVersionService;
-    private _modalService: IModalService;
-    private _errorService: ErrorService;
+    private readonly _serverIdService: ServerIdService;
+    private readonly _serverConsoleService: ServerConsoleService;
+    private readonly _manageVersionService: ManageVersionService;
+    private readonly _serverSettingsService: ServerSettingsService;
+    private readonly _modalService: IModalService;
+    private readonly _errorService: ErrorService;
 
-    private _tempFiles: FileViewModel;
-    private _localFiles: FileViewModel;
-    private _globalFiles: FileViewModel;
-    private _scenarios: ScenariosViewModel;
+    private readonly _tempFiles: FileViewModel;
+    private readonly _localFiles: FileViewModel;
+    private readonly _globalFiles: FileViewModel;
+    private readonly _scenarios: ScenariosViewModel;
 
     private _serverIds: ObservableKeyArray<string, string>;
     private _serverIdsCollectionView: CollectionView<string>;
 
+    private _nameText = '';
+    private _statusText = '';
+    private _versionText = '';
     private _sendText = '';
     private _commandHistory = new CommandHistory();
 
@@ -64,12 +68,16 @@ export class ServersConsoleViewModel extends ObservableObject {
         return this._serverIdsCollectionView;
     }
 
-    get status(): IObservableProperty<FactorioServerStatus> {
-        return this._serverConsoleService.status;
+    get nameText(): string {
+        return this._nameText;
     }
 
-    get version(): IObservableProperty<string> {
-        return this._serverConsoleService.version;
+    get statusText(): string {
+        return this._statusText;
+    }
+
+    get versionText(): string {
+        return this._versionText;
     }
 
     get resumeTooltip(): string {
@@ -193,6 +201,7 @@ export class ServersConsoleViewModel extends ObservableObject {
         serverIdService: ServerIdService,
         serverConsoleService: ServerConsoleService,
         manageVersionService: ManageVersionService,
+        serverSettingsService: ServerSettingsService,
         modalService: IModalService,
         errorService: ErrorService,
         tempFiles: FileViewModel,
@@ -205,6 +214,7 @@ export class ServersConsoleViewModel extends ObservableObject {
         this._serverIdService = serverIdService;
         this._serverConsoleService = serverConsoleService;
         this._manageVersionService = manageVersionService;
+        this._serverSettingsService = serverSettingsService;
         this._modalService = modalService;
         this._errorService = errorService;
 
@@ -268,7 +278,7 @@ export class ServersConsoleViewModel extends ObservableObject {
         });
 
         this._manageVersionCommand = new DelegateCommand(async () => {
-            let vm = new ManageVersionViewModel(this._manageVersionService, this.status, this._errorService);
+            let vm = new ManageVersionViewModel(this._manageVersionService, this._serverConsoleService.status, this._errorService);
             await this._modalService.showViewModel(vm);
 
             vm.disconnect();
@@ -288,6 +298,7 @@ export class ServersConsoleViewModel extends ObservableObject {
             this.sendText = '';
         });
 
+        this.updateStatusText(this._serverConsoleService.status.value);
         this.updateResumeTooltip();
         this.updateLoadTooltip();
         this.updateStartScenarioTooltip();
@@ -319,12 +330,23 @@ export class ServersConsoleViewModel extends ObservableObject {
             this._saveCommand.raiseCanExecuteChanged();
             this._stopCommand.raiseCanExecuteChanged();
 
+            this.updateStatusText(event)
+
             this.updateResumeTooltip();
             this.updateLoadTooltip();
             this.updateStartScenarioTooltip();
             this.updateSaveTooltip();
             this.updateStopTooltip();
         });
+
+        serverSettingsService.settingsChanged.subscribe((event) => {
+            if (event.Type === CollectionChangeType.Reset) {
+                this.updateServerName();
+            }
+        });
+        this.updateServerName();
+
+        serverConsoleService.version.bind(event => this.updateVersionText(event));
     }
 
     sendInputKey(key: number) {
@@ -338,6 +360,48 @@ export class ServersConsoleViewModel extends ObservableObject {
             this._commandHistory.resetIndex();
             this.sendText = '';
         }
+    }
+
+    private setNameText(value: string) {
+        if (value === this._nameText) {
+            return;
+        }
+
+        this._nameText = value;
+        this.raise('nameText', value);
+    }
+
+    private setStatusText(value: string) {
+        if (value === this._statusText) {
+            return;
+        }
+
+        this._statusText = value;
+        this.raise('statusText', value);
+    }
+
+    private setVersionText(value: string) {
+        if (value === this._versionText) {
+            return;
+        }
+
+        this._versionText = value;
+        this.raise('versionText', value);
+    }
+
+    private updateServerName() {
+        let text = `Name: ${this._serverSettingsService.settings?.Name ?? ''}`;
+        this.setNameText(text);
+    }
+
+    private updateStatusText(value: string) {
+        let text = `Status: ${value}`;
+        this.setStatusText(text);
+    }
+
+    private updateVersionText(value: string) {
+        let text = `Version: ${value}`;
+        this.setVersionText(text);
     }
 
     private updatedSelected(selected: string) {

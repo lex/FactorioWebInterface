@@ -12,18 +12,43 @@ export interface IBaseElement {
     connectedCallback(): void;
     disconnectedCallback(): void
     adoptedCallback(): void
-    onLifecycle(callback: (event: import("./baseElement").Lifecycle) => void): () => void;
-    setTooltip(value: string | Node | import("./tooltip").Tooltip): this;
-    bindTooltip(source: IBindingSource<string | Node | import("./tooltip").Tooltip>): this;
+    onLifecycle(callback: (event: Lifecycle) => void): () => void;
+
+    content: string | Node;
+    setContent(value: string | Node): this;
+    bindContent(source: IBindingSource<string | Node>): this;
+
+    tooltip: string | Node | Tooltip;
+    setTooltip(value: string | Node | Tooltip): this;
+    bindTooltip(source: IBindingSource<string | Node | Tooltip>): this;
+
     setBinding(key: any, binding: Binding): void;
+
+    addClasses(...classes: string[]): this;
 }
 
 export class BaseElement extends HTMLElement implements IBaseElement {
     static readonly bindingKeys = {
+        content: {},
         tooltip: {}
     };
 
-    static bindTooltip(self: BaseElement, source: IBindingSource<string | Node | Tooltip>): BaseElement {
+    static setContent<T extends IBaseElement & HTMLElement>(self: T, content?: string | Node): void {
+        self.innerHTML = '';
+        if (content != null) {
+            self.append(content);
+        }
+    }
+
+    static bindContent<T extends IBaseElement & HTMLElement>(self: T, source: IBindingSource<string | Node>): T {
+        let target = new ObjectBindingTarget(self, 'content');
+        let binding = new Binding(target, source);
+
+        BaseElement.setBinding(self, BaseElement.bindingKeys.content, binding);
+        return self;
+    }
+
+    static bindTooltip<T extends IBaseElement & HTMLElement>(self: T, source: IBindingSource<string | Node | Tooltip>): T {
         let target = new ObjectBindingTarget(self, 'tooltip');
         let binding = new Binding(target, source);
 
@@ -31,7 +56,7 @@ export class BaseElement extends HTMLElement implements IBaseElement {
         return self;
     }
 
-    static setBinding(self: BaseElement, key: any, binding: Binding | undefined): void {
+    static setBinding<T extends IBaseElement & HTMLElement>(self: T, key: any, binding: Binding | undefined): void {
         let bindingStore = BindingStore.getOrNew(self);
         bindingStore.set(key, binding);
 
@@ -45,6 +70,7 @@ export class BaseElement extends HTMLElement implements IBaseElement {
     constructor() {
         super();
     }
+
 
     connectedCallback() {
         BindingStore.get(this)?.connected();
@@ -68,6 +94,19 @@ export class BaseElement extends HTMLElement implements IBaseElement {
         return this.lifecycleObservable.subscribe(callback);
     }
 
+    set content(value: string | Node) {
+        BaseElement.setContent(this, value);
+    }
+
+    setContent(value: string | Node): this {
+        this.content = value;
+        return this;
+    }
+
+    bindContent(source: IBindingSource<string | Node>): this {
+        return BaseElement.bindContent(this, source);
+    }
+
     set tooltip(value: string | Node | Tooltip) {
         TooltipService.setTooltip(this, value);
     }
@@ -83,5 +122,10 @@ export class BaseElement extends HTMLElement implements IBaseElement {
 
     setBinding(key: any, binding: Binding | undefined): void {
         BaseElement.setBinding(this, key, binding);
+    }
+
+    addClasses(...classes: string[]): this {
+        this.classList.add(...classes);
+        return this;
     }
 }

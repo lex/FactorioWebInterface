@@ -57,7 +57,7 @@ export class ServerSettingsService {
     }
 
     saveSettings(settings: FactorioServerSettings): Promise<Result> {
-       return this._serversHubService.saveServerSettings(settings);
+        return this._serversHubService.saveServerSettings(settings);
     }
 
     updateSettings(data: KeyValueCollectionChangedData) {

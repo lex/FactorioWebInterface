@@ -41,10 +41,6 @@ export class Button extends BaseElement {
         this.innerHTML = '';
         this.append(value);
     }
-    addClasses(...classes) {
-        this.classList.add(...classes);
-        return this;
-    }
     onClick(callback) {
         return EventListener.onClick(this, callback);
     }

@@ -228,7 +228,6 @@ describe('CollectionView', function () {
 
         for (let test of resetEventTests) {
             it(`reset event ${test.name} removes selected items.`, function () {
-                debugger;
                 // Arrange.
                 let o = new ObservableKeyArray<number, number>(x => x);
                 o.add(1, 2, 3);

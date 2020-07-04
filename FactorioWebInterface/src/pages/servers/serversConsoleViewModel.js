@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ObservableKeyArray } from "../../utils/observableCollection";
 import { DelegateCommand } from "../../utils/command";
+import { CollectionChangeType } from "../../ts/utils";
 import { FileMetaData, FactorioServerStatus } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionView } from "../../utils/collectionView";
@@ -17,8 +18,11 @@ import { CommandHistory } from "../../utils/commandHistory";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 import { ManageVersionViewModel } from "./manageVersionViewModel";
 export class ServersConsoleViewModel extends ObservableObject {
-    constructor(serverIdService, serverConsoleService, manageVersionService, modalService, errorService, tempFiles, localFiles, globalFiles, scenarios) {
+    constructor(serverIdService, serverConsoleService, manageVersionService, serverSettingsService, modalService, errorService, tempFiles, localFiles, globalFiles, scenarios) {
         super();
+        this._nameText = '';
+        this._statusText = '';
+        this._versionText = '';
         this._sendText = '';
         this._commandHistory = new CommandHistory();
         this._resumeTooltip = null;
@@ -29,6 +33,7 @@ export class ServersConsoleViewModel extends ObservableObject {
         this._serverIdService = serverIdService;
         this._serverConsoleService = serverConsoleService;
         this._manageVersionService = manageVersionService;
+        this._serverSettingsService = serverSettingsService;
         this._modalService = modalService;
         this._errorService = errorService;
         this._tempFiles = tempFiles;
@@ -74,7 +79,7 @@ export class ServersConsoleViewModel extends ObservableObject {
             this._errorService.reportIfError(result);
         }));
         this._manageVersionCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
-            let vm = new ManageVersionViewModel(this._manageVersionService, this.status, this._errorService);
+            let vm = new ManageVersionViewModel(this._manageVersionService, this._serverConsoleService.status, this._errorService);
             yield this._modalService.showViewModel(vm);
             vm.disconnect();
         }));
@@ -88,6 +93,7 @@ export class ServersConsoleViewModel extends ObservableObject {
             this._commandHistory.write(text);
             this.sendText = '';
         });
+        this.updateStatusText(this._serverConsoleService.status.value);
         this.updateResumeTooltip();
         this.updateLoadTooltip();
         this.updateStartScenarioTooltip();
@@ -114,21 +120,32 @@ export class ServersConsoleViewModel extends ObservableObject {
             this._startScenarioCommand.raiseCanExecuteChanged();
             this._saveCommand.raiseCanExecuteChanged();
             this._stopCommand.raiseCanExecuteChanged();
+            this.updateStatusText(event);
             this.updateResumeTooltip();
             this.updateLoadTooltip();
             this.updateStartScenarioTooltip();
             this.updateSaveTooltip();
             this.updateStopTooltip();
         });
+        serverSettingsService.settingsChanged.subscribe((event) => {
+            if (event.Type === CollectionChangeType.Reset) {
+                this.updateServerName();
+            }
+        });
+        this.updateServerName();
+        serverConsoleService.version.bind(event => this.updateVersionText(event));
     }
     get serverIds() {
         return this._serverIdsCollectionView;
     }
-    get status() {
-        return this._serverConsoleService.status;
+    get nameText() {
+        return this._nameText;
     }
-    get version() {
-        return this._serverConsoleService.version;
+    get statusText() {
+        return this._statusText;
+    }
+    get versionText() {
+        return this._versionText;
     }
     get resumeTooltip() {
         return this._resumeTooltip;
@@ -239,6 +256,40 @@ export class ServersConsoleViewModel extends ObservableObject {
             this.sendText = '';
         }
     }
+    setNameText(value) {
+        if (value === this._nameText) {
+            return;
+        }
+        this._nameText = value;
+        this.raise('nameText', value);
+    }
+    setStatusText(value) {
+        if (value === this._statusText) {
+            return;
+        }
+        this._statusText = value;
+        this.raise('statusText', value);
+    }
+    setVersionText(value) {
+        if (value === this._versionText) {
+            return;
+        }
+        this._versionText = value;
+        this.raise('versionText', value);
+    }
+    updateServerName() {
+        var _a, _b;
+        let text = `Name: ${(_b = (_a = this._serverSettingsService.settings) === null || _a === void 0 ? void 0 : _a.Name) !== null && _b !== void 0 ? _b : ''}`;
+        this.setNameText(text);
+    }
+    updateStatusText(value) {
+        let text = `Status: ${value}`;
+        this.setStatusText(text);
+    }
+    updateVersionText(value) {
+        let text = `Version: ${value}`;
+        this.setVersionText(text);
+    }
     updatedSelected(selected) {
         let box = this._serverIdsCollectionView.getBoxByKey(selected);
         this._serverIdsCollectionView.setSingleSelected(box);
@@ -297,7 +348,7 @@ export class ServersConsoleViewModel extends ObservableObject {
 }
 ServersConsoleViewModel.resumeTooltipDisabledMessage = 'Can only resume when there is a save in Temp Saves and the server is stopped.';
 ServersConsoleViewModel.loadTooltipDisabledMessage = 'Can only load when a single save is selected and server is stopped.';
-ServersConsoleViewModel.startScenarioTooltipDisabledMessage = 'Can only start a sceanrio when a single scenario is selected and the server is stopped.';
+ServersConsoleViewModel.startScenarioTooltipDisabledMessage = 'Can only start a scenario when a single scenario is selected and the server is stopped.';
 ServersConsoleViewModel.saveTooltipEnabledMessage = 'Saves the game, file will be written to Temp Saves/currently_running.zip.';
 ServersConsoleViewModel.saveTooltipDisabledMessage = 'Can only save when the server is running.';
 ServersConsoleViewModel.manageVersionTooltipMessage = 'Opens up the Version Manager, use to change the server\'s version.';

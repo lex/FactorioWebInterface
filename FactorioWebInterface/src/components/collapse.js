@@ -74,6 +74,7 @@ export class Collapse extends BaseElement {
     }
     setContent(value) {
         this._contentPresenter.setContent(value);
+        return this;
     }
     setOpen(value) {
         this.open = value;

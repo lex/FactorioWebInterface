@@ -107,6 +107,7 @@ export class Collapse extends BaseElement {
 
     setContent(value: Node | string) {
         this._contentPresenter.setContent(value);
+        return this;
     }
 
     setOpen(value: boolean): this {
