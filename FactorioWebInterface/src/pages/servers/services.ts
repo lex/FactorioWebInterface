@@ -14,10 +14,11 @@ import { ErrorService } from "../../services/errorService";
 import { WindowService } from "../../services/windowService";
 import { IModalService } from "../../services/iModalService";
 import { ManageVersionService } from "./manageVersionService";
+import { IHiddenInputService } from "../../services/iHiddenInputService";
 
 export function registerServices(serviceLocator: ServiceLocator): ServiceLocator {
     serviceLocator.register(ServersHubService, () => new ServersHubService());
-    serviceLocator.register(ServerIdService, (services) => new ServerIdService(services.get(ServersHubService)));
+    serviceLocator.register(ServerIdService, (services) => new ServerIdService(services.get(ServersHubService), services.get(IHiddenInputService)));
     serviceLocator.register(ServerFileService, (services) => new ServerFileService(services.get(ServerIdService), services.get(ServersHubService)));
     serviceLocator.register(ServerSettingsService, (services) => new ServerSettingsService(services.get(ServersHubService), services.get(ServerIdService)));
     serviceLocator.register(ServerExtraSettingsService, (services) => new ServerExtraSettingsService(services.get(ServersHubService), services.get(ServerIdService)));

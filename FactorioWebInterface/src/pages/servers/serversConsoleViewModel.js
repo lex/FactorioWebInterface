@@ -7,7 +7,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ObservableKeyArray } from "../../utils/observableCollection";
 import { DelegateCommand } from "../../utils/command";
 import { CollectionChangeType } from "../../ts/utils";
 import { FileMetaData, FactorioServerStatus } from "./serversTypes";
@@ -40,18 +39,14 @@ export class ServersConsoleViewModel extends ObservableObject {
         this._localFiles = localFiles;
         this._globalFiles = globalFiles;
         this._scenarios = scenarios;
-        this._serverIds = new ObservableKeyArray(x => x);
-        for (let i = 1; i <= 10; i++) {
-            this._serverIds.add(i + '');
-        }
-        this._serverIdsCollectionView = new CollectionView(this._serverIds);
+        this._serverIdsCollectionView = new CollectionView(this._serverIdService.serverIds);
         this._serverIdsCollectionView.selectedChanged.subscribe(() => {
             var _a;
             let selectedValue = (_a = IterableHelper.firstOrDefault(this._serverIdsCollectionView.selected)) === null || _a === void 0 ? void 0 : _a.value;
             this.setServerId(selectedValue);
         });
-        serverIdService.serverId.subscribe(selected => this.updatedSelected(selected));
-        this.updatedSelected(serverIdService.serverId.value);
+        serverIdService.currentServerId.subscribe(selected => this.updatedSelected(selected));
+        this.updatedSelected(serverIdService.currentServerId.value);
         this._resumeCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let result = yield this._serverConsoleService.resume();
             this._errorService.reportIfError(result);

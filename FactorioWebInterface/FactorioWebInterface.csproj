@@ -116,6 +116,7 @@
     <None Remove="src\pages\servers\serverFileManagementViewModel.spec.ts" />
     <None Remove="src\pages\servers\serverFileManagementViewModel.ts" />
     <None Remove="src\pages\servers\serverFileService.ts" />
+    <None Remove="src\pages\servers\serverIdService.spec.ts" />
     <None Remove="src\pages\servers\serverIdService.ts" />
     <None Remove="src\pages\servers\serversConsoleView.ts" />
     <None Remove="src\pages\servers\serversConsoleViewModel.spec.ts" />
@@ -134,6 +135,8 @@
     <None Remove="src\services\copyToClipboardService.ts" />
     <None Remove="src\services\errorService.ts" />
     <None Remove="src\services\fileSelectionservice.ts" />
+    <None Remove="src\services\hiddenInputService.ts" />
+    <None Remove="src\services\iHiddenInputService.ts" />
     <None Remove="src\services\modalService.ts" />
     <None Remove="src\services\requestVerificationService.ts" />
     <None Remove="src\services\tooltipService.ts" />
@@ -146,6 +149,7 @@
     <None Remove="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <None Remove="src\testUtils\services\errorServiceMockBase.ts" />
     <None Remove="src\testUtils\services\fileSelectionServiceMockBase.ts" />
+    <None Remove="src\testUtils\services\hiddenInputServiceMockBase.ts" />
     <None Remove="src\testUtils\services\modalServiceMockBase.ts" />
     <None Remove="src\testUtils\services\requestVerificationServiceMockBase.ts" />
     <None Remove="src\testUtils\services\uploadServiceMockBase.ts" />
@@ -368,6 +372,7 @@
     <TypeScriptCompile Include="src\pages\servers\serverFileManagementViewModel.spec.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverFileManagementViewModel.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverFileService.ts" />
+    <TypeScriptCompile Include="src\pages\servers\serverIdService.spec.ts" />
     <TypeScriptCompile Include="src\pages\servers\serverIdService.ts" />
     <TypeScriptCompile Include="src\pages\servers\serversConsoleView.ts" />
     <TypeScriptCompile Include="src\pages\servers\serversConsoleViewModel.spec.ts" />
@@ -387,6 +392,8 @@
     <TypeScriptCompile Include="src\services\copyToClipboardService.ts" />
     <TypeScriptCompile Include="src\services\errorService.ts" />
     <TypeScriptCompile Include="src\services\fileSelectionService.ts" />
+    <TypeScriptCompile Include="src\services\hiddenInputService.ts" />
+    <TypeScriptCompile Include="src\services\iHiddenInputService.ts" />
     <TypeScriptCompile Include="src\services\modalService.ts" />
     <TypeScriptCompile Include="src\services\tooltipService.ts" />
     <TypeScriptCompile Include="src\services\uploadService.ts" />
@@ -399,6 +406,7 @@
     <TypeScriptCompile Include="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\errorServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\fileSelectionServiceMockBase.ts" />
+    <TypeScriptCompile Include="src\testUtils\services\hiddenInputServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\modalServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\requestVerificationServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\uploadServiceMockBase.ts" />

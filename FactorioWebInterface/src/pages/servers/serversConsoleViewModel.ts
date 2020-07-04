@@ -40,7 +40,6 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private readonly _globalFiles: FileViewModel;
     private readonly _scenarios: ScenariosViewModel;
 
-    private _serverIds: ObservableKeyArray<string, string>;
     private _serverIdsCollectionView: CollectionView<string>;
 
     private _nameText = '';
@@ -223,20 +222,15 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
         this._globalFiles = globalFiles;
         this._scenarios = scenarios;
 
-        this._serverIds = new ObservableKeyArray<string, string>(x => x);
-        for (let i = 1; i <= 10; i++) {
-            this._serverIds.add(i + '');
-        }
-
-        this._serverIdsCollectionView = new CollectionView(this._serverIds);
+        this._serverIdsCollectionView = new CollectionView(this._serverIdService.serverIds);
 
         this._serverIdsCollectionView.selectedChanged.subscribe(() => {
             let selectedValue = IterableHelper.firstOrDefault(this._serverIdsCollectionView.selected)?.value
             this.setServerId(selectedValue);
         });
 
-        serverIdService.serverId.subscribe(selected => this.updatedSelected(selected));
-        this.updatedSelected(serverIdService.serverId.value);
+        serverIdService.currentServerId.subscribe(selected => this.updatedSelected(selected));
+        this.updatedSelected(serverIdService.currentServerId.value);
 
         this._resumeCommand = new DelegateCommand(async () => {
             let result = await this._serverConsoleService.resume();

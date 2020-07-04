@@ -16,6 +16,8 @@ import { WindowService } from "../services/windowService";
 import { WindowServiceMockBase } from "./services/windowServiceMockBase";
 import { IModalService } from "../services/iModalService";
 import { ModalServiceMockBase } from "./services/modalServiceMockBase";
+import { IHiddenInputService } from "../services/iHiddenInputService";
+import { HiddenInputServiceMockBase } from "./services/hiddenInputServiceMockBase";
 export class TestServiceLocator extends ServiceLocator {
     static registerBaseServices(serviceLocator) {
         serviceLocator.register(CopyToClipboardService, () => new CopyToClipboardServiceMockBase());
@@ -25,6 +27,7 @@ export class TestServiceLocator extends ServiceLocator {
         serviceLocator.register(ErrorService, () => new ErrorServiceMockBase());
         serviceLocator.register(WindowService, () => new WindowServiceMockBase());
         serviceLocator.register(IModalService, () => new ModalServiceMockBase());
+        serviceLocator.register(IHiddenInputService, () => new HiddenInputServiceMockBase());
         return serviceLocator;
     }
     constructor() {

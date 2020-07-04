@@ -51,7 +51,7 @@ export class ServerSettingsService {
             this._serversHubService.requestServerSettings();
         });
 
-        serverIdService.serverId.subscribe(() => {
+        serverIdService.currentServerId.subscribe(() => {
             this._serversHubService.requestServerSettings();
         })
     }

@@ -21,7 +21,7 @@ export class ServerSettingsService {
         serversHubService.whenConnection(() => {
             this._serversHubService.requestServerSettings();
         });
-        serverIdService.serverId.subscribe(() => {
+        serverIdService.currentServerId.subscribe(() => {
             this._serversHubService.requestServerSettings();
         });
     }

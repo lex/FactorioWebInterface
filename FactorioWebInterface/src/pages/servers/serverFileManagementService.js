@@ -54,7 +54,7 @@ export class ServerFileManagementService {
     }
     uploadFiles(files) {
         let formData = this._windowsService.createFormData();
-        formData.append('serverId', this._serverIdService.currentServerId);
+        formData.append('serverId', this._serverIdService.currentServerIdValue);
         for (let file of files) {
             formData.append('files', file);
         }

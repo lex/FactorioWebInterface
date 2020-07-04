@@ -9,30 +9,40 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ObservableProperty } from "../../utils/observableProperty";
 import { Observable } from "../../utils/observable";
+import { ObservableKeyArray } from "../../utils/observableCollection";
 export class ServerIdService {
-    constructor(serversHubService) {
-        this._serverId = new ObservableProperty('1');
+    constructor(serversHubService, hiddenInputService) {
         this._clientData = new Observable();
         this._serversHubService = serversHubService;
+        let selected = hiddenInputService.getValue('serverSelected');
+        let count = Number(hiddenInputService.getValue('serverCount'));
+        this._currentServerId = new ObservableProperty(selected);
+        this._serverIds = new ObservableKeyArray(x => x);
+        for (let i = 1; i <= count; i++) {
+            this._serverIds.add(i + '');
+        }
         serversHubService.whenConnection(() => {
-            this.updateServerId(this.currentServerId);
+            this.updateServerId(this.currentServerIdValue);
         });
     }
-    get serverId() {
-        return this._serverId;
-    }
     get currentServerId() {
-        return this._serverId.value;
+        return this._currentServerId;
+    }
+    get currentServerIdValue() {
+        return this._currentServerId.value;
+    }
+    get serverIds() {
+        return this._serverIds;
     }
     get onClientData() {
         return this._clientData;
     }
     setServerId(value) {
-        if (this.currentServerId === value) {
+        if (this.currentServerIdValue === value) {
             return;
         }
         let promise = this.updateServerId(value);
-        this._serverId.raise(value);
+        this._currentServerId.raise(value);
         return promise;
     }
     updateServerId(value) {

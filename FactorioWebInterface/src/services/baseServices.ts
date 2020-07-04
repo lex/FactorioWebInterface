@@ -8,6 +8,8 @@ import { WindowService } from "./windowService";
 import { ModalService } from "./modalService";
 import { IModalService } from "./iModalService";
 import { ViewLocator } from "./viewLocator";
+import { IHiddenInputService } from "./iHiddenInputService";
+import { HiddenInputService } from "./hiddenInputService";
 
 export class BaseServices {
     static register(serviceLocator: ServiceLocator): ServiceLocator {
@@ -18,7 +20,8 @@ export class BaseServices {
         serviceLocator.register(ErrorService, () => new ErrorService());
         serviceLocator.register(WindowService, () => new WindowService());
         serviceLocator.register(ViewLocator, () => new ViewLocator());
-        serviceLocator.register(IModalService, (services) => new ModalService(services.get(ViewLocator)));        
+        serviceLocator.register(IModalService, (services) => new ModalService(services.get(ViewLocator)));
+        serviceLocator.register(IHiddenInputService, () => new HiddenInputService());
 
         return serviceLocator;
     }

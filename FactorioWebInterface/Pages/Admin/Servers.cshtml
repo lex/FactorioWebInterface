@@ -1,12 +1,13 @@
 ﻿@page "{id:int?}"
 @model FactorioWebInterface.Pages.Admin.ServersModel
-@{
-    ViewData["Title"] = "Servers";
-}
+@{ ViewData["Title"] = "Servers"; }
 
 @Html.AntiForgeryToken()
 
 <div id="app"></div>
+
+<input type="hidden" name="serverCount" value="@Model.ServerCount" />
+<input type="hidden" name="serverSelected" value="@Model.Id" />
 
 @section Scripts{
     <environment include="Development">

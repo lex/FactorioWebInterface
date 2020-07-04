@@ -59,13 +59,13 @@ export class ServerFileService {
         this._serversHubService = serversHubService;
 
         serversHubService.tempSaveFiles.subscribe(event => {
-            if (this._serverIdService.currentServerId === event.serverId) {
+            if (this._serverIdService.currentServerIdValue === event.serverId) {
                 this._tempSaveFiles.update(event);
             }
         });
 
         serversHubService.localSaveFiles.subscribe(event => {
-            if (this._serverIdService.currentServerId === event.serverId) {
+            if (this._serverIdService.currentServerIdValue === event.serverId) {
                 this._localSaveFiles.update(event);
             }
         });
@@ -83,13 +83,13 @@ export class ServerFileService {
         });
 
         serversHubService.logFiles.subscribe(event => {
-            if (this._serverIdService.currentServerId === event.serverId) {
+            if (this._serverIdService.currentServerIdValue === event.serverId) {
                 this._logFiles.update(event);
             }
         });
 
         serversHubService.chatLogsFiles.subscribe(event => {
-            if (this._serverIdService.currentServerId === event.serverId) {
+            if (this._serverIdService.currentServerIdValue === event.serverId) {
                 this._chatLogsFiles.update(event);
             }
         });
@@ -103,7 +103,7 @@ export class ServerFileService {
             this.updateGlobalFiles();
         })
 
-        serverIdService.serverId.subscribe(newServerId => {
+        serverIdService.currentServerId.subscribe(newServerId => {
             this.updateLocalFiles();
         });
     }

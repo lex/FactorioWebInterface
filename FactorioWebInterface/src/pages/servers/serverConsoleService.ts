@@ -36,7 +36,7 @@ export class ServerConsoleService {
         this._messages = new ObservableCircularBuffer(new CircularBuffer(this._bufferSize));
 
         serverHubService.onMessage.subscribe(event => {
-            if (event.ServerId !== this._serverIdService.currentServerId) {
+            if (event.ServerId !== this._serverIdService.currentServerIdValue) {
                 return;
             }
 
@@ -56,7 +56,7 @@ export class ServerConsoleService {
             this._status.raise(data.Status);
         });
 
-        serverIdService.serverId.subscribe(event => {
+        serverIdService.currentServerId.subscribe(event => {
             this.updateVersion();
         });
 

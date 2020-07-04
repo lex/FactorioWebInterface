@@ -1,20 +1,17 @@
 ﻿import { strict } from "assert";
 import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocator";
 import { ServersViewModel } from "./serversViewModel";
-import { ServerFileManagementViewModel } from "./serverFileManagementViewModel";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
 import { ServersHubService } from "./serversHubService";
 import { CollectionChangeType } from "../../ts/utils";
 import { FileMetaData } from "./serversTypes";
 import { FileSelectionServiceMockBase } from "../../testUtils/services/fileSelectionServiceMockBase";
 import { FileSelectionService } from "../../services/fileSelectionservice";
-import { fileURLToPath } from "url";
 import { UploadService } from "../../services/uploadService";
 import { UploadServiceMockBase } from "../../testUtils/services/uploadServiceMockBase";
 import { MethodInvocation } from "../../testUtils/invokeBase";
 import { PromiseHelper } from "../../utils/promiseHelper";
 import { ServerFileManagementService } from "./serverFileManagementService";
-import { WindowServiceMockBase } from "../../testUtils/services/windowServiceMockBase";
 
 const tempFile: FileMetaData = {
     Name: 'file.zip',
