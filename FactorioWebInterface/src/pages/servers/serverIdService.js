@@ -11,9 +11,10 @@ import { ObservableProperty } from "../../utils/observableProperty";
 import { Observable } from "../../utils/observable";
 import { ObservableKeyArray } from "../../utils/observableCollection";
 export class ServerIdService {
-    constructor(serversHubService, hiddenInputService) {
+    constructor(serversHubService, hiddenInputService, navigationHistory) {
         this._clientData = new Observable();
         this._serversHubService = serversHubService;
+        this._navigationHistory = navigationHistory;
         let selected = hiddenInputService.getValue('serverSelected');
         let count = Number(hiddenInputService.getValue('serverCount'));
         this._currentServerId = new ObservableProperty(selected);
@@ -21,6 +22,15 @@ export class ServerIdService {
         for (let i = 1; i <= count; i++) {
             this._serverIds.add(i + '');
         }
+        navigationHistory.replace(`/admin/servers/${selected}`, selected);
+        navigationHistory.onPop.subscribe(event => {
+            let value = event.state;
+            if (typeof value !== 'string' || value === '' || value === this.currentServerIdValue) {
+                return;
+            }
+            this.updateServerId(value);
+            this._currentServerId.raise(value);
+        });
         serversHubService.whenConnection(() => {
             this.updateServerId(this.currentServerIdValue);
         });
@@ -42,6 +52,7 @@ export class ServerIdService {
             return;
         }
         let promise = this.updateServerId(value);
+        this._navigationHistory.push(`/admin/servers/${value}`, value);
         this._currentServerId.raise(value);
         return promise;
     }

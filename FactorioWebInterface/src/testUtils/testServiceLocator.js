@@ -18,6 +18,8 @@ import { IModalService } from "../services/iModalService";
 import { ModalServiceMockBase } from "./services/modalServiceMockBase";
 import { IHiddenInputService } from "../services/iHiddenInputService";
 import { HiddenInputServiceMockBase } from "./services/hiddenInputServiceMockBase";
+import { INavigationHistoryService } from "../services/iNavigationHistoryService";
+import { NavigationHistoryServiceMockBase } from "./services/navigationHistoryServiceMockBase";
 export class TestServiceLocator extends ServiceLocator {
     static registerBaseServices(serviceLocator) {
         serviceLocator.register(CopyToClipboardService, () => new CopyToClipboardServiceMockBase());
@@ -28,6 +30,7 @@ export class TestServiceLocator extends ServiceLocator {
         serviceLocator.register(WindowService, () => new WindowServiceMockBase());
         serviceLocator.register(IModalService, () => new ModalServiceMockBase());
         serviceLocator.register(IHiddenInputService, () => new HiddenInputServiceMockBase());
+        serviceLocator.register(INavigationHistoryService, () => new NavigationHistoryServiceMockBase());
         return serviceLocator;
     }
     constructor() {

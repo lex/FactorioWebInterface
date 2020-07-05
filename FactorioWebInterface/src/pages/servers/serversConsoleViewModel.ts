@@ -229,8 +229,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
             this.setServerId(selectedValue);
         });
 
-        serverIdService.currentServerId.subscribe(selected => this.updatedSelected(selected));
-        this.updatedSelected(serverIdService.currentServerId.value);
+        serverIdService.currentServerId.bind(selected => this.updatedSelected(selected));
 
         this._resumeCommand = new DelegateCommand(async () => {
             let result = await this._serverConsoleService.resume();

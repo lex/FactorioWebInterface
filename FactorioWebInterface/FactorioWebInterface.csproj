@@ -137,7 +137,9 @@
     <None Remove="src\services\fileSelectionservice.ts" />
     <None Remove="src\services\hiddenInputService.ts" />
     <None Remove="src\services\iHiddenInputService.ts" />
+    <None Remove="src\services\iNavigationHistoryService.ts" />
     <None Remove="src\services\modalService.ts" />
+    <None Remove="src\services\navigationHistoryService.ts" />
     <None Remove="src\services\requestVerificationService.ts" />
     <None Remove="src\services\tooltipService.ts" />
     <None Remove="src\services\uploadService.ts" />
@@ -151,6 +153,7 @@
     <None Remove="src\testUtils\services\fileSelectionServiceMockBase.ts" />
     <None Remove="src\testUtils\services\hiddenInputServiceMockBase.ts" />
     <None Remove="src\testUtils\services\modalServiceMockBase.ts" />
+    <None Remove="src\testUtils\services\navigationHistoryServiceMockBase.ts" />
     <None Remove="src\testUtils\services\requestVerificationServiceMockBase.ts" />
     <None Remove="src\testUtils\services\uploadServiceMockBase.ts" />
     <None Remove="src\testUtils\services\windowServiceMockBase.ts" />
@@ -394,7 +397,9 @@
     <TypeScriptCompile Include="src\services\fileSelectionService.ts" />
     <TypeScriptCompile Include="src\services\hiddenInputService.ts" />
     <TypeScriptCompile Include="src\services\iHiddenInputService.ts" />
+    <TypeScriptCompile Include="src\services\iNavigationHistoryService.ts" />
     <TypeScriptCompile Include="src\services\modalService.ts" />
+    <TypeScriptCompile Include="src\services\navigationHistoryService.ts" />
     <TypeScriptCompile Include="src\services\tooltipService.ts" />
     <TypeScriptCompile Include="src\services\uploadService.ts" />
     <TypeScriptCompile Include="src\services\requestVerificationService.ts" />
@@ -408,6 +413,7 @@
     <TypeScriptCompile Include="src\testUtils\services\fileSelectionServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\hiddenInputServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\modalServiceMockBase.ts" />
+    <TypeScriptCompile Include="src\testUtils\services\navigationHistoryServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\requestVerificationServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\uploadServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\windowServiceMockBase.ts" />

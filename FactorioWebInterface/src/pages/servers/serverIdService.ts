@@ -4,13 +4,15 @@ import { Observable, IObservable } from "../../utils/observable";
 import { FactorioControlClientData } from "./serversTypes";
 import { IHiddenInputService } from "../../services/iHiddenInputService";
 import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
+import { INavigationHistoryService } from "../../services/iNavigationHistoryService";
 
 export class ServerIdService {
-    private _serversHubService: ServersHubService;
+    private readonly _serversHubService: ServersHubService;
+    private readonly _navigationHistory: INavigationHistoryService;
 
-    private _currentServerId: ObservableProperty<string>;
-    private _serverIds: ObservableKeyArray<string, string>;
-    private _clientData = new Observable<FactorioControlClientData>();
+    private readonly _currentServerId: ObservableProperty<string>;
+    private readonly _serverIds: ObservableKeyArray<string, string>;
+    private readonly _clientData = new Observable<FactorioControlClientData>();
 
     get currentServerId(): IObservableProperty<string> {
         return this._currentServerId;
@@ -28,8 +30,9 @@ export class ServerIdService {
         return this._clientData;
     }
 
-    constructor(serversHubService: ServersHubService, hiddenInputService: IHiddenInputService) {
+    constructor(serversHubService: ServersHubService, hiddenInputService: IHiddenInputService, navigationHistory: INavigationHistoryService) {
         this._serversHubService = serversHubService;
+        this._navigationHistory = navigationHistory;
 
         let selected = hiddenInputService.getValue('serverSelected');
         let count = Number(hiddenInputService.getValue('serverCount'));
@@ -39,6 +42,19 @@ export class ServerIdService {
         for (let i = 1; i <= count; i++) {
             this._serverIds.add(i + '');
         }
+
+        navigationHistory.replace(`/admin/servers/${selected}`, selected);
+
+        navigationHistory.onPop.subscribe(event => {
+            let value = event.state;
+
+            if (typeof value !== 'string' || value === '' || value === this.currentServerIdValue) {
+                return;
+            }
+
+            this.updateServerId(value);
+            this._currentServerId.raise(value);
+        });
 
         serversHubService.whenConnection(() => {
             this.updateServerId(this.currentServerIdValue);
@@ -52,6 +68,7 @@ export class ServerIdService {
 
         let promise = this.updateServerId(value);
 
+        this._navigationHistory.push(`/admin/servers/${value}`, value);
         this._currentServerId.raise(value);
 
         return promise

@@ -21,7 +21,7 @@ export class InvokeBase<T = any>  {
         this._methodCalled.raise(new MethodInvocation(name, args))
 
         if (this._strict) {
-            throw new Error(`MEthod ${name} not implemented.`);
+            throw new Error(`Method ${name} not implemented.`);
         }
     }
 }

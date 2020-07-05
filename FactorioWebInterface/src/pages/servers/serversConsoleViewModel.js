@@ -45,8 +45,7 @@ export class ServersConsoleViewModel extends ObservableObject {
             let selectedValue = (_a = IterableHelper.firstOrDefault(this._serverIdsCollectionView.selected)) === null || _a === void 0 ? void 0 : _a.value;
             this.setServerId(selectedValue);
         });
-        serverIdService.currentServerId.subscribe(selected => this.updatedSelected(selected));
-        this.updatedSelected(serverIdService.currentServerId.value);
+        serverIdService.currentServerId.bind(selected => this.updatedSelected(selected));
         this._resumeCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             let result = yield this._serverConsoleService.resume();
             this._errorService.reportIfError(result);
