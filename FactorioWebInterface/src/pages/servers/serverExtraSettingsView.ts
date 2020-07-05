@@ -44,7 +44,7 @@ export class ServerExtraSettingsView extends VirtualComponent {
         let header = new FlexPanel(FlexPanel.classes.horizontal);
         header.classList.add('spacing-none');
         header.style.flexGrow = '1';
-        header.append('Server Settings', this._unsavedWarning);
+        header.append('Server Extra Settings', this._unsavedWarning);
 
         this._collapse = new Collapse(header, form.root);
         this._collapse.open = true;
