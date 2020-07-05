@@ -3,7 +3,9 @@ import { HTMLLabelBaseElement } from "./htmlLabelBaseElement";
 export class Label extends HTMLLabelBaseElement {
     constructor(content) {
         super();
-        this.append(content);
+        if (content != null) {
+            this.append(content);
+        }
     }
 }
 Label.classes = {

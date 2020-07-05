@@ -9,7 +9,10 @@ export class Label extends HTMLLabelBaseElement {
 
     constructor(content?: string | Node) {
         super();
-        this.append(content);
+
+        if (content != null) {
+            this.append(content);
+        }
     }
 }
 
