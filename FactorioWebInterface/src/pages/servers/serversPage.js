@@ -7,12 +7,16 @@ import { registerServices } from "./services";
 import { ViewLocator } from "../../services/viewLocator";
 import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { ManageVersionView } from "./manageVersionView";
+import { Nav } from "../../shared/nav";
+import { INavService } from "../../services/iNavService";
 let serviceLocator = new ServiceLocator();
 BaseServices.register(serviceLocator);
 registerServices(serviceLocator);
 let viewLocator = serviceLocator.get(ViewLocator);
 viewLocator.registerViewModel(ManageVersionViewModel, (vm) => new ManageVersionView(vm));
-let app = document.getElementById('app');
+let navService = serviceLocator.get(INavService);
+let app = document.body;
+let nav = navService.buildNav(Nav.pageNames.servers);
 let serversView = new ServersView(serviceLocator.get(ServersViewModel));
-app.append(serversView.root);
+app.append(nav, serversView.root);
 //# sourceMappingURL=serversPage.js.map

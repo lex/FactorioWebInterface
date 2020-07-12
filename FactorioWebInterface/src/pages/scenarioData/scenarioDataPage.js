@@ -1,6 +1,14 @@
 import "../../components/component.less";
 import { MainView } from "./mainView";
-let app = document.getElementById('app');
+import { Nav } from "../../shared/nav";
+import { ServiceLocator } from "../../utils/serviceLocator";
+import { BaseServices } from "../../services/baseServices";
+import { INavService } from "../../services/iNavService";
+let serviceLocator = new ServiceLocator();
+BaseServices.register(serviceLocator);
+let navService = serviceLocator.get(INavService);
+let app = document.body;
+let nav = navService.buildNav(Nav.pageNames.scenarioData);
 let scenarioDataPage = new MainView();
-app.appendChild(scenarioDataPage.root);
+app.append(nav, scenarioDataPage.root);
 //# sourceMappingURL=scenarioDataPage.js.map

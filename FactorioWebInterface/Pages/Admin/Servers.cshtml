@@ -2,21 +2,11 @@
 @model FactorioWebInterface.Pages.Admin.ServersModel
 @{ ViewData["Title"] = "Servers"; }
 
-@Html.AntiForgeryToken()
-
-<div id="app"></div>
-
-<input type="hidden" name="serverCount" value="@Model.ServerCount" />
-<input type="hidden" name="serverSelected" value="@Model.Id" />
-
-@section Scripts{
-    <environment include="Development">
-        <link rel="stylesheet" href="~/css/servers.css" asp-append-version="true" />
-        <script type="text/javascript" src="~/js/servers.js" asp-append-version="true"></script>
-    </environment>
-    <environment exclude="Development">
-        <link rel="stylesheet" href="~/css/servers.css" />
-        <script type="text/javascript" src="~/js/servers.js"></script>
-    </environment>
+@section head{
+    <link rel="stylesheet" href="~/css/servers.css" asp-append-version="true" />
+    <script type="module" src="~/js/servers.js" asp-append-version="true"></script>
 }
 
+@Html.AntiForgeryToken()
+<input type="hidden" name="serverCount" value="@Model.ServerCount" />
+<input type="hidden" name="serverSelected" value="@Model.Id" />

@@ -12,6 +12,8 @@ import { IHiddenInputService } from "./iHiddenInputService";
 import { HiddenInputService } from "./hiddenInputService";
 import { INavigationHistoryService } from "./iNavigationHistoryService";
 import { NavigationHistoryService } from "./navigationHistoryService";
+import { INavService } from "./iNavService";
+import { NavService } from "./navService";
 
 export class BaseServices {
     static register(serviceLocator: ServiceLocator): ServiceLocator {
@@ -25,6 +27,7 @@ export class BaseServices {
         serviceLocator.register(IModalService, (services) => new ModalService(services.get(ViewLocator)));
         serviceLocator.register(IHiddenInputService, () => new HiddenInputService());
         serviceLocator.register(INavigationHistoryService, () => new NavigationHistoryService());
+        serviceLocator.register(INavService, (services) => new NavService(services.get(IHiddenInputService)));
 
         return serviceLocator;
     }

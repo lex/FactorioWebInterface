@@ -11,6 +11,9 @@ import { RenameModPackViewModel } from "./renameModPackViewModel";
 import { RenameModPackView } from "./renameModPackView";
 import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
 import { DeleteModPackView } from "./deleteModPackView";
+import { Nav } from "../../shared/nav";
+import { NavService } from "../../services/navService";
+import { INavService } from "../../services/iNavService";
 
 let serviceLocator = new ServiceLocator();
 BaseServices.register(serviceLocator);
@@ -21,6 +24,9 @@ viewLocator.registerViewModel(NewModPackViewModel, (vm: NewModPackViewModel) => 
 viewLocator.registerViewModel(RenameModPackViewModel, (vm: RenameModPackViewModel) => new RenameModPackView(vm));
 viewLocator.registerViewModel(DeleteModPackViewModel, (vm: DeleteModPackViewModel) => new DeleteModPackView(vm));
 
-let app = document.getElementById('app');
+let navService: NavService = serviceLocator.get(INavService);
+
+let app = document.body;
+let nav = navService.buildNav(Nav.pageNames.mods);
 let modsView = new ModsView(serviceLocator.get(ModsViewModel));
-app.append(modsView.root);
+app.append(nav, modsView.root);

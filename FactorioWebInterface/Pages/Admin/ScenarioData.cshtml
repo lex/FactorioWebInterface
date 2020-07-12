@@ -4,16 +4,9 @@
     ViewData["Title"] = "ScenarioData";
 }
 
-<div id="app"></div>
-
-@section Scripts{
-    <environment include="Development">
-        <link rel="stylesheet" href="~/css/scenarioData.css" asp-append-version="true" />
-        <script type="text/javascript" src="~/js/scenarioData.js" asp-append-version="true"></script>
-    </environment>
-    <environment exclude="Development">
-        <link rel="stylesheet" href="~/css/scenarioData.css" />
-        <script type="text/javascript" src="~/js/scenarioData.js"></script>
-    </environment>
+@section head{
+    <link rel="stylesheet" href="~/css/scenarioData.css" asp-append-version="true" />
+    <script type="module" src="~/js/scenarioData.js" asp-append-version="true"></script>
 }
 
+<div id="app"></div>

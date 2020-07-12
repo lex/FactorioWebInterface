@@ -4,17 +4,9 @@
     ViewData["Title"] = "Bans";
 }
 
-<div id="app"></div>
-<input id="_username" hidden value="@this.Model.Username" />
-
-@section Scripts{
-    <environment include="Development">
-        <link rel="stylesheet" href="~/css/bans.css" asp-append-version="true" />
-        <script type="text/javascript" src="~/js/bans.js" asp-append-version="true"></script>
-    </environment>
-    <environment exclude="Development">
-        <link rel="stylesheet" href="~/css/bans.css" />
-        <script type="text/javascript" src="~/js/bans.js"></script>
-    </environment>
+@section head{
+    <link rel="stylesheet" href="~/css/bans.css" asp-append-version="true" />
+    <script type="module" src="~/js/bans.js" asp-append-version="true"></script>
 }
 
+<input id="_username" hidden value="@this.Model.Username" />

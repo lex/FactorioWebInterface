@@ -4,15 +4,7 @@
     ViewData["Title"] = "Admins";
 }
 
-<div id="app"></div>
-
-@section Scripts{
-    <environment include="Development">
-        <link rel="stylesheet" href="~/css/admins.css" asp-append-version="true" />
-        <script type="text/javascript" src="~/js/admins.js" asp-append-version="true"></script>
-    </environment>
-    <environment exclude="Development">
-        <link rel="stylesheet" href="~/css/admins.css" />
-        <script type="text/javascript" src="~/js/admins.js"></script>
-    </environment>
+@section head{
+    <link rel="stylesheet" href="~/css/admins.css" asp-append-version="true" />
+    <script type="module" src="~/js/admins.js" asp-append-version="true"></script>
 }
