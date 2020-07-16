@@ -5,8 +5,29 @@ export var FileUploadEventType;
     FileUploadEventType["end"] = "end";
 })(FileUploadEventType || (FileUploadEventType = {}));
 export class UploadService {
-    constructor(requestVerificationService) {
+    constructor(requestVerificationService, documentService) {
         this._requestVerificationService = requestVerificationService;
+        this._documentService = documentService;
+    }
+    submitForm(url, formData) {
+        let form = this._documentService.createForm();
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+        for (let data of formData) {
+            let input = this._documentService.createInput();
+            input.name = data[0];
+            input.value = data[1].toString();
+            form.append(input);
+        }
+        let tokenInput = this._documentService.createInput();
+        tokenInput.type = 'hidden';
+        tokenInput.name = '__RequestVerificationToken';
+        tokenInput.value = this._requestVerificationService.token;
+        form.append(tokenInput);
+        document.body.append(form);
+        form.submit();
+        form.remove();
     }
     uploadFormData(url, formData, callback) {
         let xhr = new XMLHttpRequest();

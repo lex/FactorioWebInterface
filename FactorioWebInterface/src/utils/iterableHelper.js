@@ -1,3 +1,4 @@
+import { trueFunction } from "./functions";
 export class IterableHelper {
     static firstOrDefault(iterator, defaultValue) {
         for (let value of iterator) {
@@ -35,6 +36,15 @@ export class IterableHelper {
             }
         }
         return maxItem;
+    }
+    static any(iterator, predicate) {
+        predicate = predicate !== null && predicate !== void 0 ? predicate : trueFunction;
+        for (let item of iterator) {
+            if (predicate(item)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 //# sourceMappingURL=iterableHelper.js.map

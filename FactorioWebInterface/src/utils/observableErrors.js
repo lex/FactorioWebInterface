@@ -1,10 +1,17 @@
 import { ValidationResult } from "./validator";
 import { Observable } from "./observable";
+import { IterableHelper } from "./iterableHelper";
 export class ObservableErrors {
     constructor() {
         this._errorChangedObservable = new Map();
         this._propertyErrors = new Map();
-        this.propertyErrors = this._propertyErrors;
+    }
+    get propertyErrors() {
+        return this._propertyErrors;
+    }
+    ;
+    get hasErrors() {
+        return IterableHelper.any(this._propertyErrors.values(), result => !result.valid);
     }
     errorChanged(propertyName, callback) {
         let observables = this._errorChangedObservable.get(propertyName);

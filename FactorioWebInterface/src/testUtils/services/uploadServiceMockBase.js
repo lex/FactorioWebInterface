@@ -3,6 +3,9 @@ export class UploadServiceMockBase extends InvokeBase {
     constructor(strict = false) {
         super(strict);
     }
+    submitForm(url, formData) {
+        this.invoked('submitForm', url, formData);
+    }
     uploadFormData(url, formData, callback) {
         this.invoked('uploadFormData', url, formData, callback);
     }

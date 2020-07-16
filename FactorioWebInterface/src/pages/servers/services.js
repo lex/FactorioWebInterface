@@ -15,7 +15,7 @@ import { IModalService } from "../../services/iModalService";
 import { ManageVersionService } from "./manageVersionService";
 import { IHiddenInputService } from "../../services/iHiddenInputService";
 import { INavigationHistoryService } from "../../services/iNavigationHistoryService";
-export function registerServices(serviceLocator) {
+export function registerServerPageServices(serviceLocator) {
     serviceLocator.register(ServersHubService, () => new ServersHubService());
     serviceLocator.register(ServerIdService, (services) => new ServerIdService(services.get(ServersHubService), services.get(IHiddenInputService), services.get(INavigationHistoryService)));
     serviceLocator.register(ServerFileService, (services) => new ServerFileService(services.get(ServerIdService), services.get(ServersHubService)));

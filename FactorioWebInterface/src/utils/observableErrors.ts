@@ -1,5 +1,6 @@
 ﻿import { ValidationResult } from "./validator";
 import { Observable } from "./observable";
+import { IterableHelper } from "./iterableHelper";
 
 export interface IObservableErrors {
     errors: ObservableErrors;
@@ -9,7 +10,13 @@ export class ObservableErrors {
     private _errorChangedObservable = new Map<string, Observable<ValidationResult>>();
     private _propertyErrors = new Map<string, ValidationResult>();
 
-    propertyErrors: ReadonlyMap<string, ValidationResult> = this._propertyErrors;
+    get propertyErrors(): ReadonlyMap<string, ValidationResult> {
+        return this._propertyErrors;
+    };
+
+    get hasErrors(): boolean {
+        return IterableHelper.any(this._propertyErrors.values(), result => !result.valid);
+    }
 
     errorChanged(propertyName: string, callback: (event: ValidationResult) => void): () => void {
         let observables = this._errorChangedObservable.get(propertyName);

@@ -25,7 +25,8 @@ module.exports = {
         admins: "./src/pages/admins/adminsPage.ts",
         bans: "./src/pages/bans/bansPage.ts",
         scenarioData: "./src/pages/scenarioData/scenarioDataPage.ts",
-        mods: "./src/pages/mods/modsPage.ts"
+        mods: "./src/pages/mods/modsPage.ts",
+        account: "./src/pages/account/accountPage.ts"
     },
     output: {
         path: path.resolve(__dirname, "wwwroot"),

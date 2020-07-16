@@ -3,7 +3,7 @@ import { ServersViewModel } from "./serversViewModel";
 import { ServersView } from "./serversView";
 import { ServiceLocator } from "../../utils/serviceLocator";
 import { BaseServices } from "../../services/baseServices";
-import { registerServices } from "./services";
+import { registerServerPageServices } from "./services";
 import { ViewLocator } from "../../services/viewLocator";
 import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { ManageVersionView } from "./manageVersionView";
@@ -13,7 +13,7 @@ import { NavService } from "../../services/navService";
 
 let serviceLocator = new ServiceLocator();
 BaseServices.register(serviceLocator);
-registerServices(serviceLocator);
+registerServerPageServices(serviceLocator);
 
 let viewLocator: ViewLocator = serviceLocator.get(ViewLocator);
 viewLocator.registerViewModel(ManageVersionViewModel, (vm: ManageVersionViewModel) => new ManageVersionView(vm));

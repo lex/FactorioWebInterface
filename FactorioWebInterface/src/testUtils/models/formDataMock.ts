@@ -1,7 +1,7 @@
 ﻿type Entry = string | Blob;
 
 export class FormDataMock implements FormData {
-    private _entries = new Map<string, Entry[]>();
+    _entries = new Map<string, Entry[]>();
 
     append(name: string, value: string | Blob, fileName?: string): void {
         let entry = this._entries.get(name);

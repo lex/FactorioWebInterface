@@ -67,6 +67,35 @@ export class MaxStringLength<T> extends ValidationRule<T>{
     }
 }
 
+export class MinMaxStringLength<T> extends ValidationRule<T>{
+    constructor(propertyName: string, min: number, max: number, propertyNameDescription?: string) {
+        super(propertyName, (obj: T): ValidationResult => {
+            let prop = obj[propertyName] as string;
+
+            if (prop?.length < min || prop?.length > max) {
+                return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} must be between ${min} and ${max} characters but is ${prop.length}.`);
+            }
+
+            return ValidationResult.validResult;
+        });
+    }
+}
+
+export class EqualToOtherString<T> extends ValidationRule<T>{
+    constructor(propertyName: string, otherPropertyName: string, propertyNameDescription?: string, otherPropertyNameDescription?: string) {
+        super(propertyName, (obj: T): ValidationResult => {
+            let prop = obj[propertyName] as string;
+            let other = obj[otherPropertyName] as string;
+
+            if (prop !== other) {
+                return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} and ${otherPropertyNameDescription == null ? otherPropertyName : otherPropertyNameDescription} must be the same.`);
+            }
+
+            return ValidationResult.validResult;
+        });
+    }
+}
+
 export class Validator<T> {
     private ruleMap = new Map<string, ValidationRule<T>>();
 

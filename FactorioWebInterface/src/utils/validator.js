@@ -55,6 +55,29 @@ export class MaxStringLength extends ValidationRule {
         });
     }
 }
+export class MinMaxStringLength extends ValidationRule {
+    constructor(propertyName, min, max, propertyNameDescription) {
+        super(propertyName, (obj) => {
+            let prop = obj[propertyName];
+            if ((prop === null || prop === void 0 ? void 0 : prop.length) < min || (prop === null || prop === void 0 ? void 0 : prop.length) > max) {
+                return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} must be between ${min} and ${max} characters but is ${prop.length}.`);
+            }
+            return ValidationResult.validResult;
+        });
+    }
+}
+export class EqualToOtherString extends ValidationRule {
+    constructor(propertyName, otherPropertyName, propertyNameDescription, otherPropertyNameDescription) {
+        super(propertyName, (obj) => {
+            let prop = obj[propertyName];
+            let other = obj[otherPropertyName];
+            if (prop !== other) {
+                return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} and ${otherPropertyNameDescription == null ? otherPropertyName : otherPropertyNameDescription} must be the same.`);
+            }
+            return ValidationResult.validResult;
+        });
+    }
+}
 export class Validator {
     constructor(obj, rules) {
         this.obj = obj;

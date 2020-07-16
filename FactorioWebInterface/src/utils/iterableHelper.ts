@@ -1,4 +1,6 @@
-﻿export class IterableHelper {
+﻿import { trueFunction } from "./functions";
+
+export class IterableHelper {
     static firstOrDefault<T>(iterator: IterableIterator<T>, defaultValue?: T): T {
         for (let value of iterator) {
             return value;
@@ -41,5 +43,17 @@
         }
 
         return maxItem;
+    }
+
+    static any<T>(iterator: IterableIterator<T>, predicate?: (item: T) => boolean) {
+        predicate = predicate ?? trueFunction;
+
+        for (let item of iterator) {
+            if (predicate(item)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

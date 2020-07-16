@@ -17,7 +17,7 @@ import { ManageVersionService } from "./manageVersionService";
 import { IHiddenInputService } from "../../services/iHiddenInputService";
 import { INavigationHistoryService } from "../../services/iNavigationHistoryService";
 
-export function registerServices(serviceLocator: ServiceLocator): ServiceLocator {
+export function registerServerPageServices(serviceLocator: ServiceLocator): ServiceLocator {
     serviceLocator.register(ServersHubService, () => new ServersHubService());
 
     serviceLocator.register(ServerIdService, (services) => new ServerIdService(

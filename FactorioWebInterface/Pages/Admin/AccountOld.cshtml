@@ -1,0 +1,84 @@
+﻿@page
+@model FactorioWebInterface.Pages.Admin.AccountModelOld
+@{
+    ViewData["Title"] = "Account";
+    Layout = "_AdminLayout";
+}
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+
+<div class="container">
+
+    <h2 class="title is-2">Account</h2>
+
+    <div class="columns">
+        <div class="column is-4">
+            <h3>Username: @Model.UserName</h3>
+
+            @if (Model.HasPassword)
+            {
+                <form method="post">
+                    <h4 class="title is-4">Change password</h4>
+                    <hr />
+                    <div asp-validation-summary="All" class="has-text-danger"></div>
+                    <div class="field">
+                        <label asp-for="Input.CurrentPassword" class="label"></label>
+                        <div class="control">
+                            <input asp-for="Input.CurrentPassword" class="input" />
+                        </div>
+                        <span asp-validation-for="Input.CurrentPassword" class="help is-danger"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.Password" class="label"></label>
+                        <div class="control">
+                            <input asp-for="Input.Password" class="input" />
+                        </div>
+                        <span asp-validation-for="Input.Password" class="help is-danger"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.ConfirmPassword" class="label"></label>
+                        <div class="control">
+                            <input asp-for="Input.ConfirmPassword" class="input" />
+                        </div>
+                        <span asp-validation-for="Input.ConfirmPassword" class="help is-danger"></span>
+                    </div>
+                    <button type="submit" asp-page-handler="UpdatePassword" class="button is-link">Update Password</button>
+                </form>
+            }
+            else
+            {
+                <form method="post">
+                    <h4>Create a password for your account.</h4>
+                    <p>This let's you sign in without discord</p>
+                    <hr />
+                    <div asp-validation-summary="All" class="has-text-danger"></div>
+                    <div class="field">
+                        <label asp-for="Input.Password" class="label"></label>
+                        <div class="control">
+                            <input asp-for="Input.Password" class="input" />
+                        </div>
+                        <span asp-validation-for="Input.Password" class="help is-danger"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Input.ConfirmPassword" class="label"></label>
+                        <div class="control">
+                            <input asp-for="Input.ConfirmPassword" class="input" />
+                        </div>
+                        <span asp-validation-for="Input.ConfirmPassword" class="help is-danger"></span>
+                    </div>
+                    <button type="submit" asp-page-handler="CreatePassword" class="button is-link">Create Password</button>
+                </form>
+            }
+
+            @if (Model.PasswordUpdated)
+            {
+                <hr />
+                <p>Password updated</p>
+            }
+        </div>
+    </div>
+</div>
+
+

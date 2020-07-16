@@ -11,7 +11,8 @@ import { RequestVerificationServiceMockBase } from "./services/requestVerificati
 import { CopyToClipboardServiceMockBase } from "./services/copyToClipboardServiceMockBase";
 import { ServersHubService } from "../pages/servers/serversHubService";
 import { ServersHubServiceMockBase } from "./pages/servers/serversHubServiceMockBase";
-import { registerServices } from "../pages/servers/services";
+import { registerServerPageServices } from "../pages/servers/services";
+import { registerAccountPageServices } from "../pages/account/services";
 import { WindowService } from "../services/windowService";
 import { WindowServiceMockBase } from "./services/windowServiceMockBase";
 import { IModalService } from "../services/iModalService";
@@ -47,7 +48,15 @@ export class ServersPageTestServiceLocator extends TestServiceLocator {
     constructor() {
         super();
 
-        registerServices(this);
+        registerServerPageServices(this);
         this.register(ServersHubService, () => new ServersHubServiceMockBase());
+    }
+}
+
+export class AccountPageTestServiceLocator extends TestServiceLocator {
+    constructor() {
+        super();
+
+        registerAccountPageServices(this);
     }
 }
