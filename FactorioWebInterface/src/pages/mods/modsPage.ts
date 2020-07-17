@@ -1,7 +1,7 @@
 ﻿import "../../components/component.less";
 import { ServiceLocator } from "../../utils/serviceLocator";
 import { BaseServices } from "../../services/baseServices";
-import { registerServices } from "./services";
+import { registerModsPageServices } from "./services";
 import { ModsView } from "./ModsView";
 import { ModsViewModel } from "./modsViewModel";
 import { NewModPackViewModel } from "./newModPackViewModel";
@@ -17,7 +17,7 @@ import { INavService } from "../../services/iNavService";
 
 let serviceLocator = new ServiceLocator();
 BaseServices.register(serviceLocator);
-registerServices(serviceLocator);
+registerModsPageServices(serviceLocator);
 
 let viewLocator: ViewLocator = serviceLocator.get(ViewLocator);
 viewLocator.registerViewModel(NewModPackViewModel, (vm: NewModPackViewModel) => new NewModPackView(vm));

@@ -8,7 +8,7 @@ import { IModalService } from "../../services/iModalService";
 import { ErrorService } from "../../services/errorService";
 import { FileSelectionService } from "../../services/fileSelectionservice";
 
-export function registerServices(serviceLocator: ServiceLocator): ServiceLocator {
+export function registerModsPageServices(serviceLocator: ServiceLocator): ServiceLocator {
     serviceLocator.register(ModsHubService, () => new ModsHubService());
     serviceLocator.register(ModsService, (services) => new ModsService(
         services.get(ModsHubService),

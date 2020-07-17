@@ -85,6 +85,7 @@
     <None Remove="src\pages\mods\modPackFilesView.ts" />
     <None Remove="src\pages\mods\modPackFilesViewModel.ts" />
     <None Remove="src\pages\mods\ModPacksView.ts" />
+    <None Remove="src\pages\mods\modPacksViewModel.spec.ts" />
     <None Remove="src\pages\mods\modPacksViewModel.ts" />
     <None Remove="src\pages\mods\modsHubService.ts" />
     <None Remove="src\pages\mods\modsPage.ts" />
@@ -159,6 +160,7 @@
     <None Remove="src\services\windowService.ts" />
     <None Remove="src\testUtils\invokeBase.ts" />
     <None Remove="src\testUtils\models\formDataMock.ts" />
+    <None Remove="src\testUtils\pages\mods\modsHubServiceMockBase.ts" />
     <None Remove="src\testUtils\pages\servers\serversHubServiceMockBase.ts" />
     <None Remove="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <None Remove="src\testUtils\services\errorServiceMockBase.ts" />
@@ -326,6 +328,7 @@
     <TypeScriptCompile Include="src\pages\account\accountViewModel.spec.ts" />
     <TypeScriptCompile Include="src\pages\account\accountViewModel.ts" />
     <TypeScriptCompile Include="src\pages\account\services.ts" />
+    <TypeScriptCompile Include="src\pages\mods\modPacksViewModel.spec.ts" />
     <TypeScriptCompile Include="src\services\documentService.ts" />
     <TypeScriptCompile Include="src\services\iDocumentService.ts" />
     <TypeScriptCompile Include="src\services\iNavService.ts" />
@@ -430,6 +433,7 @@
     <TypeScriptCompile Include="src\services\windowService.ts" />
     <TypeScriptCompile Include="src\testUtils\invokeBase.ts" />
     <TypeScriptCompile Include="src\testUtils\models\formDataMock.ts" />
+    <TypeScriptCompile Include="src\testUtils\pages\mods\modsHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\pages\servers\serversHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\errorServiceMockBase.ts" />
