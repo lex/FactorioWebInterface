@@ -6,7 +6,7 @@ import { ModsViewModel } from "./modsViewModel";
 import { IModalService } from "../../services/iModalService";
 import { ErrorService } from "../../services/errorService";
 import { FileSelectionService } from "../../services/fileSelectionservice";
-export function registerServices(serviceLocator) {
+export function registerModsPageServices(serviceLocator) {
     serviceLocator.register(ModsHubService, () => new ModsHubService());
     serviceLocator.register(ModsService, (services) => new ModsService(services.get(ModsHubService), services.get(UploadService), services.get(WindowService)));
     serviceLocator.register(ModsViewModel, (services) => new ModsViewModel(services.get(ModsService), services.get(IModalService), services.get(ErrorService), services.get(FileSelectionService)));

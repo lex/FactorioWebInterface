@@ -12,6 +12,7 @@ import { CopyToClipboardServiceMockBase } from "./services/copyToClipboardServic
 import { ServersHubService } from "../pages/servers/serversHubService";
 import { ServersHubServiceMockBase } from "./pages/servers/serversHubServiceMockBase";
 import { registerServerPageServices } from "../pages/servers/services";
+import { registerModsPageServices } from "../pages/mods/services";
 import { registerAccountPageServices } from "../pages/account/services";
 import { WindowService } from "../services/windowService";
 import { WindowServiceMockBase } from "./services/windowServiceMockBase";
@@ -21,6 +22,8 @@ import { IHiddenInputService } from "../services/iHiddenInputService";
 import { HiddenInputServiceMockBase } from "./services/hiddenInputServiceMockBase";
 import { INavigationHistoryService } from "../services/iNavigationHistoryService";
 import { NavigationHistoryServiceMockBase } from "./services/navigationHistoryServiceMockBase";
+import { ModsHubServiceMockBase } from "./pages/mods/modsHubServiceMockBase";
+import { ModsHubService } from "../pages/mods/modsHubService";
 export class TestServiceLocator extends ServiceLocator {
     static registerBaseServices(serviceLocator) {
         serviceLocator.register(CopyToClipboardService, () => new CopyToClipboardServiceMockBase());
@@ -44,6 +47,13 @@ export class ServersPageTestServiceLocator extends TestServiceLocator {
         super();
         registerServerPageServices(this);
         this.register(ServersHubService, () => new ServersHubServiceMockBase());
+    }
+}
+export class ModsPageTestServiceLocator extends TestServiceLocator {
+    constructor() {
+        super();
+        registerModsPageServices(this);
+        this.register(ModsHubService, () => new ModsHubServiceMockBase());
     }
 }
 export class AccountPageTestServiceLocator extends TestServiceLocator {

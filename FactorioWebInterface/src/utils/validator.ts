@@ -25,6 +25,27 @@ export class ValidationRule<T> {
     }
 }
 
+export class AllValidationRule<T> extends ValidationRule<T> {
+    constructor(public propertyName: string, ...validators: ValidationRule<T>[]) {
+        super(propertyName, (obj: T): ValidationResult => {
+            let errors = [];
+
+            for (const validator of validators) {
+                const result = validator.rule(obj);
+                if (!result.valid) {
+                    errors.push(result.error);
+                }
+            }
+
+            if (errors.length === 0) {
+                return ValidationResult.validResult;
+            }
+
+            return ValidationResult.error(errors.join('\n'));
+        });
+    }
+}
+
 export class NotEmptyString<T> extends ValidationRule<T>{
     constructor(propertyName: string, propertyNameDescription?: string) {
         super(propertyName, (obj: T): ValidationResult => {
@@ -32,6 +53,20 @@ export class NotEmptyString<T> extends ValidationRule<T>{
 
             if (prop == null || prop === '') {
                 return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} must not be empty.`);
+            }
+
+            return ValidationResult.validResult;
+        });
+    }
+}
+
+export class NoWhitespaceString<T> extends ValidationRule<T>{
+    constructor(propertyName: string, propertyNameDescription?: string) {
+        super(propertyName, (obj: T): ValidationResult => {
+            let prop = obj[propertyName] as string;
+
+            if (/\s/.test(prop)) {
+                return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} must not contain whitespace characters.`);
             }
 
             return ValidationResult.validResult;

@@ -10,16 +10,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
 import { DelegateCommand } from "../../utils/command";
 import { ObservableErrors } from "../../utils/observableErrors";
-import { Validator, NotEmptyString } from "../../utils/validator";
+import { Validator, NotEmptyString, AllValidationRule, NoWhitespaceString } from "../../utils/validator";
+import { ModPackNameNotTakenValidator } from "./modPackNameNotTakenValidator";
+import { Observable } from "../../utils/observable";
 export class NewModPackViewModel extends ObservableObjectCloseBaseViewModel {
     constructor(modsService, errorService) {
         super();
+        this._subscriptions = [];
         this._errors = new ObservableErrors();
         this._name = '';
         this._modsService = modsService;
         this._errorService = errorService;
         this._validator = new Validator(this, [
-            new NotEmptyString('name', 'Name')
+            new AllValidationRule('name', new NotEmptyString('name', 'Name'), new NoWhitespaceString('name', 'Name'), new ModPackNameNotTakenValidator('name', modsService.modPacks))
         ]);
         this._createCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             if (!this.validateAll()) {
@@ -33,6 +36,7 @@ export class NewModPackViewModel extends ObservableObjectCloseBaseViewModel {
             this.close();
         }));
         this._cancelCommand = new DelegateCommand(() => this.close());
+        modsService.modPacks.subscribe(() => this.validateAll(), this._subscriptions);
     }
     get errors() {
         return this._errors;
@@ -41,7 +45,9 @@ export class NewModPackViewModel extends ObservableObjectCloseBaseViewModel {
         return this._name;
     }
     set name(value) {
+        value = value.trim();
         if (this._name === value) {
+            this.raise('name', value);
             return;
         }
         this._name = value;
@@ -53,6 +59,9 @@ export class NewModPackViewModel extends ObservableObjectCloseBaseViewModel {
     }
     get cancelCommand() {
         return this._cancelCommand;
+    }
+    disconnect() {
+        Observable.unSubscribeAll(this._subscriptions);
     }
     validateAll() {
         let validationResult = this._validator.validate('name');

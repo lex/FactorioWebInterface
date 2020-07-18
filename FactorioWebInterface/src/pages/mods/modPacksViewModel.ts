@@ -43,14 +43,16 @@ export class ModPacksViewModel {
         this._modPacks = new CollectionView(modsService.modPacks);
         this._modPacks.sortBy({ property: 'LastModifiedTime', ascending: false });
 
-        this._newCommand = new DelegateCommand(() => {
+        this._newCommand = new DelegateCommand(async () => {
             let vm = new NewModPackViewModel(this._modsService, this._errorService);
-            this._modalService.showViewModel(vm);
+            await this._modalService.showViewModel(vm);
+            vm.disconnect();
         });
 
-        this._renameCommand = new DelegateCommand(modPack => {
+        this._renameCommand = new DelegateCommand(async modPack => {
             let vm = new RenameModPackViewModel(modPack, this._modsService, this._errorService);
-            this._modalService.showViewModel(vm);
+            await this._modalService.showViewModel(vm);
+            vm.disconnect();
         });
 
         this._deleteCommand = new DelegateCommand(modPack => {

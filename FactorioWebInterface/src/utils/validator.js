@@ -22,12 +22,41 @@ export class ValidationRule {
         this.rule = rule;
     }
 }
+export class AllValidationRule extends ValidationRule {
+    constructor(propertyName, ...validators) {
+        super(propertyName, (obj) => {
+            let errors = [];
+            for (const validator of validators) {
+                const result = validator.rule(obj);
+                if (!result.valid) {
+                    errors.push(result.error);
+                }
+            }
+            if (errors.length === 0) {
+                return ValidationResult.validResult;
+            }
+            return ValidationResult.error(errors.join('\n'));
+        });
+        this.propertyName = propertyName;
+    }
+}
 export class NotEmptyString extends ValidationRule {
     constructor(propertyName, propertyNameDescription) {
         super(propertyName, (obj) => {
             let prop = obj[propertyName];
             if (prop == null || prop === '') {
                 return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} must not be empty.`);
+            }
+            return ValidationResult.validResult;
+        });
+    }
+}
+export class NoWhitespaceString extends ValidationRule {
+    constructor(propertyName, propertyNameDescription) {
+        super(propertyName, (obj) => {
+            let prop = obj[propertyName];
+            if (/\s/.test(prop)) {
+                return ValidationResult.error(`${propertyNameDescription == null ? propertyName : propertyNameDescription} must not contain whitespace characters.`);
             }
             return ValidationResult.validResult;
         });

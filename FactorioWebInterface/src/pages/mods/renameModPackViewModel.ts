@@ -2,11 +2,15 @@
 import { ErrorService } from "../../services/errorService";
 import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
-import { Validator, NotEmptyString } from "../../utils/validator";
+import { Validator, NotEmptyString, AllValidationRule, NoWhitespaceString } from "../../utils/validator";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ModPackMetaData } from "../servers/serversTypes";
+import { ModPackNameNotTakenValidator } from "./modPackNameNotTakenValidator";
+import { Observable } from "../../utils/observable";
 
 export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel implements IObservableErrors {
+    private _subscriptions: (() => void)[] = [];
+
     private _modsService: ModsService;
     private _errorService: ErrorService;
 
@@ -28,7 +32,10 @@ export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel i
         return this._name;
     }
     set name(value: string) {
+        value = value.trim();
+
         if (this._name === value) {
+            this.raise('name', value);
             return;
         }
 
@@ -56,7 +63,11 @@ export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel i
         this._name = modPack.Name;
 
         this._validator = new Validator(this, [
-            new NotEmptyString('name', 'Name')
+            new AllValidationRule('name',
+                new NotEmptyString('name', 'Name'),
+                new NoWhitespaceString('name', 'Name'),
+                new ModPackNameNotTakenValidator('name', modsService.modPacks)
+            )
         ]);
 
         this._renameCommand = new DelegateCommand(async () => {
@@ -71,9 +82,15 @@ export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel i
             }
 
             this.close();
-        })
+        });
 
         this._cancelCommand = new DelegateCommand(() => this.close());
+
+        modsService.modPacks.subscribe(() => this.validateAll(), this._subscriptions);
+    }
+
+    disconnect(): void {
+        Observable.unSubscribeAll(this._subscriptions);
     }
 
     private validateAll(): boolean {
