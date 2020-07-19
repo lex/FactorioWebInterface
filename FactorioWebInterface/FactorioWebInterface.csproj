@@ -61,6 +61,7 @@
     <None Remove="src\components\timeField.ts" />
     <None Remove="src\components\tooltip.ts" />
     <None Remove="src\components\tooltipBackground.ts" />
+    <None Remove="src\components\validationLabel.ts" />
     <None Remove="src\pages\account\accountPage.ts" />
     <None Remove="src\pages\account\accountService.ts" />
     <None Remove="src\pages\account\accountView.ts" />
@@ -328,6 +329,7 @@
     <TypeScriptCompile Include="src\components\modalBackground.ts" />
     <TypeScriptCompile Include="src\components\modal.ts" />
     <TypeScriptCompile Include="src\components\passwordField.ts" />
+    <TypeScriptCompile Include="src\components\validationLabel.ts" />
     <TypeScriptCompile Include="src\pages\account\accountPage.ts" />
     <TypeScriptCompile Include="src\pages\account\accountService.ts" />
     <TypeScriptCompile Include="src\pages\account\accountView.ts" />

@@ -1224,11 +1224,11 @@ a-placeholder {
   pointer-events: none;
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
   display: none;
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
   display: none;
 }
 a-text-field {
@@ -1307,8 +1307,8 @@ a-text-field[invalid] > div > input {
 a-text-field[invalid] > div > input:hover {
   border-color: #ff8080;
 }
-a-text-field[invalid] > div > div {
-  visibility: visible;
+a-text-field:not([invalid]) a-validation-label {
+  visibility: hidden;
 }
 @media screen and (min-width: 769px) {
   a-text-field.is-horizontal {
@@ -1326,7 +1326,17 @@ a-text-field[invalid] > div > div {
   }
 }
 
-.hide-error > div > div {
+a-validation-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: normal;
+  margin: 0.25em 0em;
+  height: 1rem;
+  color: red;
+  visibility: visible;
+}
+
+.hide-error a-validation-label {
   display: none;
 }
 a-field {
@@ -1405,8 +1415,8 @@ a-field[invalid] > div > input {
 a-field[invalid] > div > input:hover {
   border-color: #ff8080;
 }
-a-field[invalid] > div > div {
-  visibility: visible;
+a-field:not([invalid]) a-validation-label {
+  visibility: hidden;
 }
 @media screen and (min-width: 769px) {
   a-field.is-horizontal {

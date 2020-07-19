@@ -606,11 +606,11 @@ a-icon.is-left-absolute {
   top: 0.625em;
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
   display: none;
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
   display: none;
 }
 a-text-field {
@@ -689,8 +689,8 @@ a-text-field[invalid] > div > input {
 a-text-field[invalid] > div > input:hover {
   border-color: #ff8080;
 }
-a-text-field[invalid] > div > div {
-  visibility: visible;
+a-text-field:not([invalid]) a-validation-label {
+  visibility: hidden;
 }
 @media screen and (min-width: 769px) {
   a-text-field.is-horizontal {
@@ -957,7 +957,17 @@ h6 {
   display: inline;
 }
 
-.hide-error > div > div {
+a-validation-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: normal;
+  margin: 0.25em 0em;
+  height: 1rem;
+  color: red;
+  visibility: visible;
+}
+
+.hide-error a-validation-label {
   display: none;
 }
 a-date-field {
@@ -1036,8 +1046,8 @@ a-date-field[invalid] > div > input {
 a-date-field[invalid] > div > input:hover {
   border-color: #ff8080;
 }
-a-date-field[invalid] > div > div {
-  visibility: visible;
+a-date-field:not([invalid]) a-validation-label {
+  visibility: hidden;
 }
 @media screen and (min-width: 769px) {
   a-date-field.is-horizontal {
@@ -1102,7 +1112,7 @@ a-checkbox-field[disabled] > div > label {
   }
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
   display: none;
 }
 a-field {
@@ -1181,8 +1191,8 @@ a-field[invalid] > div > input {
 a-field[invalid] > div > input:hover {
   border-color: #ff8080;
 }
-a-field[invalid] > div > div {
-  visibility: visible;
+a-field:not([invalid]) a-validation-label {
+  visibility: hidden;
 }
 @media screen and (min-width: 769px) {
   a-field.is-horizontal {
@@ -1200,7 +1210,7 @@ a-field[invalid] > div > div {
   }
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
   display: none;
 }
 a-time-field {
@@ -1279,8 +1289,8 @@ a-time-field[invalid] > div > input {
 a-time-field[invalid] > div > input:hover {
   border-color: #ff8080;
 }
-a-time-field[invalid] > div > div {
-  visibility: visible;
+a-time-field:not([invalid]) a-validation-label {
+  visibility: hidden;
 }
 @media screen and (min-width: 769px) {
   a-time-field.is-horizontal {
@@ -1298,7 +1308,7 @@ a-time-field[invalid] > div > div {
   }
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
   display: none;
 }
 a-textarea-field {
@@ -1377,8 +1387,8 @@ a-textarea-field[invalid] > div > input {
 a-textarea-field[invalid] > div > input:hover {
   border-color: #ff8080;
 }
-a-textarea-field[invalid] > div > div {
-  visibility: visible;
+a-textarea-field:not([invalid]) a-validation-label {
+  visibility: hidden;
 }
 @media screen and (min-width: 769px) {
   a-textarea-field.is-horizontal {

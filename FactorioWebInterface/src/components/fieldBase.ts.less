@@ -131,10 +131,10 @@
                 .field-input-error-hover();
             }
         }
+    }
 
-        & > div {
-            visibility: visible;
-        }
+    &:not([invalid]) a-validation-label {
+        visibility: hidden;
     }
 
     @media screen and (min-width: 769px) {
@@ -144,6 +144,6 @@
     }
 }
 
-.hide-error > div > div {
+.hide-error a-validation-label {
     display: none;
 }

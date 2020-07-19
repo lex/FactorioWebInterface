@@ -1,6 +1,7 @@
 import { FieldBase } from "./fieldBase";
 import { FieldId } from "../utils/fieldId";
 import { Label } from "./label";
+import { ValidationLabel } from "./validationLabel";
 export class InputFieldBase extends FieldBase {
     constructor(property, header) {
         super();
@@ -16,7 +17,7 @@ export class InputFieldBase extends FieldBase {
         this.appendChild(this._label);
         this._fieldBody = document.createElement('div');
         this.appendChild(this._fieldBody);
-        this._error = document.createElement('div');
+        this._error = new ValidationLabel();
         this._fieldBody.appendChild(this._error);
         this._property = property;
     }

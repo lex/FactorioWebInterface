@@ -2,11 +2,12 @@
 import { FieldId } from "../utils/fieldId";
 import { Tooltip } from "./tooltip";
 import { Label } from "./label";
+import { ValidationLabel } from "./validationLabel";
 
 export abstract class InputFieldBase extends FieldBase {
     protected _label: Label;
     protected _fieldBody: HTMLDivElement;
-    protected _error: HTMLDivElement;
+    protected _error: ValidationLabel;
 
     constructor(property?: string, header?: string | Label) {
         super();
@@ -26,7 +27,7 @@ export abstract class InputFieldBase extends FieldBase {
         this._fieldBody = document.createElement('div');
         this.appendChild(this._fieldBody);
 
-        this._error = document.createElement('div');
+        this._error = new ValidationLabel();
         this._fieldBody.appendChild(this._error);
 
         this._property = property;
