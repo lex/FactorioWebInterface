@@ -25,7 +25,7 @@ export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel {
         this._name = modPack.Name;
         this._validator = new Validator(this, [
             new PropertyValidation('name')
-                .displayName('Name')
+                .displayName('New Name')
                 .notEmptyString()
                 .noWhitespaceString()
                 .rules(new ModPackNameNotTakenValidator(modsService.modPacks))

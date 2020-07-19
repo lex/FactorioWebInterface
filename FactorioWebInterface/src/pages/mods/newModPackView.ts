@@ -14,8 +14,7 @@ export class NewModPackView extends VirtualComponent {
         let title = document.createElement('h4');
         title.textContent = 'New Mod Pack';
 
-        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal);
-        buttonsPanel.classList.add('no-spacing');
+        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
         let createButton = new Button('Create', Button.classes.success).setCommand(newModPackViewModel.createCommand);
         let cancelButton = new Button('Cancel', Button.classes.primary).setCommand(newModPackViewModel.cancelCommand);
         buttonsPanel.append(createButton, cancelButton);

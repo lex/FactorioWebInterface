@@ -4,6 +4,7 @@ import { ToggleButton } from "../../components/toggleButton";
 import { Table, TextColumn, DateTimeColumn, ColumnTemplate } from "../../components/table";
 import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
+import { FlexPanel } from "../../components/flexPanel";
 export class ModPacksView extends VirtualComponent {
     constructor(modPacksViewModel) {
         super();
@@ -14,6 +15,8 @@ export class ModPacksView extends VirtualComponent {
         toggleButton.setTooltip('Pin the mod packs to keep them in view.');
         toggleButton.style.marginRight = '0.5em';
         header.append(toggleButton, 'Mod Packs');
+        let mainPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
+        mainPanel.style.margin = '0 1.5rem 0 1.5rem';
         let table = new Table(modPacksViewModel.modPacks, [
             new TextColumn('Name'),
             new DateTimeColumn('LastModifiedTime')
@@ -46,12 +49,14 @@ export class ModPacksView extends VirtualComponent {
         table.style.width = '100%';
         let newButton = iconButton(Icon.classes.folderPlus, 'New', Button.classes.success)
             .setCommand(modPacksViewModel.newCommand);
+        newButton.style.alignSelf = 'flex-start';
         let tableContainer = document.createElement('div');
         tableContainer.style.overflowX = 'auto';
-        tableContainer.style.margin = '0 1.5rem 1rem 1.5rem';
+        tableContainer.style.margin = '0 0 1rem 0';
         tableContainer.style.lineHeight = '1.5';
-        tableContainer.append(newButton, table);
-        let collapse = new Collapse(header, tableContainer);
+        tableContainer.append(table);
+        mainPanel.append(newButton, tableContainer);
+        let collapse = new Collapse(header, mainPanel);
         collapse.open = true;
         collapse.classList.add('is-4', 'border', 'header');
         collapse.style.marginTop = '2rem';

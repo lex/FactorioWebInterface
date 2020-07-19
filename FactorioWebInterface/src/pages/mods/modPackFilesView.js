@@ -28,8 +28,9 @@ export class ModPackFilesView extends VirtualComponent {
         super();
         let header = document.createElement('h4');
         modPackFilesViewModel.bind('title', text => header.textContent = text);
-        let mainPanel = new FlexPanel(FlexPanel.classes.vertical);
-        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal);
+        let mainPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
+        mainPanel.style.margin = '0 1.5rem 0 1.5rem';
+        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
         buttonsPanel.style.fontSize = '1rem';
         let uploadProgress = new Progress(p => `Uploading (${p.percentText})`);
         uploadProgress.classList.add('overlay');
@@ -77,7 +78,7 @@ export class ModPackFilesView extends VirtualComponent {
         table.style.width = '100%';
         let tableContainer = document.createElement('div');
         tableContainer.style.overflowX = 'auto';
-        tableContainer.style.margin = '0 1.5rem 1rem 1.5rem';
+        tableContainer.style.margin = '0 0 1rem 0';
         tableContainer.style.lineHeight = '1.5';
         tableContainer.append(table);
         mainPanel.append(buttonsPanel, tableContainer);
