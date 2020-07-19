@@ -1,7 +1,7 @@
 import { ObservableObject } from "../../utils/observableObject";
 import { ObservableErrors } from "../../utils/observableErrors";
-import { Validator, MinMaxStringLength, EqualToOtherString } from "../../utils/validator";
 import { DelegateCommand } from "../../utils/command";
+import { Validator, PropertyValidation } from "../../utils/validation/module";
 export class AccountViewModel extends ObservableObject {
     constructor(accountService) {
         super();
@@ -13,8 +13,10 @@ export class AccountViewModel extends ObservableObject {
         this._formFieldsTouched = new Set();
         this._accountService = accountService;
         this._validator = new Validator(this, [
-            new MinMaxStringLength('newPassword', 6, 100, 'New Password'),
-            new EqualToOtherString('confirmNewPassword', 'newPassword', 'New Password', 'Confirm New Password')
+            new PropertyValidation('newPassword').displayName('New Password')
+                .minMaxStringLength(6, 100),
+            new PropertyValidation('confirmNewPassword').displayName('Confirm New Password')
+                .equalToOtherString('newPassword', 'New Password')
         ]);
         this._submitCommand = new DelegateCommand(() => {
             if (!this.validateAll(true)) {

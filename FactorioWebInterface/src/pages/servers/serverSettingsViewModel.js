@@ -9,10 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ObservableObject } from "../../utils/observableObject";
 import { ObservableErrors } from "../../utils/observableErrors";
-import { Validator, MaxStringLength } from "../../utils/validator";
 import { DelegateCommand } from "../../utils/command";
 import { CollectionChangeType, Utils } from "../../ts/utils";
 import { MathHelper } from "../../utils/mathHelper";
+import { PropertyValidation, Validator } from "../../utils/validation/module";
 export class ServerSettingsViewModel extends ObservableObject {
     constructor(serverSettingsService, copyToClipoardService, errorService) {
         super();
@@ -24,7 +24,7 @@ export class ServerSettingsViewModel extends ObservableObject {
         this._copyToClipoardService = copyToClipoardService;
         this._errorService = errorService;
         this._validator = new Validator(this, [
-            new MaxStringLength('Name', 49)
+            new PropertyValidation('Name').maxStringLength(49)
         ]);
         this._saveCommand = new DelegateCommand(() => this.saveSettings(), () => !this.saved);
         this._undoCommand = new DelegateCommand(() => this._serverSettingsService.undoSettings(), () => !this.saved);

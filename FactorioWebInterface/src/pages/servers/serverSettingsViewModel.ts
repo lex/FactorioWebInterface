@@ -2,13 +2,13 @@
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { ServerSettingsService } from "./serverSettingsService";
 import { FactorioServerSettings, FactorioServerSettingsType } from "./serversTypes";
-import { Validator, MaxStringLength } from "../../utils/validator";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { CollectionChangeType, Utils } from "../../ts/utils";
 import { CopyToClipboardService } from "../../services/copyToClipboardService";
 import { MathHelper } from "../../utils/mathHelper";
 import { ErrorService } from "../../services/errorService";
 import { propertyOf } from "../../utils/types";
+import { PropertyValidation, Validator } from "../../utils/validation/module";
 
 interface FormFields {
     Name: string;
@@ -236,8 +236,8 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
         this._copyToClipoardService = copyToClipoardService;
         this._errorService = errorService;
 
-        this._validator = new Validator(this, [
-            new MaxStringLength<this>('Name', 49)
+        this._validator = new Validator<this>(this, [
+            new PropertyValidation('Name').maxStringLength(49)
         ]);
 
         this._saveCommand = new DelegateCommand(() => this.saveSettings(), () => !this.saved);

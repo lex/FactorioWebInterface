@@ -51,7 +51,7 @@ describe('AccountViewModel', function () {
             // Assert.
             let validationResult = viewModel.errors.getError('confirmNewPassword');
             strict.equal(validationResult.valid, false);
-            strict.equal(validationResult.error, 'New Password and Confirm New Password must be the same.');
+            strict.equal(validationResult.error, 'Confirm New Password must be equal to New Password.');
         });
 
         it('when new password and confirm password are valid there is not validation errors', function () {

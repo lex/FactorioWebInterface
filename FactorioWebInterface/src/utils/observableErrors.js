@@ -1,6 +1,6 @@
-import { ValidationResult } from "./validator";
 import { Observable } from "./observable";
 import { IterableHelper } from "./iterableHelper";
+import { ValidationResult } from "./validation/module";
 export class ObservableErrors {
     constructor() {
         this._errorChangedObservable = new Map();

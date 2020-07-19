@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { ObservableObject } from "../../utils/observableObject";
 import { Observable } from "../../utils/observable";
 import { ObservableErrors } from "../../utils/observableErrors";
-import { Validator, ValidationRule, ValidationResult } from "../../utils/validator";
+import { Validator, PropertyValidation, ValidationResult } from "../../utils/validation/module";
 export class AdminsViewModel extends ObservableObject {
     constructor(adminsService) {
         super();
@@ -20,13 +20,14 @@ export class AdminsViewModel extends ObservableObject {
         this._errorObservable = new Observable();
         this._adminsService = adminsService;
         this._validator = new Validator(this, [
-            new ValidationRule('addAdminsText', (obj) => {
-                let prop = obj.addAdminsText;
-                if (!prop || prop.search(/[^,\s]/) === -1) {
-                    return ValidationResult.error('Text must contain at least one non \',\' (comma) or \' \' (whitespace) character.');
-                }
-                else {
-                    return ValidationResult.validResult;
+            new PropertyValidation('addAdminsText').displayName('Text').rules({
+                validate: (value) => {
+                    if (!value || value.search(/[^,\s]/) === -1) {
+                        return ValidationResult.error('contain at least one non \',\' (comma) or \' \' (whitespace) character');
+                    }
+                    else {
+                        return ValidationResult.validResult;
+                    }
                 }
             })
         ]);

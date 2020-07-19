@@ -3,7 +3,7 @@ import { Observable } from "../../utils/observable";
 import { ObservableCollection } from "../../utils/observableCollection";
 import { BansService, Ban } from "./bansService";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
-import { Validator, ValidationRule, NotEmptyString, NotNull } from "../../utils/validator";
+import { Validator, PropertyValidation } from "../../utils/validation/module";
 
 export class BansViewModel extends ObservableObject implements IObservableErrors {
     private _bansService: BansService
@@ -101,12 +101,12 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
 
         this._bansService = bansService;
 
-        this._validator = new Validator(this, [
-            new NotEmptyString('username', 'Username'),
-            new NotEmptyString('reason', 'Reason'),
-            new NotEmptyString('admin', 'Admin'),
-            new NotNull('date', 'Date'),
-            new NotNull('time', 'Time')
+        this._validator = new Validator<this>(this, [
+            new PropertyValidation('username').displayName('Username').notEmptyString(),
+            new PropertyValidation('reason').displayName('Reason').notEmptyString(),
+            new PropertyValidation('admin').displayName('Admin').notEmptyString(),
+            new PropertyValidation('date').displayName('Date').notNull(),
+            new PropertyValidation('time').displayName('Time').notNull()
         ]);
 
         this.bans.subscribe((event) => {

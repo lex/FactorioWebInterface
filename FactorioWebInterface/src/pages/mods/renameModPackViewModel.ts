@@ -2,11 +2,11 @@
 import { ErrorService } from "../../services/errorService";
 import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
-import { Validator, NotEmptyString, AllValidationRule, NoWhitespaceString } from "../../utils/validator";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ModPackMetaData } from "../servers/serversTypes";
 import { ModPackNameNotTakenValidator } from "./modPackNameNotTakenValidator";
 import { Observable } from "../../utils/observable";
+import { Validator, PropertyValidation } from "../../utils/validation/module";
 
 export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel implements IObservableErrors {
     private _subscriptions: (() => void)[] = [];
@@ -62,12 +62,12 @@ export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel i
         this._modPack = modPack;
         this._name = modPack.Name;
 
-        this._validator = new Validator(this, [
-            new AllValidationRule('name',
-                new NotEmptyString('name', 'Name'),
-                new NoWhitespaceString('name', 'Name'),
-                new ModPackNameNotTakenValidator('name', modsService.modPacks)
-            )
+        this._validator = new Validator<this>(this, [
+            new PropertyValidation('name')
+                .displayName('Name')
+                .notEmptyString()
+                .noWhitespaceString()
+                .rules(new ModPackNameNotTakenValidator(modsService.modPacks))
         ]);
 
         this._renameCommand = new DelegateCommand(async () => {

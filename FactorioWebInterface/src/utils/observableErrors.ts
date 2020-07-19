@@ -1,6 +1,6 @@
-﻿import { ValidationResult } from "./validator";
-import { Observable } from "./observable";
+﻿import { Observable } from "./observable";
 import { IterableHelper } from "./iterableHelper";
+import { ValidationResult } from "./validation/module";
 
 export interface IObservableErrors {
     errors: ObservableErrors;

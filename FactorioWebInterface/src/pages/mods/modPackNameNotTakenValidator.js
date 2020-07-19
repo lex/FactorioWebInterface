@@ -1,15 +1,15 @@
-import { ValidationRule, ValidationResult } from "../../utils/validator";
 import { IterableHelper } from "../../utils/iterableHelper";
-export class ModPackNameNotTakenValidator extends ValidationRule {
-    constructor(propertyName, modPacks) {
-        super(propertyName, (obj) => {
-            let name = obj[propertyName];
-            let nameLowerCase = name.toLowerCase();
-            if (IterableHelper.any(modPacks.values(), modPack => modPack.Name.toLowerCase() === name)) {
-                return ValidationResult.error(`Mod Pack with name '${name}' already exists.`);
-            }
-            return ValidationResult.validResult;
-        });
+import { ValidationResult } from "../../utils/validation/module";
+export class ModPackNameNotTakenValidator {
+    constructor(modPacks) {
+        this.modPacks = modPacks;
+    }
+    validate(value, obj) {
+        const nameLowerCase = value.toLowerCase();
+        if (IterableHelper.any(this.modPacks.values(), modPack => modPack.Name.toLowerCase() === nameLowerCase)) {
+            return ValidationResult.error(`be unique, mod pack '${value}' already exists`);
+        }
+        return ValidationResult.validResult;
     }
 }
 //# sourceMappingURL=modPackNameNotTakenValidator.js.map

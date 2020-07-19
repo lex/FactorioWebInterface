@@ -1,6 +1,6 @@
 ﻿import { ObservableErrors, IObservableErrors } from "../../utils/observableErrors";
-import { Validator, ValidationResult, ValidationRule } from "../../utils/validator";
 import { ObservableObject } from "../../utils/observableObject";
+import { Validator, PropertyValidation, ValidationResult } from "../../utils/validation/module";
 
 export class ViewModel extends ObservableObject implements IObservableErrors {
     private _fields = {
@@ -65,8 +65,8 @@ export class ViewModel extends ObservableObject implements IObservableErrors {
     constructor() {
         super();
 
-        this._validator = new Validator(this, [
-            new ValidationRule('age', this.ageRule)
+        this._validator = new Validator<this>(this, [
+            new PropertyValidation('age').displayName('Age').rules({ validate: this.ageRule })
         ]);
     }
 
@@ -83,9 +83,9 @@ export class ViewModel extends ObservableObject implements IObservableErrors {
     private ageRule(vm: ViewModel): ValidationResult {
         let age = vm.age;
         if (age < 10) {
-            return ValidationResult.error(`Age ${age} must be greater than 9.`);
+            return ValidationResult.error('be greater than 9');
         } else if (age > 20) {
-            return ValidationResult.error(`Age ${age} must be less than 21.`);
+            return ValidationResult.error('be less than 21');
         }
 
         return ValidationResult.validResult;

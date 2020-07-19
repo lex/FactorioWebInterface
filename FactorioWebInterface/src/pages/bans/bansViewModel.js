@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { ObservableObject } from "../../utils/observableObject";
 import { Observable } from "../../utils/observable";
 import { ObservableErrors } from "../../utils/observableErrors";
-import { Validator, NotEmptyString, NotNull } from "../../utils/validator";
+import { Validator, PropertyValidation } from "../../utils/validation/module";
 export class BansViewModel extends ObservableObject {
     constructor(bansService) {
         super();
@@ -27,11 +27,11 @@ export class BansViewModel extends ObservableObject {
         this._errorObservable = new Observable();
         this._bansService = bansService;
         this._validator = new Validator(this, [
-            new NotEmptyString('username', 'Username'),
-            new NotEmptyString('reason', 'Reason'),
-            new NotEmptyString('admin', 'Admin'),
-            new NotNull('date', 'Date'),
-            new NotNull('time', 'Time')
+            new PropertyValidation('username').displayName('Username').notEmptyString(),
+            new PropertyValidation('reason').displayName('Reason').notEmptyString(),
+            new PropertyValidation('admin').displayName('Admin').notEmptyString(),
+            new PropertyValidation('date').displayName('Date').notNull(),
+            new PropertyValidation('time').displayName('Time').notNull()
         ]);
         this.bans.subscribe((event) => {
             let header = `Bans (${this.bans.count})`;

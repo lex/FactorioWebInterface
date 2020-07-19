@@ -1,9 +1,9 @@
 ﻿import { ObservableObject } from "../../utils/observableObject";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { propertyOf } from "../../utils/types";
-import { Validator, MinMaxStringLength, EqualToOtherString } from "../../utils/validator";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { AccountService } from "./accountService";
+import { Validator, PropertyValidation } from "../../utils/validation/module";
 
 export class AccountViewModel extends ObservableObject<AccountViewModel> implements IObservableErrors {
     private readonly _accountService: AccountService;
@@ -66,9 +66,11 @@ export class AccountViewModel extends ObservableObject<AccountViewModel> impleme
 
         this._accountService = accountService;
 
-        this._validator = new Validator(this, [
-            new MinMaxStringLength('newPassword', 6, 100, 'New Password'),
-            new EqualToOtherString('confirmNewPassword', 'newPassword', 'New Password', 'Confirm New Password')
+        this._validator = new Validator<this>(this, [
+            new PropertyValidation('newPassword').displayName('New Password')
+                .minMaxStringLength(6, 100),
+            new PropertyValidation('confirmNewPassword').displayName('Confirm New Password')
+                .equalToOtherString('newPassword', 'New Password')
         ]);
 
         this._submitCommand = new DelegateCommand(
