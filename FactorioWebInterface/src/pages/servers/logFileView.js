@@ -11,7 +11,7 @@ class LogFileNameColumn extends ColumnTemplate {
             let file = box.value;
             let link = document.createElement('a');
             link.innerText = file.Name;
-            link.href = `/admin/servers?handler=${handler}&directory=${file.Directory}&name=${file.Name}`;
+            link.href = `/admin/servers?handler=${encodeURIComponent(handler)}&directory=${encodeURIComponent(file.Directory)}&name=${encodeURIComponent(file.Name)}`;
             link.onclick = event => event.stopPropagation();
             return link;
         };

@@ -11,7 +11,7 @@ class FileNameColumn extends ColumnTemplate {
             let file = box.value;
             let link = document.createElement('a');
             link.innerText = file.Name;
-            link.href = `/admin/servers?handler=file&serverId=${serverId.value}&directory=${file.Directory}&name=${file.Name}`;
+            link.href = `/admin/servers?handler=file&serverId=${encodeURIComponent(serverId.value)}&directory=${encodeURIComponent(file.Directory)}&name=${encodeURIComponent(file.Name)}`;
             link.onclick = event => event.stopPropagation();
             return link;
         };

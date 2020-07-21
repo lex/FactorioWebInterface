@@ -21,7 +21,7 @@ export class ModsHubServiceMockBase extends InvokeBase {
         return this._onEndDownloadFromModPortal;
     }
     whenConnection(callback) {
-        this.invoked('whenConnection');
+        this.invoked('whenConnection', callback);
         return this._onConnection.subscribe(callback);
     }
     requestModPacks() {

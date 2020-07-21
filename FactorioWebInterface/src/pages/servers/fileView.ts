@@ -19,7 +19,7 @@ class FileNameColumn extends ColumnTemplate<FileMetaData>{
 
             let link = document.createElement('a') as HTMLAnchorElement;
             link.innerText = file.Name;
-            link.href = `/admin/servers?handler=file&serverId=${serverId.value}&directory=${file.Directory}&name=${file.Name}`;
+            link.href = `/admin/servers?handler=file&serverId=${encodeURIComponent(serverId.value)}&directory=${encodeURIComponent(file.Directory)}&name=${encodeURIComponent(file.Name)}`;
             link.onclick = event => event.stopPropagation();
 
             return link;

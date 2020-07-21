@@ -1,4 +1,5 @@
 import { Observable } from "../utils/observable";
+import { AssertionError } from "assert";
 export class MethodInvocation {
     constructor(name, args = []) {
         this.name = name;
@@ -24,6 +25,14 @@ export class InvokeBase {
         if (this._strict) {
             throw new Error(`Method ${name} not implemented.`);
         }
+    }
+    assertMethodCalled(name) {
+        for (const invocation of this._methodsCalled) {
+            if (invocation.name === name) {
+                return;
+            }
+        }
+        throw new AssertionError({ message: `The expected method invocation ${name} was not found.`, expected: name });
     }
 }
 //# sourceMappingURL=invokeBase.js.map

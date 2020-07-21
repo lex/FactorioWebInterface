@@ -97,7 +97,7 @@ export class ServersHubServiceMockBase extends InvokeBase {
         return this._chatLogsFiles;
     }
     whenConnection(callback) {
-        this.invoked('whenConnection');
+        this.invoked('whenConnection', callback);
         return this._onConnection.subscribe(callback);
     }
     requestTempSaveFiles() {

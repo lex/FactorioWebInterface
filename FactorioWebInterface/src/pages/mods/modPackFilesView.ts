@@ -11,7 +11,6 @@ import { leftIconWithContent, Icon } from "../../components/icon";
 import { Button, iconButton } from "../../components/button";
 import { Label } from "../../components/label";
 import { Select } from "../../components/select";
-import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 
 class ModPackFileNameColumn extends ColumnTemplate<ModPackFileMetaData>{
     constructor(modPackFilesViewModel: ModPackFilesViewModel) {

@@ -18,7 +18,7 @@ class LogFileNameColumn extends ColumnTemplate<FileMetaData>{
 
             let link = document.createElement('a') as HTMLAnchorElement;
             link.innerText = file.Name;
-            link.href = `/admin/servers?handler=${handler}&directory=${file.Directory}&name=${file.Name}`;
+            link.href = `/admin/servers?handler=${encodeURIComponent(handler)}&directory=${encodeURIComponent(file.Directory)}&name=${encodeURIComponent(file.Name)}`;
             link.onclick = event => event.stopPropagation();
 
             return link;
