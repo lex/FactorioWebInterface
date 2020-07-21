@@ -1,6 +1,6 @@
 import { IterableHelper } from "../../utils/iterableHelper";
 import { ValidationResult } from "../../utils/validation/module";
-export class ModPackNameNotTakenValidator {
+export class ModPackNameNotTakenValidationRule {
     constructor(modPacks) {
         this.modPacks = modPacks;
     }
@@ -12,4 +12,4 @@ export class ModPackNameNotTakenValidator {
         return ValidationResult.validResult;
     }
 }
-//# sourceMappingURL=modPackNameNotTakenValidator.js.map
+//# sourceMappingURL=modPackNameNotTakenValidationRule.js.map

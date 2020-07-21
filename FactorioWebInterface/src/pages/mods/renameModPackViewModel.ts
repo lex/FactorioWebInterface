@@ -4,9 +4,9 @@ import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewMod
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ModPackMetaData } from "../servers/serversTypes";
-import { ModPackNameNotTakenValidator } from "./modPackNameNotTakenValidator";
 import { Observable } from "../../utils/observable";
 import { Validator, PropertyValidation } from "../../utils/validation/module";
+import { ModPackNameNotTakenValidationRule } from "./modPackNameNotTakenValidationRule";
 
 export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel implements IObservableErrors {
     private _subscriptions: (() => void)[] = [];
@@ -67,7 +67,7 @@ export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel i
                 .displayName('New Name')
                 .notEmptyString()
                 .noWhitespaceString()
-                .rules(new ModPackNameNotTakenValidator(modsService.modPacks))
+                .rules(new ModPackNameNotTakenValidationRule(modsService.modPacks))
         ]);
 
         this._renameCommand = new DelegateCommand(async () => {

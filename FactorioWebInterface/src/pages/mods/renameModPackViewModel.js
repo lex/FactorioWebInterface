@@ -10,9 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
 import { ObservableErrors } from "../../utils/observableErrors";
 import { DelegateCommand } from "../../utils/command";
-import { ModPackNameNotTakenValidator } from "./modPackNameNotTakenValidator";
 import { Observable } from "../../utils/observable";
 import { Validator, PropertyValidation } from "../../utils/validation/module";
+import { ModPackNameNotTakenValidationRule } from "./modPackNameNotTakenValidationRule";
 export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel {
     constructor(modPack, modsService, errorService) {
         super();
@@ -28,7 +28,7 @@ export class RenameModPackViewModel extends ObservableObjectCloseBaseViewModel {
                 .displayName('New Name')
                 .notEmptyString()
                 .noWhitespaceString()
-                .rules(new ModPackNameNotTakenValidator(modsService.modPacks))
+                .rules(new ModPackNameNotTakenValidationRule(modsService.modPacks))
         ]);
         this._renameCommand = new DelegateCommand(() => __awaiter(this, void 0, void 0, function* () {
             if (!this.validateAll()) {

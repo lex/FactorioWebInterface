@@ -3,7 +3,7 @@ import { ModPackMetaData } from "../servers/serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { IValidationRule, ValidationResult } from "../../utils/validation/module";
 
-export class ModPackNameNotTakenValidator<T> implements IValidationRule<T>{
+export class ModPackNameNotTakenValidationRule<T> implements IValidationRule<T>{
     constructor(private readonly modPacks: ObservableCollection<ModPackMetaData>) {
     }
 

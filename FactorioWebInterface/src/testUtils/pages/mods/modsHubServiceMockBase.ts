@@ -28,7 +28,7 @@ export class ModsHubServiceMockBase extends InvokeBase<ModsHubService> implement
     }
 
     whenConnection(callback: () => void): () => void {
-        this.invoked('whenConnection');
+        this.invoked('whenConnection', callback);
         return this._onConnection.subscribe(callback);
     }
 

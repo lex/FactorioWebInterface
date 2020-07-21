@@ -3,9 +3,9 @@ import { ModsService } from "./modsService";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { ErrorService } from "../../services/errorService";
-import { ModPackNameNotTakenValidator } from "./modPackNameNotTakenValidator";
 import { Observable } from "../../utils/observable";
 import { Validator, PropertyValidation } from "../../utils/validation/module";
+import { ModPackNameNotTakenValidationRule } from "./modPackNameNotTakenValidationRule";
 
 export class NewModPackViewModel extends ObservableObjectCloseBaseViewModel implements IObservableErrors {
     private _subscriptions: (() => void)[] = [];
@@ -61,7 +61,7 @@ export class NewModPackViewModel extends ObservableObjectCloseBaseViewModel impl
                 .displayName('Name')
                 .notEmptyString()
                 .noWhitespaceString()
-                .rules(new ModPackNameNotTakenValidator(modsService.modPacks))
+                .rules(new ModPackNameNotTakenValidationRule(modsService.modPacks))
         ]);
 
         this._createCommand = new DelegateCommand(async () => {

@@ -85,7 +85,7 @@
     <None Remove="src\pages\mods\helpSectionView.ts" />
     <None Remove="src\pages\mods\modPackFilesView.ts" />
     <None Remove="src\pages\mods\modPackFilesViewModel.ts" />
-    <None Remove="src\pages\mods\modPackNameNotTakenValidator.ts" />
+    <None Remove="src\pages\mods\modPackNameNotTakenValidationRule.ts" />
     <None Remove="src\pages\mods\ModPacksView.ts" />
     <None Remove="src\pages\mods\modPacksViewModel.spec.ts" />
     <None Remove="src\pages\mods\modPacksViewModel.ts" />
@@ -336,7 +336,7 @@
     <TypeScriptCompile Include="src\pages\account\accountViewModel.spec.ts" />
     <TypeScriptCompile Include="src\pages\account\accountViewModel.ts" />
     <TypeScriptCompile Include="src\pages\account\services.ts" />
-    <TypeScriptCompile Include="src\pages\mods\modPackNameNotTakenValidator.ts" />
+    <TypeScriptCompile Include="src\pages\mods\modPackNameNotTakenValidationRule.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPacksViewModel.spec.ts" />
     <TypeScriptCompile Include="src\services\documentService.ts" />
     <TypeScriptCompile Include="src\services\iDocumentService.ts" />

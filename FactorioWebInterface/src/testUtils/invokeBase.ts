@@ -1,5 +1,6 @@
 ﻿import { Observable, IObservable } from "../utils/observable";
 import { propertyOf } from "../utils/types";
+import { AssertionError } from "assert";
 
 export class MethodInvocation {
     constructor(public readonly name: string, public readonly args: any[] = []) { }
@@ -31,5 +32,15 @@ export class InvokeBase<T = any>  {
         if (this._strict) {
             throw new Error(`Method ${name} not implemented.`);
         }
+    }
+
+    assertMethodCalled(name: propertyOf<T>): void {
+        for (const invocation of this._methodsCalled) {
+            if (invocation.name === name) {
+                return;
+            }
+        }
+
+        throw new AssertionError({ message: `The expected method invocation ${name} was not found.`, expected: name });
     }
 }

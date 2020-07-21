@@ -124,7 +124,7 @@ export class ServersHubServiceMockBase extends InvokeBase<ServersHubService> imp
     }
 
     whenConnection(callback: () => void): () => void {
-        this.invoked('whenConnection');
+        this.invoked('whenConnection', callback);
         return this._onConnection.subscribe(callback);
     }
 
