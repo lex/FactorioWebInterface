@@ -22,7 +22,7 @@ export class ScenariosView extends VirtualComponent {
         let collapse = new Collapse(scenariosViewModel.header, table);
         scenariosViewModel.propertyChanged('header', text => collapse.setHeader(text));
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
+        collapse.classList.add('section');
         this._root = collapse;
     }
 }

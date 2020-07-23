@@ -6,11 +6,12 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode=development",
+    "build-test": "webpack --mode=development --test",
     "watch": "webpack --mode=development --watch",
     "release": "webpack --mode=production",
     "publish": "npm run release && dotnet publish -c Release",
-    "test": "npm run build && mocha ./wwwroot/js/tests.js",
-    "test-debug": "npm run build && mocha --inspect-brk ./wwwroot/js/tests.js"
+    "test": "npm run build-test && mocha --exit ./wwwroot/js/tests.js",
+    "test-debug": "npm run build-test && mocha --exit --inspect-brk ./wwwroot/js/tests.js"
   },
   "keywords": [],
   "author": "",

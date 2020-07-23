@@ -85,7 +85,7 @@ export class ServerFileManagementView extends VirtualComponent {
 
         let collapse = new Collapse('File Management', rows);
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
+        collapse.classList.add('section');
 
         function updateUploadButton(isUploading: boolean) {
             if (isUploading) {

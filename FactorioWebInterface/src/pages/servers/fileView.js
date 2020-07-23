@@ -35,7 +35,7 @@ export class FileView extends VirtualComponent {
         let collapse = new Collapse(fileViewModel.header, table);
         fileViewModel.propertyChanged('header', text => collapse.setHeader(text));
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
+        collapse.classList.add('section');
         this._root = collapse;
     }
 }

@@ -14,8 +14,10 @@ export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel: ServersConsoleViewModel) {
         super();
 
-        let headerPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge);
-        headerPanel.style.alignItems = 'center';
+        let headerPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
+
+        let headerTopRowPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge);
+        headerTopRowPanel.style.alignItems = 'center';
 
         let serverIdSelect = new Select(serversConsoleViewModel.serverIds);
         serverIdSelect.icon = new Icon(Icon.classes.server);
@@ -28,7 +30,8 @@ export class ServersConsoleView extends VirtualComponent {
 
         let nameText = new Label()
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'nameText'))
-            .addClasses(Label.classes.labelText, 'vertical-margins-small');
+            .addClasses('is-4', 'header');
+        nameText.style.wordBreak = 'break-all';
 
         let statusText = new Label()
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'statusText'))
@@ -38,9 +41,11 @@ export class ServersConsoleView extends VirtualComponent {
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'versionText'))
             .addClasses(Label.classes.labelText, 'vertical-margins-small');
 
-        labelPanel.append(nameText, statusText, versionText);
+        labelPanel.append(statusText, versionText);
 
-        headerPanel.append('Console', serverIdSelect, labelPanel);
+        headerTopRowPanel.append('Console', serverIdSelect, labelPanel);
+
+        headerPanel.append(headerTopRowPanel, nameText);
 
         let mainPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing);
 
@@ -94,7 +99,7 @@ export class ServersConsoleView extends VirtualComponent {
 
         let collapse = new Collapse(headerPanel, mainPanel);
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
+        collapse.classList.add('section', 'double');
 
         this._root = collapse;
     }

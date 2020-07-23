@@ -46,7 +46,7 @@ export class ServerSettingsView extends VirtualComponent {
         header.append('Server Settings', this._unsavedWarning);
         this._collapse = new Collapse(header, form.root);
         this._collapse.open = true;
-        this._collapse.classList.add('is-4', 'border', 'header', 'wide');
+        this._collapse.classList.add('section', 'wide');
         serverSettingsViewModel.bind('saved', event => this.setCollapseUnSavedWarning(event));
         this._root = this._collapse;
     }

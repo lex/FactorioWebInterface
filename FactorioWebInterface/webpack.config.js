@@ -8,10 +8,13 @@ const RemovePlugin = require('remove-files-webpack-plugin');
 const glob = require('glob');
 
 const isDev = process.env.NODE_ENV === 'development';
+const isTest = process.argv.indexOf('--test') >= 0;
 
-module.exports = {
-    entry: {
-        tests: glob.sync("./src/**/*.spec.ts"),
+let entry;
+if (isTest) {
+    entry = { tests: glob.sync("./src/**/*.spec.ts") };
+} else {
+    entry = {
         serversOld: "./src/ts/servers.ts",
         bansOld: "./src/ts/bans.ts",
         adminsOld: "./src/ts/admins.ts",
@@ -27,7 +30,11 @@ module.exports = {
         scenarioData: "./src/pages/scenarioData/scenarioDataPage.ts",
         mods: "./src/pages/mods/modsPage.ts",
         account: "./src/pages/account/accountPage.ts"
-    },
+    };
+}
+
+module.exports = {
+    entry,
     output: {
         path: path.resolve(__dirname, "wwwroot"),
         filename: "js/[name].js",

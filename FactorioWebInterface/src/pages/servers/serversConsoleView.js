@@ -11,8 +11,9 @@ import { Label } from "../../components/label";
 export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel) {
         super();
-        let headerPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge);
-        headerPanel.style.alignItems = 'center';
+        let headerPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
+        let headerTopRowPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge);
+        headerTopRowPanel.style.alignItems = 'center';
         let serverIdSelect = new Select(serversConsoleViewModel.serverIds);
         serverIdSelect.icon = new Icon(Icon.classes.server);
         serverIdSelect.style.fontSize = '1rem';
@@ -22,15 +23,17 @@ export class ServersConsoleView extends VirtualComponent {
         let labelPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge, FlexPanel.classes.wrap);
         let nameText = new Label()
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'nameText'))
-            .addClasses(Label.classes.labelText, 'vertical-margins-small');
+            .addClasses('is-4', 'header');
+        nameText.style.wordBreak = 'break-all';
         let statusText = new Label()
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'statusText'))
             .addClasses(Label.classes.labelText, 'vertical-margins-small');
         let versionText = new Label()
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'versionText'))
             .addClasses(Label.classes.labelText, 'vertical-margins-small');
-        labelPanel.append(nameText, statusText, versionText);
-        headerPanel.append('Console', serverIdSelect, labelPanel);
+        labelPanel.append(statusText, versionText);
+        headerTopRowPanel.append('Console', serverIdSelect, labelPanel);
+        headerPanel.append(headerTopRowPanel, nameText);
         let mainPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing);
         let topPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacingSmall, FlexPanel.classes.wrap, FlexPanel.classes.spacingNone);
         let resumeButton = iconButton(Icon.classes.play, 'Resume', Button.classes.success)
@@ -67,7 +70,7 @@ export class ServersConsoleView extends VirtualComponent {
         mainPanel.append(topPanel, messageView.root, bottomPanel);
         let collapse = new Collapse(headerPanel, mainPanel);
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
+        collapse.classList.add('section', 'double');
         this._root = collapse;
     }
 }

@@ -628,13 +628,13 @@ a-nav a img {
 }
 
 .large-column {
-  margin-left: 0.25em;
-  margin-right: 0.25em;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
 }
 a-flex-panel {
   display: flex;
-  padding: 0.25em;
-  margin: 0.25em;
+  padding: 0.25rem;
+  margin: 0.25rem;
 }
 a-flex-panel.horizontal {
   flex-direction: row;
@@ -659,58 +659,58 @@ a-flex-panel.spacing-none {
   margin: 0;
 }
 a-flex-panel.child-spacing-small.horizontal > * {
-  margin-right: 0.25em;
+  margin-right: 0.25rem;
 }
 a-flex-panel.child-spacing-small.horizontal > *:last-child {
-  margin-right: 0em;
+  margin-right: 0rem;
 }
 a-flex-panel.child-spacing-small.vertical > * {
-  margin-bottom: 0.25em;
+  margin-bottom: 0.25rem;
 }
 a-flex-panel.child-spacing-small.vertical > *:last-child {
-  margin-bottom: 0em;
+  margin-bottom: 0rem;
 }
 a-flex-panel.child-spacing.horizontal > * {
-  margin-right: 0.5em;
+  margin-right: 0.5rem;
 }
 a-flex-panel.child-spacing.horizontal > *:last-child {
-  margin-right: 0em;
+  margin-right: 0rem;
 }
 a-flex-panel.child-spacing.vertical > * {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.5rem;
 }
 a-flex-panel.child-spacing.vertical > *:last-child {
-  margin-bottom: 0em;
+  margin-bottom: 0rem;
 }
 a-flex-panel.child-spacing-large.horizontal > * {
-  margin-right: 1em;
+  margin-right: 1rem;
 }
 a-flex-panel.child-spacing-large.vertical > * {
-  margin-bottom: 1em;
+  margin-bottom: 1rem;
 }
 a-flex-panel.child-spacing-small-inclusive.horizontal > * {
-  margin-right: 0.25em;
+  margin-right: 0.25rem;
 }
 a-flex-panel.child-spacing-small-inclusive.horizontal > *:last-child {
-  margin-right: 0em;
+  margin-right: 0rem;
 }
 a-flex-panel.child-spacing-small-inclusive.vertical > * {
-  margin-bottom: 0.25em;
+  margin-bottom: 0.25rem;
 }
 a-flex-panel.child-spacing-small-inclusive.vertical > *:last-child {
-  margin-bottom: 0em;
+  margin-bottom: 0rem;
 }
 a-flex-panel.child-spacing-inclusive.horizontal > * {
-  margin-right: 0.5em;
+  margin-right: 0.5rem;
 }
 a-flex-panel.child-spacing-inclusive.vertical > * {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.5rem;
 }
 a-flex-panel.child-spacing-large-inclusive.horizontal > * {
-  margin-right: 1em;
+  margin-right: 1rem;
 }
 a-flex-panel.child-spacing-large-inclusive.vertical > * {
-  margin-bottom: 1em;
+  margin-bottom: 1rem;
 }
 a-flex-panel.large-columns {
   flex-direction: row;
@@ -720,8 +720,8 @@ a-flex-panel.large-columns > * {
   flex-basis: 0;
   flex-grow: 1;
   min-width: min(600px, 100%);
-  margin-left: 0.25em;
-  margin-right: 0.25em;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
 }
 
 .hide-error a-validation-label {

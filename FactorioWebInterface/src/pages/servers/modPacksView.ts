@@ -22,7 +22,7 @@ export class ModPacksView extends VirtualComponent {
         let collapse = new Collapse(modPacksViewModel.header, table);
         modPacksViewModel.propertyChanged('header', text => collapse.setHeader(text));
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
+        collapse.classList.add('section');
         this._root = collapse;
     }
 }

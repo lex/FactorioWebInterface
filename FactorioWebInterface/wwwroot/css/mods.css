@@ -623,6 +623,239 @@ a-nav a img {
   max-width: 100%;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  position: relative;
+}
+*[hidden] {
+  display: none;
+}
+body,
+button,
+input,
+select,
+textarea {
+  font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+html,
+p,
+ol,
+ul,
+li,
+dl,
+dt,
+dd,
+blockquote,
+figure,
+fieldset,
+legend,
+textarea,
+pre,
+iframe,
+hr,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0;
+}
+html {
+  background-color: white;
+  font-size: 16px;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  min-width: 300px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  color: #4a4a4a;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0;
+  padding: 3.25rem 0 0 0;
+}
+a {
+  color: #3273dc;
+  cursor: pointer;
+  text-decoration: none;
+}
+a:hover {
+  color: #363636;
+}
+.no-spacing {
+  padding: 0;
+  margin: 0;
+}
+.overlay {
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 100%;
+}
+.text {
+  color: #363636;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.label-text {
+  color: #363636;
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.header {
+  color: #363636;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.125;
+}
+.is-1 {
+  font-size: 3rem;
+}
+.is-2 {
+  font-size: 2.5rem;
+}
+.is-3 {
+  font-size: 2rem;
+}
+.is-4 {
+  font-size: 1.5rem;
+}
+.is-5 {
+  font-size: 1.25rem;
+}
+.is-6 {
+  font-size: 1rem;
+}
+h1 {
+  color: #363636;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.125;
+  font-size: 3rem;
+}
+h2 {
+  color: #363636;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.125;
+  font-size: 2.5rem;
+}
+h3 {
+  color: #363636;
+  font-weight: 600;
+  line-height: 1.125;
+  font-size: 2rem;
+}
+h4 {
+  color: #363636;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.125;
+  font-size: 1.5rem;
+}
+h5 {
+  color: #363636;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.125;
+  font-size: 1.25rem;
+}
+h6 {
+  color: #363636;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.125;
+  font-size: 1rem;
+}
+.border {
+  border-style: solid;
+  border-width: 0.125rem;
+  border-radius: 0.3125rem;
+  border-color: lightgrey;
+  overflow: hidden;
+}
+.page-container {
+  min-width: min(720px, calc(100vw - 20px));
+  max-width: 1440px;
+  width: 70%;
+  margin: auto;
+}
+.page-container-wide {
+  min-width: min(720px, calc(100vw - 20px));
+  max-width: 1800px;
+  width: 85%;
+  margin: auto;
+}
+.close-button {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  background-color: rgba(10, 10, 10, 0.2);
+  border: none;
+  border-radius: 290486px;
+  cursor: pointer;
+  pointer-events: auto;
+  display: inline-block;
+  flex-grow: 0;
+  flex-shrink: 0;
+  font-size: 0;
+  height: 20px;
+  max-height: 20px;
+  max-width: 20px;
+  min-height: 20px;
+  min-width: 20px;
+  outline: none;
+  position: relative;
+  vertical-align: top;
+  width: 20px;
+}
+.close-button::before,
+.close-button::after {
+  background-color: white;
+  content: "";
+  display: block;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  -webkit-transform-origin: center center;
+  transform-origin: center center;
+}
+.close-button::before {
+  height: 2px;
+  width: 50%;
+}
+.close-button::after {
+  height: 50%;
+  width: 2px;
+}
+.close-button:hover {
+  background-color: rgba(10, 10, 10, 0.3);
+}
+.has-icon-left {
+  padding-left: 2.25em;
+}
+.vertical-margins-small {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
 a-collapse {
   display: flex;
   flex-direction: column;
@@ -630,6 +863,25 @@ a-collapse {
 }
 a-collapse > a-stack-panel {
   align-self: flex-start;
+}
+a-collapse.section {
+  color: #363636;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.125;
+  min-height: 3.4375rem;
+  border-style: solid;
+  border-width: 0.125rem;
+  border-radius: 0.3125rem;
+  border-color: lightgrey;
+  overflow: hidden;
+}
+a-collapse.section.double {
+  min-height: 7.375rem;
+}
+a-collapse.section.double a-collapse-button {
+  align-self: flex-start;
+  margin-top: 0.125rem;
 }
 a-collapse-button {
   flex-shrink: 1;
@@ -650,13 +902,13 @@ a-collapse.wide > a-stack-panel {
 }
 
 .large-column {
-  margin-left: 0.25em;
-  margin-right: 0.25em;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
 }
 a-flex-panel {
   display: flex;
-  padding: 0.25em;
-  margin: 0.25em;
+  padding: 0.25rem;
+  margin: 0.25rem;
 }
 a-flex-panel.horizontal {
   flex-direction: row;
@@ -681,58 +933,58 @@ a-flex-panel.spacing-none {
   margin: 0;
 }
 a-flex-panel.child-spacing-small.horizontal > * {
-  margin-right: 0.25em;
+  margin-right: 0.25rem;
 }
 a-flex-panel.child-spacing-small.horizontal > *:last-child {
-  margin-right: 0em;
+  margin-right: 0rem;
 }
 a-flex-panel.child-spacing-small.vertical > * {
-  margin-bottom: 0.25em;
+  margin-bottom: 0.25rem;
 }
 a-flex-panel.child-spacing-small.vertical > *:last-child {
-  margin-bottom: 0em;
+  margin-bottom: 0rem;
 }
 a-flex-panel.child-spacing.horizontal > * {
-  margin-right: 0.5em;
+  margin-right: 0.5rem;
 }
 a-flex-panel.child-spacing.horizontal > *:last-child {
-  margin-right: 0em;
+  margin-right: 0rem;
 }
 a-flex-panel.child-spacing.vertical > * {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.5rem;
 }
 a-flex-panel.child-spacing.vertical > *:last-child {
-  margin-bottom: 0em;
+  margin-bottom: 0rem;
 }
 a-flex-panel.child-spacing-large.horizontal > * {
-  margin-right: 1em;
+  margin-right: 1rem;
 }
 a-flex-panel.child-spacing-large.vertical > * {
-  margin-bottom: 1em;
+  margin-bottom: 1rem;
 }
 a-flex-panel.child-spacing-small-inclusive.horizontal > * {
-  margin-right: 0.25em;
+  margin-right: 0.25rem;
 }
 a-flex-panel.child-spacing-small-inclusive.horizontal > *:last-child {
-  margin-right: 0em;
+  margin-right: 0rem;
 }
 a-flex-panel.child-spacing-small-inclusive.vertical > * {
-  margin-bottom: 0.25em;
+  margin-bottom: 0.25rem;
 }
 a-flex-panel.child-spacing-small-inclusive.vertical > *:last-child {
-  margin-bottom: 0em;
+  margin-bottom: 0rem;
 }
 a-flex-panel.child-spacing-inclusive.horizontal > * {
-  margin-right: 0.5em;
+  margin-right: 0.5rem;
 }
 a-flex-panel.child-spacing-inclusive.vertical > * {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.5rem;
 }
 a-flex-panel.child-spacing-large-inclusive.horizontal > * {
-  margin-right: 1em;
+  margin-right: 1rem;
 }
 a-flex-panel.child-spacing-large-inclusive.vertical > * {
-  margin-bottom: 1em;
+  margin-bottom: 1rem;
 }
 a-flex-panel.large-columns {
   flex-direction: row;
@@ -742,8 +994,8 @@ a-flex-panel.large-columns > * {
   flex-basis: 0;
   flex-grow: 1;
   min-width: min(600px, 100%);
-  margin-left: 0.25em;
-  margin-right: 0.25em;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
 }
 
 a-toggle-button {

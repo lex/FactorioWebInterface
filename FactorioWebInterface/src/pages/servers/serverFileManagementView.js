@@ -65,7 +65,7 @@ export class ServerFileManagementView extends VirtualComponent {
         row3.append(renameButton, deflateButton, form.root);
         let collapse = new Collapse('File Management', rows);
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
+        collapse.classList.add('section');
         function updateUploadButton(isUploading) {
             if (isUploading) {
                 uploadProgress.style.visibility = '';

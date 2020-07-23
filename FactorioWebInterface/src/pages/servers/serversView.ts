@@ -24,7 +24,9 @@ export class ServersView extends VirtualComponent {
         let serversConsoleView = new ServersConsoleView(serversViewModel.serverConsoleViewModel);
         let serverSettingsView = new ServerSettingsView(serversViewModel.serverSettingsViewModel);
         let serverExtraSettingsView = new ServerExtraSettingsView(serversViewModel.serverExtraSettingsViewModel);
-        leftPanel.append(serversConsoleView.root, serverSettingsView.root, serverExtraSettingsView.root);
+        let logFiles = new LogFileView(serversViewModel.logFileViewModel);
+        let chatLogFiles = new LogFileView(serversViewModel.chatLogFileViewModel);
+        leftPanel.append(serversConsoleView.root, serverSettingsView.root, serverExtraSettingsView.root, logFiles.root, chatLogFiles.root);
 
         let fileManagementView = new ServerFileManagementView(serversViewModel.serverFileManagementViewModel);
         let tempFiles = new FileView(serversViewModel.tempFileViewModel);
@@ -32,8 +34,7 @@ export class ServersView extends VirtualComponent {
         let globalFiles = new FileView(serversViewModel.globalFileViewModel);
         let scenarios = new ScenariosView(serversViewModel.scenariosViewModel);
         let modPacks = new ModPacksView(serversViewModel.modPacksViewModel);
-        let logFiles = new LogFileView(serversViewModel.logFileViewModel);
-        let chatLogFiles = new LogFileView(serversViewModel.chatLogFileViewModel);
-        rightPanel.append(fileManagementView.root, tempFiles.root, localFiles.root, globalFiles.root, scenarios.root, modPacks.root, logFiles.root, chatLogFiles.root);
+
+        rightPanel.append(fileManagementView.root, tempFiles.root, localFiles.root, globalFiles.root, scenarios.root, modPacks.root);
     }
 }
