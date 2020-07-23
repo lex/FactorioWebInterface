@@ -7,7 +7,7 @@ on:
     branches: [ master, develop ]
 
 jobs:
-  job: 
+  job:
     name: Build and Test
 
     runs-on: windows-latest
@@ -27,7 +27,13 @@ jobs:
     - name: Install dependencies
       working-directory: ./FactorioWebInterface
       run: npm install
+    - name: Build frontend
+      working-directory: ./FactorioWebInterface
+      run: npm run release
+    - name: Test frontend
+      working-directory: ./FactorioWebInterface
+      run: npm run test
     - name: Build
-      run: dotnet build --configuration Release --no-restore   
+      run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal  
+      run: dotnet test --no-restore --verbosity normal
