@@ -15,14 +15,14 @@ namespace FactorioWebInterface.Pages.Admin
         private readonly UserManager<ApplicationUser> _userManger;
         private readonly IFactorioFileManager _factorioFileManager;
         private readonly IFactorioServerDataService _factorioServerDataService;
-        private readonly ILogger<ServersModelOld> _logger;
+        private readonly ILogger<ServersModel> _logger;
 
         public int ServerCount => _factorioServerDataService.ServerCount;
 
         public ServersModel(UserManager<ApplicationUser> userManger,
             IFactorioFileManager factorioFileManager,
             IFactorioServerDataService factorioServerDataService,
-            ILogger<ServersModelOld> logger)
+            ILogger<ServersModel> logger)
         {
             _userManger = userManger;
             _factorioFileManager = factorioFileManager;

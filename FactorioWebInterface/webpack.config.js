@@ -15,15 +15,8 @@ if (isTest) {
     entry = { tests: glob.sync("./src/**/*.spec.ts") };
 } else {
     entry = {
-        serversOld: "./src/ts/servers.ts",
-        bansOld: "./src/ts/bans.ts",
-        adminsOld: "./src/ts/admins.ts",
         saves: "./src/ts/saves.ts",
-        scenarioDataOld: "./src/ts/scenarioData.ts",
         plaguesplayground: "./src/ts/plaguesPlayground.ts",
-        modsOld: "./src/ts/mods.ts",
-        test: "./src/ts/test.ts",
-        //testOld: "./src/ts/testOld.ts"
         servers: "./src/pages/servers/serversPage.ts",
         admins: "./src/pages/admins/adminsPage.ts",
         bans: "./src/pages/bans/bansPage.ts",

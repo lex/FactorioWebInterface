@@ -2,6 +2,10 @@
 @using FactorioWebInterface.Data;
 @inject UserManager<ApplicationUser> userManger;
 
+@{
+    var user = await userManger.GetUserAsync(User);
+}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,31 +14,11 @@
     <title>@ViewData["Title"] - FactorioWebInterface</title>
 
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-    <environment include="Development">
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-        <link rel="stylesheet" href="~/lib/bulma/dist/css/bulma.css" />
-        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    </environment>
-    <environment exclude="Development">
-        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
-                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
-                asp-fallback-test="window.jQuery"
-                crossorigin="anonymous"
-                integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT">
-        </script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css"
-              asp-fallback-href="~/lib/bulma/dist/css/bulma.min.css" />
-        <link rel="stylesheet" href="~/css/site.min.css" />
-    </environment>
 
-    @RenderSection("css", required: false)
-
+    @RenderSection("head", required: false)
 </head>
-<body class="has-navbar-fixed-top">
-    @await Html.PartialAsync("_AdminNavBarPartial")
-
+<body>
+    <input type="hidden" name="__username" value="@user.UserName" />
     @RenderBody()
-
-    @RenderSection("Scripts", required: false)
 </body>
 </html>
