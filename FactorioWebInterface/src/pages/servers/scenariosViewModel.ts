@@ -1,7 +1,6 @@
-﻿import { CollectionView } from "../../utils/collectionView";
-import { ScenarioMetaData } from "./serversTypes";
-import { ObservableCollection } from "../../utils/observableCollection";
+﻿import { ScenarioMetaData } from "./serversTypes";
 import { ObservableObject } from "../../utils/observableObject";
+import { ObservableCollection, CollectionView } from "../../utils/collections/module";
 
 export class ScenariosViewModel extends ObservableObject {
     private _sourceScenarios: ObservableCollection<ScenarioMetaData>;

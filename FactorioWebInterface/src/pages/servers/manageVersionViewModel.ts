@@ -1,7 +1,5 @@
 ﻿import { CloseBaseViewModel } from "../../utils/CloseBaseViewModel";
 import { DelegateCommand, ICommand } from "../../utils/command";
-import { CollectionView } from "../../utils/collectionView";
-import { ObservableCollection } from "../../utils/observableCollection";
 import { ManageVersionService } from "./manageVersionService";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { ErrorService } from "../../services/errorService";
@@ -10,6 +8,7 @@ import { ObservableProperty, IObservableProperty } from "../../utils/observableP
 import { FactorioServerStatus } from "./serversTypes";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 import { Observable } from "../../utils/observable";
+import { CollectionView, ObservableCollection } from "../../utils/collections/module";
 
 export class ManageVersionViewModel extends CloseBaseViewModel {
     private _manageVersionService: ManageVersionService;

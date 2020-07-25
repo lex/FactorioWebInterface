@@ -1,5 +1,4 @@
 ﻿import { ModsService } from "./modsService";
-import { CollectionView } from "../../utils/collectionView";
 import { ModPackMetaData } from "../servers/serversTypes";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { IModalService } from "../../services/iModalService";
@@ -7,6 +6,7 @@ import { NewModPackViewModel } from "./newModPackViewModel";
 import { ErrorService } from "../../services/errorService";
 import { RenameModPackViewModel } from "./renameModPackViewModel";
 import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
+import { CollectionView } from "../../utils/collections/module";
 
 export class ModPacksViewModel {
     private _modsService: ModsService;

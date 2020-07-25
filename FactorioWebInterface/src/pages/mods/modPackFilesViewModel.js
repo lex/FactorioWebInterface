@@ -8,9 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { ObservableObject } from "../../utils/observableObject";
-import { CollectionView } from "../../utils/collectionView";
 import { DelegateCommand } from "../../utils/command";
 import { IterableHelper } from "../../utils/iterableHelper";
+import { CollectionView } from "../../utils/collections/module";
 export class ModPackFilesViewModel extends ObservableObject {
     constructor(modsService, fileSelectionService, errorService) {
         super();

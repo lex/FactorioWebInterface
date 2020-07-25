@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import * as signalR from "@microsoft/signalr";
+import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { Observable } from "../../utils/observable";
 export class ServersHubService {
@@ -31,7 +31,7 @@ export class ServersHubService {
         this._modPacks = new Observable();
         this._logFiles = new Observable();
         this._chatLogsFiles = new Observable();
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/factorioControlHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();
@@ -157,7 +157,7 @@ export class ServersHubService {
         return this._chatLogsFiles;
     }
     whenConnection(callback) {
-        if (this._connection.state === signalR.HubConnectionState.Connected) {
+        if (this._connection.state === HubConnectionState.Connected) {
             callback();
         }
         return this._whenConnection.subscribe(callback);

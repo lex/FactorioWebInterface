@@ -1,7 +1,7 @@
-﻿import { ObservableKeyArray } from "./observableCollection";
+﻿import { ObservableKeyArray } from "./ObservableKeyArray";
 import { CollectionView, CollectionViewChangeType, CollectionViewChangedData } from "./collectionView";
 import { strict } from "assert";
-import { CollectionChangeType } from "../ts/utils";
+import { CollectionChangeType } from "../../ts/utils";
 
 describe('CollectionView', function () {
     describe('values', function () {

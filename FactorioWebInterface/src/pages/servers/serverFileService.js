@@ -1,5 +1,5 @@
-import { ObservableKeyArray } from "../../utils/observableCollection";
 import { ObservableProperty } from "../../utils/observableProperty";
+import { ObservableKeyArray } from "../../utils/collections/module";
 export class ServerFileService {
     constructor(serverIdService, serversHubService) {
         this._tempSaveFiles = new ObservableKeyArray(ServerFileService.fileMetaDataKeySelector);

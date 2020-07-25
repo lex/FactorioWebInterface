@@ -1,8 +1,8 @@
 ﻿import { ServerIdService } from "./serverIdService";
 import { ServersHubService } from "./serversHubService";
 import { FileMetaData, ScenarioMetaData, ModPackMetaData } from "./serversTypes";
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
 import { ObservableProperty, IObservableProperty } from "../../utils/observableProperty";
+import { ObservableKeyArray, ObservableCollection } from "../../utils/collections/module";
 
 export class ServerFileService {
     static readonly fileMetaDataKeySelector = (file: FileMetaData) => file.Name;

@@ -1,6 +1,6 @@
 import { ObservableCollection } from "./observableCollection";
 import { CircularBuffer } from "./circularBuffer";
-import { CollectionChangeType } from "../ts/utils";
+import { CollectionChangeType } from "../../ts/utils";
 export class ObservableCircularBuffer extends ObservableCollection {
     constructor(buffer) {
         super();

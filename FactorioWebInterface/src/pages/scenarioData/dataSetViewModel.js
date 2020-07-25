@@ -1,6 +1,6 @@
 import { ObservableObject } from "../../utils/observableObject";
-import { CollectionView } from "../../utils/collectionView";
 import { IterableHelper } from "../../utils/iterableHelper";
+import { CollectionView } from "../../utils/collections/module";
 export class DataSetViewModel extends ObservableObject {
     constructor(scenarioDataService, updateDataViewModel) {
         super();

@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import * as signalR from "@microsoft/signalr";
+import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { Observable } from "../../utils/observable";
 export class ModsHubService {
@@ -16,7 +16,7 @@ export class ModsHubService {
         this._onSendModPacks = new Observable();
         this._onSendModPackFiles = new Observable();
         this._onEndDownloadFromModPortal = new Observable();
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl('/factorioModHub')
             .withHubProtocol(new MessagePackHubProtocol())
             .build();
@@ -44,7 +44,7 @@ export class ModsHubService {
         return this._onEndDownloadFromModPortal;
     }
     whenConnection(callback) {
-        if (this._connection.state === signalR.HubConnectionState.Connected) {
+        if (this._connection.state === HubConnectionState.Connected) {
             callback();
         }
         return this._whenConnection.subscribe(callback);

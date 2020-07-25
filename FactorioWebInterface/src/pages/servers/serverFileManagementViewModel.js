@@ -11,9 +11,8 @@ import { DelegateCommand } from "../../utils/command";
 import { FileMetaData } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { ObservableObject } from "../../utils/observableObject";
-import { ObservableKeyArray } from "../../utils/observableCollection";
-import { CollectionView } from "../../utils/collectionView";
 import { FileHelper } from "../../utils/fileHelper";
+import { CollectionView, ObservableKeyArray } from "../../utils/collections/module";
 export class ServerFileManagementViewModel extends ObservableObject {
     constructor(serverFileManagementService, fileSelectionService, errorService, tempFiles, localFiles, globalFiles) {
         super();

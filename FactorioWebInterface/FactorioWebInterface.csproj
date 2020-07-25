@@ -204,6 +204,7 @@
     <None Remove="src\utils\circularBuffer.spec.ts" />
     <None Remove="src\utils\circularBuffer.ts" />
     <None Remove="src\utils\CloseBaseViewModel.ts" />
+    <None Remove="src\utils\collections\module.ts" />
     <None Remove="src\utils\collectionView.ts" />
     <None Remove="src\utils\commandHistory.spec.ts" />
     <None Remove="src\utils\commandHistory.ts" />
@@ -426,8 +427,9 @@
     <TypeScriptCompile Include="src\testUtils\utils\validation.ts" />
     <TypeScriptCompile Include="src\utils\binding.ts" />
     <TypeScriptCompile Include="src\utils\bindingSourceOld.ts" />
-    <TypeScriptCompile Include="src\utils\circularBuffer.spec.ts" />
-    <TypeScriptCompile Include="src\utils\circularBuffer.ts" />
+    <TypeScriptCompile Include="src\utils\collections\circularBuffer.spec.ts" />
+    <TypeScriptCompile Include="src\utils\collections\circularBuffer.ts" />
+    <TypeScriptCompile Include="src\utils\collections\module.ts" />
     <TypeScriptCompile Include="src\utils\command.ts" />
     <TypeScriptCompile Include="src\components\baseElement.ts" />
     <TypeScriptCompile Include="src\components\checkboxField.ts" />
@@ -453,7 +455,7 @@
     <TypeScriptCompile Include="src\ts\utils.ts" />
     <TypeScriptCompile Include="src\utils\arrayHelper.ts" />
     <TypeScriptCompile Include="src\utils\box.ts" />
-    <TypeScriptCompile Include="src\utils\collectionView.ts" />
+    <TypeScriptCompile Include="src\utils\collections\collectionView.ts" />
     <TypeScriptCompile Include="src\utils\commandHistory.spec.ts" />
     <TypeScriptCompile Include="src\utils\commandHistory.ts" />
     <TypeScriptCompile Include="src\utils\comparatorHelper.ts" />
@@ -467,8 +469,8 @@
     <TypeScriptCompile Include="src\utils\closeBaseViewModel.ts" />
     <TypeScriptCompile Include="src\utils\nodeHelper.ts" />
     <TypeScriptCompile Include="src\utils\observable.ts" />
-    <TypeScriptCompile Include="src\utils\observableCircularBuffer.ts" />
-    <TypeScriptCompile Include="src\utils\observableCollection.ts" />
+    <TypeScriptCompile Include="src\utils\collections\observableCircularBuffer.ts" />
+    <TypeScriptCompile Include="src\utils\collections\observableCollection.ts" />
     <TypeScriptCompile Include="src\utils\observableErrors.ts" />
     <TypeScriptCompile Include="src\utils\observableObject.ts" />
     <TypeScriptCompile Include="src\utils\observableProperty.ts" />

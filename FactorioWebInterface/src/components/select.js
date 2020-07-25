@@ -1,6 +1,4 @@
 import "./select.ts.less";
-import { ObservableCollection } from "../utils/observableCollection";
-import { CollectionView, CollectionViewChangeType } from "../utils/collectionView";
 import { Box } from "../utils/box";
 import { EventListener } from "../utils/eventListener";
 import { IterableHelper } from "../utils/iterableHelper";
@@ -9,6 +7,7 @@ import { Placeholder } from "./placeholder";
 import { BaseElement } from "./baseElement";
 import { ObjectBindingTarget } from "../utils/bindingTarget";
 import { Binding } from "../utils/binding";
+import { CollectionView, ObservableCollection, CollectionViewChangeType } from "../utils/collections/module";
 export class Option extends HTMLOptionElement {
     get item() {
         return this.box.value;

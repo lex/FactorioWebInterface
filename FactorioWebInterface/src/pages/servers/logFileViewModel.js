@@ -1,5 +1,5 @@
-import { CollectionView } from "../../utils/collectionView";
 import { ObservableObject } from "../../utils/observableObject";
+import { CollectionView } from "../../utils/collections/module";
 export class LogFileViewModel extends ObservableObject {
     constructor(tableName, files, handler) {
         super();

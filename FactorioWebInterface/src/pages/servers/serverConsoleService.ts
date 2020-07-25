@@ -1,11 +1,9 @@
 ﻿import { ServersHubService } from "./serversHubService";
 import { Result } from "../../ts/utils";
-import { ObservableCircularBuffer } from "../../utils/observableCircularBuffer";
 import { MessageData, FactorioControlClientData, FactorioServerStatus } from "./serversTypes";
-import { CircularBuffer } from "../../utils/circularBuffer";
-import { ObservableCollection } from "../../utils/observableCollection";
 import { ServerIdService } from "./serverIdService";
 import { ObservableProperty, IObservableProperty } from "../../utils/observableProperty";
+import { ObservableCollection, CircularBuffer, ObservableCircularBuffer } from "../../utils/collections/module";
 
 export class ServerConsoleService {
     private readonly _bufferSize = 200;

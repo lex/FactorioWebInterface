@@ -1,9 +1,8 @@
 ﻿import { ScenarioDataService, Entry } from "./scenarioDataService";
-import { ObservableCollection } from "../../utils/observableCollection";
 import { ObservableObject } from "../../utils/observableObject";
 import { UpdateDataViewModel } from "./updateDataViewModel";
-import { CollectionView } from "../../utils/collectionView";
 import { IterableHelper } from "../../utils/iterableHelper";
+import { CollectionView, ObservableCollection } from "../../utils/collections/module";
 
 export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
     private static defaultPlaceholder = 'Select Data Set';

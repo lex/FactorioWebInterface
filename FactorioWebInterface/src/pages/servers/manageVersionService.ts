@@ -1,6 +1,6 @@
 ﻿import { ServersHubService } from "./serversHubService";
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
 import { Result } from "../../ts/utils";
+import { ObservableKeyArray, ObservableCollection } from "../../utils/collections/module";
 
 export class ManageVersionService {
     static readonly latestVersion = 'latest';

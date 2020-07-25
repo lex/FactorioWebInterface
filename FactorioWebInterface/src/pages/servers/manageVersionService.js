@@ -1,4 +1,4 @@
-import { ObservableKeyArray } from "../../utils/observableCollection";
+import { ObservableKeyArray } from "../../utils/collections/module";
 export class ManageVersionService {
     constructor(serversHubService) {
         this._downloadableVersions = new ObservableKeyArray(x => x);

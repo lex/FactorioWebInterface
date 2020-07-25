@@ -1,8 +1,8 @@
-﻿import * as signalR from "@microsoft/signalr";
+﻿import { HubConnectionBuilder, HubConnection } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
 import { CollectionChangedData, CollectionChangeType } from "../../ts/utils";
 import { ObservableObject } from "../../utils/observableObject";
+import { ObservableKeyArray, ObservableCollection } from "../../utils/collections/module";
 
 export interface ScenarioData {
     DataSet: string;
@@ -16,7 +16,7 @@ export interface Entry {
 }
 
 export class ScenarioDataService extends ObservableObject {
-    private _connection: signalR.HubConnection;
+    private _connection: HubConnection;
 
     private _currentDataSet: string = undefined;
     private _dataSets = new ObservableKeyArray<string, string>(dataSet => dataSet);
@@ -72,7 +72,7 @@ export class ScenarioDataService extends ObservableObject {
     constructor() {
         super();
 
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/scenarioDataHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();

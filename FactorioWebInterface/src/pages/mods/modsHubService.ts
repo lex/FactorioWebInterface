@@ -1,11 +1,11 @@
-﻿import * as signalR from "@microsoft/signalr";
+﻿import { HubConnectionBuilder, HubConnection, HubConnectionState } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import { Observable, IObservable } from "../../utils/observable";
 import { Result, CollectionChangedData } from "../../ts/utils";
 import { ModPackMetaData, ModPackFileMetaData } from "../servers/serversTypes";
 
 export class ModsHubService {
-    private _connection: signalR.HubConnection;
+    private _connection: HubConnection;
 
     private _whenConnection = new Observable<void>();
 
@@ -26,7 +26,7 @@ export class ModsHubService {
     }
 
     constructor() {
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl('/factorioModHub')
             .withHubProtocol(new MessagePackHubProtocol())
             .build();
@@ -51,7 +51,7 @@ export class ModsHubService {
     }
 
     whenConnection(callback: () => void): () => void {
-        if (this._connection.state === signalR.HubConnectionState.Connected) {
+        if (this._connection.state === HubConnectionState.Connected) {
             callback();
         }
 

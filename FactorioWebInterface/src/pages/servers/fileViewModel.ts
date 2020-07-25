@@ -1,8 +1,7 @@
-﻿import { CollectionView } from "../../utils/collectionView";
-import { FileMetaData } from "./serversTypes";
-import { ObservableCollection } from "../../utils/observableCollection";
+﻿import { FileMetaData } from "./serversTypes";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { ObservableObject } from "../../utils/observableObject";
+import { ObservableCollection, CollectionView } from "../../utils/collections/module";
 
 export class FileViewModel extends ObservableObject {
     private _sourceFiles: ObservableCollection<FileMetaData>;

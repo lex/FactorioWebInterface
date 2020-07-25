@@ -7,11 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { CollectionView } from "../../utils/collectionView";
 import { DelegateCommand } from "../../utils/command";
 import { NewModPackViewModel } from "./newModPackViewModel";
 import { RenameModPackViewModel } from "./renameModPackViewModel";
 import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
+import { CollectionView } from "../../utils/collections/module";
 export class ModPacksViewModel {
     constructor(modsService, modalService, errorService) {
         this._modsService = modsService;

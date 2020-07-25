@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ObservableProperty } from "../../utils/observableProperty";
 import { Observable } from "../../utils/observable";
-import { ObservableKeyArray } from "../../utils/observableCollection";
+import { ObservableKeyArray } from "../../utils/collections/module";
 export class ServerIdService {
     constructor(serversHubService, hiddenInputService, navigationHistory) {
         this._clientData = new Observable();

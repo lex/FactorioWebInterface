@@ -1,7 +1,7 @@
-﻿import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
-import * as signalR from "@microsoft/signalr";
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
+﻿import { HubConnectionBuilder, HubConnection } from "@microsoft/signalr";
+import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { Result, CollectionChangedData } from "../../ts/utils";
+import { ObservableCollection, ObservableKeyArray } from "../../utils/collections/module";
 
 export interface Ban {
     Username: string;
@@ -11,7 +11,7 @@ export interface Ban {
 }
 
 export class BansService {
-    private _connection: signalR.HubConnection;
+    private _connection: HubConnection;
 
     private _bans = new ObservableKeyArray<string, Ban>(ban => ban.Username);
 
@@ -20,7 +20,7 @@ export class BansService {
     }
 
     constructor() {
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/factorioBanHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();

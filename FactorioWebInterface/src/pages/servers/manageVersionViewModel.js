@@ -9,12 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { CloseBaseViewModel } from "../../utils/CloseBaseViewModel";
 import { DelegateCommand } from "../../utils/command";
-import { CollectionView } from "../../utils/collectionView";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionChangeType } from "../../ts/utils";
 import { ObservableProperty } from "../../utils/observableProperty";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 import { Observable } from "../../utils/observable";
+import { CollectionView } from "../../utils/collections/module";
 export class ManageVersionViewModel extends CloseBaseViewModel {
     constructor(manageVersionService, status, errorService) {
         super();

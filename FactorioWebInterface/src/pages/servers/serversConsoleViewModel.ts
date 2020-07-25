@@ -1,14 +1,12 @@
-﻿import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
-import { ServerIdService } from "./serverIdService";
+﻿import { ServerIdService } from "./serverIdService";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ServerConsoleService } from "./serverConsoleService";
-import { Result, CollectionChangeType } from "../../ts/utils";
+import { CollectionChangeType } from "../../ts/utils";
 import { FileViewModel } from "./fileViewModel";
 import { FileMetaData, ScenarioMetaData, MessageData, FactorioServerStatus } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { ScenariosViewModel } from "./scenariosViewModel";
 import { ErrorService } from "../../services/errorService";
-import { CollectionView } from "../../utils/collectionView";
 import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
@@ -16,6 +14,7 @@ import { IModalService } from "../../services/iModalService";
 import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { ManageVersionService } from "./manageVersionService";
 import { ServerSettingsService } from "./serverSettingsService";
+import { CollectionView, ObservableCollection } from "../../utils/collections/module";
 
 export class ServersConsoleViewModel extends ObservableObject<ServersConsoleViewModel> {
     static readonly resumeTooltipDisabledMessage = 'Can only resume when there is a save in Temp Saves and the server is stopped.';

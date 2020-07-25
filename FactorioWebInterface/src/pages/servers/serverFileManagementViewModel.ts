@@ -7,9 +7,8 @@ import { FileMetaData } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { ErrorService } from "../../services/errorService";
 import { ObservableObject } from "../../utils/observableObject";
-import { ObservableKeyArray } from "../../utils/observableCollection";
-import { CollectionView } from "../../utils/collectionView";
 import { FileHelper } from "../../utils/fileHelper";
+import { CollectionView, ObservableKeyArray } from "../../utils/collections/module";
 
 export interface Destination {
     path: string;

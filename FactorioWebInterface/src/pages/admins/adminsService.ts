@@ -1,14 +1,14 @@
-﻿import * as signalR from "@microsoft/signalr";
+﻿import { HubConnectionBuilder, HubConnection } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import { Result, CollectionChangedData } from "../../ts/utils";
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
+import { ObservableKeyArray, ObservableCollection } from "../../utils/collections/module";
 
 export interface Admin {
     Name: string;
 }
 
 export class AdminsService {
-    private _connection: signalR.HubConnection;
+    private _connection: HubConnection;
 
     private _admins = new ObservableKeyArray<string, Admin>(admin => admin.Name);
 
@@ -17,7 +17,7 @@ export class AdminsService {
     }
 
     constructor() {
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/factorioAdminHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();

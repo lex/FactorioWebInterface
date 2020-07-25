@@ -1,8 +1,7 @@
-﻿import { CollectionView } from "../../utils/collectionView";
-import { ModPackMetaData } from "./serversTypes";
-import { ObservableCollection } from "../../utils/observableCollection";
+﻿import { ModPackMetaData } from "./serversTypes";
 import { ObservableObject } from "../../utils/observableObject";
 import { ServerFileService } from "./serverFileService";
+import { ObservableCollection, CollectionView } from "../../utils/collections/module";
 
 export class ModPacksViewModel extends ObservableObject {
     private _sourceModPacks: ObservableCollection<ModPackMetaData>;

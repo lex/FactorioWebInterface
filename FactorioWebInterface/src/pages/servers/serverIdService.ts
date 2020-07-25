@@ -3,8 +3,8 @@ import { ServersHubService } from "./serversHubService";
 import { Observable, IObservable } from "../../utils/observable";
 import { FactorioControlClientData } from "./serversTypes";
 import { IHiddenInputService } from "../../services/iHiddenInputService";
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
 import { INavigationHistoryService } from "../../services/iNavigationHistoryService";
+import { ObservableCollection, ObservableKeyArray } from "../../utils/collections/module";
 
 export class ServerIdService {
     private readonly _serversHubService: ServersHubService;

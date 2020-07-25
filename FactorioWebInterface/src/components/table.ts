@@ -1,13 +1,11 @@
 ﻿import "./table.ts.less";
-import { ObservableCollection } from "../utils/observableCollection";
-import { CollectionView, SortSpecification, CollectionViewChangedData, CollectionViewChangeType } from "../utils/collectionView";
 import { Box } from "../utils/box";
 import { ComparatorHelper } from "../utils/comparatorHelper";
 import { Utils } from "../ts/utils";
 import { EventListener } from "../utils/eventListener";
-import { Tooltip } from "./tooltip";
-import { Observable, IObservable } from "../utils/observable";
+import { Observable } from "../utils/observable";
 import { Input } from "./input";
+import { CollectionView, ObservableCollection, SortSpecification, CollectionViewChangedData, CollectionViewChangeType } from "../utils/collections/module";
 
 export interface rowClickEventArgs<T> {
     readonly item: T;

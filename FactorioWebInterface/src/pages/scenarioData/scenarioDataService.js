@@ -7,11 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import * as signalR from "@microsoft/signalr";
+import { HubConnectionBuilder } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
-import { ObservableKeyArray } from "../../utils/observableCollection";
 import { CollectionChangeType } from "../../ts/utils";
 import { ObservableObject } from "../../utils/observableObject";
+import { ObservableKeyArray } from "../../utils/collections/module";
 export class ScenarioDataService extends ObservableObject {
     constructor() {
         super();
@@ -20,7 +20,7 @@ export class ScenarioDataService extends ObservableObject {
         this._entries = new ObservableKeyArray(entry => entry.Key);
         this._fetchingDataSets = false;
         this._fetchingEntries = false;
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/scenarioDataHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();

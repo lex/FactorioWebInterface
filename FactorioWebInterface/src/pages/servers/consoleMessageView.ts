@@ -1,8 +1,8 @@
 ﻿import "./consoleMessageView.ts.less";
 import { VirtualComponent } from "../../components/virtualComponent";
-import { ObservableCollection } from "../../utils/observableCollection";
 import { MessageData, MessageType } from "./serversTypes";
 import { CollectionChangeType } from "../../ts/utils";
+import { ObservableCollection } from "../../utils/collections/module";
 
 export class ConsoleMessageView extends VirtualComponent {
     static readonly classes = {

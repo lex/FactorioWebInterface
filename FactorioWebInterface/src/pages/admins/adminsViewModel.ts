@@ -1,9 +1,9 @@
 ﻿import { ObservableObject } from "../../utils/observableObject";
 import { AdminsService, Admin } from "./adminsService";
 import { Observable } from "../../utils/observable";
-import { ObservableCollection } from "../../utils/observableCollection";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { Validator, PropertyValidation, ValidationResult } from "../../utils/validation/module";
+import { ObservableCollection } from "../../utils/collections/module";
 
 export class AdminsViewModel extends ObservableObject implements IObservableErrors {
     private _adminsService: AdminsService

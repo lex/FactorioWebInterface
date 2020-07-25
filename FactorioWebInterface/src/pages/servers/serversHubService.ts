@@ -1,4 +1,4 @@
-﻿import * as signalR from "@microsoft/signalr";
+﻿import { HubConnection, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
 import { Result, CollectionChangedData, KeyValueCollectionChangedData } from "../../ts/utils";
 import { FactorioControlClientData, FactorioServerSettings, FactorioServerExtraSettings, MessageData, FileMetaData, ScenarioMetaData, ModPackMetaData, FactorioServerStatus } from "./serversTypes";
@@ -9,7 +9,7 @@ export interface CollectionChangedDataWithServerId<T> extends CollectionChangedD
 }
 
 export class ServersHubService {
-    private _connection: signalR.HubConnection;
+    private _connection: HubConnection;
 
     private _whenConnection = new Observable<void>();
 
@@ -107,7 +107,7 @@ export class ServersHubService {
     }
 
     constructor() {
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/factorioControlHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();
@@ -200,7 +200,7 @@ export class ServersHubService {
     }
 
     whenConnection(callback: () => void): () => void {
-        if (this._connection.state === signalR.HubConnectionState.Connected) {
+        if (this._connection.state === HubConnectionState.Connected) {
             callback();
         }
 

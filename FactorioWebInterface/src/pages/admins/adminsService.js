@@ -7,13 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import * as signalR from "@microsoft/signalr";
+import { HubConnectionBuilder } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
-import { ObservableKeyArray } from "../../utils/observableCollection";
+import { ObservableKeyArray } from "../../utils/collections/module";
 export class AdminsService {
     constructor() {
         this._admins = new ObservableKeyArray(admin => admin.Name);
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/factorioAdminHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();

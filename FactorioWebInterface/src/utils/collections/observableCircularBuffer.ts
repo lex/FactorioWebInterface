@@ -1,6 +1,6 @@
 ﻿import { ObservableCollection } from "./observableCollection";
 import { CircularBuffer } from "./circularBuffer";
-import { CollectionChangeType, CollectionChangedData } from "../ts/utils";
+import { CollectionChangedData, CollectionChangeType } from "../../ts/utils";
 
 export class ObservableCircularBuffer<T> extends ObservableCollection<T> {
     private _buffer: CircularBuffer<T>;

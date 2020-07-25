@@ -1,9 +1,9 @@
 ﻿import { ObservableObject } from "../../utils/observableObject";
 import { Observable } from "../../utils/observable";
-import { ObservableCollection } from "../../utils/observableCollection";
 import { BansService, Ban } from "./bansService";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { Validator, PropertyValidation } from "../../utils/validation/module";
+import { ObservableCollection } from "../../utils/collections/module";
 
 export class BansViewModel extends ObservableObject implements IObservableErrors {
     private _bansService: BansService

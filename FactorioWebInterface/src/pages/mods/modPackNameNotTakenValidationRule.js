@@ -6,7 +6,7 @@ export class ModPackNameNotTakenValidationRule {
     }
     validate(value, obj) {
         const nameLowerCase = value.toLowerCase();
-        if (IterableHelper.any(this.modPacks.values(), modPack => modPack.Name.toLowerCase() === nameLowerCase)) {
+        if (IterableHelper.any(this.modPacks, modPack => modPack.Name.toLowerCase() === nameLowerCase)) {
             return ValidationResult.error(`be unique, mod pack '${value}' already exists`);
         }
         return ValidationResult.validResult;

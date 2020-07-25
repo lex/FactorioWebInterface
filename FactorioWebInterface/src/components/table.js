@@ -1,10 +1,10 @@
 import "./table.ts.less";
-import { CollectionView, CollectionViewChangeType } from "../utils/collectionView";
 import { ComparatorHelper } from "../utils/comparatorHelper";
 import { Utils } from "../ts/utils";
 import { EventListener } from "../utils/eventListener";
 import { Observable } from "../utils/observable";
 import { Input } from "./input";
+import { CollectionView, CollectionViewChangeType } from "../utils/collections/module";
 export class TableRow extends HTMLTableRowElement {
     constructor(_box) {
         super();

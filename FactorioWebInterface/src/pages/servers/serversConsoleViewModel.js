@@ -11,11 +11,11 @@ import { DelegateCommand } from "../../utils/command";
 import { CollectionChangeType } from "../../ts/utils";
 import { FileMetaData, FactorioServerStatus } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";
-import { CollectionView } from "../../utils/collectionView";
 import { ObservableObject } from "../../utils/observableObject";
 import { CommandHistory } from "../../utils/commandHistory";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 import { ManageVersionViewModel } from "./manageVersionViewModel";
+import { CollectionView } from "../../utils/collections/module";
 export class ServersConsoleViewModel extends ObservableObject {
     constructor(serverIdService, serverConsoleService, manageVersionService, serverSettingsService, modalService, errorService, tempFiles, localFiles, globalFiles, scenarios) {
         super();

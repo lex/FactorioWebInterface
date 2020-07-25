@@ -7,13 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { HubConnectionBuilder } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
-import * as signalR from "@microsoft/signalr";
-import { ObservableKeyArray } from "../../utils/observableCollection";
+import { ObservableKeyArray } from "../../utils/collections/module";
 export class BansService {
     constructor() {
         this._bans = new ObservableKeyArray(ban => ban.Username);
-        this._connection = new signalR.HubConnectionBuilder()
+        this._connection = new HubConnectionBuilder()
             .withUrl("/factorioBanHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();

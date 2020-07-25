@@ -1,11 +1,11 @@
 ﻿import { ModsHubService } from "./modsHubService";
 import { ObservableProperty, IObservableProperty } from "../../utils/observableProperty";
-import { ObservableKeyArray, ObservableCollection } from "../../utils/observableCollection";
 import { ModPackFileMetaData, ModPackMetaData } from "../servers/serversTypes";
 import { Result } from "../../ts/utils";
 import { UploadService, FileUploadEventType } from "../../services/uploadService";
 import { WindowService } from "../../services/windowService";
 import { Observable, IObservable } from "../../utils/observable";
+import { ObservableKeyArray, ObservableCollection } from "../../utils/collections/module";
 
 export class ModsService {
     static readonly fileUploadUrl = '/admin/mods?handler=UploadFiles';

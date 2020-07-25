@@ -7,10 +7,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { ObservableCircularBuffer } from "../../utils/observableCircularBuffer";
 import { FactorioServerStatus } from "./serversTypes";
-import { CircularBuffer } from "../../utils/circularBuffer";
 import { ObservableProperty } from "../../utils/observableProperty";
+import { CircularBuffer, ObservableCircularBuffer } from "../../utils/collections/module";
 export class ServerConsoleService {
     constructor(serverIdService, serverHubService) {
         this._bufferSize = 200;

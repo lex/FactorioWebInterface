@@ -1,5 +1,4 @@
 ﻿import { ObservableObject } from "../../utils/observableObject";
-import { CollectionView, CollectionViewChangeType } from "../../utils/collectionView";
 import { ModPackFileMetaData, ModPackMetaData } from "../servers/serversTypes";
 import { ModsService } from "./modsService";
 import { DelegateCommand, ICommand } from "../../utils/command";
@@ -7,6 +6,7 @@ import { FileSelectionService } from "../../services/fileSelectionservice";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { ErrorService } from "../../services/errorService";
 import { IterableHelper } from "../../utils/iterableHelper";
+import { CollectionView } from "../../utils/collections/module";
 
 export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewModel>{
     static readonly defaultTitle = 'No Mod Pack selected.';
