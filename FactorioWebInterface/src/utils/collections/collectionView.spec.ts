@@ -509,4 +509,266 @@ describe('CollectionView', function () {
             strict.deepEqual(raisedEvents, [CollectionViewChangeType.Add, CollectionViewChangeType.Reorder]);
         });
     });
+
+    describe('filtering', function () {
+        it('when no filter all initial items in values', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            o.add(1, 2, 3);
+
+            let cv = new CollectionView(o);
+
+            let one = cv.getBoxByKey(1);
+            let two = cv.getBoxByKey(2);
+            let three = cv.getBoxByKey(3);
+
+            // Assert.
+            strict.deepEqual([...cv], [one, two, three]);
+        });
+
+        it('when no filter added items in values', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            let cv = new CollectionView(o);
+
+            // Act.
+            o.add(1, 2, 3);
+
+            // Assert.
+            let one = cv.getBoxByKey(1);
+            let two = cv.getBoxByKey(2);
+            let three = cv.getBoxByKey(3);
+
+            strict.deepEqual([...cv], [one, two, three]);
+        });
+
+        it('when no filter removed items are removed from values', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            o.add(1, 2, 3);
+
+            let cv = new CollectionView(o);
+
+            // Act.
+            o.remove(2);
+
+            // Assert.
+            let one = cv.getBoxByKey(1);
+            let three = cv.getBoxByKey(3);
+
+            strict.deepEqual([...cv], [one, three]);
+        });
+
+        it('when add filter only allowed items in values', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            o.add(1, 2, 3);
+
+            let cv = new CollectionView(o);
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.            
+            cv.filterBy({ predicate: number => number !== 2 });
+
+            // Assert.
+            let one = cv.getBoxByKey(1);
+            let three = cv.getBoxByKey(3);
+            strict.deepEqual([...cv], [one, three]);
+
+            strict.equal(raisedEvents.length, 1);
+            let event = raisedEvents[0];
+            strict.equal(event.type, CollectionViewChangeType.Reset);
+        });
+
+        it('when filter only allowed added items in values', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 });
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.
+            o.add(1, 2, 3);
+
+            // Assert.
+            let one = cv.getBoxByKey(1);
+            let three = cv.getBoxByKey(3);
+
+            strict.deepEqual([...cv], [one, three]);
+
+            strict.equal(raisedEvents.length, 1);
+            let event = raisedEvents[0];
+            strict.equal(event.type, CollectionViewChangeType.Add);
+            strict.deepEqual(event.items, [one, three]);
+        });
+
+        it('when filter and sorting adding items reorder raised. ', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 });
+            cv.sortBy({ ascendingComparator: (a, b) => a - b });
+
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.
+            o.add(1, 2, 3);
+
+            // Assert.
+            let one = cv.getBoxByKey(1);
+            let three = cv.getBoxByKey(3);
+
+            strict.deepEqual([...cv], [one, three]);
+
+            strict.equal(raisedEvents.length, 2);
+            let event = raisedEvents[1];
+            strict.equal(event.type, CollectionViewChangeType.Reorder);
+        });
+
+        it('when remove filter all items in values', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 });
+
+            o.add(1, 2, 3);
+
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.
+            cv.filterBy();
+
+            // Assert.
+            let one = cv.getBoxByKey(1);
+            let two = cv.getBoxByKey(2);
+            let three = cv.getBoxByKey(3);
+
+            strict.deepEqual([...cv], [one, two, three]);
+
+            strict.equal(raisedEvents.length, 1);
+            let event = raisedEvents[0];
+            strict.equal(event.type, CollectionViewChangeType.Reset);
+        });
+
+        it('when change filter only allowed items in values', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 });
+
+            o.add(1, 2, 3);
+
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.
+            cv.filterBy({ predicate: number => number !== 1 });
+
+            // Assert.
+            let two = cv.getBoxByKey(2);
+            let three = cv.getBoxByKey(3);
+            strict.deepEqual([...cv], [two, three]);
+
+            strict.equal(raisedEvents.length, 1);
+            let event = raisedEvents[0];
+            strict.equal(event.type, CollectionViewChangeType.Reset);
+        });
+
+        it('when filter remove items', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            o.add(1, 2, 3);
+
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 });
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            let one = cv.getBoxByKey(1);
+
+            // Act.
+            o.remove(1);
+
+            // Assert.            
+            let three = cv.getBoxByKey(3);
+            strict.deepEqual([...cv], [three]);
+
+            strict.equal(raisedEvents.length, 1);
+            let event = raisedEvents[0];
+            strict.equal(event.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(event.items, [one]);
+        });
+
+        it('when filter remove filtered items', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            o.add(1, 2, 3);
+
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 });
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.
+            o.remove(2);
+
+            // Assert.            
+            let one = cv.getBoxByKey(1);
+            let three = cv.getBoxByKey(3);
+            strict.deepEqual([...cv], [one, three]);
+
+            strict.equal(raisedEvents.length, 0);
+        });
+
+        it('when filter reset items', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            o.add(1, 2, 3);
+
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 && number !== 5 });
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.
+            o.reset(4, 5, 6);
+
+            // Assert.            
+            let four = cv.getBoxByKey(4);
+            let six = cv.getBoxByKey(6);
+            strict.deepEqual([...cv], [four, six]);
+
+            strict.equal(raisedEvents.length, 1);
+            let event = raisedEvents[0];
+            strict.equal(event.type, CollectionViewChangeType.Reset);
+        });
+
+        it('when filter clear items', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            o.add(1, 2, 3);
+
+            let cv = new CollectionView(o);
+            cv.filterBy({ predicate: number => number !== 2 });
+            let raisedEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => raisedEvents.push(event));
+
+            // Act.
+            o.reset();
+
+            // Assert.            
+            strict.deepEqual([...cv], []);
+
+            strict.equal(raisedEvents.length, 1);
+            let event = raisedEvents[0];
+            strict.equal(event.type, CollectionViewChangeType.Reset);
+        });
+    });
 });

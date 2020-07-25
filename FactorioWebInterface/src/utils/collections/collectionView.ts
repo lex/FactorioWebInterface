@@ -381,7 +381,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return comp;
     }
 
-    filterBy(filterSpecifications: FilterSpecifications<T> | FilterSpecifications<T>[]): void {
+    filterBy(filterSpecifications?: FilterSpecifications<T> | FilterSpecifications<T>[]): void {
         if (!Array.isArray(filterSpecifications)) {
             filterSpecifications = [filterSpecifications];
         }
