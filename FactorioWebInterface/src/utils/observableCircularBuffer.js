@@ -9,6 +9,9 @@ export class ObservableCircularBuffer extends ObservableCollection {
     get count() {
         return this._buffer.count;
     }
+    [Symbol.iterator]() {
+        return this._buffer.values();
+    }
     values() {
         return this._buffer.values();
     }

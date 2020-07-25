@@ -15,6 +15,10 @@ export class ObservableCircularBuffer<T> extends ObservableCollection<T> {
         this._buffer = buffer ?? new CircularBuffer();
     }
 
+    [Symbol.iterator](): IterableIterator<T> {
+        return this._buffer.values();
+    }
+
     values(): IterableIterator<T> {
         return this._buffer.values();
     }

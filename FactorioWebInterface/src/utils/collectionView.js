@@ -35,7 +35,10 @@ export class CollectionView extends Observable {
     get selectedSortId() {
         return CollectionView.selectedSortId;
     }
-    get values() {
+    [Symbol.iterator]() {
+        return this._array.values();
+    }
+    values() {
         return this._array.values();
     }
     get selected() {

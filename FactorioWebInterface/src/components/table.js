@@ -120,7 +120,7 @@ export class Table extends HTMLTableElement {
     }
     buildRows() {
         this._rowMap = new Map();
-        for (let data of this._source.values) {
+        for (let data of this._source) {
             this.buildRow(data);
         }
     }
@@ -168,7 +168,7 @@ export class Table extends HTMLTableElement {
         this._source.sortBy(sortSpec);
     }
     doAdd() {
-        for (let row of this._source.values) {
+        for (let row of this._source) {
             this.buildRow(row);
         }
     }
@@ -212,7 +212,7 @@ export class Table extends HTMLTableElement {
         let body = this._body;
         body.innerHTML = '';
         let rowMap = this._rowMap;
-        for (let entry of this._source.values) {
+        for (let entry of this._source) {
             let row = rowMap.get(entry);
             body.appendChild(row);
         }

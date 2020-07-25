@@ -98,7 +98,7 @@ describe('ModPacksViewModel', function () {
         hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: [modPack, modPack2] })
 
         // Assert.
-        let actual = IterableHelper.map(viewModel.modPacks.values, m => m.value);
+        let actual = IterableHelper.map(viewModel.modPacks.values(), m => m.value);
         // mod packs should be sorted by LastModifiedTime descending.
         let expected = [modPack2, modPack];
         strict.deepEqual([...actual], expected);

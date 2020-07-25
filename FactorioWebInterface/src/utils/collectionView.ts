@@ -36,7 +36,7 @@ export interface CollectionViewChangedData<T> {
     items?: Box<T>[];
 }
 
-export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> {
+export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> implements Iterable<Box<T>> {
     static readonly selectedSortId = {};
 
     private _source: ObservableCollection<T>;
@@ -58,7 +58,11 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return CollectionView.selectedSortId;
     }
 
-    get values(): IterableIterator<Box<T>> {
+    [Symbol.iterator](): IterableIterator<Box<T>> {
+        return this._array.values();
+    }
+
+    values(): IterableIterator<Box<T>> {
         return this._array.values();
     }
 

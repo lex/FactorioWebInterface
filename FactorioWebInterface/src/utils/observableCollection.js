@@ -16,6 +16,9 @@ export class ObservableKeyArray extends ObservableKeyCollection {
     get keySelector() {
         return this._keySelector;
     }
+    [Symbol.iterator]() {
+        return this._map.values();
+    }
     values() {
         return this._map.values();
     }
@@ -97,6 +100,9 @@ export class ObservableArray extends ObservableCollection {
     }
     get count() {
         return this._items.length;
+    }
+    [Symbol.iterator]() {
+        return this._items.values();
     }
     values() {
         return this._items.values();

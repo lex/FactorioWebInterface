@@ -44,7 +44,7 @@ export class Select extends BaseElement {
         }
         if (this._source) {
             this._optionMap = new Map();
-            this.buildOptions(this._source.values);
+            this.buildOptions(this._source.values());
             this._source.subscribe(event => this.update(event));
             this._source.selectedChanged.subscribe(() => this.updateSelected());
             EventListener.onChange(this._select, () => {
@@ -174,7 +174,7 @@ export class Select extends BaseElement {
     doReset() {
         this._optionMap.clear();
         this._select.options.length = 0;
-        this.buildOptions(this._source.values);
+        this.buildOptions(this._source.values());
         this._select.selectedIndex = -1;
         this.updateSelected();
     }
@@ -183,7 +183,7 @@ export class Select extends BaseElement {
         let optionMap = this._optionMap;
         let option = this._select.selectedOptions[0];
         options.length = 0;
-        for (let item of this._source.values) {
+        for (let item of this._source) {
             let option = optionMap.get(item);
             options.add(option);
         }

@@ -428,7 +428,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
 
     private updateResumeTooltip() {
         if (this._resumeCommand.canExecute()) {
-            let newFile = IterableHelper.max(this._tempFiles.files.values, f => f.value.LastModifiedTime);
+            let newFile = IterableHelper.max(this._tempFiles.files.values(), f => f.value.LastModifiedTime);
             this.resumeTooltip = `Start server with latest Temp save: ${newFile.value.Name}.`;
         } else {
             this.resumeTooltip = ServersConsoleViewModel.resumeTooltipDisabledMessage;

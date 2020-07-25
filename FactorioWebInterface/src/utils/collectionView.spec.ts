@@ -11,7 +11,7 @@ describe('CollectionView', function () {
             let cv = new CollectionView(o);
 
             // Act.
-            let array = [...cv.values];
+            let array = [...cv];
 
             // Assert.
             strict.equal(array.length, 0);
@@ -375,7 +375,7 @@ describe('CollectionView', function () {
             o.add(1);
             let one = cv.getBoxByKey(1);
 
-            strict.deepEqual([...cv.values], [one]);
+            strict.deepEqual([...cv], [one]);
             strict.equal(callbackFiredCount, 1);
 
             // Add two items.
@@ -383,7 +383,7 @@ describe('CollectionView', function () {
             let two = cv.getBoxByKey(2);
             let three = cv.getBoxByKey(3);
 
-            strict.deepEqual([...cv.values], [one, two, three]);
+            strict.deepEqual([...cv], [one, two, three]);
             strict.equal(callbackFiredCount, 2);
         });
 
@@ -403,7 +403,7 @@ describe('CollectionView', function () {
             let one = cv.getBoxByKey(1);
             let three = cv.getBoxByKey(3);
 
-            strict.deepEqual([...cv.values], [one, three])
+            strict.deepEqual([...cv], [one, three])
             strict.deepEqual(raisedEvents, [CollectionViewChangeType.Add, CollectionViewChangeType.Reorder]);
         });
 
@@ -420,7 +420,7 @@ describe('CollectionView', function () {
             o.remove(1);
 
             // Assert.
-            strict.deepEqual([...cv.values], []);
+            strict.deepEqual([...cv], []);
             strict.equal(callbackFiredCount, 1);
         });
 
@@ -442,7 +442,7 @@ describe('CollectionView', function () {
             let one = cv.getBoxByKey(1);
             let three = cv.getBoxByKey(3);
 
-            strict.deepEqual([...cv.values], [one, three])
+            strict.deepEqual([...cv], [one, three])
             strict.deepEqual(raisedEvents, [CollectionViewChangeType.Remove]);
         });
 
@@ -461,7 +461,7 @@ describe('CollectionView', function () {
             // Assert.
             let two = cv.getBoxByKey(2);
 
-            strict.deepEqual([...cv.values], [two]);
+            strict.deepEqual([...cv], [two]);
             strict.equal(callbackFiredCount, 1);
         });
     });
@@ -484,7 +484,7 @@ describe('CollectionView', function () {
             let two = cv.getBoxByKey(2);
             let three = cv.getBoxByKey(3);
 
-            strict.deepEqual([...cv.values], [one, two, three]);
+            strict.deepEqual([...cv], [one, two, three]);
             strict.equal(callbackFiredCount, 1);
         });
 
@@ -505,7 +505,7 @@ describe('CollectionView', function () {
             let two = cv.getBoxByKey(2);
             let three = cv.getBoxByKey(3);
 
-            strict.deepEqual([...cv.values], [one, two, three]);
+            strict.deepEqual([...cv], [one, two, three]);
             strict.deepEqual(raisedEvents, [CollectionViewChangeType.Add, CollectionViewChangeType.Reorder]);
         });
     });
