@@ -29,6 +29,6 @@ export class AdminsService {
     }
 
     async removeAdmin(name: string): Promise<Result> {
-        return this._adminsHubservice.removeAdmins(name);
+        return this._adminsHubservice.removeAdmin(name);
     }
 }

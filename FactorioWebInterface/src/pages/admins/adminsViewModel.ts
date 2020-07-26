@@ -2,11 +2,12 @@
 import { AdminsService } from "./adminsService";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { Validator, PropertyValidation, ValidationResult } from "../../utils/validation/module";
-import { ObservableCollection } from "../../utils/collections/module";
+import { CollectionView } from "../../utils/collections/module";
 import { Admin } from "./adminsTypes";
 import { ErrorService } from "../../services/errorService";
 import { AdminsTextValidationRule } from "./adminsTextValidationRule";
 import { DelegateCommand, ICommand } from "../../utils/command";
+import { ComparatorHelper } from "../../utils/comparatorHelper";
 
 export class AdminsViewModel extends ObservableObject implements IObservableErrors {
     private _adminsService: AdminsService
@@ -14,6 +15,8 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
 
     private _addAdminsText = '';
     private _adminListHeader = 'Admin List (fetching...)';
+
+    private _admins: CollectionView<Admin>;
 
     private _validator: Validator<AdminsViewModel>;
     private _errors = new ObservableErrors();
@@ -41,8 +44,8 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
         this.errors.setError('addAdminsText', validationResult);
     }
 
-    get admins(): ObservableCollection<Admin> {
-        return this._adminsService.admins;
+    get admins(): CollectionView<Admin> {
+        return this._admins;
     }
 
     get adminListHeader(): string {
@@ -76,6 +79,9 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
         this._adminsService = adminsService;
         this._errorService = errorService;
 
+        this._admins = new CollectionView(adminsService.admins);
+        this._admins.sortBy({ property: 'Name', ascendingComparator: ComparatorHelper.buildCaseInsensitiveStringComparatorForProperty('Name') });
+
         this._validator = new Validator<this>(this, [
             new PropertyValidation('addAdminsText')
                 .displayName('Text')
@@ -88,8 +94,8 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
 
         this._errors.errorChanged('addAdminsText', () => this._addAdminsCommand.raiseCanExecuteChanged());
 
-        this.admins.subscribe((event) => {
-            let header = `Admin List (${this.admins.count})`;
+        adminsService.admins.subscribe((event) => {
+            let header = `Admin List (${this._adminsService.admins.count})`;
             this.setAdminListHeader(header);
         });
     }
@@ -101,12 +107,18 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
             return;
         }
 
-        let result = await this._adminsService.addAdmins(this._addAdminsText)
+        let result = await this._adminsService.addAdmins(this._addAdminsText);
+        if (result.Success) {
+            this._addAdminsText = '';
+            this.raise('addAdminsText', this._addAdminsText);
+            this.errors.setError('addAdminsText', ValidationResult.validResult);
+        }
+
         this._errorService.reportIfError(result);
     }
 
     private async removeAdmin(admin: Admin) {
-        let result = await this._adminsService.removeAdmin(admin.Name)
+        let result = await this._adminsService.removeAdmin(admin.Name);
         this._errorService.reportIfError(result);
     }
 }

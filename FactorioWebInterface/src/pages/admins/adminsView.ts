@@ -64,22 +64,19 @@ export class AdminsView extends VirtualComponent {
     }
 
     private buildTable(): Table<Admin> {
-        let removeCellBuilder = (admin: Admin) => {
+        let removeCellBuilder = ((admin: Admin) => {
             return new Button('Remove', Button.classes.danger)
                 .setCommand(this._adminsViewModel.removeAdminCommand)
                 .setCommandParameter(admin);
-        }
-
-        let nameColumn = new TextColumn('Name');
+        });
 
         let table = new Table<Admin>(this._adminsViewModel.admins, [
-            nameColumn,
+            new TextColumn('Name'),
             new ColumnTemplate()
                 .setHeader(() => 'Remove')
                 .setCell(removeCellBuilder)
                 .setSortingDisabled(true)
-        ])
-        table.sortBy(nameColumn);
+        ]);
         table.style.fontSize = '1rem';
         table.style.fontWeight = 'normal';
         table.style.marginLeft = '1.5rem';

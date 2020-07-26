@@ -25,7 +25,7 @@ export class AdminsView extends VirtualComponent {
             .setCommand(this._adminsViewModel.addAdminsCommand);
         addButton.style.width = 'min-content';
         let form = new VirtualForm(this._adminsViewModel, [
-            new TextareaField('addAdminsText', 'Add in game admins (comma seperated list):'),
+            new TextareaField('addAdminsText', 'Add in game admins (comma separated list):'),
             new Field(addButton)
         ]);
         form.root.style.fontSize = '1rem';
@@ -45,20 +45,18 @@ export class AdminsView extends VirtualComponent {
         return tableCollapse;
     }
     buildTable() {
-        let removeCellBuilder = (admin) => {
+        let removeCellBuilder = ((admin) => {
             return new Button('Remove', Button.classes.danger)
                 .setCommand(this._adminsViewModel.removeAdminCommand)
                 .setCommandParameter(admin);
-        };
-        let nameColumn = new TextColumn('Name');
+        });
         let table = new Table(this._adminsViewModel.admins, [
-            nameColumn,
+            new TextColumn('Name'),
             new ColumnTemplate()
                 .setHeader(() => 'Remove')
                 .setCell(removeCellBuilder)
                 .setSortingDisabled(true)
         ]);
-        table.sortBy(nameColumn);
         table.style.fontSize = '1rem';
         table.style.fontWeight = 'normal';
         table.style.marginLeft = '1.5rem';

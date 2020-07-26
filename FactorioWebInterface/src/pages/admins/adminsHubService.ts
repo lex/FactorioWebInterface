@@ -48,7 +48,7 @@ export class AdminsHubService {
         return this._connection.invoke('AddAdmins', data);
     }
 
-    removeAdmins(name: string): Promise<Result> {
+    removeAdmin(name: string): Promise<Result> {
         return this._connection.invoke('RemoveAdmin', name);
     }
 

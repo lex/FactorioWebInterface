@@ -9,9 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { ObservableObject } from "../../utils/observableObject";
 import { ObservableErrors } from "../../utils/observableErrors";
-import { Validator, PropertyValidation } from "../../utils/validation/module";
+import { Validator, PropertyValidation, ValidationResult } from "../../utils/validation/module";
+import { CollectionView } from "../../utils/collections/module";
 import { AdminsTextValidationRule } from "./adminsTextValidationRule";
 import { DelegateCommand } from "../../utils/command";
+import { ComparatorHelper } from "../../utils/comparatorHelper";
 export class AdminsViewModel extends ObservableObject {
     constructor(adminsService, errorService) {
         super();
@@ -20,6 +22,8 @@ export class AdminsViewModel extends ObservableObject {
         this._errors = new ObservableErrors();
         this._adminsService = adminsService;
         this._errorService = errorService;
+        this._admins = new CollectionView(adminsService.admins);
+        this._admins.sortBy({ property: 'Name', ascendingComparator: ComparatorHelper.buildCaseInsensitiveStringComparatorForProperty('Name') });
         this._validator = new Validator(this, [
             new PropertyValidation('addAdminsText')
                 .displayName('Text')
@@ -28,8 +32,8 @@ export class AdminsViewModel extends ObservableObject {
         this._addAdminsCommand = new DelegateCommand(() => this.addAdmins(), () => !this._errors.hasErrors);
         this._removeAdminCommand = new DelegateCommand((admin) => this.removeAdmin(admin));
         this._errors.errorChanged('addAdminsText', () => this._addAdminsCommand.raiseCanExecuteChanged());
-        this.admins.subscribe((event) => {
-            let header = `Admin List (${this.admins.count})`;
+        adminsService.admins.subscribe((event) => {
+            let header = `Admin List (${this._adminsService.admins.count})`;
             this.setAdminListHeader(header);
         });
     }
@@ -51,7 +55,7 @@ export class AdminsViewModel extends ObservableObject {
         this.errors.setError('addAdminsText', validationResult);
     }
     get admins() {
-        return this._adminsService.admins;
+        return this._admins;
     }
     get adminListHeader() {
         return this._adminListHeader;
@@ -80,6 +84,11 @@ export class AdminsViewModel extends ObservableObject {
                 return;
             }
             let result = yield this._adminsService.addAdmins(this._addAdminsText);
+            if (result.Success) {
+                this._addAdminsText = '';
+                this.raise('addAdminsText', this._addAdminsText);
+                this.errors.setError('addAdminsText', ValidationResult.validResult);
+            }
             this._errorService.reportIfError(result);
         });
     }

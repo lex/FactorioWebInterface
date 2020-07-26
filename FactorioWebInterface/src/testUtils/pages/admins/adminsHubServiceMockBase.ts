@@ -29,8 +29,8 @@ export class AdminsHubServiceMockBase extends InvokeBase<AdminsHubService> imple
         return Promise.resolve({ Success: true });
     }
 
-    removeAdmins(name: string): Promise<Result> {
-        this.invoked('removeAdmins', name);
+    removeAdmin(name: string): Promise<Result> {
+        this.invoked('removeAdmin', name);
         return Promise.resolve({ Success: true });
     }
 }
