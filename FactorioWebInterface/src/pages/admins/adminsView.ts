@@ -2,11 +2,13 @@
 import { AdminsViewModel } from "./adminsViewModel";
 import { Table, TextColumn, ColumnTemplate } from "../../components/table";
 import { Button } from "../../components/button";
-import { Admin } from "./adminsService";
 import { Collapse } from "../../components/collapse";
 import { VirtualForm } from "../../components/virtualForm";
 import { TextareaField } from "../../components/textareaField";
 import { Field } from "../../components/field";
+import { Admin } from "./adminsTypes";
+import { FlexPanel } from "../../components/flexPanel";
+import { HelpSectionView } from "./helpSectionView";
 
 export class AdminsView extends VirtualComponent {
     private _adminsViewModel: AdminsViewModel;
@@ -15,22 +17,27 @@ export class AdminsView extends VirtualComponent {
         super();
 
         this._adminsViewModel = adminsViewModel;
-        adminsViewModel.onError((error) => alert(error));
 
-        let panel = document.createElement('div');
+        let panel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacingLarge, 'page-container');
+
+        let header = document.createElement('h2');
+        header.textContent = 'In Game Admins';
+
+        let helpSection = new HelpSectionView();
+        let formSection = this.buildAddAdminsForm();
+        let tableSection = this.buildTableCollapse();
+
+        panel.append(header, helpSection.root, formSection, tableSection);
         this._root = panel;
-
-        panel.append(this.buildAddAdminsForm());
-        panel.append(this.buildTableCollapse());
     }
 
     private buildAddAdminsForm() {
-        let addButton = new Button('Add', Button.classes.link);
+        let addButton = new Button('Add', Button.classes.link)
+            .setCommand(this._adminsViewModel.addAdminsCommand);
         addButton.style.width = 'min-content';
-        addButton.onClick(() => this._adminsViewModel.addAdmins());
 
         let form = new VirtualForm(this._adminsViewModel, [
-            new TextareaField('addAdminsText', 'Add in game admins (comma seperated list):'),
+            new TextareaField('addAdminsText', 'Add in game admins (comma separated list):'),
             new Field(addButton)
         ]);
         form.root.style.fontSize = '1rem';
@@ -38,8 +45,7 @@ export class AdminsView extends VirtualComponent {
 
         let formCollapse = new Collapse('Add Admins', form.root);
         formCollapse.open = true;
-        formCollapse.classList.add('is-3', 'border');
-        formCollapse.style.marginTop = '3rem';
+        formCollapse.classList.add('section');
 
         return formCollapse;
     }
@@ -52,18 +58,16 @@ export class AdminsView extends VirtualComponent {
 
         let tableCollapse = new Collapse(header, table)
         tableCollapse.open = true;
-        tableCollapse.classList.add('is-3', 'border');
-        tableCollapse.style.marginTop = '3rem';
+        tableCollapse.classList.add('section');
 
         return tableCollapse;
     }
 
     private buildTable(): Table<Admin> {
         let removeCellBuilder = (admin: Admin) => {
-            let button = new Button('Remove', Button.classes.danger);
-            button.onClick(() => this._adminsViewModel.removeAdmin(admin));
-
-            return button;
+            return new Button('Remove', Button.classes.danger)
+                .setCommand(this._adminsViewModel.removeAdminCommand)
+                .setCommandParameter(admin);
         }
 
         let nameColumn = new TextColumn('Name');
@@ -77,6 +81,7 @@ export class AdminsView extends VirtualComponent {
         ])
         table.sortBy(nameColumn);
         table.style.fontSize = '1rem';
+        table.style.fontWeight = 'normal';
         table.style.marginLeft = '1.5rem';
         table.style.marginBottom = '1rem';
 

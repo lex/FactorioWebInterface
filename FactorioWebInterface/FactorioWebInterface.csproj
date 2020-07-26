@@ -68,12 +68,16 @@
     <None Remove="src\pages\account\accountViewModel.spec.ts" />
     <None Remove="src\pages\account\accountViewModel.ts" />
     <None Remove="src\pages\account\services.ts" />
+    <None Remove="src\pages\admins\adminsHubService.ts" />
     <None Remove="src\pages\admins\adminsPage.ts" />
     <None Remove="src\pages\admins\adminsService.ts" />
+    <None Remove="src\pages\admins\adminsTextValidationRule.ts" />
+    <None Remove="src\pages\admins\adminsTypes.ts" />
     <None Remove="src\pages\admins\adminsView.ts" />
+    <None Remove="src\pages\admins\adminsViewModel.spec.ts" />
     <None Remove="src\pages\admins\adminsViewModel.ts" />
     <None Remove="src\pages\admins\helpSectionView.ts" />
-    <None Remove="src\pages\admins\mainView.ts" />
+    <None Remove="src\pages\admins\services.ts" />
     <None Remove="src\pages\bans\bansPage.ts" />
     <None Remove="src\pages\bans\bansService.ts" />
     <None Remove="src\pages\bans\bansView.ts" />
@@ -162,6 +166,7 @@
     <None Remove="src\services\windowService.ts" />
     <None Remove="src\testUtils\invokeBase.ts" />
     <None Remove="src\testUtils\models\formDataMock.ts" />
+    <None Remove="src\testUtils\pages\admins\adminsHubServiceMockBase.ts" />
     <None Remove="src\testUtils\pages\mods\modsHubServiceMockBase.ts" />
     <None Remove="src\testUtils\pages\servers\serversHubServiceMockBase.ts" />
     <None Remove="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
@@ -307,6 +312,11 @@
     <TypeScriptCompile Include="src\pages\account\accountViewModel.spec.ts" />
     <TypeScriptCompile Include="src\pages\account\accountViewModel.ts" />
     <TypeScriptCompile Include="src\pages\account\services.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsHubService.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsTextValidationRule.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsTypes.ts" />
+    <TypeScriptCompile Include="src\pages\admins\adminsViewModel.spec.ts" />
+    <TypeScriptCompile Include="src\pages\admins\services.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPackNameNotTakenValidationRule.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPacksViewModel.spec.ts" />
     <TypeScriptCompile Include="src\services\documentService.ts" />
@@ -330,7 +340,6 @@
     <TypeScriptCompile Include="src\pages\admins\adminsView.ts" />
     <TypeScriptCompile Include="src\pages\admins\adminsViewModel.ts" />
     <TypeScriptCompile Include="src\pages\admins\helpSectionView.ts" />
-    <TypeScriptCompile Include="src\pages\admins\mainView.ts" />
     <TypeScriptCompile Include="src\pages\bans\bansPage.ts" />
     <TypeScriptCompile Include="src\pages\bans\bansService.ts" />
     <TypeScriptCompile Include="src\pages\bans\bansView.ts" />
@@ -413,6 +422,7 @@
     <TypeScriptCompile Include="src\services\windowService.ts" />
     <TypeScriptCompile Include="src\testUtils\invokeBase.ts" />
     <TypeScriptCompile Include="src\testUtils\models\formDataMock.ts" />
+    <TypeScriptCompile Include="src\testUtils\pages\admins\adminsHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\pages\mods\modsHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\pages\servers\serversHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\copyToClipboardServiceMockBase.ts" />

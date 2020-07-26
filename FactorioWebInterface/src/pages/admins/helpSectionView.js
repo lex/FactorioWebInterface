@@ -11,8 +11,7 @@ export class HelpSectionView extends VirtualComponent {
         content.style.padding = '0 2rem';
         let collapse = new Collapse('Help', content);
         collapse.open = true;
-        collapse.classList.add('border', 'header', 'is-4');
-        collapse.style.marginTop = '1rem';
+        collapse.classList.add('section');
         this._root = collapse;
     }
 }

@@ -7,63 +7,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { HubConnectionBuilder } from "@microsoft/signalr";
-import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { ObservableKeyArray } from "../../utils/collections/module";
 export class AdminsService {
-    constructor() {
+    constructor(adminsHubservice) {
         this._admins = new ObservableKeyArray(admin => admin.Name);
-        this._connection = new HubConnectionBuilder()
-            .withUrl("/factorioAdminHub")
-            .withHubProtocol(new MessagePackHubProtocol())
-            .build();
-        this._connection.on('SendAdmins', (data) => {
-            this._admins.update(data);
+        this._adminsHubservice = adminsHubservice;
+        adminsHubservice.onSendAdmins.subscribe(event => {
+            this._admins.update(event);
         });
-        this._connection.onclose(() => __awaiter(this, void 0, void 0, function* () {
-            yield this.startConnection();
-        }));
-        this.startConnection();
+        adminsHubservice.whenConnection(() => {
+            adminsHubservice.requestAdmins();
+        });
     }
     get admins() {
         return this._admins;
     }
-    requestAdmins() {
-        this._connection.send('RequestAdmins');
-    }
     addAdmins(text) {
         return __awaiter(this, void 0, void 0, function* () {
-            let data = text.trim();
-            if (data === "") {
-                return 'Enter names for admins';
-            }
-            let result = yield this._connection.invoke('AddAdmins', data);
-            if (!result.Success) {
-                return JSON.stringify(result.Errors);
-            }
-            return undefined;
+            return this._adminsHubservice.addAdmins(text);
         });
     }
-    removeAdmin(admin) {
+    removeAdmin(name) {
         return __awaiter(this, void 0, void 0, function* () {
-            let name = admin.Name;
-            let result = yield this._connection.invoke('RemoveAdmin', name);
-            if (!result.Success) {
-                return JSON.stringify(result.Errors);
-            }
-            return undefined;
-        });
-    }
-    startConnection() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield this._connection.start();
-                this.requestAdmins();
-            }
-            catch (ex) {
-                console.log(ex);
-                setTimeout(() => this.startConnection(), 2000);
-            }
+            return this._adminsHubservice.removeAdmins(name);
         });
     }
 }

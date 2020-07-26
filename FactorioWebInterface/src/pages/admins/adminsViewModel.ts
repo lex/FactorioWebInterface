@@ -1,12 +1,16 @@
 ﻿import { ObservableObject } from "../../utils/observableObject";
-import { AdminsService, Admin } from "./adminsService";
-import { Observable } from "../../utils/observable";
+import { AdminsService } from "./adminsService";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { Validator, PropertyValidation, ValidationResult } from "../../utils/validation/module";
 import { ObservableCollection } from "../../utils/collections/module";
+import { Admin } from "./adminsTypes";
+import { ErrorService } from "../../services/errorService";
+import { AdminsTextValidationRule } from "./adminsTextValidationRule";
+import { DelegateCommand, ICommand } from "../../utils/command";
 
 export class AdminsViewModel extends ObservableObject implements IObservableErrors {
     private _adminsService: AdminsService
+    private _errorService: ErrorService;
 
     private _addAdminsText = '';
     private _adminListHeader = 'Admin List (fetching...)';
@@ -14,18 +18,25 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
     private _validator: Validator<AdminsViewModel>;
     private _errors = new ObservableErrors();
 
-    private _errorObservable = new Observable<string>();
+    private _addAdminsCommand: DelegateCommand;
+    private _removeAdminCommand: DelegateCommand<Admin>;
 
     get addAdminsText(): string {
         return this._addAdminsText;
     }
     set addAdminsText(text: string) {
-        if (text === this._addAdminsText) {
+        let trimmedText = text?.trim() ?? '';
+
+        if (this._addAdminsText === trimmedText) {
+            if (trimmedText !== text) {
+                this.raise('addAdminsText', trimmedText);
+            }
+
             return;
         }
 
-        this._addAdminsText = text;
-        this.raise('addAdminsText', text);
+        this._addAdminsText = trimmedText;
+        this.raise('addAdminsText', trimmedText);
         let validationResult = this._validator.validate('addAdminsText');
         this.errors.setError('addAdminsText', validationResult);
     }
@@ -51,22 +62,31 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
         return this._errors;
     }
 
-    constructor(adminsService: AdminsService) {
+    get addAdminsCommand(): ICommand {
+        return this._addAdminsCommand;
+    }
+
+    get removeAdminCommand(): ICommand<Admin> {
+        return this._removeAdminCommand;
+    }
+
+    constructor(adminsService: AdminsService, errorService: ErrorService) {
         super();
 
         this._adminsService = adminsService;
+        this._errorService = errorService;
 
         this._validator = new Validator<this>(this, [
-            new PropertyValidation('addAdminsText').displayName('Text').rules({
-                validate: (value: string) => {
-                    if (!value || value.search(/[^,\s]/) === -1) {
-                        return ValidationResult.error('contain at least one non \',\' (comma) or \' \' (whitespace) character');
-                    } else {
-                        return ValidationResult.validResult;
-                    }
-                }
-            })
+            new PropertyValidation('addAdminsText')
+                .displayName('Text')
+                .rules(new AdminsTextValidationRule())
         ]);
+
+        this._addAdminsCommand = new DelegateCommand(() => this.addAdmins(), () => !this._errors.hasErrors);
+
+        this._removeAdminCommand = new DelegateCommand((admin: Admin) => this.removeAdmin(admin));
+
+        this._errors.errorChanged('addAdminsText', () => this._addAdminsCommand.raiseCanExecuteChanged());
 
         this.admins.subscribe((event) => {
             let header = `Admin List (${this.admins.count})`;
@@ -74,27 +94,19 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
         });
     }
 
-    onError(callback: (event: string) => void): () => void {
-        return this._errorObservable.subscribe(callback);
-    }
-
-    async addAdmins() {
+    private async addAdmins() {
         let validationResult = this._validator.validate('addAdminsText');
         this.errors.setError('addAdminsText', validationResult);
         if (!validationResult.valid) {
             return;
         }
 
-        let error = await this._adminsService.addAdmins(this._addAdminsText)
-        if (error) {
-            this._errorObservable.raise(error);
-        }
+        let result = await this._adminsService.addAdmins(this._addAdminsText)
+        this._errorService.reportIfError(result);
     }
 
-    async removeAdmin(admin: Admin) {
-        let error = await this._adminsService.removeAdmin(admin)
-        if (error) {
-            this._errorObservable.raise(error);
-        }
+    private async removeAdmin(admin: Admin) {
+        let result = await this._adminsService.removeAdmin(admin.Name)
+        this._errorService.reportIfError(result);
     }
 }

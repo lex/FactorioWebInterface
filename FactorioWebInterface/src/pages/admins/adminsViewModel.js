@@ -8,29 +8,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { ObservableObject } from "../../utils/observableObject";
-import { Observable } from "../../utils/observable";
 import { ObservableErrors } from "../../utils/observableErrors";
-import { Validator, PropertyValidation, ValidationResult } from "../../utils/validation/module";
+import { Validator, PropertyValidation } from "../../utils/validation/module";
+import { AdminsTextValidationRule } from "./adminsTextValidationRule";
+import { DelegateCommand } from "../../utils/command";
 export class AdminsViewModel extends ObservableObject {
-    constructor(adminsService) {
+    constructor(adminsService, errorService) {
         super();
         this._addAdminsText = '';
         this._adminListHeader = 'Admin List (fetching...)';
         this._errors = new ObservableErrors();
-        this._errorObservable = new Observable();
         this._adminsService = adminsService;
+        this._errorService = errorService;
         this._validator = new Validator(this, [
-            new PropertyValidation('addAdminsText').displayName('Text').rules({
-                validate: (value) => {
-                    if (!value || value.search(/[^,\s]/) === -1) {
-                        return ValidationResult.error('contain at least one non \',\' (comma) or \' \' (whitespace) character');
-                    }
-                    else {
-                        return ValidationResult.validResult;
-                    }
-                }
-            })
+            new PropertyValidation('addAdminsText')
+                .displayName('Text')
+                .rules(new AdminsTextValidationRule())
         ]);
+        this._addAdminsCommand = new DelegateCommand(() => this.addAdmins(), () => !this._errors.hasErrors);
+        this._removeAdminCommand = new DelegateCommand((admin) => this.removeAdmin(admin));
+        this._errors.errorChanged('addAdminsText', () => this._addAdminsCommand.raiseCanExecuteChanged());
         this.admins.subscribe((event) => {
             let header = `Admin List (${this.admins.count})`;
             this.setAdminListHeader(header);
@@ -40,11 +37,16 @@ export class AdminsViewModel extends ObservableObject {
         return this._addAdminsText;
     }
     set addAdminsText(text) {
-        if (text === this._addAdminsText) {
+        var _a;
+        let trimmedText = (_a = text === null || text === void 0 ? void 0 : text.trim()) !== null && _a !== void 0 ? _a : '';
+        if (this._addAdminsText === trimmedText) {
+            if (trimmedText !== text) {
+                this.raise('addAdminsText', trimmedText);
+            }
             return;
         }
-        this._addAdminsText = text;
-        this.raise('addAdminsText', text);
+        this._addAdminsText = trimmedText;
+        this.raise('addAdminsText', trimmedText);
         let validationResult = this._validator.validate('addAdminsText');
         this.errors.setError('addAdminsText', validationResult);
     }
@@ -64,8 +66,11 @@ export class AdminsViewModel extends ObservableObject {
     get errors() {
         return this._errors;
     }
-    onError(callback) {
-        return this._errorObservable.subscribe(callback);
+    get addAdminsCommand() {
+        return this._addAdminsCommand;
+    }
+    get removeAdminCommand() {
+        return this._removeAdminCommand;
     }
     addAdmins() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -74,18 +79,14 @@ export class AdminsViewModel extends ObservableObject {
             if (!validationResult.valid) {
                 return;
             }
-            let error = yield this._adminsService.addAdmins(this._addAdminsText);
-            if (error) {
-                this._errorObservable.raise(error);
-            }
+            let result = yield this._adminsService.addAdmins(this._addAdminsText);
+            this._errorService.reportIfError(result);
         });
     }
     removeAdmin(admin) {
         return __awaiter(this, void 0, void 0, function* () {
-            let error = yield this._adminsService.removeAdmin(admin);
-            if (error) {
-                this._errorObservable.raise(error);
-            }
+            let result = yield this._adminsService.removeAdmin(admin.Name);
+            this._errorService.reportIfError(result);
         });
     }
 }
