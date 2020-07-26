@@ -8,26 +8,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
-import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { Observable } from "../../utils/observable";
-export class AdminsHubService {
+import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
+export class BansHubService {
     constructor() {
         this._whenConnection = new Observable();
-        this._onSendAdmins = new Observable();
+        this._onSendBans = new Observable();
         this._connection = new HubConnectionBuilder()
-            .withUrl("/factorioAdminHub")
+            .withUrl("/factorioBanHub")
             .withHubProtocol(new MessagePackHubProtocol())
             .build();
-        this._connection.on('SendAdmins', (data) => {
-            this._onSendAdmins.raise(data);
+        this._connection.on('SendBans', (data) => {
+            this._onSendBans.raise(data);
         });
         this._connection.onclose(() => __awaiter(this, void 0, void 0, function* () {
             yield this.startConnection();
         }));
         this.startConnection();
     }
-    get onSendAdmins() {
-        return this._onSendAdmins;
+    get onSendBans() {
+        return this._onSendBans;
     }
     whenConnection(callback) {
         if (this._connection.state === HubConnectionState.Connected) {
@@ -35,14 +35,14 @@ export class AdminsHubService {
         }
         return this._whenConnection.subscribe(callback);
     }
-    requestAdmins() {
-        this._connection.send('RequestAdmins');
+    requestBans() {
+        this._connection.send('RequestAllBans');
     }
-    addAdmins(data) {
-        return this._connection.invoke('AddAdmins', data);
+    addBan(ban, synchronizeWithServers) {
+        return this._connection.invoke('AddBan', ban, synchronizeWithServers);
     }
-    removeAdmin(name) {
-        return this._connection.invoke('RemoveAdmin', name);
+    removeBan(username, synchronizeWithServers) {
+        return this._connection.invoke('RemoveBan', username, synchronizeWithServers);
     }
     startConnection() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -57,4 +57,4 @@ export class AdminsHubService {
         });
     }
 }
-//# sourceMappingURL=adminsHubService.js.map
+//# sourceMappingURL=bansHubService.js.map

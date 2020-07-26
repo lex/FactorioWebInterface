@@ -29,7 +29,7 @@ export class AdminsService {
     }
     removeAdmin(name) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this._adminsHubservice.removeAdmins(name);
+            return this._adminsHubservice.removeAdmin(name);
         });
     }
 }

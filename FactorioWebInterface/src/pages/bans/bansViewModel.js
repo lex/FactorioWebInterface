@@ -8,11 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { ObservableObject } from "../../utils/observableObject";
-import { Observable } from "../../utils/observable";
 import { ObservableErrors } from "../../utils/observableErrors";
 import { Validator, PropertyValidation } from "../../utils/validation/module";
+import { CollectionView } from "../../utils/collections/module";
+import { DelegateCommand } from "../../utils/command";
 export class BansViewModel extends ObservableObject {
-    constructor(bansService) {
+    constructor(bansService, errorService) {
+        var _a;
         super();
         this._formFields = {
             username: '',
@@ -24,8 +26,9 @@ export class BansViewModel extends ObservableObject {
         };
         this._errors = new ObservableErrors();
         this._banListHeader = 'Bans (fetching...)';
-        this._errorObservable = new Observable();
         this._bansService = bansService;
+        this._errorService = errorService;
+        this._formFields.admin = (_a = bansService.actor) !== null && _a !== void 0 ? _a : '';
         this._validator = new Validator(this, [
             new PropertyValidation('username').displayName('Username').notEmptyString(),
             new PropertyValidation('reason').displayName('Reason').notEmptyString(),
@@ -33,8 +36,12 @@ export class BansViewModel extends ObservableObject {
             new PropertyValidation('date').displayName('Date').notNull(),
             new PropertyValidation('time').displayName('Time').notNull()
         ]);
-        this.bans.subscribe((event) => {
-            let header = `Bans (${this.bans.count})`;
+        this._bans = new CollectionView(bansService.bans);
+        this._bans.sortBy({ property: 'DateTime', ascending: false });
+        this._addBanCommand = new DelegateCommand(() => this.addBan(), () => !this.errors.hasErrors);
+        this._removeBanCommand = new DelegateCommand(ban => this.removeBan(ban));
+        this._bansService.bans.subscribe((event) => {
+            let header = `Bans (${this._bansService.bans.count})`;
             this.setBanListHeader(header);
         });
         let now = new Date();
@@ -42,7 +49,7 @@ export class BansViewModel extends ObservableObject {
         this.time = now;
     }
     get bans() {
-        return this._bansService.bans;
+        return this._bans;
     }
     get banListHeader() {
         return this._banListHeader;
@@ -83,6 +90,12 @@ export class BansViewModel extends ObservableObject {
     set synchronizeWithServers(value) {
         this.setAndRaise(this._formFields, 'synchronizeWithServers', value);
     }
+    get addBanCommand() {
+        return this._addBanCommand;
+    }
+    get removeBanCommand() {
+        return this._removeBanCommand;
+    }
     setBanListHeader(text) {
         if (text === this._banListHeader) {
             return;
@@ -94,15 +107,13 @@ export class BansViewModel extends ObservableObject {
         if (this.setAndRaise(this._formFields, propertyName, value)) {
             let validationResult = this._validator.validate(propertyName);
             this.errors.setError(propertyName, validationResult);
+            this._addBanCommand.raiseCanExecuteChanged();
             return true;
         }
         return false;
     }
     get errors() {
         return this._errors;
-    }
-    onError(callback) {
-        return this._errorObservable.subscribe(callback);
     }
     validateAll() {
         let success = true;
@@ -113,6 +124,7 @@ export class BansViewModel extends ObservableObject {
                 success = false;
             }
         }
+        this._addBanCommand.raiseCanExecuteChanged();
         return success;
     }
     addBan() {
@@ -137,19 +149,15 @@ export class BansViewModel extends ObservableObject {
                 Reason: this.reason,
                 DateTime: dateTime
             };
-            let error = yield this._bansService.addBan(ban, true);
-            if (error) {
-                this._errorObservable.raise(error);
-            }
+            let result = yield this._bansService.addBan(ban, true);
+            this._errorService.reportIfError(result);
         });
     }
-    removeAdmin(ban) {
+    removeBan(ban) {
         return __awaiter(this, void 0, void 0, function* () {
             this.updateFormFromBan(ban);
-            let error = yield this._bansService.removeBan(ban.Username, true);
-            if (error) {
-                this._errorObservable.raise(error);
-            }
+            let result = yield this._bansService.removeBan(ban.Username, true);
+            this._errorService.reportIfError(result);
         });
     }
     updateFormFromBan(ban) {

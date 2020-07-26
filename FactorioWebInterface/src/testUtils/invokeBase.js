@@ -34,5 +34,13 @@ export class InvokeBase {
         }
         throw new AssertionError({ message: `The expected method invocation ${name} was not found.`, expected: name });
     }
+    assertMethodNotCalled(name) {
+        for (const invocation of this._methodsCalled) {
+            if (invocation.name === name) {
+                throw new AssertionError({ message: `The expected method invocation ${name} was not found.`, expected: name });
+            }
+        }
+        return;
+    }
 }
 //# sourceMappingURL=invokeBase.js.map

@@ -1,71 +1,44 @@
-﻿import { HubConnectionBuilder, HubConnection } from "@microsoft/signalr";
-import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
-import { Result, CollectionChangedData } from "../../ts/utils";
+﻿import { Result } from "../../ts/utils";
 import { ObservableCollection, ObservableKeyArray } from "../../utils/collections/module";
-
-export interface Ban {
-    Username: string;
-    Reason: string;
-    Admin: string;
-    DateTime: Date;
-}
+import { BansHubService } from "./bansHubService";
+import { Ban } from "./ban";
+import { IHiddenInputService } from "../../services/iHiddenInputService";
 
 export class BansService {
-    private _connection: HubConnection;
+    private _bansHubService: BansHubService;
 
+    private _actor = '';
     private _bans = new ObservableKeyArray<string, Ban>(ban => ban.Username);
+
+    get actor(): string {
+        return this._actor;
+    }
 
     get bans(): ObservableCollection<Ban> {
         return this._bans;
     }
 
-    constructor() {
-        this._connection = new HubConnectionBuilder()
-            .withUrl("/factorioBanHub")
-            .withHubProtocol(new MessagePackHubProtocol())
-            .build();
+    constructor(bansHubService: BansHubService, hiddenInputService: IHiddenInputService) {
+        this._bansHubService = bansHubService;
 
-        this._connection.on('SendBans', (data: CollectionChangedData) => {
-            this._bans.update(data);
+        this._actor = hiddenInputService.getValue('__username');
+
+        bansHubService.onSendBans.subscribe(event => {
+            this._bans.update(event);
         });
 
-        this._connection.onclose(async () => {
-            await this.startConnection();
-        });
-
-        this.startConnection();
+        bansHubService.whenConnection(() => bansHubService.requestBans());
     }
 
-    requestBans() {
-        this._connection.send('RequestAllBans');
+    requestBans(): void {
+        this._bansHubService.requestBans();
     }
 
-    async addBan(ban: Ban, synchronizeWithServers: boolean): Promise<string> {
-        let result = await this._connection.invoke('AddBan', ban, synchronizeWithServers) as Result;
-        if (!result.Success) {
-            return JSON.stringify(result.Errors);
-        }
-
-        return undefined;
+    addBan(ban: Ban, synchronizeWithServers: boolean): Promise<Result> {
+        return this._bansHubService.addBan(ban, synchronizeWithServers);
     }
 
-    async removeBan(username: string, synchronizeWithServers: boolean): Promise<string> {
-        let result = await this._connection.invoke('RemoveBan', username, synchronizeWithServers) as Result;
-
-        if (!result.Success) {
-            return JSON.stringify(result.Errors);
-        }
-
-        return undefined
-    }
-
-    private async startConnection() {
-        try {
-            await this._connection.start();
-            this.requestBans();
-        } catch (ex) {
-            console.log(ex);
-            setTimeout(() => this.startConnection(), 2000);
-        }
+    removeBan(username: string, synchronizeWithServers: boolean): Promise<Result> {
+        return this.removeBan(username, synchronizeWithServers);
     }
 }

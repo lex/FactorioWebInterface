@@ -21,8 +21,8 @@ export class AdminsHubServiceMockBase extends InvokeBase {
         this.invoked('addAdmins', data);
         return Promise.resolve({ Success: true });
     }
-    removeAdmins(name) {
-        this.invoked('removeAdmins', name);
+    removeAdmin(name) {
+        this.invoked('removeAdmin', name);
         return Promise.resolve({ Success: true });
     }
 }

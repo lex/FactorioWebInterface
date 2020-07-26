@@ -1,12 +1,18 @@
 ﻿import { ObservableObject } from "../../utils/observableObject";
 import { Observable } from "../../utils/observable";
-import { BansService, Ban } from "./bansService";
+import { BansService } from "./bansService";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { Validator, PropertyValidation } from "../../utils/validation/module";
-import { ObservableCollection } from "../../utils/collections/module";
+import { CollectionView } from "../../utils/collections/module";
+import { ErrorService } from "../../services/errorService";
+import { Ban } from "./ban";
+import { DelegateCommand, ICommand } from "../../utils/command";
 
 export class BansViewModel extends ObservableObject implements IObservableErrors {
     private _bansService: BansService
+    private _errorService: ErrorService;
+
+    private _bans: CollectionView<Ban>;
 
     private _formFields = {
         username: '',
@@ -21,10 +27,11 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
 
     private _banListHeader = 'Bans (fetching...)';
 
-    private _errorObservable = new Observable<string>();
+    private _addBanCommand: DelegateCommand;
+    private _removeBanCommand: DelegateCommand<Ban>;
 
-    get bans(): ObservableCollection<Ban> {
-        return this._bansService.bans;
+    get bans(): CollectionView<Ban> {
+        return this._bans;
     }
 
     get banListHeader(): string {
@@ -73,6 +80,14 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
         this.setAndRaise(this._formFields, 'synchronizeWithServers', value);
     }
 
+    get addBanCommand(): ICommand {
+        return this._addBanCommand;
+    }
+
+    get removeBanCommand(): ICommand<Ban> {
+        return this._removeBanCommand;
+    }
+
     private setBanListHeader(text: string) {
         if (text === this._banListHeader) {
             return;
@@ -86,6 +101,7 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
         if (this.setAndRaise(this._formFields, propertyName, value)) {
             let validationResult = this._validator.validate(propertyName);
             this.errors.setError(propertyName, validationResult);
+            this._addBanCommand.raiseCanExecuteChanged();
             return true;
         }
 
@@ -96,10 +112,13 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
         return this._errors;
     }
 
-    constructor(bansService: BansService) {
+    constructor(bansService: BansService, errorService: ErrorService) {
         super();
 
         this._bansService = bansService;
+        this._errorService = errorService;
+
+        this._formFields.admin = bansService.actor ?? '';
 
         this._validator = new Validator<this>(this, [
             new PropertyValidation('username').displayName('Username').notEmptyString(),
@@ -109,18 +128,21 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
             new PropertyValidation('time').displayName('Time').notNull()
         ]);
 
-        this.bans.subscribe((event) => {
-            let header = `Bans (${this.bans.count})`;
+        this._bans = new CollectionView(bansService.bans);
+        this._bans.sortBy({ property: 'DateTime', ascending: false });
+
+        this._addBanCommand = new DelegateCommand(() => this.addBan(), () => !this.errors.hasErrors);
+
+        this._removeBanCommand = new DelegateCommand(ban => this.removeBan(ban));
+
+        this._bansService.bans.subscribe((event) => {
+            let header = `Bans (${this._bansService.bans.count})`;
             this.setBanListHeader(header);
         });
 
         let now = new Date();
         this.date = now;
         this.time = now;
-    }
-
-    onError(callback: (event: string) => void): () => void {
-        return this._errorObservable.subscribe(callback);
     }
 
     private validateAll(): boolean {
@@ -135,10 +157,11 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
             }
         }
 
+        this._addBanCommand.raiseCanExecuteChanged();
         return success;
     }
 
-    async addBan() {
+    private async addBan() {
         if (!this.validateAll()) {
             return;
         }
@@ -163,19 +186,15 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
             DateTime: dateTime
         };
 
-        let error = await this._bansService.addBan(ban, true)
-        if (error) {
-            this._errorObservable.raise(error);
-        }
+        let result = await this._bansService.addBan(ban, true)
+        this._errorService.reportIfError(result);
     }
 
-    async removeAdmin(ban: Ban) {
+    private async removeBan(ban: Ban) {
         this.updateFormFromBan(ban);
 
-        let error = await this._bansService.removeBan(ban.Username, true)
-        if (error) {
-            this._errorObservable.raise(error);
-        }
+        let result = await this._bansService.removeBan(ban.Username, true)
+        this._errorService.reportIfError(result);
     }
 
     updateFormFromBan(ban: Ban) {
