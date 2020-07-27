@@ -186,14 +186,14 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
             DateTime: dateTime
         };
 
-        let result = await this._bansService.addBan(ban, true)
+        let result = await this._bansService.addBan(ban, true);
         this._errorService.reportIfError(result);
     }
 
     private async removeBan(ban: Ban) {
         this.updateFormFromBan(ban);
 
-        let result = await this._bansService.removeBan(ban.Username, true)
+        let result = await this._bansService.removeBan(ban.Username, true);
         this._errorService.reportIfError(result);
     }
 

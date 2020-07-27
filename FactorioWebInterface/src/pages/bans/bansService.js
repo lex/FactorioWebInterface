@@ -23,7 +23,7 @@ export class BansService {
         return this._bansHubService.addBan(ban, synchronizeWithServers);
     }
     removeBan(username, synchronizeWithServers) {
-        return this.removeBan(username, synchronizeWithServers);
+        return this._bansHubService.removeBan(username, synchronizeWithServers);
     }
 }
 //# sourceMappingURL=bansService.js.map

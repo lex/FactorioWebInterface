@@ -5,7 +5,7 @@ import { IObservable, Observable } from "../../../utils/observable";
 import { CollectionChangedData, Result } from "../../../ts/utils";
 import { Ban } from "../../../pages/bans/ban";
 
-export class BanssHubServiceMockBase extends InvokeBase<BansHubService> implements PublicPart<BansHubService>{
+export class BansHubServiceMockBase extends InvokeBase<BansHubService> implements PublicPart<BansHubService>{
     _onConnection = new Observable<void>();
 
     _onSendBans = new Observable<CollectionChangedData<Ban>>();

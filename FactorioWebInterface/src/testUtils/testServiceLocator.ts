@@ -12,6 +12,7 @@ import { CopyToClipboardServiceMockBase } from "./services/copyToClipboardServic
 import { ServersHubService } from "../pages/servers/serversHubService";
 import { ServersHubServiceMockBase } from "./pages/servers/serversHubServiceMockBase";
 import { registerServerPageServices } from "../pages/servers/services";
+import { registerBansPageServices } from "../pages/bans/services";
 import { registerAdminsPageServices } from "../pages/admins/services";
 import { registerModsPageServices } from "../pages/mods/services";
 import { registerAccountPageServices } from "../pages/account/services";
@@ -27,6 +28,8 @@ import { ModsHubServiceMockBase } from "./pages/mods/modsHubServiceMockBase";
 import { ModsHubService } from "../pages/mods/modsHubService";
 import { AdminsHubService } from "../pages/admins/adminsHubService";
 import { AdminsHubServiceMockBase } from "./pages/admins/adminsHubServiceMockBase";
+import { BansHubService } from "../pages/bans/bansHubService";
+import { BansHubServiceMockBase } from "./pages/bans/bansHubServiceMockBase";
 
 export class TestServiceLocator extends ServiceLocator {
     static registerBaseServices(serviceLocator: ServiceLocator): ServiceLocator {
@@ -56,6 +59,15 @@ export class ServersPageTestServiceLocator extends TestServiceLocator {
 
         registerServerPageServices(this);
         this.register(ServersHubService, () => new ServersHubServiceMockBase());
+    }
+}
+
+export class BansPageTestServiceLocator extends TestServiceLocator {
+    constructor() {
+        super();
+
+        registerBansPageServices(this);
+        this.register(BansHubService, () => new BansHubServiceMockBase());
     }
 }
 

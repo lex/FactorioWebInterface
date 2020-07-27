@@ -39,6 +39,6 @@ export class BansService {
     }
 
     removeBan(username: string, synchronizeWithServers: boolean): Promise<Result> {
-        return this.removeBan(username, synchronizeWithServers);
+        return this._bansHubService.removeBan(username, synchronizeWithServers);
     }
 }

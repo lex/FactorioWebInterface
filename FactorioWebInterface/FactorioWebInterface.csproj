@@ -83,6 +83,7 @@
     <None Remove="src\pages\bans\bansPage.ts" />
     <None Remove="src\pages\bans\bansService.ts" />
     <None Remove="src\pages\bans\bansView.ts" />
+    <None Remove="src\pages\bans\bansViewModel.spec.ts" />
     <None Remove="src\pages\bans\bansViewModel.ts" />
     <None Remove="src\pages\bans\helpSectionView.ts" />
     <None Remove="src\pages\bans\services.ts" />
@@ -322,6 +323,7 @@
     <TypeScriptCompile Include="src\pages\admins\services.ts" />
     <TypeScriptCompile Include="src\pages\bans\ban.ts" />
     <TypeScriptCompile Include="src\pages\bans\bansHubService.ts" />
+    <TypeScriptCompile Include="src\pages\bans\bansViewModel.spec.ts" />
     <TypeScriptCompile Include="src\pages\bans\services.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPackNameNotTakenValidationRule.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPacksViewModel.spec.ts" />
