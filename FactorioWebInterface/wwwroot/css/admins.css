@@ -1562,5 +1562,25 @@ a-field:not([invalid]) a-validation-label {
   }
 }
 
+a-toggle-button {
+  border: 0.125rem solid lightgrey;
+  border-radius: 0.3125rem;
+  padding: 0.125rem;
+  position: relative;
+  cursor: pointer;
+  width: 1.5em;
+  height: 1.5em;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+a-toggle-button[toggled] {
+  border-color: #1e90ff;
+  background-color: #1e90ff;
+}
+a-toggle-button:hover {
+  border-color: #1e90ff;
+}
+
 
 /*# sourceMappingURL=admins.css.map*/

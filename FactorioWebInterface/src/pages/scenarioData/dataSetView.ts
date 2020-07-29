@@ -52,8 +52,7 @@ export class DataSetView extends VirtualComponent {
             new TextColumn('Value')
         ],
             (event) => dataSetViewModel.updateFormFromEntry(event.item));
-        table.style.width = '100%';
-        table.style.marginTop = '1rem';
+        table.style.width = '100%';        
         table.style.fontSize = '1rem';
         table.style.fontWeight = 'normal';
         table.style.lineHeight = '1.5em';

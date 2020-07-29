@@ -129,5 +129,5 @@ export class ModPackFilesViewModel extends ObservableObject {
         return !!this.selectedModPack;
     }
 }
-ModPackFilesViewModel.defaultTitle = 'No Mod Pack selected.';
+ModPackFilesViewModel.defaultTitle = 'No Mod Pack selected';
 //# sourceMappingURL=modPackFilesViewModel.js.map

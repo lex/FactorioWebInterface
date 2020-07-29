@@ -7,6 +7,7 @@ import { TextareaField } from "../../components/textareaField";
 import { Field } from "../../components/field";
 import { FlexPanel } from "../../components/flexPanel";
 import { HelpSectionView } from "./helpSectionView";
+import { ToggleButton } from "../../components/toggleButton";
 export class AdminsView extends VirtualComponent {
     constructor(adminsViewModel) {
         super();
@@ -30,9 +31,27 @@ export class AdminsView extends VirtualComponent {
         ]);
         form.root.style.fontSize = '1rem';
         form.root.style.margin = '0 1.5rem';
-        let formCollapse = new Collapse('Add Admins', form.root);
+        let thumbtack = document.createElement('i');
+        thumbtack.classList.add('fas', 'fa-thumbtack');
+        let toggleButton = new ToggleButton(thumbtack);
+        toggleButton.setTooltip('Pin the form to keep it in view.');
+        toggleButton.style.marginRight = '0.5em';
+        let header = document.createElement('div');
+        header.append(toggleButton, 'Add Admins');
+        let formCollapse = new Collapse(header, form.root);
         formCollapse.open = true;
         formCollapse.classList.add('section');
+        toggleButton.onToggle(state => {
+            if (state) {
+                formCollapse.style.top = '3.5rem';
+                formCollapse.style.position = 'sticky';
+                formCollapse.style.zIndex = '20';
+            }
+            else {
+                formCollapse.style.top = '';
+                formCollapse.style.position = '';
+            }
+        });
         return formCollapse;
     }
     buildTableCollapse() {

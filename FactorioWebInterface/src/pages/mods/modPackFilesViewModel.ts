@@ -9,7 +9,7 @@ import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionView } from "../../utils/collections/module";
 
 export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewModel>{
-    static readonly defaultTitle = 'No Mod Pack selected.';
+    static readonly defaultTitle = 'No Mod Pack selected';
 
     private _modsService: ModsService;
     private _fileSelectionService: FileSelectionService;
