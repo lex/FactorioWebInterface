@@ -1,6 +1,7 @@
 import { ObservableObject } from "../../utils/observableObject";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionView } from "../../utils/collections/module";
+import { DelegateCommand } from "../../utils/command";
 export class DataSetViewModel extends ObservableObject {
     constructor(scenarioDataService, updateDataViewModel) {
         super();
@@ -22,6 +23,7 @@ export class DataSetViewModel extends ObservableObject {
             this.setPlaceholder(value ? DataSetViewModel.fetchingPlaceholder : DataSetViewModel.defaultPlaceholder);
             this.raise('fetchingDataSets', value);
         });
+        this._refreshDataSetsCommand = new DelegateCommand(() => this.refreshDataSets());
     }
     get header() {
         return this._header || 'No Data Set selected';
@@ -37,6 +39,9 @@ export class DataSetViewModel extends ObservableObject {
     }
     get entries() {
         return this._scenarioDataService.entries;
+    }
+    get refreshDataSetsCommand() {
+        return this._refreshDataSetsCommand;
     }
     refreshDataSets() {
         this._scenarioDataService.clearDataSets();

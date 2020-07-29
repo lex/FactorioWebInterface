@@ -32,8 +32,8 @@ export class DataSetView extends VirtualComponent {
         select.style.fontSize = '1rem';
         select.style.fontWeight = 'normal';
 
-        let button = new Button('Refresh Data Sets', Button.classes.link);
-        button.onClick(() => this._dataSetViewModel.refreshDataSets());
+        let button = new Button('Refresh Data Sets', Button.classes.link)
+            .setCommand(this._dataSetViewModel.refreshDataSetsCommand);
         button.style.fontSize = '1rem';
         button.style.fontWeight = 'normal';
         button.style.marginRight = '1rem';
@@ -52,7 +52,7 @@ export class DataSetView extends VirtualComponent {
             new TextColumn('Value')
         ],
             (event) => dataSetViewModel.updateFormFromEntry(event.item));
-        table.style.width = '100%';        
+        table.style.width = '100%';
         table.style.fontSize = '1rem';
         table.style.fontWeight = 'normal';
         table.style.lineHeight = '1.5em';

@@ -1,5 +1,6 @@
 ﻿import { ObservableObject } from "../../utils/observableObject";
 import { ScenarioDataService } from "./scenarioDataService";
+import { DelegateCommand, ICommand } from "../../utils/command";
 
 export class UpdateDataViewModel extends ObservableObject {
     private _scenarioDataService: ScenarioDataService;
@@ -9,6 +10,8 @@ export class UpdateDataViewModel extends ObservableObject {
         Key: null as string,
         Value: null as string
     }
+
+    private _updateCommand: DelegateCommand;
 
     get DataSet(): string {
         return this._fields.DataSet;
@@ -31,17 +34,19 @@ export class UpdateDataViewModel extends ObservableObject {
         this.set('Value', value);
     }
 
+    get updateCommand(): ICommand {
+        return this._updateCommand;
+    }
+
     constructor(scenarioDataService: ScenarioDataService) {
         super();
 
         this._scenarioDataService = scenarioDataService;
+
+        this._updateCommand = new DelegateCommand(() => this._scenarioDataService.update(this._fields));
     }
 
     private set(propertyName: string, value: any) {
         return this.setAndRaise(this._fields, propertyName, value);
-    }
-
-    update() {
-        this._scenarioDataService.update(this._fields);
     }
 }

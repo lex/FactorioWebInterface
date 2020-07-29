@@ -12,9 +12,9 @@ export class UpdateDataView extends VirtualComponent {
     constructor(updateDataViewModel?: UpdateDataViewModel) {
         super();
 
-        let updateButton = new Button('Update', Button.classes.link, 'field-body');
+        let updateButton = new Button('Update', Button.classes.link, 'field-body')
+            .setCommand(updateDataViewModel.updateCommand);
         updateButton.style.width = 'min-content';
-        updateButton.onClick(() => updateDataViewModel.update());
 
         let form = new VirtualForm(updateDataViewModel, [
             new TextField('DataSet', 'Data Set:').setTooltip('The Data Set to update, add or remove entries from.'),
@@ -35,8 +35,8 @@ export class UpdateDataView extends VirtualComponent {
         let toggleButton = new ToggleButton(thumbtack);
         toggleButton.setTooltip('Pin the form to keep it in view.');
         toggleButton.style.marginRight = '0.5em';
-        
-        header.append(toggleButton, 'Update Data');        
+
+        header.append(toggleButton, 'Update Data');
 
         let collapse = new Collapse(header, form.root);
         collapse.classList.add('section');

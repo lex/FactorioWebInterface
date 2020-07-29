@@ -4,6 +4,7 @@ import { UpdateDataViewModel } from "./updateDataViewModel";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionView, ObservableCollection } from "../../utils/collections/module";
 import { Entry } from "./scenarioData";
+import { DelegateCommand, ICommand } from "../../utils/command";
 
 export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
     private static defaultPlaceholder = 'Select Data Set';
@@ -15,6 +16,8 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
     private _header: string;
     private _placeholder: string;
     private _dataSets: CollectionView<string>;
+
+    private _refreshDataSetsCommand: DelegateCommand;
 
     get header(): string {
         return this._header || 'No Data Set selected';
@@ -34,6 +37,10 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
 
     get entries(): ObservableCollection<Entry> {
         return this._scenarioDataService.entries;
+    }
+
+    get refreshDataSetsCommand(): ICommand {
+        return this._refreshDataSetsCommand;
     }
 
     constructor(scenarioDataService: ScenarioDataService, updateDataViewModel: UpdateDataViewModel) {
@@ -60,9 +67,11 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
             this.setPlaceholder(value ? DataSetViewModel.fetchingPlaceholder : DataSetViewModel.defaultPlaceholder);
             this.raise('fetchingDataSets', value);
         });
+
+        this._refreshDataSetsCommand = new DelegateCommand(() => this.refreshDataSets());
     }
 
-    refreshDataSets() {
+    private refreshDataSets() {
         this._scenarioDataService.clearDataSets();
         this._scenarioDataService.requestDataSets();
     }

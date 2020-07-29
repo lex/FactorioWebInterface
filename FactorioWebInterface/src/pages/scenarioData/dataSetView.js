@@ -23,8 +23,8 @@ export class DataSetView extends VirtualComponent {
         select.style.minWidth = '10em';
         select.style.fontSize = '1rem';
         select.style.fontWeight = 'normal';
-        let button = new Button('Refresh Data Sets', Button.classes.link);
-        button.onClick(() => this._dataSetViewModel.refreshDataSets());
+        let button = new Button('Refresh Data Sets', Button.classes.link)
+            .setCommand(this._dataSetViewModel.refreshDataSetsCommand);
         button.style.fontSize = '1rem';
         button.style.fontWeight = 'normal';
         button.style.marginRight = '1rem';

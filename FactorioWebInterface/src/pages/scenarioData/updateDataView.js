@@ -9,9 +9,9 @@ import { Field } from "../../components/field";
 export class UpdateDataView extends VirtualComponent {
     constructor(updateDataViewModel) {
         super();
-        let updateButton = new Button('Update', Button.classes.link, 'field-body');
+        let updateButton = new Button('Update', Button.classes.link, 'field-body')
+            .setCommand(updateDataViewModel.updateCommand);
         updateButton.style.width = 'min-content';
-        updateButton.onClick(() => updateDataViewModel.update());
         let form = new VirtualForm(updateDataViewModel, [
             new TextField('DataSet', 'Data Set:').setTooltip('The Data Set to update, add or remove entries from.'),
             new TextField('Key', 'Key:').setTooltip('The key for the entry.'),
