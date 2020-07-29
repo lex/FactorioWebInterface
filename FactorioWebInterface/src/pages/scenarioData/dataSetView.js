@@ -4,33 +4,34 @@ import { FlexPanel } from "../../components/flexPanel";
 import { Select } from "../../components/select";
 import { Button } from "../../components/button";
 import { ObservableObjectBindingSource } from "../../utils/bindingSource";
+import { Collapse } from "../../components/collapse";
+import { Label } from "../../components/label";
 export class DataSetView extends VirtualComponent {
     constructor(dataSetViewModel) {
         super();
         this._dataSetViewModel = dataSetViewModel;
-        let view = document.createElement('div');
-        view.classList.add('border');
-        view.style.marginTop = '2rem';
-        view.style.padding = '1rem 2rem';
-        this._root = view;
-        let panel = new FlexPanel(FlexPanel.classes.horizontal);
-        view.append(panel);
-        let header = document.createElement('h4');
-        dataSetViewModel.bind('header', (value) => header.innerText = value);
-        panel.appendChild(header);
+        let headerPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing, FlexPanel.classes.grow);
+        let header = new Label()
+            .bindContent(new ObservableObjectBindingSource(dataSetViewModel, 'header'))
+            .addClasses('is-4', 'header');
+        header.style.alignSelf = 'center';
         let select = new Select(this._dataSetViewModel.dataSets)
             .bindPlaceholder(new ObservableObjectBindingSource(dataSetViewModel, 'placeholder'))
             .bindIsLoading(new ObservableObjectBindingSource(dataSetViewModel, 'fetchingDataSets'));
         select.style.marginLeft = 'auto';
-        select.style.marginRight = '0.25rem';
+        select.onclick = event => event.stopPropagation();
         select.style.minWidth = '10em';
-        panel.append(select);
+        select.style.fontSize = '1rem';
+        select.style.fontWeight = 'normal';
         let button = new Button('Refresh Data Sets', Button.classes.link);
         button.onClick(() => this._dataSetViewModel.refreshDataSets());
-        panel.appendChild(button);
+        button.style.fontSize = '1rem';
+        button.style.fontWeight = 'normal';
+        button.style.marginRight = '1rem';
+        headerPanel.append(header, select, button);
         let tableContainer = document.createElement('div');
         tableContainer.style.overflowX = 'auto';
-        view.append(tableContainer);
+        tableContainer.style.margin = '0 1.5rem 1rem 1.5rem';
         let table = new Table(dataSetViewModel.entries, [
             new TextColumn('Key')
                 .setHeader((headerCell) => {
@@ -41,7 +42,14 @@ export class DataSetView extends VirtualComponent {
         ], (event) => dataSetViewModel.updateFormFromEntry(event.item));
         table.style.width = '100%';
         table.style.marginTop = '1rem';
+        table.style.fontSize = '1rem';
+        table.style.fontWeight = 'normal';
+        table.style.lineHeight = '1.5em';
         tableContainer.appendChild(table);
+        let collapse = new Collapse(headerPanel, tableContainer)
+            .addClasses('section')
+            .setOpen(true);
+        this._root = collapse;
     }
 }
 //# sourceMappingURL=dataSetView.js.map

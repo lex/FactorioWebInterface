@@ -109,8 +109,13 @@
     <None Remove="src\pages\scenarioData\dataSetView.ts" />
     <None Remove="src\pages\scenarioData\dataSetViewModel.ts" />
     <None Remove="src\pages\scenarioData\helpSectionView.ts" />
+    <None Remove="src\pages\scenarioData\scenarioData.ts" />
+    <None Remove="src\pages\scenarioData\scenarioDataHubService.ts" />
     <None Remove="src\pages\scenarioData\scenarioDataPage.ts" />
     <None Remove="src\pages\scenarioData\scenarioDataService.ts" />
+    <None Remove="src\pages\scenarioData\scenarioDataView.ts" />
+    <None Remove="src\pages\scenarioData\scenarioDataViewModel.ts" />
+    <None Remove="src\pages\scenarioData\services.ts" />
     <None Remove="src\pages\servers\consoleMessageView.ts" />
     <None Remove="src\pages\servers\factorioServerStatusUtils.ts" />
     <None Remove="src\pages\servers\fileView.ts" />
@@ -172,6 +177,7 @@
     <None Remove="src\testUtils\pages\admins\adminsHubServiceMockBase.ts" />
     <None Remove="src\testUtils\pages\bans\bansHubServiceMockBase.ts" />
     <None Remove="src\testUtils\pages\mods\modsHubServiceMockBase.ts" />
+    <None Remove="src\testUtils\pages\scenarioData\scenarioDataHubServiceMockBase.ts" />
     <None Remove="src\testUtils\pages\servers\serversHubServiceMockBase.ts" />
     <None Remove="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <None Remove="src\testUtils\services\errorServiceMockBase.ts" />
@@ -198,8 +204,6 @@
     <None Remove="src\components\virtualForm.ts" />
     <None Remove="src\ts\custom.d.ts" />
     <None Remove="src\ts\form.ts" />
-    <None Remove="src\pages\scenarioData\mainView.ts" />
-    <None Remove="src\pages\scenarioData\mainViewModel.ts" />
     <None Remove="src\pages\scenarioData\updateDataView.ts" />
     <None Remove="src\pages\scenarioData\updateDataViewModel.ts" />
     <None Remove="src\ts\plaguesplayground.ts" />
@@ -327,6 +331,9 @@
     <TypeScriptCompile Include="src\pages\bans\services.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPackNameNotTakenValidationRule.ts" />
     <TypeScriptCompile Include="src\pages\mods\modPacksViewModel.spec.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\scenarioData.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\scenarioDataHubService.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\services.ts" />
     <TypeScriptCompile Include="src\services\documentService.ts" />
     <TypeScriptCompile Include="src\services\iDocumentService.ts" />
     <TypeScriptCompile Include="src\services\iNavService.ts" />
@@ -432,6 +439,7 @@
     <TypeScriptCompile Include="src\testUtils\pages\admins\adminsHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\pages\bans\bansHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\pages\mods\modsHubServiceMockBase.ts" />
+    <TypeScriptCompile Include="src\testUtils\pages\scenarioData\scenarioDataHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\pages\servers\serversHubServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\copyToClipboardServiceMockBase.ts" />
     <TypeScriptCompile Include="src\testUtils\services\errorServiceMockBase.ts" />
@@ -463,8 +471,8 @@
     <TypeScriptCompile Include="src\components\virtualComponent.ts" />
     <TypeScriptCompile Include="src\components\virtualForm.ts" />
     <TypeScriptCompile Include="src\custom.d.ts" />
-    <TypeScriptCompile Include="src\pages\scenarioData\mainView.ts" />
-    <TypeScriptCompile Include="src\pages\scenarioData\mainViewModel.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\scenarioDataView.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\scenarioDataViewModel.ts" />
     <TypeScriptCompile Include="src\pages\scenarioData\updateDataView.ts" />
     <TypeScriptCompile Include="src\pages\scenarioData\updateDataViewModel.ts" />
     <TypeScriptCompile Include="src\ts\plaguesPlayground.ts" />

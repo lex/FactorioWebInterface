@@ -18,7 +18,8 @@ FlexPanel.classes = {
     childSpacingSmallInclusive: 'child-spacing-small-inclusive',
     childSpacingInclusive: 'child-spacing-inclusive',
     childSpacingLargeInclusive: 'child-spacing-large-inclusive',
-    largeColumns: 'large-columns'
+    largeColumns: 'large-columns',
+    grow: 'grow'
 };
 customElements.define('a-flex-panel', FlexPanel);
 //# sourceMappingURL=flexPanel.js.map

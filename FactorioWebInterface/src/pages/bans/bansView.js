@@ -48,8 +48,7 @@ export class BansView extends VirtualComponent {
         let toggleButton = new ToggleButton(thumbtack);
         toggleButton.setTooltip('Pin the form to keep it in view.');
         toggleButton.style.marginRight = '0.5em';
-        header.append(toggleButton);
-        header.append('Add Ban');
+        header.append(toggleButton, 'Add Ban');
         let formCollapse = new Collapse(header, form.root);
         formCollapse.open = true;
         formCollapse.classList.add('section');

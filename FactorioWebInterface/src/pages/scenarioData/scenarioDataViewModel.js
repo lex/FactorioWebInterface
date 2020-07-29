@@ -1,9 +1,7 @@
 import { UpdateDataViewModel } from "./updateDataViewModel";
-import { ScenarioDataService } from "./scenarioDataService";
 import { DataSetViewModel } from "./dataSetViewModel";
-export class MainViewModel {
-    constructor() {
-        let scenarioDataService = new ScenarioDataService();
+export class ScenarioDataViewModel {
+    constructor(scenarioDataService) {
         this._updateDataViewModel = new UpdateDataViewModel(scenarioDataService);
         this._dataSetViewModel = new DataSetViewModel(scenarioDataService, this._updateDataViewModel);
     }
@@ -14,4 +12,4 @@ export class MainViewModel {
         return this._dataSetViewModel;
     }
 }
-//# sourceMappingURL=mainViewModel.js.map
+//# sourceMappingURL=scenarioDataViewModel.js.map

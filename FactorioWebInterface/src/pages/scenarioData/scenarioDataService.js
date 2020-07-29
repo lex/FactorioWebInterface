@@ -1,44 +1,33 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-import { HubConnectionBuilder } from "@microsoft/signalr";
-import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
 import { CollectionChangeType } from "../../ts/utils";
 import { ObservableObject } from "../../utils/observableObject";
 import { ObservableKeyArray } from "../../utils/collections/module";
 export class ScenarioDataService extends ObservableObject {
-    constructor() {
+    constructor(scenarioDataHubService) {
         super();
         this._currentDataSet = undefined;
         this._dataSets = new ObservableKeyArray(dataSet => dataSet);
         this._entries = new ObservableKeyArray(entry => entry.Key);
         this._fetchingDataSets = false;
         this._fetchingEntries = false;
-        this._connection = new HubConnectionBuilder()
-            .withUrl("/scenarioDataHub")
-            .withHubProtocol(new MessagePackHubProtocol())
-            .build();
-        this._connection.on('SendDataSets', (dataSets) => {
+        this._scenarioDataHubService = scenarioDataHubService;
+        scenarioDataHubService.onSendDataSets.subscribe((event) => {
             this.setFetchingDataSets(false);
-            this._dataSets.update({ Type: CollectionChangeType.Reset, NewItems: dataSets });
+            this._dataSets.update(event);
         });
-        this._connection.on('SendEntries', (dataSet, data) => {
-            if (this._currentDataSet !== dataSet) {
+        scenarioDataHubService.onSendEntries.subscribe((event) => {
+            if (this._currentDataSet !== event.dataSet) {
                 return;
             }
             this.setFetchingEntries(false);
-            this._entries.update(data);
+            this._entries.update(event.data);
         });
-        this._connection.onclose(() => __awaiter(this, void 0, void 0, function* () {
-            yield this.startConnection();
-        }));
-        this.startConnection();
+        scenarioDataHubService.whenConnection(() => {
+            this.requestDataSets();
+            if (this.currentDataSet != null) {
+                this._scenarioDataHubService.trackDataSet(this.currentDataSet);
+                this._scenarioDataHubService.requestAllDataForDataSet(this.currentDataSet);
+            }
+        });
     }
     get currentDataSet() {
         return this._currentDataSet;
@@ -80,8 +69,8 @@ export class ScenarioDataService extends ObservableObject {
         if (dataSet === this.currentDataSet) {
             return;
         }
-        this._connection.send('TrackDataSet', dataSet);
-        this._connection.send('RequestAllDataForDataSet', dataSet);
+        this._scenarioDataHubService.trackDataSet(dataSet);
+        this._scenarioDataHubService.requestAllDataForDataSet(dataSet);
         this.currentDataSet = dataSet;
         this.setFetchingEntries(true);
         this._entries.update({ Type: CollectionChangeType.Reset, NewItems: [] });
@@ -90,30 +79,14 @@ export class ScenarioDataService extends ObservableObject {
         this._dataSets.reset();
     }
     requestDataSets() {
-        this._connection.send('RequestAllDataSets');
+        this._scenarioDataHubService.requestAllDataSets();
         this.setFetchingDataSets(true);
     }
     update(data) {
         if (data.Value == null || data.Value === "") {
             delete data.Value;
         }
-        this._connection.send('UpdateData', data);
-    }
-    startConnection() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield this._connection.start();
-                this.requestDataSets();
-                if (this.currentDataSet != null) {
-                    this._connection.send('TrackDataSet', this.currentDataSet);
-                    this._connection.send('RequestAllDataForDataSet', this.currentDataSet);
-                }
-            }
-            catch (ex) {
-                console.log(ex);
-                setTimeout(() => this.startConnection(), 2000);
-            }
-        });
+        this._scenarioDataHubService.updateData(data);
     }
 }
 //# sourceMappingURL=scenarioDataService.js.map

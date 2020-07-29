@@ -1046,6 +1046,9 @@ a-flex-panel.large-columns > * {
   margin-left: 0.25rem;
   margin-right: 0.25rem;
 }
+a-flex-panel.grow {
+  flex: 1 1 auto;
+}
 
 .hide-error a-validation-label {
   display: none;

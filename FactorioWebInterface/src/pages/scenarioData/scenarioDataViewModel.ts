@@ -2,7 +2,7 @@
 import { ScenarioDataService } from "./scenarioDataService";
 import { DataSetViewModel } from "./dataSetViewModel";
 
-export class MainViewModel {
+export class ScenarioDataViewModel {
     private _updateDataViewModel: UpdateDataViewModel;
     private _dataSetViewModel: DataSetViewModel;
 
@@ -14,9 +14,7 @@ export class MainViewModel {
         return this._dataSetViewModel;
     }
 
-    constructor() {
-        let scenarioDataService = new ScenarioDataService();
-
+    constructor(scenarioDataService: ScenarioDataService) {
         this._updateDataViewModel = new UpdateDataViewModel(scenarioDataService);
         this._dataSetViewModel = new DataSetViewModel(scenarioDataService, this._updateDataViewModel);
     }

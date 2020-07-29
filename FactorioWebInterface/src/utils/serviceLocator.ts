@@ -12,6 +12,10 @@
 
         if (service == null) {
             let factory = this._serviceFactories.get(serviceKey);
+            if (factory == null) {
+                throw `Service ${serviceKey} has not been registered.`;
+            }
+
             service = factory(this);
             map.set(serviceKey, service);
         }

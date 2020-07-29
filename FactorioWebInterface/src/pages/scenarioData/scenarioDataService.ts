@@ -1,22 +1,11 @@
-﻿import { HubConnectionBuilder, HubConnection } from "@microsoft/signalr";
-import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack"
-import { CollectionChangedData, CollectionChangeType } from "../../ts/utils";
+﻿import { CollectionChangedData, CollectionChangeType } from "../../ts/utils";
 import { ObservableObject } from "../../utils/observableObject";
 import { ObservableKeyArray, ObservableCollection } from "../../utils/collections/module";
-
-export interface ScenarioData {
-    DataSet: string;
-    Key: string;
-    Value?: string;
-}
-
-export interface Entry {
-    Key: string;
-    Value: string;
-}
+import { Entry, ScenarioData } from "./scenarioData";
+import { ScenarioDataHubService } from "./scenarioDataHubService";
 
 export class ScenarioDataService extends ObservableObject {
-    private _connection: HubConnection;
+    private readonly _scenarioDataHubService: ScenarioDataHubService;
 
     private _currentDataSet: string = undefined;
     private _dataSets = new ObservableKeyArray<string, string>(dataSet => dataSet);
@@ -69,33 +58,32 @@ export class ScenarioDataService extends ObservableObject {
         this.raise('setFetchingEntries', value);
     }
 
-    constructor() {
+    constructor(scenarioDataHubService: ScenarioDataHubService) {
         super();
 
-        this._connection = new HubConnectionBuilder()
-            .withUrl("/scenarioDataHub")
-            .withHubProtocol(new MessagePackHubProtocol())
-            .build();
+        this._scenarioDataHubService = scenarioDataHubService;
 
-        this._connection.on('SendDataSets', (dataSets: string[]) => {
+        scenarioDataHubService.onSendDataSets.subscribe((event: CollectionChangedData<string>) => {
             this.setFetchingDataSets(false);
-            this._dataSets.update({ Type: CollectionChangeType.Reset, NewItems: dataSets });
+            this._dataSets.update(event);
         });
 
-        this._connection.on('SendEntries', (dataSet: string, data: CollectionChangedData) => {
-            if (this._currentDataSet !== dataSet) {
+        scenarioDataHubService.onSendEntries.subscribe((event: { dataSet: string, data: CollectionChangedData }) => {
+            if (this._currentDataSet !== event.dataSet) {
                 return;
             }
 
             this.setFetchingEntries(false);
-            this._entries.update(data);
+            this._entries.update(event.data);
         });
 
-        this._connection.onclose(async () => {
-            await this.startConnection();
+        scenarioDataHubService.whenConnection(() => {
+            this.requestDataSets();
+            if (this.currentDataSet != null) {
+                this._scenarioDataHubService.trackDataSet(this.currentDataSet);
+                this._scenarioDataHubService.requestAllDataForDataSet(this.currentDataSet);
+            }
         });
-
-        this.startConnection();
     }
 
     setCurrentDataSet(dataSet: string) {
@@ -103,8 +91,8 @@ export class ScenarioDataService extends ObservableObject {
             return;
         }
 
-        this._connection.send('TrackDataSet', dataSet);
-        this._connection.send('RequestAllDataForDataSet', dataSet);
+        this._scenarioDataHubService.trackDataSet(dataSet);
+        this._scenarioDataHubService.requestAllDataForDataSet(dataSet);
 
         this.currentDataSet = dataSet;
         this.setFetchingEntries(true);
@@ -116,7 +104,7 @@ export class ScenarioDataService extends ObservableObject {
     }
 
     requestDataSets() {
-        this._connection.send('RequestAllDataSets');
+        this._scenarioDataHubService.requestAllDataSets();
         this.setFetchingDataSets(true);
     }
 
@@ -125,21 +113,6 @@ export class ScenarioDataService extends ObservableObject {
             delete data.Value;
         }
 
-        this._connection.send('UpdateData', data);
-    }
-
-    private async startConnection() {
-        try {
-            await this._connection.start();
-
-            this.requestDataSets();
-            if (this.currentDataSet != null) {
-                this._connection.send('TrackDataSet', this.currentDataSet);
-                this._connection.send('RequestAllDataForDataSet', this.currentDataSet);
-            }
-        } catch (ex) {
-            console.log(ex);
-            setTimeout(() => this.startConnection(), 2000);
-        }
+        this._scenarioDataHubService.updateData(data);
     }
 }

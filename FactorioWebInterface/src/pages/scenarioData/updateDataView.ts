@@ -35,13 +35,11 @@ export class UpdateDataView extends VirtualComponent {
         let toggleButton = new ToggleButton(thumbtack);
         toggleButton.setTooltip('Pin the form to keep it in view.');
         toggleButton.style.marginRight = '0.5em';
-
-        let text = document.createTextNode('Update Data');
-        header.appendChild(text);
+        
+        header.append(toggleButton, 'Update Data');        
 
         let collapse = new Collapse(header, form.root);
-        collapse.classList.add('border', 'header', 'is-4');
-        collapse.style.marginTop = '2rem';
+        collapse.classList.add('section');
         toggleButton.onToggle(state => {
             if (state) {
                 collapse.style.top = '3.5rem';
