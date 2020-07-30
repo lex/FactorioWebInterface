@@ -14,6 +14,7 @@ import { ServersHubServiceMockBase } from "./pages/servers/serversHubServiceMock
 import { registerServerPageServices } from "../pages/servers/services";
 import { registerBansPageServices } from "../pages/bans/services";
 import { registerAdminsPageServices } from "../pages/admins/services";
+import { registerScenarioDataPageServices } from "../pages/scenarioData/services";
 import { registerModsPageServices } from "../pages/mods/services";
 import { registerAccountPageServices } from "../pages/account/services";
 import { WindowService } from "../services/windowService";
@@ -30,6 +31,8 @@ import { AdminsHubService } from "../pages/admins/adminsHubService";
 import { AdminsHubServiceMockBase } from "./pages/admins/adminsHubServiceMockBase";
 import { BansHubService } from "../pages/bans/bansHubService";
 import { BansHubServiceMockBase } from "./pages/bans/bansHubServiceMockBase";
+import { ScenarioDataHubService } from "../pages/scenarioData/scenarioDataHubService";
+import { ScenarioDataHubServiceMockBase } from "./pages/scenarioData/scenarioDataHubServiceMockBase";
 
 export class TestServiceLocator extends ServiceLocator {
     static registerBaseServices(serviceLocator: ServiceLocator): ServiceLocator {
@@ -77,6 +80,15 @@ export class AdminsPageTestServiceLocator extends TestServiceLocator {
 
         registerAdminsPageServices(this);
         this.register(AdminsHubService, () => new AdminsHubServiceMockBase());
+    }
+}
+
+export class ScenarioDataPageTestServiceLocator extends TestServiceLocator {
+    constructor() {
+        super();
+
+        registerScenarioDataPageServices(this);
+        this.register(ScenarioDataHubService, () => new ScenarioDataHubServiceMockBase());
     }
 }
 

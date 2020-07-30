@@ -2,6 +2,7 @@ import { ObservableObject } from "../../utils/observableObject";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionView } from "../../utils/collections/module";
 import { DelegateCommand } from "../../utils/command";
+import { ComparatorHelper } from "../../utils/comparatorHelper";
 export class DataSetViewModel extends ObservableObject {
     constructor(scenarioDataService, updateDataViewModel) {
         super();
@@ -9,6 +10,7 @@ export class DataSetViewModel extends ObservableObject {
         this._updateDataViewModel = updateDataViewModel;
         this._header = scenarioDataService.currentDataSet;
         this._dataSets = new CollectionView(scenarioDataService.dataSets);
+        this._dataSets.sortBy({ ascendingComparator: ComparatorHelper.caseInsensitiveStringComparator });
         this._dataSets.selectedChanged.subscribe(() => this.setDataSet());
         scenarioDataService.entries.subscribe(event => {
             if (scenarioDataService.fetchingEntries) {

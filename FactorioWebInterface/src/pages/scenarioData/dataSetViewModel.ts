@@ -5,6 +5,7 @@ import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionView, ObservableCollection } from "../../utils/collections/module";
 import { Entry } from "./scenarioData";
 import { DelegateCommand, ICommand } from "../../utils/command";
+import { ComparatorHelper } from "../../utils/comparatorHelper";
 
 export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
     private static defaultPlaceholder = 'Select Data Set';
@@ -51,6 +52,7 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
         this._header = scenarioDataService.currentDataSet;
 
         this._dataSets = new CollectionView(scenarioDataService.dataSets);
+        this._dataSets.sortBy({ ascendingComparator: ComparatorHelper.caseInsensitiveStringComparator });
         this._dataSets.selectedChanged.subscribe(() => this.setDataSet())
 
         scenarioDataService.entries.subscribe(event => {

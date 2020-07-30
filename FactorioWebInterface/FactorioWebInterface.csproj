@@ -107,6 +107,7 @@
     <None Remove="src\pages\mods\renameModPackViewModel.ts" />
     <None Remove="src\pages\mods\services.ts" />
     <None Remove="src\pages\scenarioData\dataSetView.ts" />
+    <None Remove="src\pages\scenarioData\DataSetViewModel.spec.ts" />
     <None Remove="src\pages\scenarioData\dataSetViewModel.ts" />
     <None Remove="src\pages\scenarioData\helpSectionView.ts" />
     <None Remove="src\pages\scenarioData\scenarioData.ts" />
@@ -116,6 +117,7 @@
     <None Remove="src\pages\scenarioData\scenarioDataView.ts" />
     <None Remove="src\pages\scenarioData\scenarioDataViewModel.ts" />
     <None Remove="src\pages\scenarioData\services.ts" />
+    <None Remove="src\pages\scenarioData\updateDataViewModel.spec.ts" />
     <None Remove="src\pages\servers\consoleMessageView.ts" />
     <None Remove="src\pages\servers\factorioServerStatusUtils.ts" />
     <None Remove="src\pages\servers\fileView.ts" />
@@ -334,6 +336,8 @@
     <TypeScriptCompile Include="src\pages\scenarioData\scenarioData.ts" />
     <TypeScriptCompile Include="src\pages\scenarioData\scenarioDataHubService.ts" />
     <TypeScriptCompile Include="src\pages\scenarioData\services.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\dataSetViewModel.spec.ts" />
+    <TypeScriptCompile Include="src\pages\scenarioData\updateDataViewModel.spec.ts" />
     <TypeScriptCompile Include="src\services\documentService.ts" />
     <TypeScriptCompile Include="src\services\iDocumentService.ts" />
     <TypeScriptCompile Include="src\services\iNavService.ts" />

@@ -19,7 +19,10 @@ export class PropertyBindingSource<T = any> implements IBindingSource<T>{
         this.value = value;
     }
 
-    connected(target: IBindingTarget<T>): void { }
+    connected(target: IBindingTarget<T>): void {
+        target.set(this.get());
+    }
+
     disconnected(target: IBindingTarget<T>): void { }
 }
 
@@ -84,7 +87,10 @@ export class ObjectBindingSource<T = any> implements IBindingSource<T>{
         this.object[this.propertyName] = value;
     }
 
-    connected(target: IBindingTarget<T>): void { }
+    connected(target: IBindingTarget<T>): void {
+        target.set(this.get());
+    }
+
     disconnected(target: IBindingTarget<T>): void { }
 }
 

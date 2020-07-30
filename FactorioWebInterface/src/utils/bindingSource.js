@@ -8,7 +8,9 @@ export class PropertyBindingSource {
     set(value) {
         this.value = value;
     }
-    connected(target) { }
+    connected(target) {
+        target.set(this.get());
+    }
     disconnected(target) { }
 }
 export class ObservablePropertyBindingSource {
@@ -63,7 +65,9 @@ export class ObjectBindingSource {
     set(value) {
         this.object[this.propertyName] = value;
     }
-    connected(target) { }
+    connected(target) {
+        target.set(this.get());
+    }
     disconnected(target) { }
 }
 export class ObservableObjectBindingSource {
