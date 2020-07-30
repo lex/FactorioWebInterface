@@ -165,4 +165,4 @@ describe('DataSetViewModel', function () {
         strict.equal(true, viewModel.fetchingDataSets);
     });
 });
-//# sourceMappingURL=DataSetViewModel.spec.js.map
+//# sourceMappingURL=dataSetViewModel.spec.js.map

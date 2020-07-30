@@ -175,5 +175,37 @@ describe('BansViewModel', function () {
             strict.equal(synchronizeWithServers, true);
         });
     });
+    it('updates form when click on ban row', function () {
+        // Arrange.
+        let services = new BansPageTestServiceLocator();
+        let hub = services.get(BansHubService);
+        let viewModel = services.get(BansViewModel);
+        hub._onSendBans.raise({ Type: CollectionChangeType.Reset, NewItems: bans });
+        let ban = [...viewModel.bans.values()][1].value;
+        // Act.
+        viewModel.updateFormFromBan(ban);
+        // Assert.
+        strict.equal(viewModel.username, ban.Username);
+        strict.equal(viewModel.reason, ban.Reason);
+        strict.equal(viewModel.admin, ban.Admin);
+        strict.equal(viewModel.date, ban.DateTime);
+        strict.equal(viewModel.time, ban.DateTime);
+    });
+    it('updates form when remove ban', function () {
+        // Arrange.
+        let services = new BansPageTestServiceLocator();
+        let hub = services.get(BansHubService);
+        let viewModel = services.get(BansViewModel);
+        hub._onSendBans.raise({ Type: CollectionChangeType.Reset, NewItems: bans });
+        let ban = [...viewModel.bans.values()][1].value;
+        // Act.
+        viewModel.removeBanCommand.execute(ban);
+        // Assert.
+        strict.equal(viewModel.username, ban.Username);
+        strict.equal(viewModel.reason, ban.Reason);
+        strict.equal(viewModel.admin, ban.Admin);
+        strict.equal(viewModel.date, ban.DateTime);
+        strict.equal(viewModel.time, ban.DateTime);
+    });
 });
 //# sourceMappingURL=bansViewModel.spec.js.map
