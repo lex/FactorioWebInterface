@@ -12,17 +12,17 @@ const isTest = process.argv.indexOf('--test') >= 0;
 
 let entry;
 if (isTest) {
-    entry = { tests: glob.sync("./src/**/*.spec.ts") };
+    entry = { tests: glob.sync("./client/**/*.spec.ts") };
 } else {
     entry = {
-        saves: "./src/ts/saves.ts",
-        plaguesplayground: "./src/ts/plaguesPlayground.ts",
-        servers: "./src/pages/servers/serversPage.ts",
-        admins: "./src/pages/admins/adminsPage.ts",
-        bans: "./src/pages/bans/bansPage.ts",
-        scenarioData: "./src/pages/scenarioData/scenarioDataPage.ts",
-        mods: "./src/pages/mods/modsPage.ts",
-        account: "./src/pages/account/accountPage.ts"
+        saves: "./client/ts/saves.ts",
+        plaguesplayground: "./client/ts/plaguesPlayground.ts",
+        servers: "./client/pages/servers/serversPage.ts",
+        admins: "./client/pages/admins/adminsPage.ts",
+        bans: "./client/pages/bans/bansPage.ts",
+        scenarioData: "./client/pages/scenarioData/scenarioDataPage.ts",
+        mods: "./client/pages/mods/modsPage.ts",
+        account: "./client/pages/account/accountPage.ts"
     };
 }
 

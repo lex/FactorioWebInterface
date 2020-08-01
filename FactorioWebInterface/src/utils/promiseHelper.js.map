@@ -1,1 +1,0 @@
-{"version":3,"file":"promiseHelper.js","sourceRoot":"","sources":["promiseHelper.ts"],"names":[],"mappings":"AAAA,MAAM,OAAO,aAAa;IACtB,MAAM,CAAC,KAAK,CAAC,YAAoB;QAC7B,OAAO,IAAI,OAAO,CAAC,OAAO,CAAC,EAAE;YACzB,UAAU,CAAC,OAAO,EAAE,YAAY,CAAC,CAAC;QACtC,CAAC,CAAC,CAAC;IACP,CAAC;CACJ"}
