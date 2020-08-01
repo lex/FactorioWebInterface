@@ -470,7 +470,7 @@ a-collapse {
   flex-direction: column;
   background-color: white;
 }
-a-collapse > a-stack-panel {
+a-collapse > a-flex-panel {
   align-self: flex-start;
 }
 a-collapse.section {
@@ -506,7 +506,7 @@ a-collapse-button {
 a-collapse[open] a-collapse-button {
   transform: rotate(90deg);
 }
-a-collapse.wide > a-stack-panel {
+a-collapse.wide > a-flex-panel {
   align-self: stretch;
 }
 
@@ -1813,7 +1813,7 @@ a-progress > div {
   height: 100%;
   background-color: limegreen;
 }
-a-progress > a-stack-panel {
+a-progress > a-flex-panel {
   margin: 0;
   padding: 0;
   position: absolute;
@@ -1821,7 +1821,7 @@ a-progress > a-stack-panel {
   width: 100%;
   height: 100%;
 }
-a-progress > a-stack-panel > div {
+a-progress > a-flex-panel > div {
   margin: auto;
 }
 a-progress.indeterminate {

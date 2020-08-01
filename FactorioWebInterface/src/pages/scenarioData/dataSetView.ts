@@ -59,7 +59,7 @@ export class DataSetView extends VirtualComponent {
         tableContainer.appendChild(table);
 
         let collapse = new Collapse(headerPanel, tableContainer)
-            .addClasses('section')
+            .addClasses('section', 'wide')
             .setOpen(true);
 
         this._root = collapse;

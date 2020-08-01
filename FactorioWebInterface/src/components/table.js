@@ -367,7 +367,7 @@ export class MultiSelectColumn extends ColumnTemplate {
             }
         });
         container.append(checkbox);
-        headerCell.style.width = '3.5em';
+        headerCell.style.width = '4rem';
         headerCell.style.minWidth = '0px';
         return container;
     }
@@ -423,7 +423,7 @@ export class SingleSelectColumn extends ColumnTemplate {
             source.unSelectAll();
         });
         container.append(radio);
-        headerCell.style.width = '3.5em';
+        headerCell.style.width = '4rem';
         headerCell.style.minWidth = '0px';
         return container;
     }

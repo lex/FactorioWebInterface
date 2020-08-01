@@ -861,7 +861,7 @@ a-collapse {
   flex-direction: column;
   background-color: white;
 }
-a-collapse > a-stack-panel {
+a-collapse > a-flex-panel {
   align-self: flex-start;
 }
 a-collapse.section {
@@ -897,7 +897,7 @@ a-collapse-button {
 a-collapse[open] a-collapse-button {
   transform: rotate(90deg);
 }
-a-collapse.wide > a-stack-panel {
+a-collapse.wide > a-flex-panel {
   align-self: stretch;
 }
 
