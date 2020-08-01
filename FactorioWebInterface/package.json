@@ -11,7 +11,20 @@
     "release": "webpack --mode=production",
     "publish": "npm run release && dotnet publish -c Release",
     "test": "npm run build-test && mocha --exit ./wwwroot/js/tests.js",
-    "test-debug": "npm run build-test && mocha --exit --inspect-brk ./wwwroot/js/tests.js"
+    "test-debug": "npm run build-test && mocha --exit --inspect-brk ./wwwroot/js/tests.js",
+    "test-coverage": "nyc npm run test"
+  },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "**/*.spec.ts"
+    ],
+    "reporter": [
+      "text"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -34,6 +47,7 @@
     "lodash": "^4.17.19",
     "mini-css-extract-plugin": "^0.4.5",
     "mocha": "^7.1.2",
+    "nyc": "^15.1.0",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "remove-files-webpack-plugin": "^1.4.3",
     "style-loader": "^1.1.3",

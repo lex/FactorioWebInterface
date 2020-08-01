@@ -264,6 +264,9 @@ __pycache__/
 FactorioWebInterface/wwwroot/js/
 FactorioWebInterface/src/ts/*.js*
 
+#nyc_output directory
+.nyc_output/
+
 #tokens
 FactorioWebInterface/appsettings.json
 FactorioWrapper/token.txt
@@ -272,4 +275,3 @@ FactorioWrapper/settings.json
 #databases
 FactorioWebInterface/FactorioWebInterface.db
 FactorioWebInterface/Scenario.db
-
