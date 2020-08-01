@@ -1,8 +1,6 @@
 import { Observable } from "../utils/observable";
-import { Binding } from "../utils/binding";
-import { BindingStore } from "../utils/BindingStore";
 import { TooltipService } from "../services/tooltipService";
-import { ObjectBindingTarget } from "../utils/bindingTarget";
+import { Binding, ObjectBindingTarget, BindingStore } from "../utils/binding/module";
 export class BaseElement extends HTMLElement {
     constructor() {
         super();

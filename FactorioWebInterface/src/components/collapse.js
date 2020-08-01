@@ -1,10 +1,8 @@
-'use strict';
 import "./collapse.ts.less";
 import { FlexPanel } from "./flexPanel";
 import { HideableContent } from "./hideableContent";
-import { ObjectBindingTarget } from "../utils/bindingTarget";
-import { Binding } from "../utils/binding";
 import { BaseElement } from "./baseElement";
+import { ObjectBindingTarget, Binding } from "../utils/binding/module";
 let collapseButtonTemplate = document.createElement('template');
 collapseButtonTemplate.innerHTML = `
 <svg width="100%" viewbox="-50 -50 100 100">  

@@ -1,7 +1,7 @@
 import { BaseElement } from "./baseElement";
 import { Observable } from "../utils/observable";
-import { BindingStore } from "../utils/BindingStore";
 import { TooltipService } from "../services/tooltipService";
+import { BindingStore } from "../utils/binding/module";
 export class HTMLLabelBaseElement extends HTMLLabelElement {
     constructor() {
         super(...arguments);

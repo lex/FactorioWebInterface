@@ -1,12 +1,8 @@
-﻿'use strict';
-
-import "./collapse.ts.less";
+﻿import "./collapse.ts.less";
 import { FlexPanel } from "./flexPanel";
 import { HideableContent } from "./hideableContent";
-import { IBindingSource } from "../utils/bindingSource";
-import { ObjectBindingTarget } from "../utils/bindingTarget";
-import { Binding } from "../utils/binding";
 import { BaseElement } from "./baseElement";
+import { IBindingSource, ObjectBindingTarget, Binding } from "../utils/binding/module";
 
 let collapseButtonTemplate = document.createElement('template');
 collapseButtonTemplate.innerHTML = `

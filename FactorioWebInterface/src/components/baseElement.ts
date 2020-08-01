@@ -1,10 +1,7 @@
 ﻿import { Observable } from "../utils/observable";
-import { Binding } from "../utils/binding";
-import { IBindingSource } from "../utils/bindingSource";
-import { BindingStore } from "../utils/BindingStore";
 import { TooltipService } from "../services/tooltipService";
 import { Tooltip } from "./tooltip";
-import { ObjectBindingTarget } from "../utils/bindingTarget";
+import { IBindingSource, Binding, ObjectBindingTarget, BindingStore } from "../utils/binding/module";
 
 export type Lifecycle = 'connectedCallback' | 'disconnectedCallback' | 'adoptedCallback' | 'attributeChangedCallback';
 

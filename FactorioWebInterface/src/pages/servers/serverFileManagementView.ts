@@ -8,7 +8,7 @@ import { Progress } from "../../components/progress";
 import { VirtualForm } from "../../components/virtualForm";
 import { TextField } from "../../components/textField";
 import { Select } from "../../components/select";
-import { ObservableObjectBindingSource } from "../../utils/bindingSource";
+import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
 export class ServerFileManagementView extends VirtualComponent {
     constructor(serverFileManagementViewModel: ServerFileManagementViewModel) {

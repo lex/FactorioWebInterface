@@ -1,10 +1,8 @@
 ﻿import { BaseElement, Lifecycle, IBaseElement } from "./baseElement";
-import { IBindingSource } from "../utils/bindingSource";
-import { Binding } from "../utils/binding";
 import { Observable } from "../utils/observable";
-import { BindingStore } from "../utils/BindingStore";
 import { TooltipService } from "../services/tooltipService";
 import { Tooltip } from "./tooltip";
+import { BindingStore, IBindingSource, Binding } from "../utils/binding/module";
 
 export class HTMLInputBaseElement extends HTMLInputElement implements IBaseElement {
     private lifecycleObservable = new Observable<Lifecycle>();

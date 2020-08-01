@@ -5,9 +5,8 @@ import { IterableHelper } from "../utils/iterableHelper";
 import { Icon } from "./icon";
 import { Placeholder } from "./placeholder";
 import { BaseElement } from "./baseElement";
-import { ObjectBindingTarget } from "../utils/bindingTarget";
-import { Binding } from "../utils/binding";
 import { CollectionView, ObservableCollection, CollectionViewChangeType } from "../utils/collections/module";
+import { ObjectBindingTarget, Binding } from "../utils/binding/module";
 export class Option extends HTMLOptionElement {
     get item() {
         return this.box.value;

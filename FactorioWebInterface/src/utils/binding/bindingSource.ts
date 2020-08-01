@@ -1,6 +1,6 @@
 ﻿import { IBindingTarget } from "./bindingTarget";
-import { IObservableObject } from "./observableObject";
-import { IObservableProperty, ObservableProperty } from "./observableProperty";
+import { ObservableProperty, IObservableProperty } from "../observableProperty";
+import { IObservableObject } from "../observableObject";
 
 export interface IBindingSource<T = any> {
     get(): T;

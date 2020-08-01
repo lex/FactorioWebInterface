@@ -1,8 +1,7 @@
 import "./textInput.ts.less";
 import { EventListener } from "../utils/eventListener";
 import { HTMLInputBaseElement } from "./htmlInputBaseElement";
-import { ObjectChangeBindingTarget } from "../utils/bindingTarget";
-import { Binding } from "../utils/binding";
+import { ObjectChangeBindingTarget, Binding } from "../utils/binding/module";
 export class TextInput extends HTMLInputBaseElement {
     constructor() {
         super();

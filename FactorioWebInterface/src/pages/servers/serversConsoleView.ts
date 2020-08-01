@@ -7,8 +7,8 @@ import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { ConsoleMessageView } from "./consoleMessageView";
 import { TextInput } from "../../components/textInput";
-import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 import { Label } from "../../components/label";
+import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
 export class ServersConsoleView extends VirtualComponent {
     constructor(serversConsoleViewModel: ServersConsoleViewModel) {

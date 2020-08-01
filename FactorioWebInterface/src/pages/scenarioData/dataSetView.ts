@@ -4,9 +4,9 @@ import { Table, TextColumn } from "../../components/table";
 import { FlexPanel } from "../../components/flexPanel";
 import { Select } from "../../components/select";
 import { Button } from "../../components/button";
-import { ObservableObjectBindingSource } from "../../utils/bindingSource";
 import { Collapse } from "../../components/collapse";
 import { Label } from "../../components/label";
+import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
 export class DataSetView extends VirtualComponent {
     private _dataSetViewModel: DataSetViewModel;

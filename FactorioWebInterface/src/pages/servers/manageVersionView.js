@@ -5,7 +5,7 @@ import { FlexPanel } from "../../components/flexPanel";
 import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { Table, TextColumn, ColumnTemplate } from "../../components/table";
-import { ReadonlyObservablePropertyBindingSource } from "../../utils/bindingSource";
+import { ReadonlyObservablePropertyBindingSource } from "../../utils/binding/module";
 export class ManageVersionView extends VirtualComponent {
     constructor(manageVersionViewModel) {
         super();

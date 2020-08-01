@@ -1,5 +1,5 @@
 ﻿import { IBindingSource } from "./bindingSource";
-import { EventListener } from "./eventListener";
+import { EventListener } from "../eventListener";
 
 export interface IBindingTarget<T = any> {
     get(): T;
