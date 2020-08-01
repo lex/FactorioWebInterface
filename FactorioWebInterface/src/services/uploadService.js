@@ -53,11 +53,13 @@ export class UploadService {
                 catch (_b) {
                     result = { Success: false, Errors: [{ Key: 'UploadError', Description: text }] };
                 }
-                if (parsed.Success) {
-                    result = { Success: true };
-                }
-                else {
-                    result = { Success: false, Errors: (_a = parsed.Errors) !== null && _a !== void 0 ? _a : [{ Key: 'UploadError', Description: text }] };
+                if (parsed != undefined) {
+                    if (parsed.Success) {
+                        result = { Success: true };
+                    }
+                    else {
+                        result = { Success: false, Errors: (_a = parsed.Errors) !== null && _a !== void 0 ? _a : [{ Key: 'UploadError', Description: text }] };
+                    }
                 }
                 callback({ type: FileUploadEventType.end, result: result });
                 xhr.onloadend = undefined;
