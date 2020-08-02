@@ -40,75 +40,124 @@ export class ObservableKeyArray<K, V> extends ObservableKeyCollection<K, V> {
 
     update(changeData: CollectionChangedData): void {
         switch (changeData.Type) {
-            case CollectionChangeType.Reset:
-                this._map.clear();
-                this.doAdd(changeData.NewItems);
-                break;
-            case CollectionChangeType.Remove:
-                this.doRemove(changeData.OldItems);
-                break;
-            case CollectionChangeType.Add:
-                this.doAdd(changeData.NewItems);
-                break;
-            case CollectionChangeType.AddAndRemove:
-                this.doRemove(changeData.OldItems);
-                this.doAdd(changeData.NewItems);
-                break;
+            case CollectionChangeType.Reset: {
+                this.doReset(changeData.NewItems);
+                this.raise({ Type: CollectionChangeType.Reset });
+                return;
+            }
+            case CollectionChangeType.Remove: {
+                let removed = this.doRemove(changeData.OldItems);
+
+                if (removed.length === 0) {
+                    return;
+                }
+
+                this.raise({ Type: CollectionChangeType.Remove, OldItems: removed });
+                return;
+            }
+            case CollectionChangeType.Add: {
+                let added = this.doAdd(changeData.NewItems);
+
+                if (added.length === 0) {
+                    return;
+                }
+
+                this.raise({ Type: CollectionChangeType.Add, NewItems: added });
+                return;
+            }
+            case CollectionChangeType.AddAndRemove: {
+                let removed = this.doRemove(changeData.OldItems);
+                let added = this.doAdd(changeData.NewItems);
+
+                if (removed.length === 0 && added.length === 0) {
+                    return;
+                }
+
+                this.raise({ Type: CollectionChangeType.AddAndRemove, NewItems: added, OldItems: removed });
+                return;
+            }
             default:
                 return;
         }
-
-        this.raise(changeData);
     }
 
     add(...items: V[]) {
-        this.doAdd(items);
+        let added = this.doAdd(items);
         let changeData: CollectionChangedData = {
             Type: CollectionChangeType.Add,
-            NewItems: items
+            NewItems: added
         };
         this.raise(changeData);
     }
 
     remove(...items: V[]) {
-        this.doRemove(items);
+        let removed = this.doRemove(items);
         let changeData: CollectionChangedData = {
             Type: CollectionChangeType.Remove,
-            OldItems: items
+            OldItems: removed
         };
         this.raise(changeData);
     }
 
     reset(...items: V[]) {
-        this._map.clear();
-        this.doAdd(items);
-
-        this.raise({ Type: CollectionChangeType.Reset, NewItems: items });
+        this.doReset(items);
+        this.raise({ Type: CollectionChangeType.Reset });
     }
 
+    private doReset(items?: V[]): void {
+        let map = this._map;
+        map.clear();
 
-    private doAdd(items: V[]) {
-        if (items == null) {
+        if (items == null || items.length === 0) {
             return;
         }
 
+        let keySelector = this._keySelector;
+
         for (let i = 0; i < items.length; i++) {
             let item = items[i];
-            let key = this.keySelector(item);
-            this._map.set(key, item);
+            let key = keySelector(item);
+            map.set(key, item);
         }
     }
 
-
-    private doRemove(items: V[]) {
-        if (items == null) {
-            return;
+    private doAdd(items?: V[]): V[] {
+        if (items == null || items.length === 0) {
+            return [];
         }
+
+        let keySelector = this._keySelector;
+        let map = this._map;
+        let added = new Map<K, V>();
 
         for (let i = 0; i < items.length; i++) {
             let item = items[i];
-            let key = this.keySelector(item);
-            this._map.delete(key);
+            let key = keySelector(item);
+            map.set(key, item);
+            added.set(key, item);
         }
+
+        return [...added.values()];
+    }
+
+    private doRemove(items: V[]): V[] {
+        if (items == null || items.length === 0) {
+            return [];
+        }
+
+        let keySelector = this._keySelector;
+        let map = this._map;
+        let removed: V[] = [];
+
+        for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            let key = keySelector(item);
+
+            if (map.delete(key)) {
+                removed.push(item)
+            }
+        }
+
+        return removed;
     }
 }

@@ -2,6 +2,7 @@
 import { CollectionView, CollectionViewChangeType, CollectionViewChangedData } from "./collectionView";
 import { strict } from "assert";
 import { CollectionChangeType } from "../../ts/utils";
+import { ObservableArray } from "./observableArray";
 
 describe('CollectionView', function () {
     describe('values', function () {
@@ -363,6 +364,65 @@ describe('CollectionView', function () {
     });
 
     describe('ObservableCollection change event', function () {
+        it('when reset new items are added', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            let cv = new CollectionView(o);
+
+            let actualEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => actualEvents.push(event));
+
+            // Add one item.
+            o.update({ Type: CollectionChangeType.Reset, NewItems: [1, 2, 3] });
+            let one = cv.getBoxByKey(1);
+            let two = cv.getBoxByKey(2);
+            let three = cv.getBoxByKey(3);
+
+            strict.deepEqual([...cv], [one, two, three]);
+
+            strict.equal(actualEvents.length, 1);
+            strict.equal(actualEvents[0].type, CollectionChangeType.Reset);
+        });
+
+        it('when reset and key selector duplicate items are not added', function () {
+            // Arrange.
+            let o = new ObservableArray<number>();
+            let cv = new CollectionView(o, x => x);
+
+            let actualEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => actualEvents.push(event));
+
+            // Add one item.
+            o.update({ Type: CollectionChangeType.Reset, NewItems: [1, 1, 2] });
+            let one = cv.getBoxByKey(1);
+            let two = cv.getBoxByKey(2);
+
+            strict.deepEqual([...cv], [one, two]);
+
+            strict.equal(actualEvents.length, 1);
+            strict.equal(actualEvents[0].type, CollectionChangeType.Reset);
+        });
+
+        it('when reset and key selector and filter duplicate items are not added', function () {
+            // Arrange.
+            let o = new ObservableArray<number>();
+            let cv = new CollectionView(o, x => x);
+            cv.filterBy({ predicate: () => true });
+
+            let actualEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => actualEvents.push(event));
+
+            // Add one item.
+            o.update({ Type: CollectionChangeType.Reset, NewItems: [1, 1, 2] });
+            let one = cv.getBoxByKey(1);
+            let two = cv.getBoxByKey(2);
+
+            strict.deepEqual([...cv], [one, two]);
+
+            strict.equal(actualEvents.length, 1);
+            strict.equal(actualEvents[0].type, CollectionChangeType.Reset);
+        });
+
         it('when add items are added.', function () {
             // Arrange.
             let o = new ObservableKeyArray<number, number>(x => x);
@@ -385,6 +445,69 @@ describe('CollectionView', function () {
 
             strict.deepEqual([...cv], [one, two, three]);
             strict.equal(callbackFiredCount, 2);
+        });
+
+        it('when add items and key selector duplicates are not added.', function () {
+            // Arrange.
+            let o = new ObservableArray<number>();
+            let cv = new CollectionView(o, x => x);
+
+            let actualEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe((event) => actualEvents.push(event));
+
+            // Add one item.
+            o.update({ Type: CollectionChangeType.Add, NewItems: [1] });
+
+            let one = cv.getBoxByKey(1);
+
+            strict.deepEqual([...cv], [one]);
+            strict.equal(actualEvents.length, 1);
+
+            // Add two items.
+            o.update({ Type: CollectionChangeType.Add, NewItems: [1, 1, 2] });
+            let two = cv.getBoxByKey(2);
+
+            strict.deepEqual([...cv], [one, two]);
+
+            strict.equal(actualEvents.length, 2);
+            strict.equal(actualEvents[0].type, CollectionChangeType.Add);
+            strict.deepEqual(actualEvents[0].items, [one]);
+            strict.equal(actualEvents[1].type, CollectionChangeType.Add);
+
+            // Should raise both as it could be an update.
+            strict.deepEqual(actualEvents[1].items, [one, two]);
+        });
+
+        it('when add items and key selector and filter duplicates are not added.', function () {
+            // Arrange.
+            let o = new ObservableArray<number>();
+            let cv = new CollectionView(o, x => x);
+            cv.filterBy({ predicate: () => true });
+
+            let actualEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe((event) => actualEvents.push(event));
+
+            // Add one item.
+            o.update({ Type: CollectionChangeType.Add, NewItems: [1] });
+
+            let one = cv.getBoxByKey(1);
+
+            strict.deepEqual([...cv], [one]);
+            strict.equal(actualEvents.length, 1);
+
+            // Add two items.
+            o.update({ Type: CollectionChangeType.Add, NewItems: [1, 1, 2] });
+            let two = cv.getBoxByKey(2);
+
+            strict.deepEqual([...cv], [one, two]);
+
+            strict.equal(actualEvents.length, 2);
+            strict.equal(actualEvents[0].type, CollectionChangeType.Add);
+            strict.deepEqual(actualEvents[0].items, [one]);
+            strict.equal(actualEvents[1].type, CollectionChangeType.Add);
+
+            // Should raise both as it could be an update.
+            strict.deepEqual(actualEvents[1].items, [one, two]);
         });
 
         it('when add and collectionView is sorted, reorder is raised.', function () {

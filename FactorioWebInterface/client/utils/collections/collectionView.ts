@@ -87,6 +87,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return this._selectedChanged;
     }
 
+    get isSorted(): boolean {
+        return this._comparator != null;
+    }
+
     get sortSpecifications(): SortSpecification<T>[] {
         return this._sortSpecifications.value;
     }
@@ -489,7 +493,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 for (let item of iterator) {
                     let box = new Box(item);
                     if (filter(box)) {
-                        this._array.push(box);
+                        array.push(box);
                     }
                 }
             } else {
@@ -498,10 +502,23 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
                 for (let item of iterator) {
                     let key = this._keySelector(item);
-                    let box = new Box(item);
-                    if (filter(box)) {
-                        this._map.set(key, box);
-                        this._array.push(box);
+                    let box = map.get(key);
+                    let newBox = false;
+
+                    if (box === undefined) {
+                        box = new Box(item);
+                        newBox = true;
+                    }
+
+                    if (!filter(box)) {
+                        continue;
+                    }
+
+                    if (newBox) {
+                        map.set(key, box);
+                        array.push(box);
+                    } else {
+                        box.value = item;
                     }
                 }
             }
@@ -509,7 +526,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             if (this._keySelector === undefined) {
                 for (let item of iterator) {
                     let box = new Box(item);
-                    this._array.push(box);
+                    array.push(box);
                 }
             } else {
                 let map = this._map;
@@ -517,9 +534,15 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
                 for (let item of iterator) {
                     let key = this._keySelector(item);
-                    let box = new Box(item);
-                    this._map.set(key, box);
-                    this._array.push(box);
+
+                    let box = map.get(key);
+                    if (box === undefined) {
+                        box = new Box(item);
+                        map.set(key, box);
+                        array.push(box);
+                    } else {
+                        box.value = item;
+                    }
                 }
             }
         }
@@ -534,11 +557,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
     }
 
     private doAdd(items: T[]): [Box<T>[], Box<T>[]] {
-        let added: Box<T>[] = [];
         let removed: Box<T>[] = [];
 
         if (items == null) {
-            return [added, removed];
+            return [[], removed];
         }
 
         let array = this._array;
@@ -546,6 +568,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         let filter = this._predicate;
 
         if (keySelector === undefined) {
+            let added: Box<T>[] = [];
             if (filter == null) {
                 for (let item of items) {
                     let box = new Box(item);
@@ -568,6 +591,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         }
 
         let map = this._map;
+        let added = new Map<any, Box<T>>();
 
         if (filter == null) {
             for (let item of items) {
@@ -582,10 +606,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                     box.value = item;
                 }
 
-                added.push(box);
+                added.set(key, box);
             }
 
-            return [added, removed];
+            return [[...added.values()], removed];
         }
 
         for (let item of items) {
@@ -598,13 +622,13 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 if (filter(box)) {
                     map.set(key, box);
                     array.push(box);
-                    added.push(box);
+                    added.set(key, box);
                 }
             } else {
                 box.value = item;
 
                 if (filter(box)) {
-                    added.push(box);
+                    added.set(key, box);
                 } else {
                     map.delete(key);
                     ArrayHelper.remove(array, box);
@@ -613,7 +637,7 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             }
         }
 
-        return [added, removed];
+        return [[...added.values()], removed];
     }
 
     private doRemove(items: T[]): { removed: Box<T>[], selectedRemoved: Box<T>[] } {
@@ -650,9 +674,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
                 let box = map.get(key);
                 if (box) {
-                    map.delete(key);
-                    ArrayHelper.remove(array, box);
-                    removed.push(box);
+                    if (map.delete(key)) {
+                        ArrayHelper.remove(array, box);
+                        removed.push(box);
+                    }
 
                     if (this._selected.delete(box)) {
                         selectedRemoved.push(box);
