@@ -151,7 +151,7 @@ export class Table<T = any> extends HTMLTableElement {
         cell.append(cellBuilder(propertyData, entry, this))
     }
 
-    private buildRow(box: Box<T>) {
+    private buildRow(box: Box<T>): TableRow {
         let row = new TableRow(box);
 
         this._rowMap.set(box, row);
@@ -163,6 +163,8 @@ export class Table<T = any> extends HTMLTableElement {
         if (this._rowClickObservable.subscriberCount > 0) {
             this.addRowClickHandler(box, row);
         }
+
+        return row;
     }
 
     private addRowClickHandler(box: Box<T>, row: HTMLTableRowElement) {
@@ -262,11 +264,17 @@ export class Table<T = any> extends HTMLTableElement {
 
     private doUpdate(rowEntries: Box<T>[]) {
         let rowMap = this._rowMap;
+        let isSorted = this._source.isSorted;
 
         for (let entry of rowEntries) {
             let row = rowMap.get(entry);
             if (row === undefined) {
-                this.buildRow(entry);
+                let row = this.buildRow(entry);
+                if (!isSorted) {
+                    // We only need to add rows when not sorted.
+                    // In the sorted cases the CollectionView will raise a reorder event.
+                    this._body.appendChild(row);
+                }
             } else {
                 row.innerHTML = '';
 
