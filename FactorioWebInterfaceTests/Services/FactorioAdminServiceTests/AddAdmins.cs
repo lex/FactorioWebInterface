@@ -18,7 +18,8 @@ namespace FactorioWebInterfaceTests.Services.FactorioAdminServiceTests
             new object[]{"abc", new Admin[] { new Admin() { Name = "abc" } } },
             new object[]{" abc ", new Admin[] { new Admin() { Name = "abc" } } },
             new object[]{"abc,def,ghi", new Admin[] { new Admin() { Name = "abc" }, new Admin() { Name = "def" }, new Admin() { Name = "ghi" } } },
-            new object[]{"abc , def , ghi", new Admin[] { new Admin() { Name = "abc" }, new Admin() { Name = "def" }, new Admin() { Name = "ghi" } } }
+            new object[]{"abc , def , ghi", new Admin[] { new Admin() { Name = "abc" }, new Admin() { Name = "def" }, new Admin() { Name = "ghi" } } },
+            new object[]{"abc, abc ", new Admin[] { new Admin() { Name = "abc" } } }
         };
 
         [Theory]
