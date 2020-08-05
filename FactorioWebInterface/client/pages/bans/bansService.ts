@@ -30,10 +30,6 @@ export class BansService {
         bansHubService.whenConnection(() => bansHubService.requestBans());
     }
 
-    requestBans(): void {
-        this._bansHubService.requestBans();
-    }
-
     addBan(ban: Ban, synchronizeWithServers: boolean): Promise<Result> {
         return this._bansHubService.addBan(ban, synchronizeWithServers);
     }

@@ -1,5 +1,6 @@
 ﻿import { Observable, IObservable } from "../utils/observable";
 import { propertyOf } from "../utils/types";
+import deepEqual from "deep-equal";
 import { AssertionError } from "assert";
 
 export class MethodInvocation {
@@ -34,14 +35,24 @@ export class InvokeBase<T = any>  {
         }
     }
 
-    assertMethodCalled(name: propertyOf<T>): void {
-        for (const invocation of this._methodsCalled) {
-            if (invocation.name === name) {
-                return;
+    assertMethodCalled(name: propertyOf<T>, ...args: any[]): void {
+        if (args.length === 0) {
+            for (const invocation of this._methodsCalled) {
+                if (invocation.name === name) {
+                    return;
+                }
             }
-        }
 
-        throw new AssertionError({ message: `The expected method invocation ${name} was not found.`, expected: name });
+            throw new AssertionError({ message: `The expected method invocation ${name} was not found.`, expected: name });
+        } else {
+            for (const invocation of this._methodsCalled) {
+                if (invocation.name === name && deepEqual(invocation.args, args, { strict: true })) {
+                    return;
+                }
+            }
+
+            throw new AssertionError({ message: `The expected method invocation ${name} with args ${args} was not found.`, expected: args });
+        }
     }
 
     assertMethodNotCalled(name: propertyOf<T>): void {

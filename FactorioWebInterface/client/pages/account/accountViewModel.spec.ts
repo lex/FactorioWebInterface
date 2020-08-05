@@ -5,8 +5,68 @@ import { UploadService } from "../../services/uploadService";
 import { UploadServiceMockBase } from "../../testUtils/services/uploadServiceMockBase";
 import { MethodInvocation } from "../../testUtils/invokeBase";
 import { FormDataMock } from "../../testUtils/models/formDataMock";
+import { IHiddenInputService } from "../../services/iHiddenInputService";
+import { HiddenInputServiceMockBase } from "../../testUtils/services/hiddenInputServiceMockBase";
 
 describe('AccountViewModel', function () {
+    it('page initialized on load', function () {
+        // Arrange.
+        let services = new AccountPageTestServiceLocator();
+
+        // Act.
+        let viewModel: AccountViewModel = services.get(AccountViewModel);
+
+        // Assert.
+        strict.equal(viewModel.username, 'username');
+        strict.equal(viewModel.newPassword, '');
+        strict.equal(viewModel.confirmNewPassword, '');
+        strict.equal(viewModel.hasPassword, false);
+        strict.equal(viewModel.submitButtonText, 'Create Password');
+        strict.equal(viewModel.passwordUpdated, false);
+        strict.equal(viewModel.errorUpdating, false);
+    });
+
+    it('page initialized on load after update password', function () {
+        // Arrange.
+        let services = new AccountPageTestServiceLocator();
+
+        let hiddenInputservice: HiddenInputServiceMockBase = services.get(IHiddenInputService);
+        hiddenInputservice._map.set('__hasPassword', 'true');
+        hiddenInputservice._map.set('__passwordUpdated', 'true');
+
+        // Act.
+        let viewModel: AccountViewModel = services.get(AccountViewModel);
+
+        // Assert.
+        strict.equal(viewModel.username, 'username');
+        strict.equal(viewModel.newPassword, '');
+        strict.equal(viewModel.confirmNewPassword, '');
+        strict.equal(viewModel.hasPassword, true);
+        strict.equal(viewModel.submitButtonText, 'Update Password');
+        strict.equal(viewModel.passwordUpdated, true);
+        strict.equal(viewModel.errorUpdating, false);
+    });
+
+    it('page initialized on load after error', function () {
+        // Arrange.
+        let services = new AccountPageTestServiceLocator();
+
+        let hiddenInputservice: HiddenInputServiceMockBase = services.get(IHiddenInputService);
+        hiddenInputservice._map.set('__accountError', 'true');
+
+        // Act.
+        let viewModel: AccountViewModel = services.get(AccountViewModel);
+
+        // Assert.
+        strict.equal(viewModel.username, 'username');
+        strict.equal(viewModel.newPassword, '');
+        strict.equal(viewModel.confirmNewPassword, '');
+        strict.equal(viewModel.hasPassword, false);
+        strict.equal(viewModel.submitButtonText, 'Create Password');
+        strict.equal(viewModel.passwordUpdated, false);
+        strict.equal(viewModel.errorUpdating, true);
+    });
+
     describe('password validation', function () {
         it('when password too short there is validation error', function () {
             // Arrange.

@@ -9,7 +9,7 @@ export interface IBindingSource<T = any> {
     disconnected(target: IBindingTarget<T>): void;
 }
 
-export class PropertyBindingSource<T = any> implements IBindingSource<T>{
+export class ValueBindingSource<T = any> implements IBindingSource<T>{
     constructor(private value) { }
 
     get(): T {

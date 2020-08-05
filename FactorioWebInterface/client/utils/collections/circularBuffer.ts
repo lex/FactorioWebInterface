@@ -1,7 +1,7 @@
 ﻿import { ArrayHelper } from "../arrayHelper";
 
 export class CircularBuffer<T> implements Iterable<T>{
-    private static readonly defaultCapacity = 4;
+    static readonly defaultCapacity = 4;
 
     private _head = 0;
     private _full = false;

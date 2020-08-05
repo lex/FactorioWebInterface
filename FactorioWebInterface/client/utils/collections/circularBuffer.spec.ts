@@ -2,16 +2,64 @@
 import { CircularBuffer } from "./circularBuffer";
 
 describe('CircularBuffer', function () {
-    it('constructor', function () {
+    function toArray<T>(iterator: Iterable<T>): T[] {
+        // written this was to test [Symbol.iterator].
+
+        let array = [];
+        for (let item of iterator) {
+            array.push(item);
+        }
+
+        return array;
+    }
+
+    it('constructor with capacity', function () {
         const capacity = 4;
 
         let cb = new CircularBuffer<number>(capacity);
 
         strict.equal(cb.capacity, capacity);
-        strict.equal(0, cb.count);
+        strict.equal(cb.count, 0);
 
-        strict.equal(0, cb.toArray().length);
-        strict.equal(0, [...cb.values()].length);
+        strict.equal(cb.toArray().length, 0);
+        strict.equal([...cb.values()].length, 0);
+        strict.equal(toArray(cb).length, 0);
+    });
+
+    it('constructor without capacity has default capacity', function () {
+        let cb = new CircularBuffer<number>();
+
+        strict.equal(cb.capacity, CircularBuffer.defaultCapacity);
+    });
+
+    it('constructor with values', function () {
+        const capacity = 4;
+
+        let values = [1, 2, 3, 4];
+
+        let cb = new CircularBuffer<number>(capacity, values.values());
+
+        strict.equal(cb.count, values.length);
+
+        strict.deepEqual(cb.toArray(), values);
+        strict.deepEqual([...cb.values()], values);
+        strict.deepEqual(toArray(cb), values);
+    });
+
+    it('constructor with values over capacity', function () {
+        const capacity = 2;
+
+        let values = [1, 2, 3, 4];
+
+        let cb = new CircularBuffer<number>(capacity, values.values());
+
+        let expected = [3, 4];
+
+        strict.equal(cb.count, capacity);
+
+        strict.deepEqual(cb.toArray(), expected);
+        strict.deepEqual([...cb.values()], expected);
+        strict.deepEqual(toArray(cb), expected);
     });
 
     it('constructor with invalid capacity throws', function () {
@@ -38,6 +86,7 @@ describe('CircularBuffer', function () {
 
             strict.deepEqual(cb.toArray(), test.values);
             strict.deepEqual([...cb.values()], test.values);
+            strict.deepEqual(toArray(cb), test.values);
         });
     }
 
@@ -65,7 +114,13 @@ describe('CircularBuffer', function () {
             strict.equal(cb.count, capacity);
             strict.deepEqual(cb.toArray(), test.expected);
             strict.deepEqual([...cb.values()], test.expected);
+            strict.deepEqual(toArray(cb), test.expected);
             strict.deepEqual(actualRemoved, test.expectedRemoved);
         });
     }
+
+    it('throws error when capacity <= 0', function () {
+        strict.throws(() => new CircularBuffer(0), 'capacity must be greater than 0.');
+        strict.throws(() => new CircularBuffer(-1), 'capacity must be greater than 0.');
+    });
 });

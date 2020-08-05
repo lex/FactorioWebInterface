@@ -43,7 +43,7 @@ describe('BansViewModel', function () {
             }
         });
 
-        // Act.
+        // Act.        
         let viewModel: BansViewModel = services.get(BansViewModel);
 
         // Assert.

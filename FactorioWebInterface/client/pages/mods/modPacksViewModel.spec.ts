@@ -19,7 +19,7 @@ const modPack: ModPackMetaData = {
 };
 
 const modPack2: ModPackMetaData = {
-    Name: 'name',
+    Name: 'name2',
     CreatedTime: '2020-01-02 00:00:00',
     LastModifiedTime: '2020-01-02 00:00:00'
 };

@@ -34,6 +34,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="client\pages\mods\modPackFilesViewModel.spec.ts" />
+    <None Remove="client\utils\binding\bindingSource.spec.ts" />
+    <None Remove="client\utils\collections\observableKeyArray.spec.ts" />
     <None Remove="FactorioWebInterface.db" />
     <None Remove="Scenario.db" />
     <None Remove="client\components\button.ts" />
@@ -332,6 +335,7 @@
     <TypeScriptCompile Include="client\pages\bans\bansHubService.ts" />
     <TypeScriptCompile Include="client\pages\bans\bansViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\bans\services.ts" />
+    <TypeScriptCompile Include="client\pages\mods\modPackFilesViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\mods\modPackNameNotTakenValidationRule.ts" />
     <TypeScriptCompile Include="client\pages\mods\modPacksViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\scenarioData\scenarioData.ts" />
@@ -457,10 +461,12 @@
     <TypeScriptCompile Include="client\testUtils\testServiceLocator.ts" />
     <TypeScriptCompile Include="client\testUtils\utils\validation.ts" />
     <TypeScriptCompile Include="client\utils\binding\binding.ts" />
+    <TypeScriptCompile Include="client\utils\binding\bindingSource.spec.ts" />
     <TypeScriptCompile Include="client\utils\binding\module.ts" />
     <TypeScriptCompile Include="client\utils\collections\circularBuffer.spec.ts" />
     <TypeScriptCompile Include="client\utils\collections\circularBuffer.ts" />
     <TypeScriptCompile Include="client\utils\collections\module.ts" />
+    <TypeScriptCompile Include="client\utils\collections\observableKeyArray.spec.ts" />
     <TypeScriptCompile Include="client\utils\command.ts" />
     <TypeScriptCompile Include="client\components\baseElement.ts" />
     <TypeScriptCompile Include="client\components\checkboxField.ts" />

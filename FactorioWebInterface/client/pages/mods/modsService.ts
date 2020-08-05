@@ -79,6 +79,11 @@ export class ModsService {
 
         modsHubService.whenConnection(() => {
             modsHubService.requestModPacks();
+
+            let selectedModPack = this._selectedModPack.value
+            if (selectedModPack != null) {
+                this._modsHubService.requestModPackFiles(selectedModPack);
+            }
         });
     }
 
@@ -88,7 +93,9 @@ export class ModsService {
             return;
         }
 
-        this._modsHubService.requestModPackFiles(modPack);
+        if (modPack != null) {
+            this._modsHubService.requestModPackFiles(modPack);
+        }
 
         this._selectedModPack.raise(modPack);
         this._selectedModPackFiles.reset();

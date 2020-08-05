@@ -11,6 +11,7 @@ export class HiddenInputServiceMockBase extends InvokeBase<IHiddenInputService> 
 
         this._map.set('serverSelected', '1');
         this._map.set('serverCount', '10');
+        this._map.set('__username', 'username');
     }
 
     getValue(name: string): string {
