@@ -15,6 +15,7 @@ import { ManageVersionViewModel } from "./manageVersionViewModel";
 import { ManageVersionService } from "./manageVersionService";
 import { ServerSettingsService } from "./serverSettingsService";
 import { CollectionView, ObservableCollection } from "../../utils/collections/module";
+import { ServerFileService } from "./serverFileService";
 
 export class ServersConsoleViewModel extends ObservableObject<ServersConsoleViewModel> {
     static readonly resumeTooltipDisabledMessage = 'Can only resume when there is a save in Temp Saves and the server is stopped.';
@@ -26,6 +27,8 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     static readonly stopTooltipEnabledMessage = 'Stops the server.';
     static readonly stopTooltipDisabledMessage = 'Can only stop when the server is running.';
     static readonly forceStopTooltipMessage = 'Forcefully stops the server, or any rogue Factorio processes.';
+
+    static readonly noModPackMessage = 'None (no mods)';
 
     private readonly _serverIdService: ServerIdService;
     private readonly _serverConsoleService: ServerConsoleService;
@@ -44,6 +47,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private _nameText = '';
     private _statusText = '';
     private _versionText = '';
+    private _modPackText = '';
     private _sendText = '';
     private _commandHistory = new CommandHistory();
 
@@ -76,6 +80,10 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
 
     get versionText(): string {
         return this._versionText;
+    }
+
+    get modPackText(): string {
+        return this._modPackText;
     }
 
     get resumeTooltip(): string {
@@ -200,6 +208,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
         serverConsoleService: ServerConsoleService,
         manageVersionService: ManageVersionService,
         serverSettingsService: ServerSettingsService,
+        serverFileService: ServerFileService,
         modalService: IModalService,
         errorService: ErrorService,
         tempFiles: FileViewModel,
@@ -339,6 +348,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
         this.updateServerName();
 
         serverConsoleService.version.bind(event => this.updateVersionText(event));
+        serverFileService.selectedModPack.bind(event => this.updateModPackText(event));
     }
 
     sendInputKey(key: number) {
@@ -381,6 +391,15 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
         this.raise('versionText', value);
     }
 
+    private setModPackText(value: string) {
+        if (value === this._modPackText) {
+            return;
+        }
+
+        this._modPackText = value;
+        this.raise('modPackText', value);
+    }
+
     private updateServerName() {
         let text = `Name: ${this._serverSettingsService.settings?.Name ?? ''}`;
         this.setNameText(text);
@@ -394,6 +413,15 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private updateVersionText(value: string) {
         let text = `Version: ${value}`;
         this.setVersionText(text);
+    }
+
+    private updateModPackText(value: string) {
+        if (!value) {
+            value = ServersConsoleViewModel.noModPackMessage;
+        }
+
+        let text = `Mod Pack: ${value}`;
+        this.setModPackText(text);
     }
 
     private updatedSelected(selected: string) {

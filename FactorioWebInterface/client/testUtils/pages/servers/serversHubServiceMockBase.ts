@@ -14,7 +14,7 @@ export class ServersHubServiceMockBase extends InvokeBase<ServersHubService> imp
     _onVersion = new Observable<string>();
     _onDownloadableVersions = new Observable<string[]>();
 
-    _selectedModPack = new Observable<string>();
+    _onSelectedModPack = new Observable<string>();
     _onCachedVersions = new Observable<CollectionChangedData<string>>();
     _onServerSettings = new Observable<{ settings: FactorioServerSettings, saved: boolean }>();
     _onServerExtraSettings = new Observable<{ settings: FactorioServerExtraSettings, saved: boolean }>();
@@ -54,9 +54,9 @@ export class ServersHubServiceMockBase extends InvokeBase<ServersHubService> imp
         return this._onDownloadableVersions;
     }
 
-    get selectedModPack(): IObservable<string> {
-        this.invoked('selectedModPack');
-        return this._selectedModPack;
+    get onSelectedModPack(): IObservable<string> {
+        this.invoked('onSelectedModPack');
+        return this._onSelectedModPack;
     }
 
     get onCachedVersions(): IObservable<CollectionChangedData<string>> {

@@ -94,7 +94,7 @@ export class ServerFileService {
             }
         });
 
-        serversHubService.selectedModPack.subscribe(event => {
+        serversHubService.onSelectedModPack.subscribe(event => {
             this._selectedModPack.raise(event);
         })
 

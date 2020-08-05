@@ -2,6 +2,7 @@
 import { ObservableObject } from "../../utils/observableObject";
 import { ServerFileService } from "./serverFileService";
 import { ObservableCollection, CollectionView } from "../../utils/collections/module";
+import { IterableHelper } from "../../utils/iterableHelper";
 
 export class ModPacksViewModel extends ObservableObject {
     private _sourceModPacks: ObservableCollection<ModPackMetaData>;
@@ -27,23 +28,15 @@ export class ModPacksViewModel extends ObservableObject {
         this._sourceModPacks = modPacks;
         this._modPacks = new CollectionView(modPacks);
         this._modPacks.sortBy({ property: 'LastModifiedTime', ascending: false });
-        this._modPacks.selectedChanged.subscribe(() => {
-            let selectedModPack = [...this._modPacks.selected][0];
-            let name: string;
-            if (selectedModPack == null) {
-                name = '';
-            } else {
-                name = selectedModPack.value.Name;
-            }
-
+        this._modPacks.newSingleSelectedChanged.subscribe(() => {
+            let name = IterableHelper.firstOrDefault(this._modPacks.selected)?.value.Name ?? '';
             serverFileService.setSelectedModPack(name);
         });
 
         this.setSelectModPackByName(selectedModPack.value);
         selectedModPack.subscribe(modPack => this.setSelectModPackByName(modPack));
 
-        this.updateHeader();
-        this.modPacks.subscribe(() => this.updateHeader());
+        this.modPacks.bind(() => this.updateHeader());
     }
 
     private setSelectModPackByName(modPack: string) {

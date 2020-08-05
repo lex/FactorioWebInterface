@@ -87,6 +87,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return this._selectedChanged;
     }
 
+    get newSingleSelectedChanged(): IObservable<CollectionViewChangedData<T>> {
+        return new CollectionViewNewSingleSelectedObservable(this);
+    }
+
     get isSorted(): boolean {
         return this._comparator != null;
     }
@@ -177,7 +181,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 this.raise({ type: CollectionViewChangeType.Reorder });
             }
 
-            this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+            if (removed.length > 0) {
+                this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+            }
+
             this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
 
             return;
@@ -193,7 +200,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
 
-        this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+        if (removed.length > 0) {
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+        }
+
         this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
     }
 
@@ -728,5 +738,21 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         }
 
         return false;
+    }
+}
+
+class CollectionViewNewSingleSelectedObservable<T> implements IObservable<CollectionViewChangedData<T>>{
+    constructor(private readonly collectionView: CollectionView<T>) { }
+
+    subscribe(callback: (event: CollectionViewChangedData<T>) => void, subscriptions?: (() => void)[]): () => void {
+        let filterdCallback = (event: CollectionViewChangedData<T>) => {
+            if (event.type === CollectionViewChangeType.Remove && this.collectionView.selectedCount === 1) {
+                return;
+            }
+
+            callback(event);
+        };
+
+        return this.collectionView.selectedChanged.subscribe(filterdCallback, subscriptions);
     }
 }

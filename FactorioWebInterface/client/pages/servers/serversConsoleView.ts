@@ -17,16 +17,16 @@ export class ServersConsoleView extends VirtualComponent {
         let headerPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
 
         let headerTopRowPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge);
-        headerTopRowPanel.style.alignItems = 'center';
 
         let serverIdSelect = new Select(serversConsoleViewModel.serverIds);
         serverIdSelect.icon = new Icon(Icon.classes.server);
         serverIdSelect.style.fontSize = '1rem';
         serverIdSelect.style.fontWeight = 'normal';
-        serverIdSelect.style.margin = '-0.3em 1em -0.3em 1em';
+        serverIdSelect.style.margin = '-0.25em 1em -0.25em 1em';
         serverIdSelect.onclick = event => event.stopPropagation();
 
         let labelPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingLarge, FlexPanel.classes.wrap);
+        labelPanel.style.alignSelf = 'center';
 
         let nameText = new Label()
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'nameText'))
@@ -41,7 +41,11 @@ export class ServersConsoleView extends VirtualComponent {
             .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'versionText'))
             .addClasses(Label.classes.labelText, 'vertical-margins-small');
 
-        labelPanel.append(statusText, versionText);
+        let modPackText = new Label()
+            .bindContent(new ObservableObjectBindingSource(serversConsoleViewModel, 'modPackText'))
+            .addClasses(Label.classes.labelText, 'vertical-margins-small');
+
+        labelPanel.append(statusText, versionText, modPackText);
 
         headerTopRowPanel.append('Console', serverIdSelect, labelPanel);
 

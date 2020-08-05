@@ -19,7 +19,7 @@ export class ServersHubService {
     private _onVersion = new Observable<string>();
     private _onDownloadableVersions = new Observable<string[]>();
 
-    private _selectedModPack = new Observable<string>();
+    private _onSelectedModPack = new Observable<string>();
     private _onCachedVersions = new Observable<CollectionChangedData<string>>();
     private _onServerSettings = new Observable<{ settings: FactorioServerSettings, saved: boolean }>();
     private _onServerExtraSettings = new Observable<{ settings: FactorioServerExtraSettings, saved: boolean }>();
@@ -54,8 +54,8 @@ export class ServersHubService {
         return this._onDownloadableVersions;
     }
 
-    get selectedModPack(): IObservable<string> {
-        return this._selectedModPack;
+    get onSelectedModPack(): IObservable<string> {
+        return this._onSelectedModPack;
     }
 
     get onCachedVersions(): IObservable<CollectionChangedData<string>> {
@@ -169,7 +169,7 @@ export class ServersHubService {
         })
 
         this._connection.on('SendSelectedModPack', (modPack: string) => {
-            this._selectedModPack.raise(modPack);
+            this._onSelectedModPack.raise(modPack);
         })
 
         this._connection.on('SendCachedVersions', (data: CollectionChangedData<string>) => {

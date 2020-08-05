@@ -98,8 +98,6 @@ describe('CollectionView', function () {
             strict.equal(cv.selectedCount, 2);
             strict.equal(cv.isSelected(one), true);
             strict.equal(cv.isSelected(two), true);
-
-
         });
 
         it('select all should select all items.', function () {
@@ -360,6 +358,142 @@ describe('CollectionView', function () {
 
             // Assert.
             strict.equal(callbackFiredCount, 0);
+        });
+
+        describe('setSingleSelected', function () {
+            it('select item', function () {
+                // Arrange.
+                let o = new ObservableKeyArray<number, number>(x => x);
+                let cv = new CollectionView(o);
+
+                o.add(1, 2, 3);
+                let one = cv.getBoxByKey(1);
+                let two = cv.getBoxByKey(2);
+                let three = cv.getBoxByKey(3);
+
+                let actualEvents: CollectionViewChangedData<number>[] = [];
+                cv.selectedChanged.subscribe(event => actualEvents.push(event));
+
+                let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
+                cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
+
+                // Act.
+                cv.setSingleSelected(two);
+
+                // Assert.
+                let expectedSelected = [two];
+
+                strict.deepEqual([...cv.selected], expectedSelected);
+                strict.deepEqual([...cv.viewableSelected], expectedSelected);
+                strict.equal(cv.selectedCount, 1);
+                strict.equal(cv.isSelected(one), false);
+                strict.equal(cv.isSelected(two), true);
+                strict.equal(cv.isSelected(three), false);
+
+                strict.equal(1, actualEvents.length);
+
+                let addEvent = actualEvents[0];
+                strict.equal(addEvent.type, CollectionViewChangeType.Add);
+                strict.deepEqual(addEvent.items, expectedSelected);
+
+                strict.equal(1, actualSingleSelectedEvents.length);
+
+                let singleSelectedAddEvent = actualSingleSelectedEvents[0];
+                strict.equal(singleSelectedAddEvent.type, CollectionViewChangeType.Add);
+                strict.deepEqual(singleSelectedAddEvent.items, expectedSelected);
+            });
+
+            it('select different item', function () {
+                // Arrange.
+                let o = new ObservableKeyArray<number, number>(x => x);
+                let cv = new CollectionView(o);
+
+                o.add(1, 2, 3);
+                let one = cv.getBoxByKey(1);
+                let two = cv.getBoxByKey(2);
+                let three = cv.getBoxByKey(3);
+
+                cv.setSingleSelected(two);
+
+                let actualEvents: CollectionViewChangedData<number>[] = [];
+                cv.selectedChanged.subscribe(event => actualEvents.push(event));
+
+                let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
+                cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
+
+                // Act.
+                cv.setSingleSelected(three);
+
+                // Assert.
+                let expectedSelected = [three];
+
+                strict.deepEqual([...cv.selected], expectedSelected);
+                strict.deepEqual([...cv.viewableSelected], expectedSelected);
+                strict.equal(cv.selectedCount, 1);
+                strict.equal(cv.isSelected(one), false);
+                strict.equal(cv.isSelected(two), false);
+                strict.equal(cv.isSelected(three), true);
+
+                strict.equal(2, actualEvents.length);
+
+                let removeEvent = actualEvents[0];
+                strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
+                strict.deepEqual(removeEvent.items, [two]);
+
+                let addEvent = actualEvents[1];
+                strict.equal(addEvent.type, CollectionViewChangeType.Add);
+                strict.deepEqual(addEvent.items, expectedSelected);
+
+                strict.equal(1, actualSingleSelectedEvents.length);
+
+                let singleSelectedAddEvent = actualSingleSelectedEvents[0];
+                strict.equal(singleSelectedAddEvent.type, CollectionViewChangeType.Add);
+                strict.deepEqual(singleSelectedAddEvent.items, expectedSelected);
+            });
+
+            it('unselect item', function () {
+                // Arrange.
+                let o = new ObservableKeyArray<number, number>(x => x);
+                let cv = new CollectionView(o);
+
+                o.add(1, 2, 3);
+                let one = cv.getBoxByKey(1);
+                let two = cv.getBoxByKey(2);
+                let three = cv.getBoxByKey(3);
+
+                cv.setSingleSelected(two);
+
+                let actualEvents: CollectionViewChangedData<number>[] = [];
+                cv.selectedChanged.subscribe(event => actualEvents.push(event));
+
+                let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
+                cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
+
+                // Act.
+                cv.setSingleSelected(null);
+
+                // Assert.
+                let expectedSelected = [];
+
+                strict.deepEqual([...cv.selected], expectedSelected);
+                strict.deepEqual([...cv.viewableSelected], expectedSelected);
+                strict.equal(cv.selectedCount, 0);
+                strict.equal(cv.isSelected(one), false);
+                strict.equal(cv.isSelected(two), false);
+                strict.equal(cv.isSelected(three), false);
+
+                strict.equal(1, actualEvents.length);
+
+                let removeEvent = actualEvents[0];
+                strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
+                strict.deepEqual(removeEvent.items, [two]);
+
+                strict.equal(1, actualSingleSelectedEvents.length);
+
+                let singleSelectedRemoveEvent = actualSingleSelectedEvents[0];
+                strict.equal(singleSelectedRemoveEvent.type, CollectionViewChangeType.Remove);
+                strict.deepEqual(singleSelectedRemoveEvent.items, [two]);
+            });
         });
     });
 

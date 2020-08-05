@@ -1533,6 +1533,7 @@ describe('ServerConsoleViewModel', function () {
         class HubServiceMock extends ServersHubServiceMockBase {
             _connected = true;
             _version: string = '0.0.0';
+            _selectedModPack: string = 'mod pack';
             _factorioControlClientData: FactorioControlClientData = { Status: FactorioServerStatus.Unknown, Messages: [] };
             _serverSettings: FactorioServerSettings = defaultFactorioServerSettings;
 
@@ -1559,6 +1560,11 @@ describe('ServerConsoleViewModel', function () {
             requestServerSettings() {
                 setInterval(() => this._onServerSettings.raise({ settings: this._serverSettings, saved: true }), 0);
                 super.requestServerSettings();
+            }
+
+            requestSelectedModPack() {
+                super.requestSelectedModPack();
+                setInterval(() => this._onSelectedModPack.raise(this._selectedModPack), 0);
             }
         }
 
@@ -1590,6 +1596,9 @@ describe('ServerConsoleViewModel', function () {
             let versionEvent: string = undefined;
             viewModel.propertyChanged('versionText', event => versionEvent = event);
 
+            let modPackEvent: string = undefined;
+            viewModel.propertyChanged('modPackText', event => modPackEvent = event);
+
             let messageEvent: CollectionChangedData<MessageData> = undefined;
             viewModel.messages.subscribe(event => messageEvent = event);
 
@@ -1601,6 +1610,7 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(nameEvent, 'Name: Name');
             strict.equal(statusEvent, 'Status: Stopped');
             strict.equal(versionEvent, 'Version: 0.0.0');
+            strict.equal(modPackEvent, 'Mod Pack: mod pack');
             strict.equal(messageEvent.Type, CollectionChangeType.Reset);
             strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
         });
@@ -1628,6 +1638,7 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(viewModel.nameText, 'Name: Name');
             strict.equal(viewModel.statusText, 'Status: Stopped');
             strict.equal(viewModel.versionText, 'Version: 0.0.1');
+            strict.equal(viewModel.modPackText, 'Mod Pack: mod pack');
             strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
         });
 
@@ -1661,12 +1672,16 @@ describe('ServerConsoleViewModel', function () {
             let versionEvent: string = undefined;
             viewModel.propertyChanged('versionText', event => versionEvent = event);
 
+            let modPackEvent: string = undefined;
+            viewModel.propertyChanged('modPackText', event => modPackEvent = event);
+
             let messageEvent: CollectionChangedData<MessageData> = undefined;
             viewModel.messages.subscribe(event => messageEvent = event);
 
             hubService._serverSettings.Name = 'Name2';
             factorioControlClientData.Status = FactorioServerStatus.Stopped;
             hubService._version = '0.0.2';
+            hubService._selectedModPack = 'mod pack 2';
 
             let serverIds = viewModel.serverIds;
 
@@ -1678,8 +1693,37 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(nameEvent, 'Name: Name2');
             strict.equal(statusEvent, 'Status: Stopped');
             strict.equal(versionEvent, 'Version: 0.0.2');
+            strict.equal(modPackEvent, 'Mod Pack: mod pack 2');
             strict.equal(messageEvent.Type, CollectionChangeType.Reset);
             strict.deepEqual([...viewModel.messages.values()], factorioControlClientData.Messages);
+        });
+    });
+
+    describe('modPackText', function () {
+        it('when mod pack is selected', async function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            // Act.
+            hubService._onSelectedModPack.raise('mod pack');
+
+            // Assert.
+            strict.equal(viewModel.modPackText, 'Mod Pack: mod pack');
+        });
+
+        it('when mod pack no mod pack is selected', async function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            // Assert.
+            strict.equal(viewModel.modPackText, `Mod Pack: ${ServersConsoleViewModel.noModPackMessage}`);
         });
     });
 });

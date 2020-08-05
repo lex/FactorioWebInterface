@@ -61,6 +61,7 @@ export class ServersViewModel {
             serverConsoleService,
             mangeVersionService,
             serverSettingsService,
+            serverFileService,
             modalService,
             errorService,
             this.tempFileViewModel,
