@@ -11,7 +11,6 @@ import { FileSelectionService } from "../../services/fileSelectionservice";
 import { FileSelectionServiceMockBase } from "../../testUtils/services/fileSelectionServiceMockBase";
 import { UploadService, FileUploadEvent, FileUploadEventType } from "../../services/uploadService";
 import { UploadServiceMockBase } from "../../testUtils/services/uploadServiceMockBase";
-import { MethodInvocation } from "../../testUtils/invokeBase";
 import { ModsService } from "./modsService";
 import { FormDataMock } from "../../testUtils/models/formDataMock";
 import { ErrorService } from "../../services/errorService";
@@ -30,7 +29,13 @@ const modPack2: ModPackMetaData = {
     LastModifiedTime: '2020-01-02 00:00:00'
 };
 
-const modPacks = [modPack, modPack2];
+const modPack3: ModPackMetaData = {
+    Name: 'name3',
+    CreatedTime: '2020-01-03 00:00:00',
+    LastModifiedTime: '2020-01-03 00:00:00'
+};
+
+const modPacks = [modPack, modPack2, modPack3];
 
 const modFile: ModPackFileMetaData = {
     Name: 'file abc',
@@ -46,7 +51,14 @@ const modFile2: ModPackFileMetaData = {
     Size: 100
 };
 
-const modFiles = [modFile, modFile2];
+const modFile3: ModPackFileMetaData = {
+    Name: 'file ghi',
+    CreatedTime: '2020-01-03 00:00:00',
+    LastModifiedTime: '2020-01-03 00:00:00',
+    Size: 100
+};
+
+const modFiles = [modFile, modFile2, modFile3];
 
 describe('ModPackFilesViewModel', function () {
     it('updates when first loading', function () {
@@ -125,7 +137,7 @@ describe('ModPackFilesViewModel', function () {
         // Assert.
         let actual = IterableHelper.map(viewModel.modPacks.values(), m => m.value);
         // mod packs should be sorted by LastModifiedTime descending.     
-        let expected = [modPack2, modPack];
+        let expected = [modPack3, modPack2, modPack];
         strict.deepEqual([...actual], expected);
     });
 
@@ -562,6 +574,414 @@ describe('ModPackFilesViewModel', function () {
             strict.equal(viewModel.isDownloading.value, true);
             strict.equal(called, true);
             strict.equal(viewModel.downloadFilesCommand.canExecute(), false);
+        });
+    });
+
+    describe('delete files command', function () {
+        it('can delete file', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            let modFile2Box = viewModel.files.getBoxByKey(modFile2.Name);
+            viewModel.files.setSelected(modFile2Box, true);
+
+            // Act.
+            strict.equal(true, viewModel.deleteFilesCommand.canExecute());
+            viewModel.deleteFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodCalled('deleteModPackFiles', modPack.Name, [modFile2.Name]);
+        });
+
+        it('can delete files', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            viewModel.files.selectAll();
+
+            // Act.
+            strict.equal(true, viewModel.deleteFilesCommand.canExecute());
+            viewModel.deleteFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodCalled('deleteModPackFiles', modPack.Name, [modFile.Name, modFile2.Name, modFile3.Name]);
+        });
+
+        it('can not execute when no files selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            // Act.
+            strict.equal(false, viewModel.deleteFilesCommand.canExecute());
+            viewModel.deleteFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('deleteModPackFiles');
+        });
+
+        it('can not execute when no mod pack selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            // Act.
+            strict.equal(false, viewModel.deleteFilesCommand.canExecute());
+            viewModel.deleteFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('deleteModPackFiles');
+        });
+    });
+
+    describe('move files command', function () {
+        it('can move file', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            let modFile2Box = viewModel.files.getBoxByKey(modFile2.Name);
+            viewModel.files.setSelected(modFile2Box, true);
+
+            let modPack2Box = viewModel.modPacks.getBoxByKey(modPack2.Name);
+            viewModel.modPacks.setSingleSelected(modPack2Box);
+
+            // Act.
+            strict.equal(true, viewModel.moveFilesCommand.canExecute());
+            viewModel.moveFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodCalled('moveModPackFiles', modPack.Name, modPack2.Name, [modFile2.Name]);
+        });
+
+        it('can move files', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            viewModel.files.selectAll();
+            let modPack3Box = viewModel.modPacks.getBoxByKey(modPack3.Name);
+            viewModel.modPacks.setSingleSelected(modPack3Box);
+
+            // Act.
+            strict.equal(true, viewModel.moveFilesCommand.canExecute());
+            viewModel.moveFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodCalled('moveModPackFiles', modPack.Name, modPack3.Name, [modFile.Name, modFile2.Name, modFile3.Name]);
+        });
+
+        it('can not execute when no files selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            // Act.
+            strict.equal(false, viewModel.moveFilesCommand.canExecute());
+            viewModel.moveFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('moveModPackFiles');
+        });
+
+        it('can not execute when no mod pack selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            // Act.
+            strict.equal(false, viewModel.moveFilesCommand.canExecute());
+            viewModel.moveFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('moveModPackFiles');
+        });
+
+        it('can not execute when no destination mod pack selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: [modPack] });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            viewModel.files.selectAll();
+
+            // Act.
+            strict.equal(false, viewModel.moveFilesCommand.canExecute());
+            viewModel.moveFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('moveModPackFiles');
+        });
+    });
+
+    describe('copy files command', function () {
+        it('can copy file', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            let modFile2Box = viewModel.files.getBoxByKey(modFile2.Name);
+            viewModel.files.setSelected(modFile2Box, true);
+
+            let modPack2Box = viewModel.modPacks.getBoxByKey(modPack2.Name);
+            viewModel.modPacks.setSingleSelected(modPack2Box);
+
+            // Act.
+            strict.equal(true, viewModel.copyFilesCommand.canExecute());
+            viewModel.copyFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodCalled('copyModPackFiles', modPack.Name, modPack2.Name, [modFile2.Name]);
+        });
+
+        it('can copy files', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            viewModel.files.selectAll();
+            let modPack3Box = viewModel.modPacks.getBoxByKey(modPack3.Name);
+            viewModel.modPacks.setSingleSelected(modPack3Box);
+
+            // Act.
+            strict.equal(true, viewModel.copyFilesCommand.canExecute());
+            viewModel.copyFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodCalled('copyModPackFiles', modPack.Name, modPack3.Name, [modFile.Name, modFile2.Name, modFile3.Name]);
+        });
+
+        it('can not execute when no files selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            // Act.
+            strict.equal(false, viewModel.copyFilesCommand.canExecute());
+            viewModel.copyFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('copyModPackFiles');
+        });
+
+        it('can not execute when no mod pack selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            // Act.
+            strict.equal(false, viewModel.copyFilesCommand.canExecute());
+            viewModel.copyFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('copyModPackFiles');
+        });
+
+        it('can not execute when no destination mod pack selected', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: [modPack] });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+
+            hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
+
+            viewModel.files.selectAll();
+
+            // Act.
+            strict.equal(false, viewModel.copyFilesCommand.canExecute());
+            viewModel.copyFilesCommand.execute();
+
+            // Assert.
+            hub.assertMethodNotCalled('copyModPackFiles');
+        });
+    });
+
+    describe('destination mod packs', function () {
+        it('does not contain selected mod pack', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+
+            // Act.
+            modPackViewModel.setSelectModPack(modPack);
+
+            // Assert.
+            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack2]);
+        });
+
+        it('changes items when selected mod pack changes', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+            modPackViewModel.setSelectModPack(modPack);
+            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack2]);
+
+            // Act.
+            modPackViewModel.setSelectModPack(modPack2);
+
+            // Assert.
+            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack]);
+        });
+
+        it('sorted same as mod packs', function () {
+            // Arrange.
+            let services = new ModsPageTestServiceLocator();
+
+            let mainViewModel: ModsViewModel = services.get(ModsViewModel);
+            let viewModel = mainViewModel.modPackFilesViewModel;
+
+            let hub: ModsHubServiceMockBase = services.get(ModsHubService);
+            hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            // Should start sorted by LastModifiedTime descending.
+            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack2, modPack]);
+
+            let sortSpec = { property: 'Name', ascending: true };
+            let modPackViewModel = mainViewModel.modPacksViewModel;
+
+            // Act.
+            modPackViewModel.modPacks.sortBy(sortSpec);
+
+            // Assert.
+            strict.deepEqual(viewModel.modPacks.sortSpecifications, [sortSpec]);
+            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack, modPack2, modPack3]);
         });
     });
 });
