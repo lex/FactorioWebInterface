@@ -34,7 +34,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="client\pages\mods\deleteModPackViewModel.spec.ts" />
     <None Remove="client\pages\mods\modPackFilesViewModel.spec.ts" />
+    <None Remove="client\pages\mods\modPackNameNotTakenValidationRule.spec.ts" />
+    <None Remove="client\pages\mods\newModPackViewModel.spec.ts" />
+    <None Remove="client\pages\mods\renameModPackViewModel.spec.ts" />
     <None Remove="client\utils\binding\bindingSource.spec.ts" />
     <None Remove="client\utils\collections\observableKeyArray.spec.ts" />
     <None Remove="FactorioWebInterface.db" />
@@ -335,9 +339,13 @@
     <TypeScriptCompile Include="client\pages\bans\bansHubService.ts" />
     <TypeScriptCompile Include="client\pages\bans\bansViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\bans\services.ts" />
+    <TypeScriptCompile Include="client\pages\mods\deleteModPackViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\mods\modPackFilesViewModel.spec.ts" />
+    <TypeScriptCompile Include="client\pages\mods\modPackNameNotTakenValidationRule.spec.ts" />
     <TypeScriptCompile Include="client\pages\mods\modPackNameNotTakenValidationRule.ts" />
     <TypeScriptCompile Include="client\pages\mods\modPacksViewModel.spec.ts" />
+    <TypeScriptCompile Include="client\pages\mods\newModPackViewModel.spec.ts" />
+    <TypeScriptCompile Include="client\pages\mods\renameModPackViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\scenarioData\scenarioData.ts" />
     <TypeScriptCompile Include="client\pages\scenarioData\scenarioDataHubService.ts" />
     <TypeScriptCompile Include="client\pages\scenarioData\services.ts" />
