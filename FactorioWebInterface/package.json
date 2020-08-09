@@ -20,7 +20,9 @@
     ],
     "exclude": [
       "**/*.d.ts",
-      "**/*.spec.ts"
+      "**/*.spec.ts",
+      "**/testUtils/**",
+      "**/*HubService.ts"
     ],
     "reporter": [
       "text"
