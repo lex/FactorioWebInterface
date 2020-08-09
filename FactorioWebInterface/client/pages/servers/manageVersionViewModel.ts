@@ -1,4 +1,4 @@
-﻿import { CloseBaseViewModel } from "../../utils/CloseBaseViewModel";
+﻿import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ManageVersionService } from "./manageVersionService";
 import { IterableHelper } from "../../utils/iterableHelper";
@@ -9,17 +9,24 @@ import { FactorioServerStatus } from "./serversTypes";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 import { Observable } from "../../utils/observable";
 import { CollectionView, ObservableCollection } from "../../utils/collections/module";
+import { ComparatorHelper } from "../../utils/comparatorHelper";
 
-export class ManageVersionViewModel extends CloseBaseViewModel {
+export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
+    static readonly updateDisabledTooltipMessage = 'Can only update when the server is stopped.';
+
     private _manageVersionService: ManageVersionService;
     private _status: IObservableProperty<FactorioServerStatus>;
     private _errorService: ErrorService;
 
     private _downloadableVersions: CollectionView<string>;
+    private _cachedVersions: CollectionView<string>;
     private _isFetchingVersions = new ObservableProperty<boolean>(true);
+
+    private _updateTooltip = null;
 
     private _downloadAndUpdateCommand: DelegateCommand;
     private _updateCommand: DelegateCommand<string>;
+    private _deleteCommand: DelegateCommand<string>;
 
     private _subscriptions: (() => void)[] = [];
 
@@ -27,12 +34,24 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
         return this._downloadableVersions;
     }
 
+    get cachedVersions(): CollectionView<string> {
+        return this._cachedVersions;
+    }
+
     get isFetchingVersions(): IObservableProperty<boolean> {
         return this._isFetchingVersions;
     }
 
-    get cachedVersions(): ObservableCollection<string> {
-        return this._manageVersionService.cachedVersions;
+    get updateTooltip(): string {
+        return this._updateTooltip;
+    }
+    set updateTooltip(value: string) {
+        if (value === this._updateTooltip) {
+            return;
+        }
+
+        this._updateTooltip = value;
+        this.raise('updateTooltip', value);
     }
 
     get downloadAndUpdateCommand(): ICommand {
@@ -43,6 +62,10 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
         return this._updateCommand;
     }
 
+    get deleteCommand(): ICommand<string> {
+        return this._deleteCommand;
+    }
+
     constructor(manageVersionService: ManageVersionService, status: IObservableProperty<FactorioServerStatus>, errorService: ErrorService) {
         super();
 
@@ -51,7 +74,11 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
         this._errorService = errorService;
 
         this._downloadableVersions = new CollectionView<string>(manageVersionService.downloadableVersions);
+        this._downloadableVersions.sortBy({ property: null, ascendingComparator: ManageVersionViewModel.downloadableVersionsComparator, ascending: false });
         this.updatedSelected();
+
+        this._cachedVersions = new CollectionView<string>(manageVersionService.cachedVersions);
+        this._cachedVersions.sortBy({ property: null, ascendingComparator: ComparatorHelper.caseInsensitiveStringComparator, ascending: false });
 
         manageVersionService.downloadableVersions.subscribe(event => {
             if (event.Type === CollectionChangeType.Reset) {
@@ -78,6 +105,10 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
         this._updateCommand = new DelegateCommand(version => this.update(version),
             version => FactorioServerStatusUtils.IsUpdatable(this._status.value));
 
+        this._deleteCommand = new DelegateCommand<string>(version => {
+            this._manageVersionService.deleteCachedVersion(version);
+        });
+
         this._downloadableVersions.selectedChanged.subscribe(() => this._downloadAndUpdateCommand.raiseCanExecuteChanged(), this._subscriptions);
 
         this._status.subscribe(event => {
@@ -85,11 +116,17 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
             this._updateCommand.raiseCanExecuteChanged();
         }, this._subscriptions);
 
+        this._status.bind(() => this.updateUpdateTooltip(), this._subscriptions);
+
         manageVersionService.requestDownloadableVersion();
         manageVersionService.requestCachedVersions();
     }
 
-    async update(version: string): Promise<void> {
+    disconnect() {
+        Observable.unSubscribeAll(this._subscriptions);
+    }
+
+    private async update(version: string): Promise<void> {
         let result = await this._manageVersionService.update(version);
         this._errorService.reportIfError(result);
 
@@ -98,17 +135,33 @@ export class ManageVersionViewModel extends CloseBaseViewModel {
         }
     }
 
-    delete(version: string): void {
-        this._manageVersionService.deleteCachedVersion(version);
-    }
-
-    disconnect() {
-        Observable.unSubscribeAll(this._subscriptions);
-    }
-
     private updatedSelected() {
         if (this._downloadableVersions.selectedCount === 0) {
             this._downloadableVersions.setFirstSingleSelected();
         }
+    }
+
+    private updateUpdateTooltip() {
+        if (FactorioServerStatusUtils.IsUpdatable(this._status.value)) {
+            this.updateTooltip = null;
+        } else {
+            this.updateTooltip = ManageVersionViewModel.updateDisabledTooltipMessage;
+        }
+    }
+
+    private static downloadableVersionsComparator(a: string, b: string): number {
+        if (a === b) {
+            return 0;
+        }
+
+        if (a === ManageVersionService.latestVersion) {
+            return -1;
+        }
+
+        if (b === ManageVersionService.latestVersion) {
+            return 1;
+        }
+
+        return ComparatorHelper.caseInsensitiveStringComparator(a, b);
     }
 }

@@ -58,10 +58,16 @@ export class InvokeBase<T = any>  {
     assertMethodNotCalled(name: propertyOf<T>): void {
         for (const invocation of this._methodsCalled) {
             if (invocation.name === name) {
-                throw new AssertionError({ message: `The expected method invocation ${name} was not found.`, expected: name });
+                throw new AssertionError({ message: `The expected method invocation ${name} was found when it should not have been.`, expected: name });
             }
         }
 
         return;
+    }
+
+    assertNoMethodCalls(): void {
+        if (this._methodsCalled.length > 0) {
+            throw new AssertionError({ message: `methods have been called when none were expected \n ${this._methodsCalled}` });
+        }
     }
 }

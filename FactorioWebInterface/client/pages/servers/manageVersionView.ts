@@ -6,7 +6,7 @@ import { FlexPanel } from "../../components/flexPanel";
 import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { Table, TextColumn, ColumnTemplate } from "../../components/table";
-import { ReadonlyObservablePropertyBindingSource } from "../../utils/binding/module";
+import { ReadonlyObservablePropertyBindingSource, ObservableObjectBindingSource } from "../../utils/binding/module";
 
 export class ManageVersionView extends VirtualComponent {
     constructor(manageVersionViewModel: ManageVersionViewModel) {
@@ -32,39 +32,33 @@ export class ManageVersionView extends VirtualComponent {
             .bindIsLoading(new ReadonlyObservablePropertyBindingSource(manageVersionViewModel.isFetchingVersions));
 
         let downlaodAndUpdateButton = iconButton(Icon.classes.download, 'Download and Update', Button.classes.link)
-            .setCommand(manageVersionViewModel.downloadAndUpdateCommand);
+            .setCommand(manageVersionViewModel.downloadAndUpdateCommand)
+            .bindTooltip(new ObservableObjectBindingSource(manageVersionViewModel, 'updateTooltip'));
 
         topPanel.append(versionSelect, downlaodAndUpdateButton);
 
         let updateCellBuilder = ((version: string) => {
-            let button = new Button('Update', Button.classes.success)
+            return new Button('Update', Button.classes.success)
                 .setCommand(manageVersionViewModel.updateCommand)
-                .setCommandParameter(version);
-
-            return button;
+                .setCommandParameter(version)
+                .bindTooltip(new ObservableObjectBindingSource(manageVersionViewModel, 'updateTooltip'));
         });
 
         let deleteCellBuilder = ((version: string) => {
-            let button = new Button('Delete', Button.classes.danger);
-            button.onClick((event: MouseEvent) => {
-                event.stopPropagation();
-                manageVersionViewModel.delete(version);
-            });
-
-            return button;
+            return new Button('Delete', Button.classes.danger)
+                .setCommand(manageVersionViewModel.deleteCommand)
+                .setCommandParameter(version);
         });
 
         let cachedVersionHeader = document.createElement('h4');
         cachedVersionHeader.textContent = 'Cached Versions';
         cachedVersionHeader.style.margin = '1em';
 
-        let versionColumn = new TextColumn().setHeader(() => 'Version');
         let cachedVersionsTable = new Table(manageVersionViewModel.cachedVersions, [
-            versionColumn,
+            new TextColumn(null).setHeader(() => 'Version'),
             new ColumnTemplate().setHeader(() => 'Update').setCell(updateCellBuilder).setSortingDisabled(true),
             new ColumnTemplate().setHeader(() => 'Delete').setCell(deleteCellBuilder).setSortingDisabled(true)
         ]);
-        cachedVersionsTable.sortBy(versionColumn, false);
         cachedVersionsTable.style.width = 'min-content';
 
         mainPanel.append(topPanel, cachedVersionHeader, cachedVersionsTable);
