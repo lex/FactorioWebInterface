@@ -113,8 +113,7 @@ export class ModPackFilesView extends VirtualComponent {
 
         let collapse = new Collapse(header, mainPanel);
         collapse.open = true;
-        collapse.classList.add('is-4', 'border', 'header');
-        collapse.style.marginTop = '2rem';
+        collapse.classList.add('section');
         this._root = collapse;
 
         function updateUploadButton(isUploading: boolean) {

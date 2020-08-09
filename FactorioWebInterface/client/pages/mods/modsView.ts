@@ -3,14 +3,13 @@ import { ModsViewModel } from "./modsViewModel";
 import { ModPacksView } from "./ModPacksView";
 import { HelpSectionView } from "./helpSectionView";
 import { ModPackFilesView } from "./modPackFilesView";
+import { FlexPanel } from "../../components/flexPanel";
 
 export class ModsView extends VirtualComponent {
     constructor(modsViewModel: ModsViewModel) {
         super();
 
-        let root = document.createElement('div');
-        root.classList.add('page-container');
-        this._root = root;
+        let panel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacingLarge, 'page-container');
 
         let header = document.createElement('h2');
         header.textContent = 'Mod Packs';
@@ -19,6 +18,8 @@ export class ModsView extends VirtualComponent {
         let modPacksView = new ModPacksView(modsViewModel.modPacksViewModel);
         let modPackFilesView = new ModPackFilesView(modsViewModel.modPackFilesViewModel);
 
-        root.append(header, helpSection.root, modPacksView.root, modPackFilesView.root);
+        panel.append(header, helpSection.root, modPacksView.root, modPackFilesView.root);
+
+        this._root = panel;
     }
 }
