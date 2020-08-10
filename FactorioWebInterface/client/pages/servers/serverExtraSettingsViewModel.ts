@@ -9,7 +9,7 @@ import { ErrorService } from "../../services/errorService";
 import { propertyOf } from "../../utils/types";
 
 export class ServerExtraSettingsViewModel extends ObservableObject<ServerExtraSettingsViewModel> {
-    private static readonly formFieldsDefaultValues: FactorioServerExtraSettings = {
+    static readonly formFieldsDefaultValues: FactorioServerExtraSettings = {
         SyncBans: true,
         BuildBansFromDatabaseOnStart: true,
         SetDiscordChannelName: true,

@@ -8,7 +8,7 @@ import { ServerIdService } from "./serverIdService";
 export class ServerExtraSettingsService {
     private _serversHubService: ServersHubService;
 
-    private _settings: FactorioServerExtraSettings;
+    private _settings = {} as FactorioServerExtraSettings;
     private _saved = new ObservableProperty<boolean>(true);
     private _settingsObservable = new Observable<KeyValueCollectionChangedData>();
 
