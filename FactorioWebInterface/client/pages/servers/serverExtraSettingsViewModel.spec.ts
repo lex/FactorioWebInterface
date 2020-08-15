@@ -26,7 +26,7 @@ describe('ServerExtraSettingsViewModel', function () {
         strict.equal(settings.SyncBans, viewModel.SyncBans);
     }
 
-    let serverExtraSettingsTestCases: { property: propertyOf<ServerExtraSettingsViewModel>, value: any }[] = [
+    const serverExtraSettingsTestCases: { property: propertyOf<ServerExtraSettingsViewModel>, value: any }[] = [
         { property: 'SyncBans', value: false },
         { property: 'BuildBansFromDatabaseOnStart', value: false },
         { property: 'SetDiscordChannelName', value: false },
@@ -434,6 +434,76 @@ describe('ServerExtraSettingsViewModel', function () {
                     hubService.assertMethodCalled('updateServerExtraSettings', expected);
                 });
             }
+        });
+
+        describe('paste with no changes does not trigger update', function () {
+            for (let testCase of serverExtraSettingsTestCases) {
+                it(testCase.property, function () {
+                    // Arrange.
+                    let services = new ServersPageTestServiceLocator();
+                    let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                    let viewModel = mainViewModel.serverExtraSettingsViewModel;
+                    let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                    let expectedSettings: FactorioServerExtraSettings = {
+                        SyncBans: true,
+                        BuildBansFromDatabaseOnStart: true,
+                        SetDiscordChannelName: true,
+                        SetDiscordChannelTopic: true,
+                        GameChatToDiscord: true,
+                        GameShoutToDiscord: true,
+                        DiscordToGameChat: true,
+                        PingDiscordCrashRole: true
+                    };
+
+                    let settings = {};
+                    settings[testCase.property] = viewModel[testCase.property];
+
+                    let text = JSON.stringify(settings);
+
+                    // Act.
+                    viewModel.pasteSettings(text);
+
+                    // Assert.
+                    assertSettingsEqualViewModel(expectedSettings, viewModel);
+                    strict.equal(viewModel.pasteText, ServerSettingsViewModel.appliedPasteText);
+                    strict.equal(viewModel.saved, true);
+
+                    hubService.assertMethodNotCalled('updateServerExtraSettings');
+                });
+            }
+        });
+
+        it('paste empty object does not trigger update', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverExtraSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let expectedSettings: FactorioServerExtraSettings = {
+                SyncBans: true,
+                BuildBansFromDatabaseOnStart: true,
+                SetDiscordChannelName: true,
+                SetDiscordChannelTopic: true,
+                GameChatToDiscord: true,
+                GameShoutToDiscord: true,
+                DiscordToGameChat: true,
+                PingDiscordCrashRole: true
+            };
+
+            let settings = {};
+            let text = JSON.stringify(settings);
+
+            // Act.
+            viewModel.pasteSettings(text);
+
+            // Assert.
+            assertSettingsEqualViewModel(expectedSettings, viewModel);
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.appliedPasteText);
+            strict.equal(viewModel.saved, true);
+
+            hubService.assertMethodNotCalled('updateServerExtraSettings');
         });
 
         it('parse error shows error', function () {

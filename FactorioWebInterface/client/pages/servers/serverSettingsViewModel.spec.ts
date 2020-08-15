@@ -1,64 +1,36 @@
 ﻿import { strict } from "assert";
 import { ServerSettingsViewModel } from "./serverSettingsViewModel";
-import { ServerSettingsService } from "./serverSettingsService";
 import { FactorioServerSettings } from "./serversTypes";
-import { IObservable, Observable } from "../../utils/observable";
-import { KeyValueCollectionChangedData, Result, CollectionChangeType } from "../../ts/utils";
-import { IObservableProperty, ObservableProperty } from "../../utils/observableProperty";
-import { PublicPart, propertyOf } from "../../utils/types";
-import { InvokeBase } from "../../testUtils/invokeBase";
-import { CopyToClipboardService } from "../../services/copyToClipboardService";
+import { CollectionChangeType, Result, KeyValueCollectionChangedData } from "../../ts/utils";
+import { propertyOf } from "../../utils/types";
+import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocator";
+import { ServersViewModel } from "./serversViewModel";
+import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
+import { ServersHubService } from "./serversHubService";
+import { PromiseHelper } from "../../utils/promiseHelper";
+import { ErrorServiceMockBase } from "../../testUtils/services/errorServiceMockBase";
 import { ErrorService } from "../../services/errorService";
-
-class ServerSettingsServiceMock extends InvokeBase<ServerSettingsService> implements PublicPart<ServerSettingsService> {
-    static create(): ServerSettingsService {
-        return new ServerSettingsServiceMock() as any as ServerSettingsService;
-    }
-
-    private _settingsChangedObservable = new Observable<KeyValueCollectionChangedData<any>>();
-
-    raiseSettingsChangedObservable(event: KeyValueCollectionChangedData<any>) {
-        this._settingsChangedObservable.raise(event);
-    }
-
-    get settings(): FactorioServerSettings {
-        this.invoked('settings');
-        return {} as FactorioServerSettings;
-    }
-    get saved(): boolean {
-        this.invoked('saved');
-        return true;
-    }
-    get settingsChanged(): IObservable<KeyValueCollectionChangedData<any>> {
-        this.invoked('settingsChanged');
-        return this._settingsChangedObservable;
-    }
-    get savedChanged(): IObservableProperty<boolean> {
-        this.invoked('savedChanged');
-        return new ObservableProperty();
-    }
-    saveSettings(settings: FactorioServerSettings): Promise<Result> {
-        this.invoked('saveSettings', [settings]);
-        return Promise.resolve({ Success: true });
-    }
-    updateSettings(data: KeyValueCollectionChangedData<any>): void {
-        this.invoked('updateSettings', data);
-    }
-    undoSettings(): void {
-        this.invoked('undoSettings');
-    }
-}
+import { CopyToClipboardServiceMockBase } from "../../testUtils/services/copyToClipboardServiceMockBase";
+import { CopyToClipboardService } from "../../services/copyToClipboardService";
 
 describe('ServerSettingsViewModel', function () {
-    function makeServerSettingsViewModel(serverSettingsService?: ServerSettingsService): ServerSettingsViewModel {
-        serverSettingsService = serverSettingsService ?? (new ServerSettingsServiceMock() as any as ServerSettingsService);
-        let copyToClipoardService = {} as CopyToClipboardService;
-        let errorService = {} as ErrorService;
-
-        return new ServerSettingsViewModel(serverSettingsService, copyToClipoardService, errorService)
+    function assertSettingsEqualViewModel(settings: Partial<ServerSettingsViewModel>, viewModel: ServerSettingsViewModel) {
+        strict.equal(settings.Name, viewModel.Name);
+        strict.equal(settings.Description, viewModel.Description);
+        strict.equal(settings.Tags, viewModel.Tags);
+        strict.equal(settings.MaxPlayers, viewModel.MaxPlayers);
+        strict.equal(settings.GamePassword, viewModel.GamePassword);
+        strict.equal(settings.MaxUploadSlots, viewModel.MaxUploadSlots);
+        strict.equal(settings.AutoPause, viewModel.AutoPause);
+        strict.equal(settings.UseDefaultAdmins, viewModel.UseDefaultAdmins);
+        strict.equal(settings.Admins, viewModel.Admins);
+        strict.equal(settings.AutosaveInterval, viewModel.AutosaveInterval);
+        strict.equal(settings.AutosaveSlots, viewModel.AutosaveSlots);
+        strict.equal(settings.NonBlockingSaving, viewModel.NonBlockingSaving);
+        strict.equal(settings.PublicVisible, viewModel.PublicVisible);
     }
 
-    let serverSettingsTestCases: { property: propertyOf<ServerSettingsViewModel>, value: any, settingValue: any }[] = [
+    const serverSettingsTestCases: { property: propertyOf<ServerSettingsViewModel>, value: any, settingValue: any }[] = [
         { property: 'Name', value: 'new value', settingValue: 'new value' },
         { property: 'Description', value: 'new value', settingValue: 'new value' },
         { property: 'Tags', value: 'new value', settingValue: ['new value'] },
@@ -74,34 +46,105 @@ describe('ServerSettingsViewModel', function () {
         { property: 'PublicVisible', value: false, settingValue: false },
     ];
 
+    describe('starts with default values', function () {
+        for (let testCase of serverSettingsTestCases) {
+            it(testCase.property, function () {
+                // Arrange.          
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+
+                // Act.
+                let viewModel = mainViewModel.serverSettingsViewModel;
+
+                // Assert.                
+                let actual = viewModel[testCase.property]
+                let expected = ServerSettingsViewModel.formFieldsDefaultValues[testCase.property];
+                strict.equal(actual, expected);
+            });
+        }
+    });
+
+    describe('setting null sets to default value', function () {
+        for (let testCase of serverSettingsTestCases) {
+            it(testCase.property, function () {
+                // Arrange.          
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverSettingsViewModel;
+                let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                let settings = {};
+                settings[testCase.property] = null;
+                let settingsEvent = { Type: CollectionChangeType.Add, NewItems: settings };
+
+                // Act.
+                hubService._onServerSettingsUpdate.raise({ data: settingsEvent, markUnsaved: false });
+
+                // Assert.                
+                let actual = viewModel[testCase.property];
+                let expected = ServerSettingsViewModel.formFieldsDefaultValues[testCase.property];
+                strict.equal(actual, expected);
+                strict.equal(viewModel.saved, true);
+            });
+        }
+    });
+
+    describe('updates onServerSettings', function () {
+        for (let testCase of serverSettingsTestCases) {
+            it(testCase.property, function () {
+                // Arrange.          
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverSettingsViewModel;
+                let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                let settings = {} as FactorioServerSettings;
+                for (let prop of serverSettingsTestCases) {
+                    settings[prop.property] = prop.settingValue;
+                }
+
+                let actaulPropertyValue: any = undefined;
+                viewModel.propertyChanged(testCase.property, event => actaulPropertyValue = event);
+
+                // Act.
+                hubService._onServerSettings.raise({ settings: settings, saved: false });
+
+                // Assert.
+                strict.equal(actaulPropertyValue, testCase.value);
+                strict.equal(viewModel.saved, false);
+            });
+        }
+    });
+
     describe('setting form property triggers updates', function () {
         for (let testCase of serverSettingsTestCases) {
             it(testCase.property, function () {
                 // Arrange.
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverSettingsViewModel;
+                let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
                 let expectedSettings = {};
                 expectedSettings[testCase.property] = testCase.settingValue;
                 let expectedUpdateSettings = { Type: CollectionChangeType.Add, NewItems: expectedSettings };
 
                 let actaulUpdateSettings: any = undefined;
-
-                let serverSettingsServiceMock = new ServerSettingsServiceMock();
-                serverSettingsServiceMock.methodCalled.subscribe(event => {
-                    if (event.name === 'updateSettings') {
+                hubService.methodCalled.subscribe(event => {
+                    if (event.name === 'updateServerSettings') {
                         actaulUpdateSettings = event.args[0];
                     }
                 });
 
-                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock as any as ServerSettingsService);
-
                 let actaulPropertyValue: any = undefined;
-                serverSettingsViewModel.propertyChanged(testCase.property, event => actaulPropertyValue = event);
+                viewModel.propertyChanged(testCase.property, event => actaulPropertyValue = event);
 
-                let saved = serverSettingsViewModel.saved;
+                let saved = viewModel.saved;
                 strict.equal(saved, true);
-                serverSettingsViewModel.propertyChanged('saved', event => saved = event);
+                viewModel.propertyChanged('saved', event => saved = event);
 
                 // Act.
-                serverSettingsViewModel[testCase.property as string] = testCase.value;
+                viewModel[testCase.property as string] = testCase.value;
 
                 // Assert.            
                 strict.equal(actaulPropertyValue, testCase.value);
@@ -115,30 +158,25 @@ describe('ServerSettingsViewModel', function () {
         for (let testCase of serverSettingsTestCases) {
             it(testCase.property, function () {
                 // Arrange.
-                let serverSettingsServiceMock = new ServerSettingsServiceMock();
-
-                let updateSettingsCalled = false;
-                serverSettingsServiceMock.methodCalled.subscribe(event => {
-                    if (event.name === 'updateSettings') {
-                        updateSettingsCalled = true;
-                    }
-                });
-
-                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock as any as ServerSettingsService);
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverSettingsViewModel;
+                let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
 
                 let actaulPropertyValue = undefined;
-                serverSettingsViewModel.propertyChanged(testCase.property, event => actaulPropertyValue = event);
+                viewModel.propertyChanged(testCase.property, event => actaulPropertyValue = event);
 
                 let settings = {};
                 settings[testCase.property] = testCase.settingValue;
                 let settingsEvent = { Type: CollectionChangeType.Add, NewItems: settings };
 
                 // Act.
-                serverSettingsServiceMock.raiseSettingsChangedObservable(settingsEvent);
+                hubService._onServerSettingsUpdate.raise({ data: settingsEvent, markUnsaved: true });
 
                 // Assert.
                 strict.equal(actaulPropertyValue, testCase.value);
-                strict.equal(updateSettingsCalled, false);
+                strict.equal(viewModel.saved, false);
+                hubService.assertMethodNotCalled('updateServerSettings');
             });
         }
     });
@@ -152,14 +190,17 @@ describe('ServerSettingsViewModel', function () {
         for (let testCase of testCases) {
             it(`from property: ${testCase.value}`, function () {
                 // Arrange.
-                let serverSettingsViewModel = makeServerSettingsViewModel();
-                serverSettingsViewModel.UseDefaultAdmins = !testCase.value;
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+
+                let viewModel = mainViewModel.serverSettingsViewModel;
+                viewModel.UseDefaultAdmins = !testCase.value;
 
                 let actaulRaised = undefined;
-                serverSettingsViewModel.propertyChanged('adminsEditEnabled', event => actaulRaised = event);
+                viewModel.propertyChanged('adminsEditEnabled', event => actaulRaised = event);
 
                 // Act.
-                serverSettingsViewModel.UseDefaultAdmins = testCase.value;
+                viewModel.UseDefaultAdmins = testCase.value;
 
                 // Assert.
                 strict.equal(actaulRaised, testCase.expected);
@@ -169,24 +210,474 @@ describe('ServerSettingsViewModel', function () {
         for (let testCase of testCases) {
             it(`from settings: ${testCase.value}`, function () {
                 // Arrange.
-                let serverSettingsServiceMock = new ServerSettingsServiceMock();
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverSettingsViewModel;
+                let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                viewModel.UseDefaultAdmins = !testCase.value;
+
+                let actaulRaised = undefined;
+                viewModel.propertyChanged('adminsEditEnabled', event => actaulRaised = event);
 
                 let settings = {};
                 settings['UseDefaultAdmins'] = testCase.value;
                 let settingsEvent = { Type: CollectionChangeType.Add, NewItems: settings };
 
-                let serverSettingsViewModel = makeServerSettingsViewModel(serverSettingsServiceMock as any as ServerSettingsService);
-                serverSettingsViewModel.UseDefaultAdmins = !testCase.value;
-
-                let actaulRaised = undefined;
-                serverSettingsViewModel.propertyChanged('adminsEditEnabled', event => actaulRaised = event);
-
                 // Act.
-                serverSettingsServiceMock.raiseSettingsChangedObservable(settingsEvent);
+                hubService._onServerSettingsUpdate.raise({ data: settingsEvent, markUnsaved: false });
 
                 // Assert.
                 strict.equal(actaulRaised, testCase.expected);
             });
         }
+    });
+
+    describe('save command', function () {
+        it('can execute', async function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            viewModel.AutoPause = false;
+
+            let actualSettings: FactorioServerSettings = undefined;
+            hubService.methodCalled.subscribe(event => {
+                if (event.name === 'saveServerSettings') {
+                    actualSettings = event.args[0];
+                }
+            });
+
+            let expectedSettings: FactorioServerSettings = {
+                Name: '',
+                Description: '',
+                Tags: [],
+                MaxPlayers: 0,
+                GamePassword: '',
+                MaxUploadSlots: 32,
+                AutoPause: false,
+                UseDefaultAdmins: true,
+                Admins: [],
+                AutosaveInterval: 5,
+                AutosaveSlots: 20,
+                NonBlockingSaving: true,
+                PublicVisible: true
+            };
+
+            // Act.
+            strict.equal(viewModel.saveCommand.canExecute(), true);
+            viewModel.saveCommand.execute();
+            await PromiseHelper.delay(0);
+
+            // Assert.
+            strict.deepEqual(actualSettings, expectedSettings);
+        });
+
+        it('can not execute when no unsaved changes', async function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            // Act.
+            strict.equal(viewModel.saved, true);
+            strict.equal(viewModel.saveCommand.canExecute(), false);
+            viewModel.saveCommand.execute();
+            await PromiseHelper.delay(0);
+
+            // Assert.
+            hubService.assertMethodNotCalled('saveServerSettings');
+        });
+
+        it('can execute changes when saved changes', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+
+            let canExecuteChangedCalled = false;
+            viewModel.saveCommand.canExecuteChanged.subscribe(() => canExecuteChangedCalled = true);
+
+            strict.equal(viewModel.saveCommand.canExecute(), false);
+
+            // Act.
+            viewModel.AutoPause = false;
+
+            // Assert.
+            strict.equal(viewModel.saveCommand.canExecute(), true);
+            strict.equal(canExecuteChangedCalled, true);
+        });
+
+        class ErrorServersHubServiceMockBase extends ServersHubServiceMockBase {
+            _result: Result;
+
+            saveServerSettings(settings: FactorioServerSettings): Promise<Result> {
+                this.invoked('saveServerSettings', settings);
+                return Promise.resolve(this._result);
+            }
+        }
+
+        it('reports error', async function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            services.register(ServersHubService, () => new ErrorServersHubServiceMockBase());
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+
+            let result: Result = { Success: false, Errors: [{ Key: 'some key', Description: 'some description' }] };
+            let hubService: ErrorServersHubServiceMockBase = services.get(ServersHubService);
+            hubService._result = result;
+
+            let errorService: ErrorServiceMockBase = services.get(ErrorService);
+
+            viewModel.AutoPause = false;
+
+            // Act.
+            strict.equal(viewModel.saveCommand.canExecute(), true);
+            viewModel.saveCommand.execute();
+            await PromiseHelper.delay(0);
+
+            // Assert.
+            hubService.assertMethodCalled('saveServerSettings');
+            errorService.assertMethodCalled('reportIfError', result);
+        });
+    });
+
+    describe('undo command', function () {
+        it('can execute', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            viewModel.AutoPause = false;
+
+            // Act.
+            strict.equal(viewModel.undoCommand.canExecute(), true);
+            viewModel.undoCommand.execute();
+
+            // Assert.
+            hubService.assertMethodCalled('undoServerSettings');
+        });
+
+        it('can not execute when no unsaved changes', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            // Act.
+            strict.equal(viewModel.saved, true);
+            strict.equal(viewModel.undoCommand.canExecute(), false);
+            viewModel.undoCommand.execute();
+
+            // Assert.
+            hubService.assertMethodNotCalled('undoServerSettings');
+        });
+
+        it('can execute changes when saved changes', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+
+            let canExecuteChangedCalled = false;
+            viewModel.undoCommand.canExecuteChanged.subscribe(() => canExecuteChangedCalled = true);
+
+            strict.equal(viewModel.undoCommand.canExecute(), false);
+
+            // Act.
+            viewModel.AutoPause = false;
+
+            // Assert.
+            strict.equal(viewModel.undoCommand.canExecute(), true);
+            strict.equal(canExecuteChangedCalled, true);
+        });
+    });
+
+    it('copy command does copy settings to clipboard', function () {
+        // Arrange.
+        let services = new ServersPageTestServiceLocator();
+
+        let clipboardService: CopyToClipboardServiceMockBase = services.get(CopyToClipboardService);
+
+        let actualText;
+        clipboardService.methodCalled.subscribe(event => {
+            if (event.name === 'copy') {
+                actualText = event.args[0];
+            }
+        });
+
+        let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+        let viewModel = mainViewModel.serverSettingsViewModel;
+
+        viewModel.Name = ' Name ';
+        viewModel.Description = ' Description ';
+        viewModel.Tags = 'tag1\ntag2\ntag3';
+        viewModel.MaxPlayers = 10;
+        viewModel.GamePassword = 'password';
+        viewModel.MaxUploadSlots = 16;
+        viewModel.AutoPause = false;
+        viewModel.UseDefaultAdmins = true;
+        viewModel.Admins = 'admin1, admin2';
+        viewModel.AutosaveInterval = 4;
+        viewModel.AutosaveSlots = 8;
+        viewModel.NonBlockingSaving = true;
+        viewModel.PublicVisible = false;
+
+        let expectedSettings: FactorioServerSettings = {
+            Name: 'Name',
+            Description: 'Description',
+            Tags: ['tag1', 'tag2', 'tag3'],
+            MaxPlayers: 10,
+            GamePassword: 'password',
+            MaxUploadSlots: 16,
+            AutoPause: false,
+            UseDefaultAdmins: true,
+            Admins: ['admin1', 'admin2'],
+            AutosaveInterval: 4,
+            AutosaveSlots: 8,
+            NonBlockingSaving: true,
+            PublicVisible: false
+        };
+
+        // Act.
+        viewModel.copyCommand.execute();
+
+        // Assert.        
+        let settings = JSON.parse(actualText);
+        strict.deepEqual(settings, expectedSettings);
+    });
+
+    describe('paste settings', function () {
+        it('starts with normal paste text', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+
+            // Act.
+            let viewModel = mainViewModel.serverSettingsViewModel;
+
+            // Assert.
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.normalPasteText);
+        });
+
+        it('does paste settings', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let settings: FactorioServerSettings = {
+                Name: 'Name2',
+                Description: 'Description2',
+                Tags: ['tag1', 'tag2', 'tag3'],
+                MaxPlayers: 10,
+                GamePassword: 'password',
+                MaxUploadSlots: 16,
+                AutoPause: false,
+                UseDefaultAdmins: false,
+                Admins: ['admin1', 'admin2'],
+                AutosaveInterval: 4,
+                AutosaveSlots: 8,
+                NonBlockingSaving: false,
+                PublicVisible: false
+            };
+
+            let expectedViewModel: Partial<ServerSettingsViewModel> = {
+                Name: 'Name2',
+                Description: 'Description2',
+                Tags: 'tag1\ntag2\ntag3',
+                MaxPlayers: 10,
+                GamePassword: 'password',
+                MaxUploadSlots: 16,
+                AutoPause: false,
+                UseDefaultAdmins: false,
+                Admins: 'admin1, admin2',
+                AutosaveInterval: 4,
+                AutosaveSlots: 8,
+                NonBlockingSaving: false,
+                PublicVisible: false
+            };
+
+            let text = JSON.stringify(settings);
+
+            // Act.
+            viewModel.pasteSettings(text);
+
+            // Assert.
+            assertSettingsEqualViewModel(expectedViewModel, viewModel);
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.appliedPasteText);
+            strict.equal(viewModel.saved, false);
+
+            let expected: KeyValueCollectionChangedData = { Type: CollectionChangeType.Add, NewItems: settings };
+            hubService.assertMethodCalled('updateServerSettings', expected);
+        });
+
+        describe('paste partial', function () {
+            for (let testCase of serverSettingsTestCases) {
+                it(testCase.property, function () {
+                    // Arrange.
+                    let services = new ServersPageTestServiceLocator();
+                    let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                    let viewModel = mainViewModel.serverSettingsViewModel;
+                    let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                    let expectedViewModel: Partial<ServerSettingsViewModel> = Object.assign({}, ServerSettingsViewModel.formFieldsDefaultValues);
+                    expectedViewModel[testCase.property as string] = testCase.value;
+
+                    let settings = {};
+                    settings[testCase.property] = testCase.settingValue;
+
+                    let text = JSON.stringify(settings);
+
+                    // Act.
+                    viewModel.pasteSettings(text);
+
+                    // Assert.
+                    assertSettingsEqualViewModel(expectedViewModel, viewModel);
+                    strict.equal(viewModel.pasteText, ServerSettingsViewModel.appliedPasteText);
+                    strict.equal(viewModel.saved, false);
+
+                    let expected: KeyValueCollectionChangedData = { Type: CollectionChangeType.Add, NewItems: settings };
+                    hubService.assertMethodCalled('updateServerSettings', expected);
+                });
+            }
+        });
+
+        describe('paste with no changes does not trigger update', function () {
+            for (let testCase of serverSettingsTestCases) {
+                it(testCase.property, function () {
+                    // Arrange.
+                    let services = new ServersPageTestServiceLocator();
+                    let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                    let viewModel = mainViewModel.serverSettingsViewModel;
+                    let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+                    let expectedViewModel: Partial<ServerSettingsViewModel> = Object.assign({}, ServerSettingsViewModel.formFieldsDefaultValues);
+
+                    let settings = {};
+                    settings[testCase.property] = viewModel[testCase.property];
+
+                    let text = JSON.stringify(settings);
+
+                    // Act.
+                    viewModel.pasteSettings(text);
+
+                    // Assert.
+                    assertSettingsEqualViewModel(expectedViewModel, viewModel);
+                    strict.equal(viewModel.pasteText, ServerSettingsViewModel.appliedPasteText);
+                    strict.equal(viewModel.saved, true);
+
+                    hubService.assertMethodNotCalled('updateServerSettings');
+                });
+            }
+        });
+
+        it('paste empty object does not trigger update', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let expectedViewModel: Partial<ServerSettingsViewModel> = Object.assign({}, ServerSettingsViewModel.formFieldsDefaultValues);
+
+            let settings = {};
+            let text = JSON.stringify(settings);
+
+            // Act.
+            viewModel.pasteSettings(text);
+
+            // Assert.
+            assertSettingsEqualViewModel(expectedViewModel, viewModel);
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.appliedPasteText);
+            strict.equal(viewModel.saved, true);
+
+            hubService.assertMethodNotCalled('updateServerSettings');
+        });
+
+        it('parse error shows error', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let expectedViewModel: Partial<ServerSettingsViewModel> = Object.assign({}, ServerSettingsViewModel.formFieldsDefaultValues);
+
+            // Act.
+            viewModel.pasteSettings('0');
+
+            // Assert.
+            assertSettingsEqualViewModel(expectedViewModel, viewModel);
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.errorPasteText);
+            strict.equal(viewModel.saved, true);
+            hubService.assertMethodNotCalled('updateServerSettings');
+        });
+
+        it('not object shows error', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+            let expectedViewModel: Partial<ServerSettingsViewModel> = Object.assign({}, ServerSettingsViewModel.formFieldsDefaultValues);
+
+            // Act.
+            viewModel.pasteSettings('text');
+
+            // Assert.
+            assertSettingsEqualViewModel(expectedViewModel, viewModel);
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.errorPasteText);
+            strict.equal(viewModel.saved, true);
+            hubService.assertMethodNotCalled('updateServerSettings');
+        });
+
+        it('click reset text after successful paste', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+
+            let settings = {
+                AutoPause: false
+            };
+
+            let text = JSON.stringify(settings);
+            viewModel.pasteSettings(text);
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.appliedPasteText);
+
+            // Act.
+            viewModel.pasteSettingsClicked();
+
+            // Assert.
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.normalPasteText);
+        });
+
+        it('click reset text after unsuccessful paste', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverSettingsViewModel;
+
+            let text = JSON.stringify('0');
+            viewModel.pasteSettings(text);
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.errorPasteText);
+
+            // Act.
+            viewModel.pasteSettingsClicked();
+
+            // Assert.
+            strict.equal(viewModel.pasteText, ServerSettingsViewModel.normalPasteText);
+        });
     });
 });

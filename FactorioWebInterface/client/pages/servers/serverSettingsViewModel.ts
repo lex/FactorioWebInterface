@@ -31,7 +31,7 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
     static readonly errorPasteText = 'Invalid settings';
     static readonly appliedPasteText = 'Settings applied';
 
-    private static readonly formFieldsDefaultValues: FormFields = {
+    static readonly formFieldsDefaultValues: FormFields = {
         Name: '',
         Description: '',
         Tags: '',
@@ -48,6 +48,7 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
     }
 
     private _suppressUpdate = false;
+    private _changesDuringSupression = false;
 
     private _serverSettingsService: ServerSettingsService;
     private _copyToClipoardService: CopyToClipboardService;
@@ -279,8 +280,10 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
                 let settings = {};
                 settings[propertyName] = settingValue;
                 this._serverSettingsService.updateSettings({ Type: CollectionChangeType.Add, NewItems: settings });
+            } else {
+                this._changesDuringSupression = true;
             }
-
+            
             return true;
         }
 
@@ -292,17 +295,55 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
     }
 
     private static convertToFormField(key: FactorioServerSettingsType, settingValue: any): any {
+        if (settingValue == null) {
+            return ServerSettingsViewModel.formFieldsDefaultValues[key];
+        }
+
         switch (key) {
+            case 'Name':
+            case 'Description':
+            case 'GamePassword': {
+                return settingValue + '';
+            }
+            case 'MaxPlayers':
+            case 'MaxUploadSlots':
+            case 'AutosaveInterval':
+            case 'AutosaveSlots': {
+                settingValue = Number(settingValue);
+                if (isNaN(settingValue)) {
+                    settingValue = null;
+                }
+
+                break;
+            }
+            case 'AutoPause':
+            case 'UseDefaultAdmins':
+            case 'NonBlockingSaving':
+            case 'PublicVisible': {
+                return Boolean(settingValue);
+            }
             case 'Tags': {
-                let tags = (settingValue ?? []) as string[];
-                return tags.join('\n');
+                if (!Array.isArray(settingValue)) {
+                    settingValue = null;
+                    break;
+                }
+
+                let tags = settingValue as string[];
+                return tags.map(s => s + '').join('\n');
             }
             case 'Admins': {
-                let admins = (settingValue ?? []) as string[];
-                return admins.map(s => s.trim()).join(', ');
+                if (!Array.isArray(settingValue)) {
+                    settingValue = null;
+                    break;
+                }
+
+                let admins = settingValue as string[];
+                return admins.map(s => (s + '').trim()).join(', ');
             }
-            default: return settingValue ?? ServerSettingsViewModel.formFieldsDefaultValues[key];
+            default: return null;
         }
+
+        return settingValue ?? ServerSettingsViewModel.formFieldsDefaultValues[key];
     }
 
     private static convertToFactorioServerSettings(key: FactorioServerSettingsType, fieldValue: any): any {
@@ -312,18 +353,25 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
             case 'Name': return value.trim();
             case 'Description': return value.trim();
             case 'Tags': {
-                let tags = value as string
-                return tags.trim().split('\n');
+                let tags = value as string;
+                tags = tags.trim();
+                return tags === '' ? [] : tags.split('\n');
             }
             case 'Admins': {
-                let admins = value as string;
-                let adminsText = admins.trim().split(',');
+                let adminsText = value as string;
+                adminsText = adminsText.trim();
 
-                for (let i = 0; i < adminsText.length; i++) {
-                    adminsText[i] = adminsText[i].trim();
+                if (adminsText === '') {
+                    return [];
                 }
 
-                return adminsText;
+                let admins = adminsText.split(',');
+
+                for (let i = 0; i < admins.length; i++) {
+                    admins[i] = admins[i].trim();
+                }
+
+                return admins;
             }
             default: return value;
         }
@@ -379,6 +427,7 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
 
         try {
             this._suppressUpdate = true;
+            this._changesDuringSupression = false;
 
             for (let propertyName in settings) {
                 if (!fields.hasOwnProperty(propertyName)) {
@@ -394,9 +443,11 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
                 changeData[propertyName] = ServerSettingsViewModel.convertToFactorioServerSettings(propertyName as FactorioServerSettingsType, this[propertyName]);
             }
 
-            this.setPasteText(ServerSettingsViewModel.appliedPasteText);
+            if (this._changesDuringSupression) {
+                this._serverSettingsService.updateSettings({ Type: CollectionChangeType.Add, NewItems: changeData });
+            }
 
-            this._serverSettingsService.updateSettings({ Type: CollectionChangeType.Add, NewItems: changeData });
+            this.setPasteText(ServerSettingsViewModel.appliedPasteText);
         } finally {
             this._suppressUpdate = false;
         }

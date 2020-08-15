@@ -155,7 +155,7 @@ export class ServerExtraSettingsViewModel extends ObservableObject<ServerExtraSe
         }
     }
 
-    private set(propertyName: propertyOf<ServerExtraSettingsViewModel>, value: any) {
+    private set(propertyName: propertyOf<ServerExtraSettingsViewModel>, value: any): boolean {
         if (this.setAndRaise(this._formFields, propertyName, value)) {
             this.setSaved(false);
 
@@ -165,7 +165,11 @@ export class ServerExtraSettingsViewModel extends ObservableObject<ServerExtraSe
                 settings[propertyName] = settingValue;
                 this._serverExtraSettingsService.updateSettings({ Type: CollectionChangeType.Add, NewItems: settings });
             }
+
+            return true;
         }
+
+        return false;
     }
 
     private buildFactorioServerSettings(): FactorioServerExtraSettings {
@@ -219,6 +223,7 @@ export class ServerExtraSettingsViewModel extends ObservableObject<ServerExtraSe
         try {
             this._suppressUpdate = true;
 
+            let hasChanges = false;
             for (let propertyName in settings) {
                 if (!fields.hasOwnProperty(propertyName)) {
                     continue;
@@ -229,19 +234,25 @@ export class ServerExtraSettingsViewModel extends ObservableObject<ServerExtraSe
                     continue;
                 }
 
-                this[propertyName] = value;
+                hasChanges = this.set(propertyName as propertyOf<ServerExtraSettingsViewModel>, value) || hasChanges;
                 changeData[propertyName] = value;
             }
 
-            this.setPasteText(ServerSettingsViewModel.appliedPasteText);
+            if (hasChanges) {
+                this._serverExtraSettingsService.updateSettings({ Type: CollectionChangeType.Add, NewItems: changeData });
+            }
 
-            this._serverExtraSettingsService.updateSettings({ Type: CollectionChangeType.Add, NewItems: changeData });
+            this.setPasteText(ServerSettingsViewModel.appliedPasteText);
         } finally {
             this._suppressUpdate = false;
         }
     }
 
     private static getOrDefault(key: FactorioServerExtraSettingsType, fieldValue: any): any {
-        return fieldValue ?? ServerExtraSettingsViewModel.formFieldsDefaultValues[key];
+        if (typeof fieldValue === 'boolean') {
+            return fieldValue;
+        }
+
+        return ServerExtraSettingsViewModel.formFieldsDefaultValues[key];
     }
 }
