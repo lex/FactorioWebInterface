@@ -20,7 +20,7 @@ export abstract class CommandBase<T = void> implements ICommand<T> {
     execute(arg: T): void {
     }
 
-    raiseCanExecuteChanged() {
+    raiseCanExecuteChanged(): void {
         this._canExecuteChanged.raise();
     }
 }
@@ -46,21 +46,21 @@ export class DelegateCommand<T = void> implements ICommand<T>{
         }
     }
 
-    canExecute(arg: T) {
+    canExecute(arg: T): boolean {
         if (this._canExecute == null) {
             return true;
         }
 
-        return this._canExecute(arg);
+        return !!this._canExecute(arg);
     }
 
-    execute(arg: T) {
+    execute(arg: T): void {
         if (this.canExecute(arg)) {
-            return this._execute(arg);
+            this._execute(arg);
         }
     }
 
-    raiseCanExecuteChanged() {
+    raiseCanExecuteChanged(): void {
         this._canExecuteChanged.raise();
     }
 }

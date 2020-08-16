@@ -23,7 +23,7 @@ export class ServerFileManagementViewModel extends ObservableObject {
     static readonly copySavesTooltipDisabledMessage = 'Select saves to copy to destination.';
     static readonly renameSaveTooltipDisableMessage = 'Select a single save and a new name to rename.';
     static readonly deflateSaveTooltipDisableMessage = 'Select a single save to deflate and optionally a new name.';
-    static readonly deflateSaveTooltipInProgressDisableMessage = 'Wait for deflating to finish before defalting more saves.';
+    static readonly deflateSaveTooltipInProgressDisableMessage = 'Wait for deflating to finish before deflating more saves.';
 
     private _serverFileManagementService: ServerFileManagementService;
     private _errorService: ErrorService;
@@ -406,12 +406,12 @@ export class ServerFileManagementViewModel extends ObservableObject {
             let newName = this._newFileName;
 
             if (!newName) {
-                newName = FileMetaData.defaltedName(save);
+                newName = FileMetaData.deflatedName(save);
             } else {
                 newName = FileHelper.enusreExtension(newName, '.zip');
             }
 
-            this.deflateSavesTooltip = `Defalte ${FileMetaData.FriendlyDirectoryName(save)}/${save.Name} to ${newName}.`;
+            this.deflateSavesTooltip = `Deflate ${FileMetaData.FriendlyDirectoryName(save)}/${save.Name} to ${newName}.`;
         } else {
             if (this.isDeflating.value) {
                 this.deflateSavesTooltip = ServerFileManagementViewModel.deflateSaveTooltipInProgressDisableMessage;

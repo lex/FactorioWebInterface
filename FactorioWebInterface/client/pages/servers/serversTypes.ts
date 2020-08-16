@@ -49,7 +49,7 @@ export class FileMetaData {
         }
     }
 
-    static defaltedName(file: FileMetaData): string {
+    static deflatedName(file: FileMetaData): string {
         let name = file.Name;
         if (name.endsWith('.zip')) {
             name = name.substring(0, name.length - 4);
