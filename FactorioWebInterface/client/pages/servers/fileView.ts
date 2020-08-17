@@ -7,6 +7,8 @@ import { FileMetaData } from "./serversTypes";
 import { Box } from "../../utils/box";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { ComparatorHelper } from "../../utils/comparatorHelper";
+import { Label } from "../../components/label";
+import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
 class FileNameColumn extends ColumnTemplate<FileMetaData>{
     constructor(serverId: IObservableProperty<string>) {
@@ -46,8 +48,12 @@ export class FileView extends VirtualComponent {
         table.style.width = 'calc(100% - 2rem)';
         table.style.margin = '0rem 1rem 0.67rem 1rem';
 
-        let collapse = new Collapse(fileViewModel.header, table);
-        fileViewModel.propertyChanged('header', text => collapse.setHeader(text));
+        let header = new Label()
+            .bindContent(new ObservableObjectBindingSource(fileViewModel, 'header'))
+            .addClasses('is-4', 'header');
+        header.style.wordBreak = 'break-all';
+
+        let collapse = new Collapse(header, table);        
         collapse.open = true;
         collapse.classList.add('section');
         this._root = collapse;

@@ -6,7 +6,6 @@ import { IterableHelper } from "../../utils/iterableHelper";
 
 export class ModPacksViewModel extends ObservableObject {
     private _sourceModPacks: ObservableCollection<ModPackMetaData>;
-    private _count: number;
 
     private _header: string;
     private _modPacks: CollectionView<ModPackMetaData>;
@@ -17,6 +16,10 @@ export class ModPacksViewModel extends ObservableObject {
 
     get modPacks() {
         return this._modPacks;
+    }
+
+    get count(): number {
+        return this._sourceModPacks.count;
     }
 
     constructor(serverFileService: ServerFileService) {
@@ -33,8 +36,7 @@ export class ModPacksViewModel extends ObservableObject {
             serverFileService.setSelectedModPack(name);
         });
 
-        this.setSelectModPackByName(selectedModPack.value);
-        selectedModPack.subscribe(modPack => this.setSelectModPackByName(modPack));
+        selectedModPack.bind(modPack => this.setSelectModPackByName(modPack));
 
         this.modPacks.bind(() => this.updateHeader());
     }
@@ -51,15 +53,14 @@ export class ModPacksViewModel extends ObservableObject {
     }
 
     private updateHeader() {
-        let newCount = this._sourceModPacks.count;
-
-        if (this._count === newCount) {
-            return;
+        let selectedCount = this._modPacks.selectedCount;
+        if (selectedCount === 0) {
+            this._header = `Mod Packs (${this.count})`;
+        } else {
+            let selected = IterableHelper.firstOrDefault(this._modPacks.selected).value.Name;
+            this._header = `Mod Packs (${this.count}) - Selected: ${selected}`;
         }
 
-        this._count = newCount;
-
-        this._header = `Mod Packs (${newCount})`;
         this.raise('header', this._header);
     }
 }

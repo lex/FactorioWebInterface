@@ -2,6 +2,8 @@
 import { VirtualComponent } from "../../components/virtualComponent";
 import { Collapse } from "../../components/collapse";
 import { ModPacksViewModel } from "./modPacksViewModel";
+import { Label } from "../../components/label";
+import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
 export class ModPacksView extends VirtualComponent {
     constructor(modPacksViewModel: ModPacksViewModel) {
@@ -19,8 +21,12 @@ export class ModPacksView extends VirtualComponent {
         table.style.width = 'calc(100% - 2rem)';
         table.style.margin = '0rem 1rem 0.67rem 1rem';
 
-        let collapse = new Collapse(modPacksViewModel.header, table);
-        modPacksViewModel.propertyChanged('header', text => collapse.setHeader(text));
+        let header = new Label()
+            .bindContent(new ObservableObjectBindingSource(modPacksViewModel, 'header'))
+            .addClasses('is-4', 'header');
+        header.style.wordBreak = 'break-all';
+
+        let collapse = new Collapse(header, table);
         collapse.open = true;
         collapse.classList.add('section');
         this._root = collapse;

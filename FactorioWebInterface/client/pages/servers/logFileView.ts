@@ -6,6 +6,8 @@ import { FileMetaData } from "./serversTypes";
 import { Box } from "../../utils/box";
 import { ComparatorHelper } from "../../utils/comparatorHelper";
 import { LogFileViewModel } from "./logFileViewModel";
+import { Label } from "../../components/label";
+import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
 class LogFileNameColumn extends ColumnTemplate<FileMetaData>{
     constructor(handler: string) {
@@ -44,8 +46,12 @@ export class LogFileView extends VirtualComponent {
         table.style.width = 'calc(100% - 2rem)';
         table.style.margin = '0rem 1rem 0.67rem 1rem';
 
-        let collapse = new Collapse(logFileViewModel.header, table);
-        logFileViewModel.propertyChanged('header', text => collapse.setHeader(text));
+        let header = new Label()
+            .bindContent(new ObservableObjectBindingSource(logFileViewModel, 'header'))
+            .addClasses('is-4', 'header');
+        header.style.wordBreak = 'break-all';
+
+        let collapse = new Collapse(header, table);
         collapse.open = true;
         collapse.classList.add('section');
         this._root = collapse;

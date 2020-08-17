@@ -39,7 +39,11 @@
     <None Remove="client\pages\mods\modPackNameNotTakenValidationRule.spec.ts" />
     <None Remove="client\pages\mods\newModPackViewModel.spec.ts" />
     <None Remove="client\pages\mods\renameModPackViewModel.spec.ts" />
+    <None Remove="client\pages\servers\fileViewModel.spec.ts" />
+    <None Remove="client\pages\servers\logFileViewModel.spec.ts" />
     <None Remove="client\pages\servers\manageVersionViewModel.spec.ts" />
+    <None Remove="client\pages\servers\modPacksViewModel.spec.ts" />
+    <None Remove="client\pages\servers\scenariosViewModel.spec.ts" />
     <None Remove="client\utils\binding\bindingSource.spec.ts" />
     <None Remove="client\utils\collections\observableKeyArray.spec.ts" />
     <None Remove="FactorioWebInterface.db" />
@@ -352,7 +356,11 @@
     <TypeScriptCompile Include="client\pages\scenarioData\services.ts" />
     <TypeScriptCompile Include="client\pages\scenarioData\dataSetViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\scenarioData\updateDataViewModel.spec.ts" />
+    <TypeScriptCompile Include="client\pages\servers\fileViewModel.spec.ts" />
+    <TypeScriptCompile Include="client\pages\servers\logFileViewModel.spec.ts" />
     <TypeScriptCompile Include="client\pages\servers\manageVersionViewModel.spec.ts" />
+    <TypeScriptCompile Include="client\pages\servers\modPacksViewModel.spec.ts" />
+    <TypeScriptCompile Include="client\pages\servers\scenariosViewModel.spec.ts" />
     <TypeScriptCompile Include="client\services\documentService.ts" />
     <TypeScriptCompile Include="client\services\iDocumentService.ts" />
     <TypeScriptCompile Include="client\services\iNavService.ts" />

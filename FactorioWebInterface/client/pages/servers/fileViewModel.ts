@@ -2,11 +2,11 @@
 import { IObservableProperty } from "../../utils/observableProperty";
 import { ObservableObject } from "../../utils/observableObject";
 import { ObservableCollection, CollectionView } from "../../utils/collections/module";
+import { IterableHelper } from "../../utils/iterableHelper";
 
 export class FileViewModel extends ObservableObject {
     private _sourceFiles: ObservableCollection<FileMetaData>;
     private _tableName: string;
-    private _prevCount: number;
 
     private _header: string;
     private _files: CollectionView<FileMetaData>;
@@ -42,15 +42,16 @@ export class FileViewModel extends ObservableObject {
     }
 
     private updateHeader() {
-        let newCount = this.count;
-
-        if (this._prevCount === newCount) {
-            return;
+        let selectedCount = this._files.selectedCount;
+        if (selectedCount === 0) {
+            this._header = `${this._tableName} (${this.count})`;
+        } else if (selectedCount === 1) {
+            let selected = IterableHelper.firstOrDefault(this._files.selected).value.Name;
+            this._header = `${this._tableName} (${this.count}) - Selected: ${selected}`;
+        } else {
+            this._header = `${this._tableName} (${this.count}) - Selected: ${selectedCount} saves`;
         }
 
-        this._prevCount = newCount;
-
-        this._header = `${this._tableName} (${newCount})`;
         this.raise('header', this._header);
     }
 }

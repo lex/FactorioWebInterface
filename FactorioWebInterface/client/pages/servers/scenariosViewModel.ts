@@ -1,10 +1,10 @@
 ﻿import { ScenarioMetaData } from "./serversTypes";
 import { ObservableObject } from "../../utils/observableObject";
 import { ObservableCollection, CollectionView } from "../../utils/collections/module";
+import { IterableHelper } from "../../utils/iterableHelper";
 
 export class ScenariosViewModel extends ObservableObject {
     private _sourceScenarios: ObservableCollection<ScenarioMetaData>;
-    private _count: number;
 
     private _header: string;
     private _scenarios: CollectionView<ScenarioMetaData>;
@@ -15,6 +15,10 @@ export class ScenariosViewModel extends ObservableObject {
 
     get scenarios() {
         return this._scenarios;
+    }
+
+    get count(): number {
+        return this._sourceScenarios.count;
     }
 
     constructor(scenarios: ObservableCollection<ScenarioMetaData>) {
@@ -29,15 +33,14 @@ export class ScenariosViewModel extends ObservableObject {
     }
 
     private updateHeader() {
-        let newCount = this._sourceScenarios.count;
-
-        if (this._count === newCount) {
-            return;
+        let selectedCount = this._scenarios.selectedCount;
+        if (selectedCount === 0) {
+            this._header = `Scenarios (${this.count})`;
+        } else {
+            let selected = IterableHelper.firstOrDefault(this._scenarios.selected).value.Name;
+            this._header = `Scenarios (${this.count}) - Selected: ${selected}`;
         }
 
-        this._count = newCount;
-
-        this._header = `Scenarios (${newCount})`;
         this.raise('header', this._header);
     }
 }

@@ -2,6 +2,8 @@
 import { Table, SingleSelectColumn, TextColumn, DateTimeColumn } from "../../components/table";
 import { VirtualComponent } from "../../components/virtualComponent";
 import { Collapse } from "../../components/collapse";
+import { ObservableObjectBindingSource } from "../../utils/binding/module";
+import { Label } from "../../components/label";
 
 export class ScenariosView extends VirtualComponent {
     constructor(scenariosViewModel: ScenariosViewModel) {
@@ -19,8 +21,12 @@ export class ScenariosView extends VirtualComponent {
         table.style.width = 'calc(100% - 2rem)';
         table.style.margin = '0rem 1rem 0.67rem 1rem';
 
-        let collapse = new Collapse(scenariosViewModel.header, table);
-        scenariosViewModel.propertyChanged('header', text => collapse.setHeader(text));
+        let header = new Label()
+            .bindContent(new ObservableObjectBindingSource(scenariosViewModel, 'header'))
+            .addClasses('is-4', 'header');
+        header.style.wordBreak = 'break-all';
+
+        let collapse = new Collapse(header, table);
         collapse.open = true;
         collapse.classList.add('section');
         this._root = collapse;

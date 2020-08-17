@@ -30,7 +30,7 @@ const localFile: FileMetaData = {
     Directory: 'local_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const localFile2: FileMetaData = {
     Name: 'local_file2.zip',
@@ -38,7 +38,7 @@ const localFile2: FileMetaData = {
     Directory: 'local_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const globalFile: FileMetaData = {
     Name: 'global_file.zip',
@@ -46,7 +46,7 @@ const globalFile: FileMetaData = {
     Directory: 'global_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const globalFile2: FileMetaData = {
     Name: 'global_file2.zip',
@@ -54,19 +54,19 @@ const globalFile2: FileMetaData = {
     Directory: 'global_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const scenario: ScenarioMetaData = {
     Name: 'scenario',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const scenario2: ScenarioMetaData = {
     Name: 'scenario2',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const logFile: FileMetaData = {
     Name: 'log.log',
@@ -74,7 +74,7 @@ const logFile: FileMetaData = {
     Directory: 'logs',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const chatLogFile: FileMetaData = {
     Name: 'chatlog.log',
@@ -82,7 +82,7 @@ const chatLogFile: FileMetaData = {
     Directory: 'chat_logs',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 describe('ServerConsoleViewModel', function () {
     describe('resume command', function () {

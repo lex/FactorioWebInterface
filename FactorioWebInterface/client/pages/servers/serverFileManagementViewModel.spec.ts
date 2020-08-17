@@ -13,7 +13,6 @@ import { MethodInvocation } from "../../testUtils/invokeBase";
 import { PromiseHelper } from "../../utils/promiseHelper";
 import { ServerFileManagementService } from "./serverFileManagementService";
 import { ServerFileManagementViewModel } from "./serverFileManagementViewModel";
-import { IterableHelper } from "../../utils/iterableHelper";
 
 const tempFile: FileMetaData = {
     Name: 'file.zip',
@@ -37,7 +36,7 @@ const localFile: FileMetaData = {
     Directory: 'local_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const localFile2: FileMetaData = {
     Name: 'local_file2.zip',
@@ -45,7 +44,7 @@ const localFile2: FileMetaData = {
     Directory: 'local_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const globalFile: FileMetaData = {
     Name: 'global_file.zip',
@@ -53,7 +52,7 @@ const globalFile: FileMetaData = {
     Directory: 'global_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 const globalFile2: FileMetaData = {
     Name: 'global_file2.zip',
@@ -61,7 +60,7 @@ const globalFile2: FileMetaData = {
     Directory: 'global_saves',
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
-}
+};
 
 describe('ServerFileManagementViewModel', function () {
     describe('upload save command', function () {

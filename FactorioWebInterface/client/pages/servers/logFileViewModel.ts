@@ -5,7 +5,6 @@ import { ObservableCollection, CollectionView } from "../../utils/collections/mo
 export class LogFileViewModel extends ObservableObject {
     private _sourceFiles: ObservableCollection<FileMetaData>;
     private _tableName: string;
-    private _count: number;
 
     private _header: string;
     private _files: CollectionView<FileMetaData>;
@@ -23,6 +22,10 @@ export class LogFileViewModel extends ObservableObject {
         return this._handler;
     }
 
+    get count(): number {
+        return this._sourceFiles.count;
+    }
+
     constructor(tableName: string, files: ObservableCollection<FileMetaData>, handler: string) {
         super();
 
@@ -32,20 +35,11 @@ export class LogFileViewModel extends ObservableObject {
         this._files.sortBy({ property: 'LastModifiedTime', ascending: false });
         this._handler = handler;
 
-        this.updateHeader();
-        this.files.subscribe(() => this.updateHeader());
+        this.files.bind(() => this.updateHeader());
     }
 
     private updateHeader() {
-        let newCount = this._sourceFiles.count;
-
-        if (this._count === newCount) {
-            return;
-        }
-
-        this._count = newCount;
-
-        this._header = `${this._tableName} (${newCount})`;
+        this._header = `${this._tableName} (${this.count})`;
         this.raise('header', this._header);
     }
 }
