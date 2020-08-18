@@ -4,7 +4,7 @@ import { ServersViewModel } from "./serversViewModel";
 import { ServersHubService } from "./serversHubService";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
 import { CollectionChangeType, CollectionChangedData } from "../../ts/utils";
-import { FileMetaData, FactorioServerStatus, ScenarioMetaData, MessageData, MessageType, FactorioControlClientData, FactorioServerSettings } from "./serversTypes";
+import { FileMetaData, FactorioServerStatus, ScenarioMetaData, MessageData, MessageType, FactorioControlClientData, FactorioServerSettings, ModPackMetaData } from "./serversTypes";
 import { PromiseHelper } from "../../utils/promiseHelper";
 import { ServersConsoleViewModel } from "./serversConsoleViewModel";
 
@@ -83,6 +83,20 @@ const chatLogFile: FileMetaData = {
     CreatedTime: '2020-01-01 00:00:00',
     LastModifiedTime: '2020-01-01 00:00:00'
 };
+
+const modPack: ModPackMetaData = {
+    Name: 'modpack',
+    CreatedTime: '2020-01-02 00:00:00',
+    LastModifiedTime: '2020-01-02 00:00:00'
+};
+
+const modPack2: ModPackMetaData = {
+    Name: 'modpack2',
+    CreatedTime: '2020-01-01 00:00:00',
+    LastModifiedTime: '2020-01-01 00:00:00'
+};
+
+const modPacks = [modPack, modPack2];
 
 describe('ServerConsoleViewModel', function () {
     describe('resume command', function () {
@@ -1026,6 +1040,25 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(viewModel.resumeTooltip, 'Start server with latest Temp save: file2.zip.');
         });
 
+        it('when can resume message shows save that will be loaded and mod pack.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+            hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+            hubService._onSelectedModPack.raise(modPack.Name);
+
+            // Act.
+            hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile, tempFile2] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+
+            // Assert.
+            strict.equal(viewModel.resumeTooltip, 'Start server with latest Temp save: file2.zip and Mod Pack: modpack.');
+        });
+
         it('is initially set.', function () {
             // Arrange.
             let services = new ServersPageTestServiceLocator();
@@ -1073,6 +1106,28 @@ describe('ServerConsoleViewModel', function () {
 
             // Act.
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
+
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+
+        it('raised when mod pack changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
+            hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let raisedCount = 0;
+            viewModel.propertyChanged('resumeTooltip', event => raisedCount++);
+
+            // Act.            
+            hubService._onSelectedModPack.raise(modPack.Name);
 
             // Assert.
             strict.equal(raisedCount, 1);
@@ -1157,6 +1212,28 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(viewModel.loadTooltip, 'Start server with selected save: Local Saves/local_file.zip.');
         });
 
+        it('when can load message shows save that will be loaded and mod pack.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
+            hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+            hubService._onSelectedModPack.raise(modPack.Name);
+
+            let localFiles = mainViewModel.localFileViewModel.files;
+            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+
+            // Act.            
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+
+            // Assert.
+            strict.equal(viewModel.loadTooltip, 'Start server with selected save: Local Saves/local_file.zip and Mod Pack: modpack.');
+        });
+
         it('is initially set.', function () {
             // Arrange.
             let services = new ServersPageTestServiceLocator();
@@ -1209,6 +1286,31 @@ describe('ServerConsoleViewModel', function () {
             // Act.
             let localFiles = mainViewModel.localFileViewModel.files;
             localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+
+        it('raised when mod pack changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+            hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let localFiles = mainViewModel.localFileViewModel.files;
+            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+
+            let raisedCount = 0;
+            viewModel.propertyChanged('loadTooltip', event => raisedCount++);
+
+            // Act.
+            hubService._onSelectedModPack.raise(modPack.Name);
 
             // Assert.
             strict.equal(raisedCount, 1);
@@ -1273,6 +1375,28 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(viewModel.startScenarioTooltip, 'Start server with selected scenario: scenario.');
         });
 
+        it('when can start scenario message shows scenario that will be started and mod pack.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+            hubService._onSelectedModPack.raise(modPack.Name);
+
+            let scenarios = mainViewModel.scenariosViewModel.scenarios;
+
+            // Act.            
+            scenarios.setFirstSingleSelected();
+
+            // Assert.
+            strict.equal(viewModel.startScenarioTooltip, 'Start server with selected scenario: scenario and Mod Pack: modpack.');
+        });
+
         it('is initially set.', function () {
             // Arrange.
             let services = new ServersPageTestServiceLocator();
@@ -1326,6 +1450,31 @@ describe('ServerConsoleViewModel', function () {
 
             // Act.            
             scenarios.setFirstSingleSelected();
+
+            // Assert.
+            strict.equal(raisedCount, 1);
+        });
+
+        it('raised when mod pack changed.', function () {
+            // Arrange.
+            let services = new ServersPageTestServiceLocator();
+
+            let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+            let viewModel = mainViewModel.serverConsoleViewModel;
+
+            let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+            hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
+            hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
+            hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+            let scenarios = mainViewModel.scenariosViewModel.scenarios;
+            scenarios.setFirstSingleSelected();
+
+            let raisedCount = 0;
+            viewModel.propertyChanged('startScenarioTooltip', event => raisedCount++);
+
+            // Act.            
+            hubService._onSelectedModPack.raise(modPack.Name);
 
             // Assert.
             strict.equal(raisedCount, 1);

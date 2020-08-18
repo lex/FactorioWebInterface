@@ -34,6 +34,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private readonly _serverConsoleService: ServerConsoleService;
     private readonly _manageVersionService: ManageVersionService;
     private readonly _serverSettingsService: ServerSettingsService;
+    private readonly _serverFileService: ServerFileService
     private readonly _modalService: IModalService;
     private readonly _errorService: ErrorService;
 
@@ -222,6 +223,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
         this._serverConsoleService = serverConsoleService;
         this._manageVersionService = manageVersionService;
         this._serverSettingsService = serverSettingsService;
+        this._serverFileService = serverFileService;
         this._modalService = modalService;
         this._errorService = errorService;
 
@@ -348,7 +350,15 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
         this.updateServerName();
 
         serverConsoleService.version.bind(event => this.updateVersionText(event));
-        serverFileService.selectedModPack.bind(event => this.updateModPackText(event));
+
+        this.updateModPackText(null);
+
+        serverFileService.selectedModPack.subscribe(event => {
+            this.updateModPackText(event);
+            this.updateResumeTooltip();
+            this.updateLoadTooltip();
+            this.updateStartScenarioTooltip();
+        });
     }
 
     sendInputKey(key: number) {
@@ -456,7 +466,8 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private updateResumeTooltip() {
         if (this._resumeCommand.canExecute()) {
             let newFile = IterableHelper.max(this._tempFiles.files.values(), f => f.value.LastModifiedTime);
-            this.resumeTooltip = `Start server with latest Temp save: ${newFile.value.Name}.`;
+            let modPackText = this.getModPackText();
+            this.resumeTooltip = `Start server with latest Temp save: ${newFile.value.Name}${modPackText}.`;
         } else {
             this.resumeTooltip = ServersConsoleViewModel.resumeTooltipDisabledMessage;
         }
@@ -465,7 +476,8 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private updateLoadTooltip() {
         if (this._loadCommand.canExecute()) {
             let saveFile = this.getSelectedSaveFile();
-            this.loadTooltip = `Start server with selected save: ${FileMetaData.FriendlyDirectoryName(saveFile)}/${saveFile.Name}.`;
+            let modPackText = this.getModPackText();
+            this.loadTooltip = `Start server with selected save: ${FileMetaData.FriendlyDirectoryName(saveFile)}/${saveFile.Name}${modPackText}.`;
         } else {
             this.loadTooltip = ServersConsoleViewModel.loadTooltipDisabledMessage;
         }
@@ -474,7 +486,8 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private updateStartScenarioTooltip() {
         if (this._startScenarioCommand.canExecute()) {
             let scenario = this.getSelectedScenario();
-            this.startScenarioTooltip = `Start server with selected scenario: ${scenario.Name}.`;
+            let modPackText = this.getModPackText();
+            this.startScenarioTooltip = `Start server with selected scenario: ${scenario.Name}${modPackText}.`;
         } else {
             this.startScenarioTooltip = ServersConsoleViewModel.startScenarioTooltipDisabledMessage;
         }
@@ -486,5 +499,14 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
 
     private updateStopTooltip() {
         this.stopTooltip = this._stopCommand.canExecute() ? ServersConsoleViewModel.stopTooltipEnabledMessage : ServersConsoleViewModel.stopTooltipDisabledMessage;
+    }
+
+    private getModPackText(): string {
+        let modPack = this._serverFileService.selectedModPack.value;
+        if (modPack) {
+            return ` and Mod Pack: ${modPack}`;
+        }
+
+        return '';
     }
 }
