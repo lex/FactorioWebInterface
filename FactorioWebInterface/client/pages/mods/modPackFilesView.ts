@@ -41,7 +41,7 @@ export class ModPackFilesView extends VirtualComponent {
         let mainPanel = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
         mainPanel.style.margin = '0 1.5rem 0 1.5rem';
 
-        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
+        let buttonsPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacingInclusive, FlexPanel.classes.wrap, FlexPanel.classes.spacingNone);
         buttonsPanel.style.fontSize = '1rem';
 
         let uploadProgress = new Progress(p => `Uploading (${p.percentText})`);

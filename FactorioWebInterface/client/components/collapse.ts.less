@@ -19,7 +19,8 @@ a-collapse {
         border-width: 0.125rem;
         border-radius: 0.3125rem;
         border-color: lightgrey;
-        overflow: hidden;
+        overflow-x: auto;
+        overflow-y: hidden;
 
         &.double {
             min-height: 7.375rem;
@@ -50,4 +51,5 @@ a-collapse[open] a-collapse-button {
 
 a-collapse.wide > a-flex-panel {
     align-self: stretch;
+    width: auto;
 }

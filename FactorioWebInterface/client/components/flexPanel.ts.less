@@ -38,6 +38,7 @@ a-flex-panel {
 
     &.horizontal {
         flex-direction: row;
+        width: fit-content;
 
         &.reverse {
             flex-direction: row-reverse;
@@ -46,6 +47,7 @@ a-flex-panel {
 
     &.vertical {
         flex-direction: column;
+        //height: fit-content;
 
         &.reverse {
             flex-direction: column-reverse;
@@ -104,5 +106,6 @@ a-flex-panel {
 
     &.grow {
         flex: 1 1 auto;
+        width: auto;
     }
 }

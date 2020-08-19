@@ -15,9 +15,9 @@ export class ServerFileManagementView extends VirtualComponent {
         super();
 
         let rows = new FlexPanel(FlexPanel.classes.vertical, FlexPanel.classes.childSpacing);
-        let row1 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
-        let row2 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
-        let row3 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacing);
+        let row1 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingInclusive);
+        let row2 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingInclusive);
+        let row3 = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.spacingNone, FlexPanel.classes.childSpacingInclusive, FlexPanel.classes.grow);
         rows.append(row1, row2, row3);
 
         let uploadProgress = new Progress(p => `Uploading (${p.percentText})`);
@@ -79,7 +79,7 @@ export class ServerFileManagementView extends VirtualComponent {
         nameInput.style.flexGrow = '1';
         let form = new VirtualForm(serverFileManagementViewModel, nameInput);
         form.isHorizontal = true;
-        form.hideErrors = true;
+        form.hideErrors = true;        
 
         row3.append(renameButton, deflateButton, form.root);
 

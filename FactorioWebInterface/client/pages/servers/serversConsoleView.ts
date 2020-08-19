@@ -87,7 +87,7 @@ export class ServersConsoleView extends VirtualComponent {
 
         let messageView = new ConsoleMessageView(serversConsoleViewModel.messages);
 
-        let bottomPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing, FlexPanel.classes.spacingNone);
+        let bottomPanel = new FlexPanel(FlexPanel.classes.horizontal, FlexPanel.classes.childSpacing, FlexPanel.classes.grow, FlexPanel.classes.spacingNone);
 
         let sendInput = new TextInput();
         sendInput.placeholder = 'Message or Command';

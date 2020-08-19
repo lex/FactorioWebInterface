@@ -79,6 +79,7 @@ export class ServerExtraSettingsView extends VirtualComponent {
         pasteSettings.oninput = () => pasteSettings.value = '';
         pasteSettings.style.flexBasis = '10em';
         pasteSettings.style.flexGrow = '0';
+        pasteSettings.style.minWidth = '10em';
 
         panel.append(saveButton, undoButton, copyButton, pasteSettings);
 
