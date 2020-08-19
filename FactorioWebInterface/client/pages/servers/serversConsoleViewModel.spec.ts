@@ -7,6 +7,9 @@ import { CollectionChangeType, CollectionChangedData } from "../../ts/utils";
 import { FileMetaData, FactorioServerStatus, ScenarioMetaData, MessageData, MessageType, FactorioControlClientData, FactorioServerSettings, ModPackMetaData } from "./serversTypes";
 import { PromiseHelper } from "../../utils/promiseHelper";
 import { ServersConsoleViewModel } from "./serversConsoleViewModel";
+import { ModalServiceMockBase } from "../../testUtils/services/modalServiceMockBase";
+import { IModalService } from "../../services/iModalService";
+import { ManageVersionViewModel } from "./manageVersionViewModel";
 
 const tempFile: FileMetaData = {
     Name: 'file.zip',
@@ -825,6 +828,23 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(forceStopRaised, true);
             strict.equal(viewModel.forceStopCommand.canExecute(), true);
         });
+    });
+
+    it('manage version command shows modal', function () {
+        // Arrange.          
+        let services = new ServersPageTestServiceLocator();
+        let modalService: ModalServiceMockBase = services.get(IModalService);
+
+        let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+        let viewModel = mainViewModel.serverConsoleViewModel;
+
+        // Act.
+        viewModel.manageVersionCommand.execute();
+
+        // Assert.
+        let method = modalService.methodsCalled[0];
+        strict.equal(method.name, 'showViewModel');
+        strict.equal(method.args[0] instanceof ManageVersionViewModel, true);
     });
 
     describe('send text command', function () {

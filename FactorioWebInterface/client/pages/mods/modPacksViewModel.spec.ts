@@ -46,7 +46,7 @@ describe('ModPacksViewModel', function () {
             // Assert.
             let method = modalService.methodsCalled[0];
             strict.equal(method.name, 'showViewModel');
-            strict.equal(method.args[0] instanceof testCase.viewModelType, true)
+            strict.equal(method.args[0] instanceof testCase.viewModelType, true);
         });
     }
 
