@@ -93,6 +93,8 @@ namespace FactorioWebInterface
 
             services.AddMemoryCache();
 
+            services.AddResponseCompression();
+
             services.AddSingleton<System.IO.Abstractions.IFileSystem, FileSystem>();
             services.AddSingleton<ITimeSystem, TimeSystem>();
             services.AddSingleton<IProcessSystem, ProcessSystem>();
@@ -201,6 +203,8 @@ namespace FactorioWebInterface
                 app.UseExceptionHandler("/error");
                 //app.UseHsts(); This prevented the GitHub hook from working.
             }
+
+            app.UseResponseCompression();
 
             //app.UseHttpsRedirection(); This isn't needed if behind a reverse proxy.
             app.UseDefaultFiles();

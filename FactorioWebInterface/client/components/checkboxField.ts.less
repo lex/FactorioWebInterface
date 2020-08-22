@@ -1,0 +1,54 @@
+﻿a-checkbox-field {
+    display: flex;
+    flex-direction: row;
+    padding: 0.1em;
+    margin: 0.3em 0em;
+    line-height: 1.15;
+    font-size: 1rem;
+    position: relative;
+    max-width: 100%;
+    width: 100%;
+    clear: both;
+
+    & > div {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    & > div > label {
+        color: #363636;
+        display: inline;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: 0.3em;
+    }
+
+    & > div > input {
+        margin-top: 0.2em;
+        cursor: pointer;
+    }
+
+    &[disabled],
+    &[disabled] > div > label {
+        color: #7a7a7a;
+        cursor: not-allowed;
+    }
+
+    @media screen and (min-width: 769px) {
+        &.is-horizontal {
+            &::before {
+                content: "";
+                flex-grow: 1;
+                flex-basis: 0;
+                margin-right: 0.5em;
+                max-width: 15em;
+            }
+
+            & > div {
+                flex-grow: 5;
+                flex-basis: 0;
+            }
+        }
+    }
+}

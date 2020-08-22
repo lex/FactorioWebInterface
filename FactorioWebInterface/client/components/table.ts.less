@@ -1,0 +1,63 @@
+﻿table {
+    background-color: white;
+    color: #363636;
+    border-collapse: collapse;
+    border-spacing: 0;
+
+    & thead {
+        background-color: transparent;
+    }
+
+    & tbody {
+        background-color: transparent;
+
+        & tr:hover {
+            & td, & th {
+                background-color: whitesmoke;
+            }
+        }
+    }
+
+    & tr:last-child th {
+        border-bottom-width: 1px;
+        border: 1px solid #dbdbdb;
+        padding: 0.5em 0.75em;
+        vertical-align: top;
+    }
+
+    & tr:nth-child(even) {
+        & td, & th {
+            background-color: #fafafa;
+        }
+    }
+
+    & td {
+        border: 1px solid #dbdbdb;
+        padding: 0.5em 0.75em;
+        vertical-align: top;
+        text-align: left;
+        background-clip: padding-box;
+    }
+
+    & th {
+        text-align: left;
+    }
+
+    & > thead > tr > th {
+        &:not([sortingDisabled]) {
+            cursor: pointer;
+        }
+
+        &[sort='ascending']:after {
+            content: '▲';
+        }
+
+        &[sort='descending']:after {
+            content: '▼';
+        }
+    }
+}
+
+.th-min-width-normal th {
+    min-width: 8rem;
+}

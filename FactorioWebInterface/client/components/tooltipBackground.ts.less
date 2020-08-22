@@ -1,0 +1,19 @@
+﻿a-tooltip-background {
+    position: fixed;
+    display: flex;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    pointer-events: none;
+    overflow: hidden;
+
+    & > .spacer {
+        flex-shrink: 1;
+    }
+
+    & > .tooltip-container {
+        flex-grow: 1;
+    }
+}

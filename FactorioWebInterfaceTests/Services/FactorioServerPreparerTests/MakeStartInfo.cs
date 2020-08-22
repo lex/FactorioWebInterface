@@ -1,14 +1,10 @@
 ﻿using FactorioWebInterface;
-using FactorioWebInterface.Models;
+using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Services;
 using FactorioWebInterfaceTests.Utils;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Abstractions;
-using System.Reflection.Metadata;
-using System.Text;
+using System.Linq;
 using Xunit;
 
 namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
@@ -95,6 +91,41 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             // Assert.
             Assert.Equal(expected, startInfo.Arguments);
+        }
+
+        [Fact]
+        public void MissingModDirectory_SetsSelectedModPackToNone()
+        {
+            // Arrange.
+            const string factorioWrapperPath = "FactorioWrapperPath";
+
+            var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
+            factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath);
+
+            var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
+            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null);
+
+            var factorioControlHub = new TestFactorioControlHub();
+
+            var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(
+                factorioServerDataService: factorioServerDataService.Object,
+                factorioModManager: factorioModManager.Object,
+                factorioControlHub: factorioControlHub);
+
+            var data = ServerDataHelper.MakeMutableData();
+            data.ModPack = "some mod pack";
+
+            string startTypeArguments = Constants.FactorioLoadSaveFlag + " save_name";
+
+            string expected = $"{data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} ";
+
+            // Act.
+            var startInfo = service.MakeStartInfo(data, startTypeArguments);
+
+            // Assert.
+            Assert.Equal(expected, startInfo.Arguments);
+            Assert.Equal("", data.ModPack);
+            Assert.Contains(factorioControlHub.Invocations, x => x.Name == nameof(IFactorioControlClientMethods.SendSelectedModPack) && (string)x.Arguments[0]! == "");
         }
     }
 }

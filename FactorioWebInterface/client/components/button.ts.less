@@ -1,0 +1,80 @@
+﻿.is-role(@color, @hover-color) {
+    background-color: @color;
+    border-color: transparent;
+    color: #fff;
+
+    &:hover {
+        background-color: @hover-color;
+    }
+    /* &:hover:not([disabled]) {
+        background-color: @hover-color;
+    }
+
+    &[disabled] {
+        background-color: @disabled-color;
+    }*/
+}
+
+.button-spacing {
+    padding-bottom: calc(0.375em - 1px);
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    padding-top: calc(0.375em - 1px);
+}
+
+a-button {
+    background-color: white;
+    border: 1px solid #dbdbdb;
+    border-radius: 4px;
+    color: #363636;
+    cursor: pointer;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    align-items: center;
+    box-shadow: none;
+    display: inline-flex;
+    height: 2.25em;
+    line-height: 1.5;
+    position: relative;
+    vertical-align: top;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    .button-spacing();
+
+    &[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &:hover {
+        box-shadow: none;
+    }
+
+    &.is-primary {
+        .is-role(#00d1b2, #00c4a7);
+    }
+
+    &.is-success {
+        .is-role(#23d160, #22c65b);
+    }
+
+    &.is-danger {
+        .is-role(#ff3860, #ff2b56);
+    }
+
+    &.is-info {
+        .is-role(#209cee, #1496ed);
+    }
+
+    &.is-link {
+        .is-role(#3273dc, #276cda);
+    }
+
+    &.is-warning {
+        .is-role(#ffdd57, #ffdb4a);
+    }
+}

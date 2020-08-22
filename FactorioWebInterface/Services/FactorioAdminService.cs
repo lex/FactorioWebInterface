@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Services
@@ -127,7 +128,9 @@ namespace FactorioWebInterface.Services
             {
                 var newAdmins = data.Split(',')
                     .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Select(x => new Admin { Name = x.Trim() })
+                    .Select(x => x.Trim())
+                    .Distinct()
+                    .Select(x => new Admin { Name = x })
                     .ToArray();
                 var admins = db.Admins;
 

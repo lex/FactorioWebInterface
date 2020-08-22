@@ -1,0 +1,236 @@
+﻿@text-color: #363636;
+
+@hover-color: #b5b5b5;
+
+@focus-border-color: #3273dc;
+
+@disabled-color: #7a7a7a;
+@disabled-background-color: #f5f5f5;
+@disabled-border-color: #f5f5f5;
+
+@field-border-color: #dbdbdb;
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+* {
+    position: relative;
+}
+
+*[hidden] {
+    display: none;
+}
+
+body, button, input, select, textarea {
+    font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+
+html, p, ol, ul, li, dl, dt, dd, blockquote, figure, fieldset, legend, textarea, pre, iframe, hr, h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    background-color: white;
+    font-size: 16px;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    min-width: 300px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    color: #4a4a4a;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin: 0;
+    padding: 3.25rem 0 0 0;
+}
+
+a {
+    color: #3273dc;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #363636;
+}
+
+.no-spacing {
+    padding: 0;
+    margin: 0;
+}
+
+.overlay {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+}
+
+.text {
+    color: @text-color;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.label-text {
+    color: #363636;
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.header {
+    color: @text-color;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.125;
+}
+
+.is-1 {
+    font-size: 3rem;
+}
+
+.is-2 {
+    font-size: 2.5rem;
+}
+
+.is-3 {
+    font-size: 2rem;
+}
+
+.is-4 {
+    font-size: 1.5rem;
+}
+
+.is-5 {
+    font-size: 1.25rem;
+}
+
+.is-6 {
+    font-size: 1rem;
+}
+
+h1 {
+    .header();
+    .is-1();
+}
+
+h2 {
+    .header();
+    .is-2();
+}
+
+h3 {
+    .header();
+    .is-3();
+}
+
+h4 {
+    .header();
+    .is-4();
+}
+
+h5 {
+    .header();
+    .is-5();
+}
+
+h6 {
+    .header();
+    .is-6();
+}
+
+.border {
+    border-style: solid;
+    border-width: 0.125rem;
+    border-radius: 0.3125rem;
+    border-color: lightgrey;
+    //box-shadow: 0 2px 3px rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.1);
+    overflow: hidden;
+}
+
+.page-container {
+    min-width: ~"min(720px, calc(100vw - 20px))";
+    max-width: 1440px;
+    width: 70%;
+    margin: auto;
+}
+
+.page-container-wide {
+    min-width: ~"min(720px, calc(100vw - 20px))";
+    max-width: 1800px;
+    width: 85%;
+    margin: auto;
+}
+
+.close-button {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    background-color: rgba(10, 10, 10, 0.2);
+    border: none;
+    border-radius: 290486px;
+    cursor: pointer;
+    pointer-events: auto;
+    display: inline-block;
+    flex-grow: 0;
+    flex-shrink: 0;
+    font-size: 0;
+    height: 20px;
+    max-height: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    min-width: 20px;
+    outline: none;
+    position: relative;
+    vertical-align: top;
+    width: 20px;
+
+    &::before, &::after {
+        background-color: white;
+        content: "";
+        display: block;
+        left: 50%;
+        position: absolute;
+        top: 50%;
+        -webkit-transform: translateX(-50%) translateY(-50%) rotate(45deg);
+        transform: translateX(-50%) translateY(-50%) rotate(45deg);
+        -webkit-transform-origin: center center;
+        transform-origin: center center;
+    }
+
+    &::before {
+        height: 2px;
+        width: 50%;
+    }
+
+    &::after {
+        height: 50%;
+        width: 2px;
+    }
+
+    &:hover {
+        background-color: rgba(10, 10, 10, 0.3);
+    }
+}
+
+.has-icon-left {
+    padding-left: 2.25em;
+}
+
+.vertical-margins-small {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}

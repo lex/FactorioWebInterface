@@ -271,15 +271,19 @@ namespace FactorioWebInterface.Services
         private string PrepareModDirectory(FactorioServerMutableData mutableData)
         {
             var dir = _factorioModManager.GetModPackDirectoryInfo(mutableData.ModPack);
-            if (dir == null)
-            {
-                mutableData.ModPack = "";
-                return "";
-            }
-            else
+            if (dir != null)
             {
                 return dir.FullName;
             }
+
+            if (!string.IsNullOrEmpty(mutableData.ModPack))
+            {
+                mutableData.ModPack = "";
+                _factorioControlHub.Clients.Group(mutableData.ServerId).SendSelectedModPack("");
+                // Return error?
+            }
+
+            return "";
         }
 
         private async Task<Result<ProcessStartInfo>> PrepareServerCommon(FactorioServerMutableData mutableData, string startTypeArguments)

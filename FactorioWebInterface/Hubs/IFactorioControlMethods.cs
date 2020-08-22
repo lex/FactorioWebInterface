@@ -42,6 +42,7 @@ namespace FactorioWebInterface.Hubs
         Task UndoServerSettings();
         Task UndoServerExtraSettings();
         Task<Result> DeflateSave(string directoryPath, string fileName, string newFileName);
+        Task<Result> Update(string version);
         Task RequestDownloadableVersions();
         Task RequestCachedVersions();
         Task<string> GetVersion();

@@ -147,6 +147,19 @@ namespace FactorioWebInterface.Services
         private void FactorioModManager_ModPackChanged(IFactorioModManager sender, CollectionChangedData<ModPackMetaData> eventArgs)
         {
             _factorioControlHub.Clients.All.SendModPacks(eventArgs);
+
+            foreach (var server in _factorioServerDataService.Servers.Values)
+            {
+                _ = server.LockAsync(md =>
+                {
+                    string modPackName = md.ModPack;
+                    if (eventArgs.OldItems.Any(modPackMetaData => modPackMetaData.Name == modPackName))
+                    {
+                        md.ModPack = "";
+                        _ = _factorioControlHub.Clients.Group(md.ServerId).SendSelectedModPack("");
+                    }
+                });
+            }
         }
 
         private void FactorioBanManager_BanChanged(IFactorioBanService sender, FactorioBanEventArgs eventArgs)

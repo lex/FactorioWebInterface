@@ -23,7 +23,7 @@
     {
         /// <summary>
         /// Returns true if the server's status allows starting the server.
-        /// </summary>        
+        /// </summary>
         public static bool IsStartable(this FactorioServerStatus status)
         {
             switch (status)

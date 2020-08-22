@@ -1,0 +1,39 @@
+﻿@import "./fieldBase.ts.less";
+
+a-textarea-field {
+    .field();
+
+    & > div {
+        & > textarea {
+            .field-input();
+            height: 6.75em;
+            min-height: 2.25em;
+            max-height: 32em;
+            resize: vertical;
+        }
+
+        & > textarea:focus {
+            .field-input-focus();
+        }
+
+        & > textarea[disabled] {
+            .field-input-disabled();
+        }
+
+        & > textarea[readonly] {
+            .field-input-readonly();
+        }
+
+        & > textarea:hover {
+            .field-input-hover();
+        }
+    }
+
+    &[invalid] > div > textarea {
+        .field-input-error();
+
+        &:hover {
+            .field-input-error-hover();
+        }
+    }
+}

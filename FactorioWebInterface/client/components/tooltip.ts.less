@@ -1,0 +1,33 @@
+﻿a-tooltip {
+    display: block;
+    border: 1px solid lightgrey;
+    border-radius: 10px;
+    background: white;
+    color: #363636;
+    z-index: 100;
+    font-size: 1rem;
+    padding: 0.5em;    
+    width: -moz-fit-content;
+    width: -webkit-fit-content;
+    width: fit-content;
+    height: -moz-min-content;
+    height: -webkit-min-content;
+    height: min-content;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    font-weight: normal;
+    box-shadow: 0 2px 3px rgba(10,10,10,.1), 0 0 0 1px rgba(10,10,10,.1);
+    animation: show 0.3s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes show {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
