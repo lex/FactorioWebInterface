@@ -32,6 +32,7 @@ namespace FactorioWebInterfaceTests.Services.DefaultAdminAccountServiceTests
             userManager = serviceProvider.GetService<UserManager<ApplicationUser>>();
             defaultAdminAccountService = serviceProvider.GetRequiredService<DefaultAdminAccountService>();
             DefaultAdminAccountServiceHelper.SetupRoles(roleManager);
+            DefaultAdminAccountServiceHelper.SetupFileSystem(fileSystem);
         }
 
         public void Dispose()
@@ -42,9 +43,6 @@ namespace FactorioWebInterfaceTests.Services.DefaultAdminAccountServiceTests
         [Fact]
         public async Task CreatedSuccessfully_WhenNoUsers()
         {
-            // Arrange.
-            DefaultAdminAccountServiceHelper.SetupFileSystem(fileSystem);
-
             // Act.
             await defaultAdminAccountService.SetupDefaultUserAsync();
 
@@ -67,8 +65,7 @@ namespace FactorioWebInterfaceTests.Services.DefaultAdminAccountServiceTests
         [Fact]
         public async Task NotCreated_WhenUsers()
         {
-            // Arrange.
-            DefaultAdminAccountServiceHelper.SetupFileSystem(fileSystem);
+            // Arrange.            
             await userManager.CreateAsync(new ApplicationUser() { Id = "Test", UserName = "Test" });
 
             // Act.
