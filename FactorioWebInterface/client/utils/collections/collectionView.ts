@@ -185,17 +185,20 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
             }
 
-            this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
-
             return;
         }
 
         let removed = [...oldSelected]
         selected.clear();
-        selected.add(item);
-        this.raise({ type: CollectionViewChangeType.Add, items: [...removed, item] });
 
-        if (this.isSortedBySelection()) {
+        let added = false;
+        if (this.isAllowedByFilter(item)) {
+            added = true;
+            selected.add(item);
+            this.raise({ type: CollectionViewChangeType.Add, items: [...removed, item] });
+        }
+
+        if ((added || removed.length > 0) && this.isSortedBySelection()) {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
@@ -204,11 +207,17 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
         }
 
-        this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
+        if (added) {
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
+        }
     }
 
     setSelected(item: Box<T>, selected: boolean) {
         if (selected) {
+            if (!this.isAllowedByFilter(item)) {
+                return;
+            }
+
             if (this._selected.has(item)) {
                 return;
             }
@@ -218,8 +227,6 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 return;
             }
         }
-
-        // todo - check filter.
 
         this.raise({ type: CollectionViewChangeType.Add, items: [item] });
 
@@ -253,10 +260,20 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         let selected = this._selected;
         let change: Box<T>[] = [];
 
-        for (let box of this._array) {
-            if (!selected.has(box)) {
-                selected.add(box);
-                change.push(box);
+        let filter = this._predicate;
+        if (filter) {
+            for (let box of this._array) {
+                if (!selected.has(box) && filter(box)) {
+                    selected.add(box);
+                    change.push(box);
+                }
+            }
+        } else {
+            for (let box of this._array) {
+                if (!selected.has(box)) {
+                    selected.add(box);
+                    change.push(box);
+                }
             }
         }
 
@@ -400,9 +417,26 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             filterSpecifications = [filterSpecifications];
         }
 
-        this._predicate = CollectionView.buildPredicate(filterSpecifications);
+        let filter = CollectionView.buildPredicate(filterSpecifications);
+        this._predicate = filter;
+
+        let selected = this._selected;
+        let oldSelected = [...selected];
 
         this.doReset();
+
+        if (filter == null) {
+            for (const item of oldSelected) {
+                selected.add(item);
+            }
+        } else {
+            for (const item of oldSelected) {
+                if (filter(item)) {
+                    selected.add(item);
+                }
+            }
+        }
+
         this.sort();
         this.raise({ type: CollectionViewChangeType.Reset });
         this._filterSpecifications.raise(filterSpecifications);
@@ -738,6 +772,16 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         }
 
         return false;
+    }
+
+    private isAllowedByFilter(item: Box<T>): boolean {
+        let filter = this._predicate;
+
+        if (filter == null) {
+            return true;
+        }
+
+        return filter(item);
     }
 }
 

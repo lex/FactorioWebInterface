@@ -156,7 +156,15 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
             this.raise('selectedModPack', this.selectedModPack);
             this.raise('isModPackSelected', this.isModPackSelected);
 
+            //let currentSelected = IterableHelper.firstOrDefault(this._modPacks.selected);
+
             this._modPacks.filterBy({ predicate: modPack => modPack.Name !== event });
+
+            //if (currentSelected && currentSelected.value.Name !== event) {
+            //    this._modPacks.setSingleSelected(currentSelected);
+            //} else {
+            //    this._modPacks.setFirstSingleSelected();
+            //}
 
             this._uploadFilesCommand.raiseCanExecuteChanged();
             this._downloadFilesCommand.raiseCanExecuteChanged();
