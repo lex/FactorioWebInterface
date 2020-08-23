@@ -59,14 +59,14 @@ namespace FactorioWebInterface.Services
             result = await _userManager.AddToRoleAsync(user, Constants.RootRole);
             if (!result.Succeeded)
             {
-                _logger.LogError("Could not add role to {UserId}", Constants.DefaultAdminAccount);
+                _logger.LogError("Could not add role {role} to {UserId}", Constants.RootRole, Constants.DefaultAdminAccount);
                 return;
             }
 
             result = await _userManager.AddToRoleAsync(user, Constants.AdminRole);
             if (!result.Succeeded)
             {
-                _logger.LogError("Could not add role to {UserId}", Constants.DefaultAdminAccount);
+                _logger.LogError("Could not add role {role} to {UserId}", Constants.AdminRole, Constants.DefaultAdminAccount);
                 return;
             }
 
