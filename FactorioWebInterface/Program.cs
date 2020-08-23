@@ -38,13 +38,11 @@ namespace FactorioWebInterface
                 Log.Information("Starting factorio web interface");
 
                 var host = CreateWebHostBuilder(args).Build();
-
-                // This makes sure the databases are setup.
-                SeedData(host);
-
                 var services = host.Services;
 
                 await Task.WhenAll(
+                    // This makes sure the databases are setup.
+                    SeedData(host),
                     services.GetService<IFactorioServerDataService>().Init(),
                     services.GetService<DiscordBot>().Init(),
                     services.GetService<IDiscordService>().Init());
@@ -79,7 +77,7 @@ namespace FactorioWebInterface
                 .UseSerilog();
             });
 
-        private static void SeedData(IHost host)
+        private static async Task SeedData(IHost host)
         {
             using (var scope = host.Services.CreateScope())
             {
@@ -93,8 +91,10 @@ namespace FactorioWebInterface
 
                 var roleManager = services.GetService<RoleManager<IdentityRole>>();
 
-                roleManager.CreateAsync(new IdentityRole(Constants.RootRole));
-                roleManager.CreateAsync(new IdentityRole(Constants.AdminRole));
+                await roleManager.CreateAsync(new IdentityRole(Constants.RootRole));
+                await roleManager.CreateAsync(new IdentityRole(Constants.AdminRole));
+
+                await services.GetService<IDefaultAdminAccountService>().SetupDefaultUserAsync();
             }
         }
     }

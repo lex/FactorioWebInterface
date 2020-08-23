@@ -50,42 +50,7 @@ namespace FactorioWebInterface
 
             services.AddSingleton<IDbContextFactory, DbContextFactory>();
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
-
-            services.Configure<IdentityOptions>(options =>
-            {
-                // Password settings.
-                options.Password.RequireDigit = false;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequiredUniqueChars = 1;
-
-                // Lockout settings.
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.AllowedForNewUsers = true;
-
-                StringBuilder sb = new StringBuilder();
-                for (int i = 32; i < ushort.MaxValue; i++)
-                {
-                    sb.Append((char)i);
-                }
-                string set = sb.ToString();
-
-                // User settings.
-                options.User.AllowedUserNameCharacters = set;
-                //"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+()[]{}"; // Todo Find out all allowed characters for discord username.
-                options.User.RequireUniqueEmail = false;
-            });
-
-            services.Configure<SecurityStampValidatorOptions>(options =>
-            {
-                // enables immediate logout, after updating the user's stat.
-                options.ValidationInterval = TimeSpan.Zero;
-            });
+            SetupIdentity(services);
 
             //services.ConfigureApplicationCookie(options => options.LoginPath = "");
 
@@ -114,6 +79,7 @@ namespace FactorioWebInterface
             services.AddSingleton<BanHubEventHandlerService, BanHubEventHandlerService>();
             services.AddSingleton<FactorioAdminServiceEventHandlerService, FactorioAdminServiceEventHandlerService>();
             services.AddSingleton<IFactorioModPortalService, FactorioModPortalService>();
+            services.AddTransient<IDefaultAdminAccountService, DefaultAdminAccountService>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
 
@@ -230,6 +196,46 @@ namespace FactorioWebInterface
                 endpoints.MapHub<FactorioBanHub>("/factorioBanHub");
                 endpoints.MapHub<PlaguesPlaygroundHub>("/plaguesPlaygroundHub");
                 endpoints.MapHub<FactorioModHub>("/factorioModHub");
+            });
+        }
+
+        internal static void SetupIdentity(IServiceCollection services)
+        {
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                // Password settings.
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequiredUniqueChars = 1;
+
+                // Lockout settings.
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
+
+                StringBuilder sb = new StringBuilder();
+                for (int i = 32; i < ushort.MaxValue; i++)
+                {
+                    sb.Append((char)i);
+                }
+                string set = sb.ToString();
+
+                // User settings.
+                options.User.AllowedUserNameCharacters = set;
+                //"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+()[]{}"; // Todo Find out all allowed characters for discord username.
+                options.User.RequireUniqueEmail = false;
+            });
+
+            services.Configure<SecurityStampValidatorOptions>(options =>
+            {
+                // enables immediate logout, after updating the user's stat.
+                options.ValidationInterval = TimeSpan.Zero;
             });
         }
 

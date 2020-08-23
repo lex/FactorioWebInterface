@@ -22,6 +22,10 @@ namespace FactorioWebInterface
         public const string GitHubCallbackFilePathKey = "WebHookGitHubCallbackFile";
         public const string PlaguesScriptDefaultPathKey = "PlaguesScriptDefaultPath";
 
+        public const string DefaultAdminAccount = "DefaultAdminAccount";
+        public const string DefaultAdminName = "Admin";
+        public const string DefaultAdminFile = "DefaultUser.txt";
+
         public const string DiscordBotCommandPrefix = ";;";
 
         public const string TempSavesDirectoryName = "saves";
