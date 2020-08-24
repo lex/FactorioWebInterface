@@ -1,5 +1,4 @@
 ﻿import "./select.ts.less";
-import { Box } from "../utils/box";
 import { EventListener } from "../utils/eventListener";
 import { IterableHelper } from "../utils/iterableHelper";
 import { Icon } from "./icon";
@@ -9,16 +8,12 @@ import { CollectionView, ObservableCollection, CollectionViewChangedData, Collec
 import { IBindingSource, ObjectBindingTarget, Binding } from "../utils/binding/module";
 
 export class Option<T> extends HTMLOptionElement {
-    box: Box<T>;
-
-    get item(): T {
-        return this.box.value;
-    }
+    item: T;
 }
 
 customElements.define('a-option', Option, { extends: 'option' });
 
-export class Select<T = any> extends BaseElement {
+export class Select<T = any, K = any> extends BaseElement {
     static readonly bindingKeys = {
         placeholder: {},
         isLoading: {},
@@ -27,9 +22,9 @@ export class Select<T = any> extends BaseElement {
 
     private _select: HTMLSelectElement;
 
-    private _source: CollectionView<T>;
+    private _source: CollectionView<T, K>;
     private _optionBuilder: (item: T) => string | Option<T>;
-    private _optionMap: Map<Box<T>, HTMLOptionElement>;
+    private _optionMap: Map<K, HTMLOptionElement>;
 
     private _icon: Icon;
     private _placeholder: Placeholder;
@@ -38,13 +33,9 @@ export class Select<T = any> extends BaseElement {
         return this._select.value;
     }
 
-    get selectedBox(): Box<T> {
-        let option = this._select.selectedOptions[0] as Option<T>;
-        return option?.box;
-    }
-
     get selectedItem(): T {
-        return this.selectedBox?.value;
+        let option = this._select.selectedOptions[0] as Option<T>;
+        return option?.item;
     }
 
     get options(): HTMLOptionsCollection {
@@ -61,7 +52,7 @@ export class Select<T = any> extends BaseElement {
         }
 
         if (this._source) {
-            this._source.setSingleSelected(option.box);
+            this._source.setSingleSelectedItem(option.item);
             return;
         }
 
@@ -122,7 +113,7 @@ export class Select<T = any> extends BaseElement {
         this.classList.toggle('is-loading', value);
     }
 
-    constructor(source?: T[] | ObservableCollection<T> | CollectionView<T>, optionBuilder?: (item: T) => string | Option<T>) {
+    constructor(source?: T[] | ObservableCollection<T> | CollectionView<T, K>, optionBuilder?: (item: T) => string | Option<T>) {
         super();
 
         this._select = document.createElement('select');
@@ -140,7 +131,7 @@ export class Select<T = any> extends BaseElement {
             let options = this._select.options;
 
             for (let item of source) {
-                let option = this.buildOptionElement(new Box(item));
+                let option = this.buildOptionElement(item);
                 options.add(option);
             }
 
@@ -161,8 +152,8 @@ export class Select<T = any> extends BaseElement {
             this._source.selectedChanged.subscribe(() => this.updateSelected());
 
             EventListener.onChange(this._select, () => {
-                let selectedBox = this.selectedBox;
-                this._source.setSingleSelected(selectedBox);
+                let selectedItem = this.selectedItem;
+                this._source.setSingleSelectedItem(selectedItem);
             });
 
             this._select.selectedIndex = -1;
@@ -201,8 +192,8 @@ export class Select<T = any> extends BaseElement {
         return this;
     }
 
-    private buildOptionElement(item: Box<T>): Option<T> {
-        let option = this._optionBuilder(item.value);
+    private buildOptionElement(item: T): Option<T> {
+        let option = this._optionBuilder(item);
 
         if (typeof option === 'string') {
             let text = option;
@@ -210,17 +201,19 @@ export class Select<T = any> extends BaseElement {
             option.innerText = text;
         }
 
-        option.box = item;
+        option.item = item;
         return option;
     }
 
-    private buildOptions(items: IterableIterator<Box<T>>) {
+    private buildOptions(items: IterableIterator<T>) {
         let options = this._select.options;
         let map = this._optionMap;
+        let keySelector = this._source.keySelector;
 
         for (let item of items) {
             let option = this.buildOptionElement(item);
-            map.set(item, option);
+            let key = keySelector(item);
+            map.set(key, option);
             options.add(option);
         }
     }
@@ -238,12 +231,14 @@ export class Select<T = any> extends BaseElement {
     private doReorder() {
         let options = this._select.options;
         let optionMap = this._optionMap;
+        let keySelector = this._source.keySelector;
 
         let option = this._select.selectedOptions[0] as Option<T>;
         options.length = 0;
 
         for (let item of this._source) {
-            let option = optionMap.get(item);
+            let key = keySelector(item);
+            let option = optionMap.get(key);
             options.add(option);
         }
 
@@ -254,32 +249,36 @@ export class Select<T = any> extends BaseElement {
         }
     }
 
-    private doUpdate(items: Box<T>[]) {
+    private doUpdate(items: T[]) {
         let options = this._select.options;
         let optionMap = this._optionMap;
+        let keySelector = this._source.keySelector;
 
         for (let item of items) {
-            let option = optionMap.get(item);
+            let key = keySelector(item);
+            let option = optionMap.get(key);
 
             if (option != null) {
                 let newOption = this.buildOptionElement(item);
                 options[option.index] = newOption;
-                optionMap.set(item, newOption);
+                optionMap.set(key, newOption);
             } else {
                 option = this.buildOptionElement(item);
-                optionMap.set(item, option);
+                optionMap.set(key, option);
                 options.add(option);
             }
         }
     }
 
-    private doRemove(items: Box<T>[]) {
+    private doRemove(items: T[]) {
         let optionMap = this._optionMap;
+        let keySelector = this._source.keySelector;
 
         for (let item of items) {
-            let option = optionMap.get(item);
+            let key = keySelector(item);
+            let option = optionMap.get(key);
             if (option !== undefined) {
-                optionMap.delete(item);
+                optionMap.delete(key);
                 option.remove();
             }
         }
@@ -305,10 +304,10 @@ export class Select<T = any> extends BaseElement {
     }
 
     private updateSelected() {
-        let box = IterableHelper.firstOrDefault(this._source.selected);
+        let item = IterableHelper.firstOrDefault(this._source.selected);
 
-        if (box == this.selectedBox) {
-            if (box == null) {
+        if (item === this.selectedItem) {
+            if (item == null) {
                 this.addPlaceHolder();
             } else {
                 this.removePlaceholder();
@@ -316,13 +315,15 @@ export class Select<T = any> extends BaseElement {
             return;
         }
 
-        if (box == null) {
+        if (item == null) {
             this._select.selectedIndex = -1;
             this.addPlaceHolder();
             return;
         }
 
-        let option = this._optionMap.get(box);
+        let keySelector = this._source.keySelector;
+        let key = keySelector(item);
+        let option = this._optionMap.get(key);
         if (option == null) {
             this._select.selectedIndex = -1;
             this.addPlaceHolder();

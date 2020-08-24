@@ -7,13 +7,13 @@ export class ScenariosViewModel extends ObservableObject {
     private _sourceScenarios: ObservableCollection<ScenarioMetaData>;
 
     private _header: string;
-    private _scenarios: CollectionView<ScenarioMetaData>;
+    private _scenarios: CollectionView<ScenarioMetaData, string>;
 
-    get header() {
+    get header(): string {
         return this._header;
     }
 
-    get scenarios() {
+    get scenarios(): CollectionView<ScenarioMetaData, string> {
         return this._scenarios;
     }
 
@@ -37,7 +37,7 @@ export class ScenariosViewModel extends ObservableObject {
         if (selectedCount === 0) {
             this._header = `Scenarios (${this.count})`;
         } else {
-            let selected = IterableHelper.firstOrDefault(this._scenarios.selected).value.Name;
+            let selected = IterableHelper.firstOrDefault(this._scenarios.selected).Name;
             this._header = `Scenarios (${this.count}) - Selected: ${selected}`;
         }
 

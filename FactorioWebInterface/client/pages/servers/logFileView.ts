@@ -15,9 +15,7 @@ class LogFileNameColumn extends ColumnTemplate<FileMetaData>{
 
         this.property = 'Name';
 
-        this.cell = (name: string, box: Box<FileMetaData>) => {
-            let file = box.value;
-
+        this.cell = (name: string, file: FileMetaData) => {
             let link = document.createElement('a') as HTMLAnchorElement;
             link.innerText = file.Name;
             link.href = `/admin/servers?handler=${encodeURIComponent(handler)}&directory=${encodeURIComponent(file.Directory)}&name=${encodeURIComponent(file.Name)}`;

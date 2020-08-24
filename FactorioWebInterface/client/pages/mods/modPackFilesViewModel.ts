@@ -15,8 +15,8 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
     private _fileSelectionService: FileSelectionService;
     private _errorService: ErrorService;
 
-    private _files: CollectionView<ModPackFileMetaData>;
-    private _modPacks: CollectionView<ModPackMetaData>;
+    private _files: CollectionView<ModPackFileMetaData, string>;
+    private _modPacks: CollectionView<ModPackMetaData, string>;
 
     private _title = ModPackFilesViewModel.defaultTitle;
 
@@ -26,11 +26,11 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
     private _copyFilesCommand: DelegateCommand;
     private _moveFilesCommand: DelegateCommand;
 
-    get files(): CollectionView<ModPackFileMetaData> {
+    get files(): CollectionView<ModPackFileMetaData, string> {
         return this._files;
     }
 
-    get modPacks(): CollectionView<ModPackMetaData> {
+    get modPacks(): CollectionView<ModPackMetaData, string> {
         return this._modPacks;
     }
 
@@ -125,7 +125,7 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
             () => this.isModPackSelected && !this.isDownloading.value);
 
         this._deleteFilesCommand = new DelegateCommand(async () => {
-            let fileNames = IterableHelper.map(this._files.selected, f => f.value.Name);
+            let fileNames = IterableHelper.map(this._files.selected, f => f.Name);
             let result = await this._modsService.deleteModPackFiles([...fileNames]);
 
             this._errorService.reportIfError(result);
@@ -133,8 +133,8 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
             () => this.isModPackSelected && this._files.selectedCount > 0);
 
         this._copyFilesCommand = new DelegateCommand(async () => {
-            let targetModPack = IterableHelper.firstOrDefault(this._modPacks.selected).value.Name;
-            let fileNames = IterableHelper.map(this._files.selected, f => f.value.Name);
+            let targetModPack = IterableHelper.firstOrDefault(this._modPacks.selected).Name;
+            let fileNames = IterableHelper.map(this._files.selected, f => f.Name);
             let result = await this._modsService.copyModPackFiles(targetModPack, [...fileNames]);
 
             this._errorService.reportIfError(result);
@@ -142,8 +142,8 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
             () => this.isModPackSelected && this._files.selectedCount > 0 && this._modPacks.selectedCount === 1);
 
         this._moveFilesCommand = new DelegateCommand(async () => {
-            let targetModPack = IterableHelper.firstOrDefault(this._modPacks.selected).value.Name;
-            let fileNames = IterableHelper.map(this._files.selected, f => f.value.Name);
+            let targetModPack = IterableHelper.firstOrDefault(this._modPacks.selected).Name;
+            let fileNames = IterableHelper.map(this._files.selected, f => f.Name);
             let result = await this._modsService.moveModPackFiles(targetModPack, [...fileNames]);
 
             this._errorService.reportIfError(result);

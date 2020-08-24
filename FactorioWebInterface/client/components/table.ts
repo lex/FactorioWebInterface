@@ -1,5 +1,4 @@
 ﻿import "./table.ts.less";
-import { Box } from "../utils/box";
 import { ComparatorHelper } from "../utils/comparatorHelper";
 import { Utils } from "../ts/utils";
 import { EventListener } from "../utils/eventListener";
@@ -9,32 +8,27 @@ import { CollectionView, ObservableCollection, SortSpecification, CollectionView
 
 export interface rowClickEventArgs<T> {
     readonly item: T;
-    readonly box: Box<T>;
     readonly row: TableRow<T>;
 }
 
 export class TableRow<T = any> extends HTMLTableRowElement implements rowClickEventArgs<T> {
     get item() {
-        return this._box.value;
-    }
-
-    get box() {
-        return this._box;
+        return this._item;
     }
 
     get row() {
         return this;
     }
 
-    constructor(private _box?: Box<T>) {
+    constructor(private _item?: T) {
         super();
     }
 }
 
 customElements.define('a-tr', TableRow, { extends: 'tr' });
 
-export class Table<T = any> extends HTMLTableElement {
-    private _source: CollectionView<T>;
+export class Table<T = any, K = any> extends HTMLTableElement {
+    private _source: CollectionView<T, K>;
     private _columns: IColumnTemplate[];
     private _rowClickHandler: (this: HTMLTableRowElement) => void;
     private _rowClickObservable: Observable<rowClickEventArgs<T>>;
@@ -42,14 +36,16 @@ export class Table<T = any> extends HTMLTableElement {
     private _headers: HTMLTableRowElement;
     private _body: HTMLTableSectionElement;
 
-    private _rowMap: Map<Box<T>, TableRow<T>>;
+    private _keySelector: (item: T) => K;
+
+    private _rowMap: Map<K, TableRow<T>>;
     private _sortIdMap: Map<any, HTMLTableHeaderCellElement>;
 
     get source(): CollectionView<T> {
         return this._source;
     }
 
-    constructor(source?: ObservableCollection<T> | CollectionView<T>, columns?: IColumnTemplate<T>[], rowClick?: (event: rowClickEventArgs<T>) => void) {
+    constructor(source?: ObservableCollection<T> | CollectionView<T, K>, columns?: IColumnTemplate<T>[], rowClick?: (event: rowClickEventArgs<T>) => void) {
         super();
 
         if (source instanceof CollectionView) {
@@ -58,6 +54,8 @@ export class Table<T = any> extends HTMLTableElement {
             this._source = new CollectionView(source);
         }
         this._source.sortChanged.subscribe((event) => this.updateHeaderSortDisplay(event));
+
+        this._keySelector = this._source.keySelector;
 
         this._columns = columns;
 
@@ -134,12 +132,11 @@ export class Table<T = any> extends HTMLTableElement {
         this.updateHeaderSortDisplay(this._source.sortSpecifications);
     }
 
-    private buildCell(row: HTMLTableRowElement, entry: Box<T>, index: number) {
+    private buildCell(row: HTMLTableRowElement, entry: T, index: number) {
         let template = this._columns[index];
-        let data = entry.value;
 
         let property = template.property;
-        let propertyData = property == null ? data : data[property];
+        let propertyData = property == null ? entry : entry[property];
 
         let cell = row.cells[index];
         if (cell == null) {
@@ -148,26 +145,27 @@ export class Table<T = any> extends HTMLTableElement {
         }
 
         let cellBuilder = template.cell || this.textCellBuilder;
-        cell.append(cellBuilder(propertyData, entry, this))
+        cell.append(cellBuilder(propertyData, this))
     }
 
-    private buildRow(box: Box<T>): TableRow {
-        let row = new TableRow(box);
+    private buildRow(item: T): TableRow {
+        let row = new TableRow(item);
+        let key = this._keySelector(item);
 
-        this._rowMap.set(box, row);
+        this._rowMap.set(key, row);
 
         for (let index = 0; index < this._columns.length; index++) {
-            this.buildCell(row, box, index);
+            this.buildCell(row, item, index);
         }
 
         if (this._rowClickObservable.subscriberCount > 0) {
-            this.addRowClickHandler(box, row);
+            this.addRowClickHandler(row);
         }
 
         return row;
     }
 
-    private addRowClickHandler(box: Box<T>, row: HTMLTableRowElement) {
+    private addRowClickHandler(row: HTMLTableRowElement) {
         row.addEventListener('click', this._rowClickHandler);
     }
 
@@ -238,7 +236,7 @@ export class Table<T = any> extends HTMLTableElement {
         }
     }
 
-    private doReset(rowEntries: Box<T>[]) {
+    private doReset(rowEntries: T[]) {
         this._rowMap?.clear();
 
         if (rowEntries == null) {
@@ -250,24 +248,28 @@ export class Table<T = any> extends HTMLTableElement {
         this.doReorder();
     }
 
-    private doRemove(rowEntries: Box<T>[]) {
+    private doRemove(rowEntries: T[]) {
         let rowMap = this._rowMap;
+        let keySelector = this._keySelector;
 
         for (let entry of rowEntries) {
-            let oldRow = rowMap.get(entry);
+            let key = keySelector(entry);
+            let oldRow = rowMap.get(key);
             if (oldRow !== undefined) {
-                rowMap.delete(entry);
+                rowMap.delete(key);
                 oldRow.remove();
             }
         }
     }
 
-    private doUpdate(rowEntries: Box<T>[]) {
+    private doUpdate(rowEntries: T[]) {
         let rowMap = this._rowMap;
         let isSorted = this._source.isSorted;
+        let keySelector = this._keySelector;
 
         for (let entry of rowEntries) {
-            let row = rowMap.get(entry);
+            let key = keySelector(entry);
+            let row = rowMap.get(key);
             if (row === undefined) {
                 let row = this.buildRow(entry);
                 if (!isSorted) {
@@ -290,9 +292,11 @@ export class Table<T = any> extends HTMLTableElement {
         body.innerHTML = '';
 
         let rowMap = this._rowMap;
+        let keySelector = this._keySelector;
 
         for (let entry of this._source) {
-            let row = rowMap.get(entry);
+            let key = keySelector(entry);
+            let row = rowMap.get(key);
             body.appendChild(row);
         }
     }
@@ -318,8 +322,8 @@ export class Table<T = any> extends HTMLTableElement {
 
     onRowClick(callback: (event: rowClickEventArgs<T>) => void): () => void {
         if (this._rowClickObservable.subscriberCount === 0) {
-            for (let entry of this._rowMap) {
-                this.addRowClickHandler(entry[0], entry[1]);
+            for (let row of this._rowMap.values()) {
+                this.addRowClickHandler(row);
             }
         }
 
@@ -331,8 +335,8 @@ export class Table<T = any> extends HTMLTableElement {
                 return;
             }
 
-            for (let entry of this._rowMap) {
-                entry[1].removeEventListener('click', this._rowClickHandler);
+            for (let row of this._rowMap.values()) {
+                row.removeEventListener('click', this._rowClickHandler);
             }
         });
     }
@@ -359,7 +363,7 @@ customElements.define('a-table', Table, { extends: 'table' });
 export interface IColumnTemplate<T = any> {
     property?: string;
     header?: (headerCell?: HTMLTableHeaderCellElement, table?: Table<T>) => Node | string;
-    cell?: (value: any, box?: Box<T>, table?: Table<T>) => Node | string;
+    cell?: (value: any, item: T, table?: Table<T>) => Node | string;
     comparator?: (a: any, b: any) => number;
     sortId?: any;
     sortingDisabled?: boolean;
@@ -371,7 +375,7 @@ export interface IColumnTemplate<T = any> {
 export class ColumnTemplate<T = any> implements IColumnTemplate<T>{
     property: string;
     header: (headerCell?: HTMLTableHeaderCellElement, table?: Table<T>) => Node | string;
-    cell: (value: any, box?: Box<T>, table?: Table<T>) => Node | string;
+    cell: (value: any, item: T, table?: Table<T>) => Node | string;
     comparator: (a: any, b: any) => number;
     sortId: any;
     sortingDisabled: boolean;
@@ -386,7 +390,7 @@ export class ColumnTemplate<T = any> implements IColumnTemplate<T>{
         return this;
     }
 
-    setCell(cell: (value: any, box?: Box<T>, table?: Table<T>) => Node | string): this {
+    setCell(cell: (value: any, item: T, table?: Table<T>) => Node | string): this {
         this.cell = cell;
         return this;
     }
@@ -456,15 +460,15 @@ export class DateTimeColumn<T = any> extends ColumnTemplate<T>{
 }
 
 export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
-    static cell<T>(item: any, box: Box<T>, table: Table<T>): Node {
+    static cell<T>(value: any, item: T, table: Table<T>): Node {
         let source = table.source;
 
         let checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.checked = source.isSelected(box);
+        checkbox.checked = source.isSelectedItem(value);
         EventListener.onClick(checkbox, (event) => {
             event.stopPropagation();
-            source.setSelected(box, checkbox.checked);
+            source.setSelectedItem(value, checkbox.checked);
         });
 
         return checkbox;
@@ -511,9 +515,10 @@ export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
 
         this._rowClickSubscription = table.onRowClick(event => {
             let source = table.source;
-            let box = event.box;
+            let item = event.item;
+            let key = source.keySelector(item);
 
-            source.setSelected(box, !source.isSelected(box));
+            source.setSelected(key, !source.isSelected(key));
         });
     }
 
@@ -522,24 +527,24 @@ export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
     }
 
     getSortSpecification(table: Table<T>): SortSpecification<T> {
-        return { ascendingBoxComparator: table.source.selectedComparatorBuilder(), sortId: table.source.selectedSortId };
+        return { ascendingComparator: table.source.selectedComparatorBuilder(), sortId: table.source.selectedSortId };
     }
 }
 
 export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
-    static cell<T>(item: any, box: Box<T>, table: Table<T>): Node {
+    static cell<T>(value: any, item: T, table: Table<T>): Node {
         let source = table.source;
 
         let radio = document.createElement('input');
         radio.type = 'radio';
-        radio.checked = source.isSelected(box);
+        radio.checked = source.isSelectedItem(value);
         EventListener.onClick(radio, (event) => {
             event.stopPropagation();
 
-            if (source.isSelected(box)) {
+            if (source.isSelectedItem(value)) {
                 source.unSelectAll();
             } else {
-                source.setSingleSelected(box);
+                source.setSingleSelectedItem(value);
             }
         });
 
@@ -584,12 +589,12 @@ export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
 
         this._rowClickSubscription = table.onRowClick(event => {
             let source = table.source;
-            let box = event.box;
+            let item = event.item;
 
-            if (source.isSelected(box)) {
+            if (source.isSelectedItem(item)) {
                 source.unSelectAll();
             } else {
-                source.setSingleSelected(box);
+                source.setSingleSelectedItem(item);
             }
         });
     }
@@ -599,6 +604,6 @@ export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
     }
 
     getSortSpecification(table: Table<T>): SortSpecification<T> {
-        return { ascendingBoxComparator: table.source.selectedComparatorBuilder(), sortId: table.source.selectedSortId };
+        return { ascendingComparator: table.source.selectedComparatorBuilder(), sortId: table.source.selectedSortId };
     }
 }

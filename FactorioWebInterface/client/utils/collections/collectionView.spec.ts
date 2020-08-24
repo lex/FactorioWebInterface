@@ -41,13 +41,11 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let one = cv.getBoxByKey(1);
-
             let actualEvent: CollectionViewChangedData<number>
             cv.selectedChanged.subscribe(event => actualEvent = event);
 
             // Act.            
-            cv.setSelected(one, true);
+            cv.setSelected(1, true);
 
             // Assert.
             let selected = [...cv.selected];
@@ -57,12 +55,12 @@ describe('CollectionView', function () {
             strict.equal(viewabledSelected.length, 1);
             strict.equal(cv.selectedCount, 1);
 
-            strict.equal(selected[0], one);
-            strict.equal(viewabledSelected[0], one);
-            strict.equal(cv.isSelected(one), true);
+            strict.equal(selected[0], 1);
+            strict.equal(viewabledSelected[0], 1);
+            strict.equal(cv.isSelected(1), true);
 
             strict.equal(actualEvent.type, CollectionViewChangeType.Add);
-            strict.deepEqual(actualEvent.items, [one]);
+            strict.deepEqual(actualEvent.items, [1]);
         });
 
         it('should contain items when items are selected.', function () {
@@ -71,33 +69,30 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-
             let actualEvent: CollectionViewChangedData<number>
             cv.selectedChanged.subscribe(event => actualEvent = event);
 
             // Act.            
-            cv.setSelected(one, true);
+            cv.setSelected(1, true);
 
             // Assert Event.
             strict.equal(actualEvent.type, CollectionViewChangeType.Add);
-            strict.deepEqual(actualEvent.items, [one]);
+            strict.deepEqual(actualEvent.items, [1]);
 
             // Act.
-            cv.setSelected(two, true);
+            cv.setSelected(2, true);
 
             // Assert.
             strict.equal(actualEvent.type, CollectionViewChangeType.Add);
-            strict.deepEqual(actualEvent.items, [two]);
+            strict.deepEqual(actualEvent.items, [2]);
 
-            let expectedSelected = [one, two];
+            let expectedSelected = [1, 2];
 
             strict.deepEqual([...cv.selected], expectedSelected);
             strict.deepEqual([...cv.viewableSelected], expectedSelected);
             strict.equal(cv.selectedCount, 2);
-            strict.equal(cv.isSelected(one), true);
-            strict.equal(cv.isSelected(two), true);
+            strict.equal(cv.isSelected(1), true);
+            strict.equal(cv.isSelected(2), true);
         });
 
         it('select all should select all items.', function () {
@@ -109,21 +104,18 @@ describe('CollectionView', function () {
             let actualEvent: CollectionViewChangedData<number>;
             cv.selectedChanged.subscribe(event => actualEvent = event);
 
-            // Act.
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
+            // Act.            
             cv.selectAll();
 
             // Assert.
-            let expectedSelected = [one, two, three];
+            let expectedSelected = [1, 2, 3];
 
             strict.deepEqual([...cv.selected], expectedSelected);
             strict.deepEqual([...cv.viewableSelected], expectedSelected);
             strict.equal(cv.selectedCount, 3);
-            strict.equal(cv.isSelected(one), true);
-            strict.equal(cv.isSelected(two), true);
-            strict.equal(cv.isSelected(three), true);
+            strict.equal(cv.isSelected(1), true);
+            strict.equal(cv.isSelected(2), true);
+            strict.equal(cv.isSelected(3), true);
 
             strict.equal(actualEvent.type, CollectionViewChangeType.Add);
             strict.deepEqual(actualEvent.items, expectedSelected);
@@ -135,16 +127,15 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let one = cv.getBoxByKey(1);
-            cv.setSelected(one, true);
+            cv.setSelected(1, true);
 
-            strict.equal(cv.isSelected(one), true);
+            strict.equal(cv.isSelected(1), true);
 
             let actualEvent: CollectionViewChangedData<number>;
             cv.selectedChanged.subscribe(event => actualEvent = event);
 
             // Act.            
-            cv.setSelected(one, false);
+            cv.setSelected(1, false);
 
             // Assert.
             let expectedSelected = [];
@@ -152,10 +143,10 @@ describe('CollectionView', function () {
             strict.deepEqual([...cv.viewableSelected], expectedSelected);
             strict.equal(cv.selectedCount, 0);
 
-            strict.equal(cv.isSelected(one), false);
+            strict.equal(cv.isSelected(1), false);
 
             strict.equal(actualEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(actualEvent.items, [one]);
+            strict.deepEqual(actualEvent.items, [1]);
         });
 
         it('removing an item removes it from selected items.', function () {
@@ -164,10 +155,9 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let one = cv.getBoxByKey(1);
-            cv.setSelected(one, true);
+            cv.setSelected(1, true);
 
-            strict.equal(cv.isSelected(one), true);
+            strict.equal(cv.isSelected(1), true);
 
             let actualEvent: CollectionViewChangedData<number>;
             cv.selectedChanged.subscribe(event => actualEvent = event);
@@ -181,10 +171,10 @@ describe('CollectionView', function () {
             strict.deepEqual([...cv.viewableSelected], expectedSelected);
             strict.equal(cv.selectedCount, 0);
 
-            strict.equal(cv.isSelected(one), false);
+            strict.equal(cv.isSelected(1), false);
 
             strict.equal(actualEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(actualEvent.items, [one]);
+            strict.deepEqual(actualEvent.items, [1]);
         });
 
         it('removing multiple items removes them from selected items.', function () {
@@ -193,13 +183,11 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
             let cv = new CollectionView(o);
 
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            cv.setSelected(one, true);
-            cv.setSelected(two, true);
+            cv.setSelected(1, true);
+            cv.setSelected(2, true);
 
-            strict.equal(cv.isSelected(one), true);
-            strict.equal(cv.isSelected(two), true);
+            strict.equal(cv.isSelected(1), true);
+            strict.equal(cv.isSelected(2), true);
 
             let actualEvent: CollectionViewChangedData<number>;
             cv.selectedChanged.subscribe(event => actualEvent = event);
@@ -213,11 +201,11 @@ describe('CollectionView', function () {
             strict.deepEqual([...cv.viewableSelected], expectedSelected);
             strict.equal(cv.selectedCount, 0);
 
-            strict.equal(cv.isSelected(one), false);
-            strict.equal(cv.isSelected(two), false);
+            strict.equal(cv.isSelected(1), false);
+            strict.equal(cv.isSelected(2), false);
 
             strict.equal(actualEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(actualEvent.items, [one, two]);
+            strict.deepEqual(actualEvent.items, [1, 2]);
         });
 
         let resetEventTests = [
@@ -232,10 +220,9 @@ describe('CollectionView', function () {
                 o.add(1, 2, 3);
                 let cv = new CollectionView(o);
 
-                let one = cv.getBoxByKey(1);
-                cv.setSelected(one, true);
+                cv.setSelected(1, true);
 
-                strict.equal(cv.isSelected(one), true);
+                strict.equal(cv.isSelected(1), true);
 
                 let actualEvent: CollectionViewChangedData<number>;
                 cv.selectedChanged.subscribe(event => actualEvent = event);
@@ -249,7 +236,7 @@ describe('CollectionView', function () {
                 strict.deepEqual([...cv.viewableSelected], expectedSelected);
                 strict.equal(cv.selectedCount, 0);
 
-                strict.equal(cv.isSelected(one), false);
+                strict.equal(cv.isSelected(1), false);
 
                 strict.equal(actualEvent.type, CollectionViewChangeType.Reset);
             });
@@ -260,16 +247,13 @@ describe('CollectionView', function () {
                 let cv = new CollectionView(o);
 
                 o.add(1, 2, 3);
-                let one = cv.getBoxByKey(1);
-                let two = cv.getBoxByKey(2);
-                let three = cv.getBoxByKey(3);
 
                 let callbackFiredCount = 0;
                 cv.selectedChanged.subscribe(() => callbackFiredCount++);
 
-                strict.equal(cv.isSelected(one), false);
-                strict.equal(cv.isSelected(two), false);
-                strict.equal(cv.isSelected(three), false);
+                strict.equal(cv.isSelected(1), false);
+                strict.equal(cv.isSelected(2), false);
+                strict.equal(cv.isSelected(3), false);
 
                 // Act.
                 o.update(test.arg);
@@ -284,18 +268,15 @@ describe('CollectionView', function () {
                 let cv = new CollectionView(o);
 
                 o.add(1, 2, 3);
-                let one = cv.getBoxByKey(1);
-                let two = cv.getBoxByKey(2);
-                let three = cv.getBoxByKey(3);
 
                 cv.selectAll();
 
                 let actualEvent: CollectionViewChangedData<number>;
                 cv.selectedChanged.subscribe(event => actualEvent = event);
 
-                strict.equal(cv.isSelected(one), true);
-                strict.equal(cv.isSelected(two), true);
-                strict.equal(cv.isSelected(three), true);
+                strict.equal(cv.isSelected(1), true);
+                strict.equal(cv.isSelected(2), true);
+                strict.equal(cv.isSelected(3), true);
 
                 // Act.
                 o.update(test.arg);
@@ -336,16 +317,13 @@ describe('CollectionView', function () {
             let cv = new CollectionView(o);
 
             o.add(1, 2, 3);
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
 
             let callbackFiredCount = 0;
             cv.selectedChanged.subscribe(() => callbackFiredCount++);
 
-            strict.equal(cv.isSelected(one), false);
-            strict.equal(cv.isSelected(two), false);
-            strict.equal(cv.isSelected(three), false);
+            strict.equal(cv.isSelected(1), false);
+            strict.equal(cv.isSelected(2), false);
+            strict.equal(cv.isSelected(3), false);
 
             // Act remove one item.
             o.remove(2);
@@ -367,9 +345,6 @@ describe('CollectionView', function () {
                 let cv = new CollectionView(o);
 
                 o.add(1, 2, 3);
-                let one = cv.getBoxByKey(1);
-                let two = cv.getBoxByKey(2);
-                let three = cv.getBoxByKey(3);
 
                 let actualEvents: CollectionViewChangedData<number>[] = [];
                 cv.selectedChanged.subscribe(event => actualEvents.push(event));
@@ -378,17 +353,17 @@ describe('CollectionView', function () {
                 cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
 
                 // Act.
-                cv.setSingleSelected(two);
+                cv.setSingleSelected(2);
 
                 // Assert.
-                let expectedSelected = [two];
+                let expectedSelected = [2];
 
                 strict.deepEqual([...cv.selected], expectedSelected);
                 strict.deepEqual([...cv.viewableSelected], expectedSelected);
                 strict.equal(cv.selectedCount, 1);
-                strict.equal(cv.isSelected(one), false);
-                strict.equal(cv.isSelected(two), true);
-                strict.equal(cv.isSelected(three), false);
+                strict.equal(cv.isSelected(1), false);
+                strict.equal(cv.isSelected(2), true);
+                strict.equal(cv.isSelected(3), false);
 
                 strict.equal(1, actualEvents.length);
 
@@ -409,11 +384,8 @@ describe('CollectionView', function () {
                 let cv = new CollectionView(o);
 
                 o.add(1, 2, 3);
-                let one = cv.getBoxByKey(1);
-                let two = cv.getBoxByKey(2);
-                let three = cv.getBoxByKey(3);
 
-                cv.setSingleSelected(two);
+                cv.setSingleSelected(2);
 
                 let actualEvents: CollectionViewChangedData<number>[] = [];
                 cv.selectedChanged.subscribe(event => actualEvents.push(event));
@@ -422,23 +394,23 @@ describe('CollectionView', function () {
                 cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
 
                 // Act.
-                cv.setSingleSelected(three);
+                cv.setSingleSelected(3);
 
                 // Assert.
-                let expectedSelected = [three];
+                let expectedSelected = [3];
 
                 strict.deepEqual([...cv.selected], expectedSelected);
                 strict.deepEqual([...cv.viewableSelected], expectedSelected);
                 strict.equal(cv.selectedCount, 1);
-                strict.equal(cv.isSelected(one), false);
-                strict.equal(cv.isSelected(two), false);
-                strict.equal(cv.isSelected(three), true);
+                strict.equal(cv.isSelected(1), false);
+                strict.equal(cv.isSelected(2), false);
+                strict.equal(cv.isSelected(3), true);
 
                 strict.equal(2, actualEvents.length);
 
                 let removeEvent = actualEvents[0];
                 strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-                strict.deepEqual(removeEvent.items, [two]);
+                strict.deepEqual(removeEvent.items, [2]);
 
                 let addEvent = actualEvents[1];
                 strict.equal(addEvent.type, CollectionViewChangeType.Add);
@@ -457,11 +429,8 @@ describe('CollectionView', function () {
                 let cv = new CollectionView(o);
 
                 o.add(1, 2, 3);
-                let one = cv.getBoxByKey(1);
-                let two = cv.getBoxByKey(2);
-                let three = cv.getBoxByKey(3);
 
-                cv.setSingleSelected(two);
+                cv.setSingleSelected(2);
 
                 let actualEvents: CollectionViewChangedData<number>[] = [];
                 cv.selectedChanged.subscribe(event => actualEvents.push(event));
@@ -478,21 +447,21 @@ describe('CollectionView', function () {
                 strict.deepEqual([...cv.selected], expectedSelected);
                 strict.deepEqual([...cv.viewableSelected], expectedSelected);
                 strict.equal(cv.selectedCount, 0);
-                strict.equal(cv.isSelected(one), false);
-                strict.equal(cv.isSelected(two), false);
-                strict.equal(cv.isSelected(three), false);
+                strict.equal(cv.isSelected(1), false);
+                strict.equal(cv.isSelected(2), false);
+                strict.equal(cv.isSelected(3), false);
 
                 strict.equal(1, actualEvents.length);
 
                 let removeEvent = actualEvents[0];
                 strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-                strict.deepEqual(removeEvent.items, [two]);
+                strict.deepEqual(removeEvent.items, [2]);
 
                 strict.equal(1, actualSingleSelectedEvents.length);
 
                 let singleSelectedRemoveEvent = actualSingleSelectedEvents[0];
                 strict.equal(singleSelectedRemoveEvent.type, CollectionViewChangeType.Remove);
-                strict.deepEqual(singleSelectedRemoveEvent.items, [two]);
+                strict.deepEqual(singleSelectedRemoveEvent.items, [2]);
             });
         });
     });
@@ -508,11 +477,8 @@ describe('CollectionView', function () {
 
             // Add one item.
             o.update({ Type: CollectionChangeType.Reset, NewItems: [1, 2, 3] });
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
 
-            strict.deepEqual([...cv], [one, two, three]);
+            strict.deepEqual([...cv], [1, 2, 3]);
 
             strict.equal(actualEvents.length, 1);
             strict.equal(actualEvents[0].type, CollectionChangeType.Reset);
@@ -528,10 +494,8 @@ describe('CollectionView', function () {
 
             // Add one item.
             o.update({ Type: CollectionChangeType.Reset, NewItems: [1, 1, 2] });
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
 
-            strict.deepEqual([...cv], [one, two]);
+            strict.deepEqual([...cv], [1, 2]);
 
             strict.equal(actualEvents.length, 1);
             strict.equal(actualEvents[0].type, CollectionChangeType.Reset);
@@ -548,10 +512,8 @@ describe('CollectionView', function () {
 
             // Add one item.
             o.update({ Type: CollectionChangeType.Reset, NewItems: [1, 1, 2] });
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
 
-            strict.deepEqual([...cv], [one, two]);
+            strict.deepEqual([...cv], [1, 2]);
 
             strict.equal(actualEvents.length, 1);
             strict.equal(actualEvents[0].type, CollectionChangeType.Reset);
@@ -567,17 +529,14 @@ describe('CollectionView', function () {
 
             // Add one item.
             o.add(1);
-            let one = cv.getBoxByKey(1);
 
-            strict.deepEqual([...cv], [one]);
+            strict.deepEqual([...cv], [1]);
             strict.equal(callbackFiredCount, 1);
 
             // Add two items.
             o.add(2, 3);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
 
-            strict.deepEqual([...cv], [one, two, three]);
+            strict.deepEqual([...cv], [1, 2, 3]);
             strict.equal(callbackFiredCount, 2);
         });
 
@@ -592,24 +551,21 @@ describe('CollectionView', function () {
             // Add one item.
             o.update({ Type: CollectionChangeType.Add, NewItems: [1] });
 
-            let one = cv.getBoxByKey(1);
-
-            strict.deepEqual([...cv], [one]);
+            strict.deepEqual([...cv], [1]);
             strict.equal(actualEvents.length, 1);
 
             // Add two items.
             o.update({ Type: CollectionChangeType.Add, NewItems: [1, 1, 2] });
-            let two = cv.getBoxByKey(2);
 
-            strict.deepEqual([...cv], [one, two]);
+            strict.deepEqual([...cv], [1, 2]);
 
             strict.equal(actualEvents.length, 2);
             strict.equal(actualEvents[0].type, CollectionChangeType.Add);
-            strict.deepEqual(actualEvents[0].items, [one]);
+            strict.deepEqual(actualEvents[0].items, [1]);
             strict.equal(actualEvents[1].type, CollectionChangeType.Add);
 
             // Should raise both as it could be an update.
-            strict.deepEqual(actualEvents[1].items, [one, two]);
+            strict.deepEqual(actualEvents[1].items, [1, 2]);
         });
 
         it('when add items and key selector and filter duplicates are not added.', function () {
@@ -624,24 +580,21 @@ describe('CollectionView', function () {
             // Add one item.
             o.update({ Type: CollectionChangeType.Add, NewItems: [1] });
 
-            let one = cv.getBoxByKey(1);
-
-            strict.deepEqual([...cv], [one]);
+            strict.deepEqual([...cv], [1]);
             strict.equal(actualEvents.length, 1);
 
             // Add two items.
             o.update({ Type: CollectionChangeType.Add, NewItems: [1, 1, 2] });
-            let two = cv.getBoxByKey(2);
 
-            strict.deepEqual([...cv], [one, two]);
+            strict.deepEqual([...cv], [1, 2]);
 
             strict.equal(actualEvents.length, 2);
             strict.equal(actualEvents[0].type, CollectionChangeType.Add);
-            strict.deepEqual(actualEvents[0].items, [one]);
+            strict.deepEqual(actualEvents[0].items, [1]);
             strict.equal(actualEvents[1].type, CollectionChangeType.Add);
 
             // Should raise both as it could be an update.
-            strict.deepEqual(actualEvents[1].items, [one, two]);
+            strict.deepEqual(actualEvents[1].items, [1, 2]);
         });
 
         it('when add and collectionView is sorted, reorder is raised.', function () {
@@ -657,10 +610,7 @@ describe('CollectionView', function () {
             o.add(3, 1);
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, three])
+            strict.deepEqual([...cv], [1, 3])
             strict.deepEqual(raisedEvents, [CollectionViewChangeType.Add, CollectionViewChangeType.Reorder]);
         });
 
@@ -696,10 +646,7 @@ describe('CollectionView', function () {
             o.remove(2);
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, three])
+            strict.deepEqual([...cv], [1, 3])
             strict.deepEqual(raisedEvents, [CollectionViewChangeType.Remove]);
         });
 
@@ -716,9 +663,7 @@ describe('CollectionView', function () {
             o.remove(1, 3);
 
             // Assert.
-            let two = cv.getBoxByKey(2);
-
-            strict.deepEqual([...cv], [two]);
+            strict.deepEqual([...cv], [2]);
             strict.equal(callbackFiredCount, 1);
         });
     });
@@ -737,11 +682,7 @@ describe('CollectionView', function () {
             cv.sortBy({ ascendingComparator: (a, b) => a - b });
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, two, three]);
+            strict.deepEqual([...cv], [1, 2, 3]);
             strict.equal(callbackFiredCount, 1);
         });
 
@@ -758,11 +699,7 @@ describe('CollectionView', function () {
             o.add(3, 2, 1);
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, two, three]);
+            strict.deepEqual([...cv], [1, 2, 3]);
             strict.deepEqual(raisedEvents, [CollectionViewChangeType.Add, CollectionViewChangeType.Reorder]);
         });
     });
@@ -775,12 +712,8 @@ describe('CollectionView', function () {
 
             let cv = new CollectionView(o);
 
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
-
             // Assert.
-            strict.deepEqual([...cv], [one, two, three]);
+            strict.deepEqual([...cv], [1, 2, 3]);
         });
 
         it('when no filter added items in values', function () {
@@ -792,11 +725,7 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, two, three]);
+            strict.deepEqual([...cv], [1, 2, 3]);
         });
 
         it('when no filter removed items are removed from values', function () {
@@ -810,10 +739,7 @@ describe('CollectionView', function () {
             o.remove(2);
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, three]);
+            strict.deepEqual([...cv], [1, 3]);
         });
 
         it('when add filter only allowed items in values', function () {
@@ -829,9 +755,7 @@ describe('CollectionView', function () {
             cv.filterBy({ predicate: number => number !== 2 });
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let three = cv.getBoxByKey(3);
-            strict.deepEqual([...cv], [one, three]);
+            strict.deepEqual([...cv], [1, 3]);
 
             strict.equal(raisedEvents.length, 1);
             let event = raisedEvents[0];
@@ -851,15 +775,12 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, three]);
+            strict.deepEqual([...cv], [1, 3]);
 
             strict.equal(raisedEvents.length, 1);
             let event = raisedEvents[0];
             strict.equal(event.type, CollectionViewChangeType.Add);
-            strict.deepEqual(event.items, [one, three]);
+            strict.deepEqual(event.items, [1, 3]);
         });
 
         it('when filter and sorting adding items reorder raised. ', function () {
@@ -877,10 +798,7 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, three]);
+            strict.deepEqual([...cv], [1, 3]);
 
             strict.equal(raisedEvents.length, 2);
             let event = raisedEvents[1];
@@ -903,11 +821,7 @@ describe('CollectionView', function () {
             cv.filterBy();
 
             // Assert.
-            let one = cv.getBoxByKey(1);
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
-
-            strict.deepEqual([...cv], [one, two, three]);
+            strict.deepEqual([...cv], [1, 2, 3]);
 
             strict.equal(raisedEvents.length, 1);
             let event = raisedEvents[0];
@@ -929,9 +843,7 @@ describe('CollectionView', function () {
             cv.filterBy({ predicate: number => number !== 1 });
 
             // Assert.
-            let two = cv.getBoxByKey(2);
-            let three = cv.getBoxByKey(3);
-            strict.deepEqual([...cv], [two, three]);
+            strict.deepEqual([...cv], [2, 3]);
 
             strict.equal(raisedEvents.length, 1);
             let event = raisedEvents[0];
@@ -948,19 +860,16 @@ describe('CollectionView', function () {
             let raisedEvents: CollectionViewChangedData<number>[] = [];
             cv.subscribe(event => raisedEvents.push(event));
 
-            let one = cv.getBoxByKey(1);
-
             // Act.
             o.remove(1);
 
-            // Assert.            
-            let three = cv.getBoxByKey(3);
-            strict.deepEqual([...cv], [three]);
+            // Assert.                        
+            strict.deepEqual([...cv], [3]);
 
             strict.equal(raisedEvents.length, 1);
             let event = raisedEvents[0];
             strict.equal(event.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(event.items, [one]);
+            strict.deepEqual(event.items, [1]);
         });
 
         it('when filter remove filtered items', function () {
@@ -976,10 +885,8 @@ describe('CollectionView', function () {
             // Act.
             o.remove(2);
 
-            // Assert.            
-            let one = cv.getBoxByKey(1);
-            let three = cv.getBoxByKey(3);
-            strict.deepEqual([...cv], [one, three]);
+            // Assert.                        
+            strict.deepEqual([...cv], [1, 3]);
 
             strict.equal(raisedEvents.length, 0);
         });
@@ -997,10 +904,8 @@ describe('CollectionView', function () {
             // Act.
             o.reset(4, 5, 6);
 
-            // Assert.            
-            let four = cv.getBoxByKey(4);
-            let six = cv.getBoxByKey(6);
-            strict.deepEqual([...cv], [four, six]);
+            // Assert.                        
+            strict.deepEqual([...cv], [4, 6]);
 
             strict.equal(raisedEvents.length, 1);
             let event = raisedEvents[0];

@@ -94,7 +94,7 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
     }
 
     private setDataSet() {
-        let selectedDataSet: string = IterableHelper.firstOrDefault(this._dataSets.selected)?.value;
+        let selectedDataSet: string = IterableHelper.firstOrDefault(this._dataSets.selected);
 
         if (selectedDataSet == null) {
             return;

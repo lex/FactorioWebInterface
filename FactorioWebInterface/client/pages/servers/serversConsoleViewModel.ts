@@ -43,7 +43,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private readonly _globalFiles: FileViewModel;
     private readonly _scenarios: ScenariosViewModel;
 
-    private _serverIdsCollectionView: CollectionView<string>;
+    private _serverIdsCollectionView: CollectionView<string, string>;
 
     private _nameText = '';
     private _statusText = '';
@@ -235,7 +235,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
         this._serverIdsCollectionView = new CollectionView(this._serverIdService.serverIds);
 
         this._serverIdsCollectionView.selectedChanged.subscribe(() => {
-            let selectedValue = IterableHelper.firstOrDefault(this._serverIdsCollectionView.selected)?.value
+            let selectedValue = IterableHelper.firstOrDefault(this._serverIdsCollectionView.selected);
             this.setServerId(selectedValue);
         });
 
@@ -435,8 +435,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     }
 
     private updatedSelected(selected: string) {
-        let box = this._serverIdsCollectionView.getBoxByKey(selected);
-        this._serverIdsCollectionView.setSingleSelected(box);
+        this._serverIdsCollectionView.setSingleSelected(selected);
     }
 
     private setServerId(serverId: string) {
@@ -452,7 +451,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private getSelectedSaveFile(): FileMetaData {
         return (IterableHelper.firstOrDefault(this._tempFiles.files.selected) ??
             IterableHelper.firstOrDefault(this._localFiles.files.selected) ??
-            IterableHelper.firstOrDefault(this._globalFiles.files.selected)).value;
+            IterableHelper.firstOrDefault(this._globalFiles.files.selected));
     }
 
     private getScenarioSelectedCount(): number {
@@ -460,14 +459,14 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     }
 
     private getSelectedScenario(): ScenarioMetaData {
-        return IterableHelper.firstOrDefault(this._scenarios.scenarios.selected).value;
+        return IterableHelper.firstOrDefault(this._scenarios.scenarios.selected);
     }
 
     private updateResumeTooltip() {
         if (this._resumeCommand.canExecute()) {
-            let newFile = IterableHelper.max(this._tempFiles.files.values(), f => f.value.LastModifiedTime);
+            let newFile = IterableHelper.max(this._tempFiles.files.values(), f => f.LastModifiedTime);
             let modPackText = this.getModPackText();
-            this.resumeTooltip = `Start server with latest Temp save: ${newFile.value.Name}${modPackText}.`;
+            this.resumeTooltip = `Start server with latest Temp save: ${newFile.Name}${modPackText}.`;
         } else {
             this.resumeTooltip = ServersConsoleViewModel.resumeTooltipDisabledMessage;
         }

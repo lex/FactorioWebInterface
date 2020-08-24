@@ -199,7 +199,7 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             strict.equal(viewModel.deleteSavesCommand.canExecute(), true);
 
@@ -253,7 +253,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(raised, true);
@@ -265,7 +265,7 @@ describe('ServerFileManagementViewModel', function () {
                 expected: [`${tempFile.Directory}/${tempFile.Name}`],
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile.Name));
+                    files.setSingleSelected(tempFile.Name);
                 }
             },
             {
@@ -273,7 +273,7 @@ describe('ServerFileManagementViewModel', function () {
                 expected: [`${tempFile2.Directory}/${tempFile2.Name}`],
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile2.Name));
+                    files.setSingleSelected(tempFile2.Name);
                 }
             },
             {
@@ -281,7 +281,7 @@ describe('ServerFileManagementViewModel', function () {
                 expected: [`${localFile.Directory}/${localFile.Name}`],
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.localFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(localFile.Name));
+                    files.setSingleSelected(localFile.Name);
                 }
             },
             {
@@ -289,7 +289,7 @@ describe('ServerFileManagementViewModel', function () {
                 expected: [`${globalFile.Directory}/${globalFile.Name}`],
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.globalFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(globalFile.Name));
+                    files.setSingleSelected(globalFile.Name);
                 }
             },
             {
@@ -350,14 +350,14 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Act.
             strict.equal(viewModel.moveSavesCommand.canExecute(), true);
@@ -365,7 +365,7 @@ describe('ServerFileManagementViewModel', function () {
 
             // Assert.
             let expectedFiles = [`${tempFile.Directory}/${tempFile.Name}`];
-            hubService.assertMethodCalled('moveFiles', destination.value.path, expectedFiles);
+            hubService.assertMethodCalled('moveFiles', destination.path, expectedFiles);
         });
 
         it('can not execute when no saves are selected', function () {
@@ -402,7 +402,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(raised, true);
@@ -415,7 +415,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: 'public/start',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile.Name));
+                    files.setSingleSelected(tempFile.Name);
                 }
             },
             {
@@ -424,7 +424,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: 'global_saves',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile2.Name));
+                    files.setSingleSelected(tempFile2.Name);
                 }
             },
             {
@@ -433,7 +433,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: '1/local_saves',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.localFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(localFile.Name));
+                    files.setSingleSelected(localFile.Name);
                 }
             },
             {
@@ -442,7 +442,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: 'public/final',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.globalFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(globalFile.Name));
+                    files.setSingleSelected(globalFile.Name);
                 }
             },
             {
@@ -472,8 +472,8 @@ describe('ServerFileManagementViewModel', function () {
                 let mainViewModel: ServersViewModel = services.get(ServersViewModel);
                 let viewModel = mainViewModel.serverFileManagementViewModel;
 
-                let destination = viewModel.destinationsCollectionView.getBoxByKey(testCase.path);
-                viewModel.destinationsCollectionView.setSingleSelected(destination);
+                let destination = viewModel.destinationsCollectionView.getItemByKey(testCase.path);
+                viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
                 let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
 
@@ -510,14 +510,14 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Act.
             strict.equal(viewModel.copySavesCommand.canExecute(), true);
@@ -525,7 +525,7 @@ describe('ServerFileManagementViewModel', function () {
 
             // Assert.            
             let expectedFiles = [`${tempFile.Directory}/${tempFile.Name}`];
-            hubService.assertMethodCalled('copyFiles', destination.value.path, expectedFiles);
+            hubService.assertMethodCalled('copyFiles', destination.path, expectedFiles);
         });
 
         it('can not execute when no saves are selected', function () {
@@ -562,7 +562,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(raised, true);
@@ -575,7 +575,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: 'public/start',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile.Name));
+                    files.setSingleSelected(tempFile.Name);
                 }
             },
             {
@@ -584,7 +584,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: 'global_saves',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile2.Name));
+                    files.setSingleSelected(tempFile2.Name);
                 }
             },
             {
@@ -593,7 +593,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: '1/local_saves',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.localFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(localFile.Name));
+                    files.setSingleSelected(localFile.Name);
                 }
             },
             {
@@ -602,7 +602,7 @@ describe('ServerFileManagementViewModel', function () {
                 path: 'public/final',
                 arrange: (vm: ServersViewModel) => {
                     let files = vm.globalFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(globalFile.Name));
+                    files.setSingleSelected(globalFile.Name);
                 }
             },
             {
@@ -632,8 +632,8 @@ describe('ServerFileManagementViewModel', function () {
                 let mainViewModel: ServersViewModel = services.get(ServersViewModel);
                 let viewModel = mainViewModel.serverFileManagementViewModel;
 
-                let destination = viewModel.destinationsCollectionView.getBoxByKey(testCase.path);
-                viewModel.destinationsCollectionView.setSingleSelected(destination);
+                let destination = viewModel.destinationsCollectionView.getItemByKey(testCase.path);
+                viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
                 let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
 
@@ -674,8 +674,8 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            let selectedFile = tempFiles.getBoxByKey(tempFile.Name);
-            tempFiles.setSingleSelected(selectedFile);
+            let selectedFile = tempFiles.getItemByKey(tempFile.Name);
+            tempFiles.setSingleSelected(selectedFile.Name);
 
             viewModel.newFileName = 'newName';
 
@@ -684,7 +684,7 @@ describe('ServerFileManagementViewModel', function () {
             viewModel.renameSaveCommand.execute();
 
             // Assert.                                    
-            hubService.assertMethodCalled('renameFile', selectedFile.value.Directory, selectedFile.value.Name, viewModel.newFileName);
+            hubService.assertMethodCalled('renameFile', selectedFile.Directory, selectedFile.Name, viewModel.newFileName);
         });
 
         it('can not rename when no save selected', function () {
@@ -741,8 +741,8 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            let selectedFile = tempFiles.getBoxByKey(tempFile.Name);
-            tempFiles.setSingleSelected(selectedFile);
+            let selectedFile = tempFiles.getItemByKey(tempFile.Name);
+            tempFiles.setSingleSelected(selectedFile.Name);
 
             viewModel.newFileName = '';
 
@@ -770,7 +770,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(raised, true);
@@ -809,15 +809,14 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            let selectedFileBox = tempFiles.getBoxByKey(tempFile.Name);
-            tempFiles.setSingleSelected(selectedFileBox);
+            let selectedFile = tempFiles.getItemByKey(tempFile.Name);
+            tempFiles.setSingleSelected(selectedFile.Name);
 
             // Act.
             strict.equal(viewModel.deflateSaveCommand.canExecute(), true);
             viewModel.deflateSaveCommand.execute();
 
-            // Assert.         
-            let selectedFile = selectedFileBox.value;
+            // Assert.                     
             hubService.assertMethodCalled('deflateSave', selectedFile.Directory, selectedFile.Name, viewModel.newFileName);
         });
 
@@ -832,8 +831,8 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            let selectedFileBox = tempFiles.getBoxByKey(tempFile.Name);
-            tempFiles.setSingleSelected(selectedFileBox);
+            let selectedFile = tempFiles.getItemByKey(tempFile.Name);
+            tempFiles.setSingleSelected(selectedFile.Name);
 
             viewModel.newFileName = 'newName';
 
@@ -841,8 +840,7 @@ describe('ServerFileManagementViewModel', function () {
             strict.equal(viewModel.deflateSaveCommand.canExecute(), true);
             viewModel.deflateSaveCommand.execute();
 
-            // Assert.         
-            let selectedFile = selectedFileBox.value;
+            // Assert.                     
             hubService.assertMethodCalled('deflateSave', selectedFile.Directory, selectedFile.Name, viewModel.newFileName);
         });
 
@@ -857,8 +855,8 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            let selectedFileBox = tempFiles.getBoxByKey(tempFile.Name);
-            tempFiles.setSingleSelected(selectedFileBox);
+            let selectedFile = tempFiles.getItemByKey(tempFile.Name);
+            tempFiles.setSingleSelected(selectedFile.Name);
 
             // Execute command to start deflating.
             viewModel.deflateSaveCommand.execute();
@@ -940,7 +938,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(raised, true);
@@ -957,8 +955,7 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            let selectedFileBox = tempFiles.getBoxByKey(tempFile.Name);
-            tempFiles.setSingleSelected(selectedFileBox);
+            tempFiles.setSingleSelected(tempFile.Name);
 
             let calledCount = 0;
             viewModel.deflateSaveCommand.canExecuteChanged.subscribe(() => calledCount++);
@@ -1112,7 +1109,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.deleteSavesTooltip, 'Delete the save Temp Saves/file.zip.');
@@ -1153,7 +1150,7 @@ describe('ServerFileManagementViewModel', function () {
             viewModel.propertyChanged('deleteSavesTooltip', () => calledCount++);
 
             // Act select.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.deleteSavesTooltip, 'Delete the save Temp Saves/file.zip.');
@@ -1202,8 +1199,8 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
@@ -1211,7 +1208,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.moveSavesTooltip, 'Move the save Temp Saves/file.zip to Local 1.');
@@ -1224,8 +1221,8 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile, tempFile2] });
@@ -1246,8 +1243,8 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
@@ -1258,7 +1255,7 @@ describe('ServerFileManagementViewModel', function () {
             viewModel.propertyChanged('moveSavesTooltip', () => calledCount++);
 
             // Act select.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.moveSavesTooltip, 'Move the save Temp Saves/file.zip to Local 1.');
@@ -1307,8 +1304,8 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
@@ -1316,7 +1313,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.copySavesTooltip, 'Copy the save Temp Saves/file.zip to Local 1.');
@@ -1329,8 +1326,8 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile, tempFile2] });
@@ -1351,8 +1348,8 @@ describe('ServerFileManagementViewModel', function () {
             let mainViewModel: ServersViewModel = services.get(ServersViewModel);
             let viewModel = mainViewModel.serverFileManagementViewModel;
 
-            let destination = viewModel.destinationsCollectionView.getBoxByKey('1/local_saves');
-            viewModel.destinationsCollectionView.setSingleSelected(destination);
+            let destination = viewModel.destinationsCollectionView.getItemByKey('1/local_saves');
+            viewModel.destinationsCollectionView.setSingleSelected(destination.path);
 
             let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
@@ -1363,7 +1360,7 @@ describe('ServerFileManagementViewModel', function () {
             viewModel.propertyChanged('copySavesTooltip', () => calledCount++);
 
             // Act select.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.copySavesTooltip, 'Copy the save Temp Saves/file.zip to Local 1.');
@@ -1438,7 +1435,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.renameSavesTooltip, ServerFileManagementViewModel.renameSaveTooltipDisableMessage);
@@ -1458,7 +1455,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.renameSavesTooltip, 'Rename Temp Saves/file.zip to newName.zip.');
@@ -1481,7 +1478,7 @@ describe('ServerFileManagementViewModel', function () {
             viewModel.propertyChanged('renameSavesTooltip', () => calledCount++);
 
             // Act select.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.renameSavesTooltip, 'Rename Temp Saves/file.zip to newName.zip.');
@@ -1507,7 +1504,7 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             let calledCount = 0;
             viewModel.propertyChanged('renameSavesTooltip', () => calledCount++);
@@ -1583,7 +1580,7 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Act.
             viewModel.deflateSaveCommand.execute();
@@ -1607,7 +1604,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.deflateSavesTooltip, 'Deflate Temp Saves/file.zip to file-deflated.zip.');
@@ -1627,7 +1624,7 @@ describe('ServerFileManagementViewModel', function () {
             let tempFiles = mainViewModel.tempFileViewModel.files;
 
             // Act.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.deflateSavesTooltip, 'Deflate Temp Saves/file.zip to newName.zip.');
@@ -1649,7 +1646,7 @@ describe('ServerFileManagementViewModel', function () {
             viewModel.propertyChanged('deflateSavesTooltip', () => calledCount++);
 
             // Act select.
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Assert.
             strict.equal(viewModel.deflateSavesTooltip, 'Deflate Temp Saves/file.zip to file-deflated.zip.');
@@ -1675,7 +1672,7 @@ describe('ServerFileManagementViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             let calledCount = 0;
             viewModel.propertyChanged('deflateSavesTooltip', () => calledCount++);

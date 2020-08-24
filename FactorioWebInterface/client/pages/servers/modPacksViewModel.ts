@@ -8,13 +8,13 @@ export class ModPacksViewModel extends ObservableObject {
     private _sourceModPacks: ObservableCollection<ModPackMetaData>;
 
     private _header: string;
-    private _modPacks: CollectionView<ModPackMetaData>;
+    private _modPacks: CollectionView<ModPackMetaData, string>;
 
-    get header() {
+    get header(): string {
         return this._header;
     }
 
-    get modPacks() {
+    get modPacks(): CollectionView<ModPackMetaData, string> {
         return this._modPacks;
     }
 
@@ -32,7 +32,7 @@ export class ModPacksViewModel extends ObservableObject {
         this._modPacks = new CollectionView(modPacks);
         this._modPacks.sortBy({ property: 'LastModifiedTime', ascending: false });
         this._modPacks.newSingleSelectedChanged.subscribe(() => {
-            let name = IterableHelper.firstOrDefault(this._modPacks.selected)?.value.Name ?? '';
+            let name = IterableHelper.firstOrDefault(this._modPacks.selected)?.Name ?? '';
             serverFileService.setSelectedModPack(name);
         });
 
@@ -42,14 +42,7 @@ export class ModPacksViewModel extends ObservableObject {
     }
 
     private setSelectModPackByName(modPack: string) {
-        let box = this._modPacks.getBoxByKey(modPack);
-
-        if (box == null) {
-            this._modPacks.unSelectAll();
-            return;
-        }
-
-        this._modPacks.setSingleSelected(box);
+        this._modPacks.setSingleSelected(modPack);
     }
 
     private updateHeader() {
@@ -57,7 +50,7 @@ export class ModPacksViewModel extends ObservableObject {
         if (selectedCount === 0) {
             this._header = `Mod Packs (${this.count})`;
         } else {
-            let selected = IterableHelper.firstOrDefault(this._modPacks.selected).value.Name;
+            let selected = IterableHelper.firstOrDefault(this._modPacks.selected).Name;
             this._header = `Mod Packs (${this.count}) - Selected: ${selected}`;
         }
 
