@@ -2,7 +2,6 @@
 import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocator";
 import { ServerFileService } from "./serverFileService";
 import { ModPacksViewModel } from "./modPacksViewModel";
-import { IterableHelper } from "../../utils/iterableHelper";
 import { strict } from "assert";
 import { ServersViewModel } from "./serversViewModel";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
@@ -34,7 +33,7 @@ describe('ModPacksViewModel', function () {
 
         // Assert.
         strict.equal(modPacksViewModel.count, 0);
-        strict.deepEqual([...IterableHelper.map(modPacksViewModel.modPacks, f => f.value)], []);
+        strict.deepEqual([...modPacksViewModel.modPacks], []);
         strict.equal(modPacksViewModel.header, 'Mod Packs (0)');
     });
 
@@ -50,7 +49,7 @@ describe('ModPacksViewModel', function () {
         let modPacksViewModel = mainViewModel.modPacksViewModel;
 
         // Assert.
-        strict.deepEqual([...IterableHelper.map(modPacksViewModel.modPacks, f => f.value)], modPacks);
+        strict.deepEqual([...modPacksViewModel.modPacks], modPacks);
         strict.equal(modPacksViewModel.header, 'Mod Packs (2)');
         strict.equal(modPacksViewModel.count, 2);
     });
@@ -64,10 +63,9 @@ describe('ModPacksViewModel', function () {
         hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
 
         let modPacksViewModel = mainViewModel.modPacksViewModel;
-        let box = modPacksViewModel.modPacks.getBoxByKey(modPack.Name);
 
         // Act.
-        modPacksViewModel.modPacks.setSingleSelected(box);
+        modPacksViewModel.modPacks.setSingleSelected(modPack.Name);
 
         // Assert.
         strict.equal(modPacksViewModel.header, 'Mod Packs (2) - Selected: modpack');
@@ -86,7 +84,7 @@ describe('ModPacksViewModel', function () {
         hubService._onSelectedModPack.raise('modpack');
 
         // Assert.
-        let selected = [...IterableHelper.map(modPacksViewModel.modPacks.selected, m => m.value)];
+        let selected = [...modPacksViewModel.modPacks.selected];
         strict.deepEqual(selected, [modPack]);
     });
 
@@ -99,8 +97,7 @@ describe('ModPacksViewModel', function () {
         hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
 
         let modPacksViewModel = mainViewModel.modPacksViewModel;
-        let box = modPacksViewModel.modPacks.getBoxByKey(modPack.Name);
-        modPacksViewModel.modPacks.setSingleSelected(box);
+        modPacksViewModel.modPacks.setSingleSelected(modPack.Name);
 
         strict.equal(modPacksViewModel.modPacks.selectedCount, 1);
 
@@ -108,7 +105,7 @@ describe('ModPacksViewModel', function () {
         hubService._onSelectedModPack.raise('missing');
 
         // Assert.
-        let selected = [...IterableHelper.map(modPacksViewModel.modPacks.selected, m => m.value)];
+        let selected = [...modPacksViewModel.modPacks.selected];
         strict.deepEqual(selected, []);
     });
 
@@ -121,10 +118,9 @@ describe('ModPacksViewModel', function () {
         hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
 
         let modPacksViewModel = mainViewModel.modPacksViewModel;
-        let box = modPacksViewModel.modPacks.getBoxByKey(modPack.Name);
 
         // Act.        
-        modPacksViewModel.modPacks.setSingleSelected(box);
+        modPacksViewModel.modPacks.setSingleSelected(modPack.Name);
 
         // Assert.        
         hubService.assertMethodCalled('setSelectedModPack', modPack.Name);

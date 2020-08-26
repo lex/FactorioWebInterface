@@ -73,7 +73,7 @@ describe('BansViewModel', function () {
         hub._onSendBans.raise({ Type: CollectionChangeType.Reset, NewItems: bans })
 
         // Assert.
-        let actual = IterableHelper.map(viewModel.bans.values(), a => a.value.Username);
+        let actual = IterableHelper.map(viewModel.bans, a => a.Username);
         // should be sorted by date.
         let expected = ['abc', 'def', 'ghi'];
         strict.deepEqual([...actual], expected);
@@ -221,7 +221,7 @@ describe('BansViewModel', function () {
 
         hub._onSendBans.raise({ Type: CollectionChangeType.Reset, NewItems: bans })
 
-        let ban = [...viewModel.bans.values()][1].value;
+        let ban = [...viewModel.bans][1];
 
         // Act.
         viewModel.updateFormFromBan(ban);
@@ -242,7 +242,7 @@ describe('BansViewModel', function () {
 
         hub._onSendBans.raise({ Type: CollectionChangeType.Reset, NewItems: bans })
 
-        let ban = [...viewModel.bans.values()][1].value;
+        let ban = [...viewModel.bans][1];
 
         // Act.
         viewModel.removeBanCommand.execute(ban);

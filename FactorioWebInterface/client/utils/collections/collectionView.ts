@@ -300,6 +300,10 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
 
     setFirstSingleSelected(): void {
         let first = this._array[0];
+        if (first === undefined) {
+            return;
+        }
+
         let key = this._keySelector(first);
         if (key !== undefined) {
             this.setSingleSelected(key);
@@ -423,10 +427,10 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
                 selected.add(key);
             }
         } else {
-            let map = this._map;;
+            let map = this._map;
             for (const key of oldSelectedKeys) {
                 let item = map.get(key);
-                if (filter(item)) {
+                if (item !== undefined && filter(item)) {
                     selected.add(key);
                 }
             }

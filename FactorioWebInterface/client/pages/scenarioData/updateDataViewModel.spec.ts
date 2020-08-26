@@ -62,8 +62,7 @@ describe('UpdateDataViewModel', function () {
         let hub: ScenarioDataHubServiceMockBase = services.get(ScenarioDataHubService);
         hub._onSendDataSets.raise({ Type: CollectionChangeType.Reset, NewItems: dataSets });
 
-        let dataSetBox = dataSetViewModel.dataSets.getBoxByKey(dataSets[1]);
-        dataSetViewModel.dataSets.setSingleSelected(dataSetBox);
+        dataSetViewModel.dataSets.setSingleSelected(dataSets[1]);
 
         hub._onSendEntries.raise({ dataSet: dataSets[1], data: { Type: CollectionChangeType.Reset, NewItems: entries } });
 

@@ -29,7 +29,7 @@ customElements.define('a-tr', TableRow, { extends: 'tr' });
 
 export class Table<T = any, K = any> extends HTMLTableElement {
     private _source: CollectionView<T, K>;
-    private _columns: IColumnTemplate[];
+    private _columns: IColumnTemplate<T>[];
     private _rowClickHandler: (this: HTMLTableRowElement) => void;
     private _rowClickObservable: Observable<rowClickEventArgs<T>>;
 
@@ -145,7 +145,7 @@ export class Table<T = any, K = any> extends HTMLTableElement {
         }
 
         let cellBuilder = template.cell || this.textCellBuilder;
-        cell.append(cellBuilder(propertyData, this))
+        cell.append(cellBuilder(propertyData, entry, this));
     }
 
     private buildRow(item: T): TableRow {
@@ -363,7 +363,7 @@ customElements.define('a-table', Table, { extends: 'table' });
 export interface IColumnTemplate<T = any> {
     property?: string;
     header?: (headerCell?: HTMLTableHeaderCellElement, table?: Table<T>) => Node | string;
-    cell?: (value: any, item: T, table?: Table<T>) => Node | string;
+    cell?: (value: any, item?: T, table?: Table<T>) => Node | string;
     comparator?: (a: any, b: any) => number;
     sortId?: any;
     sortingDisabled?: boolean;

@@ -5,7 +5,6 @@ import { ServersHubService } from "./serversHubService";
 import { FileMetaData } from "./serversTypes";
 import { CollectionChangeType } from "../../ts/utils";
 import { strict } from "assert";
-import { IterableHelper } from "../../utils/iterableHelper";
 import { FileViewModel } from "./fileViewModel";
 import { ServerFileService } from "./serverFileService";
 import { ServerIdService } from "./serverIdService";
@@ -67,14 +66,14 @@ describe('FileViewModel', function () {
         // Arrange.
         let services = new ServersPageTestServiceLocator();
         let serverFileService: ServerFileService = services.get(ServerFileService);
-        let serverIdService: ServerIdService = services.get(ServerIdService);        
+        let serverIdService: ServerIdService = services.get(ServerIdService);
 
         // Act.
         let fileViewModel = new FileViewModel('Temp Saves', serverFileService.tempSaveFiles, serverIdService.currentServerId);
 
         // Assert.
         strict.equal(fileViewModel.count, 0);
-        strict.deepEqual([...IterableHelper.map(fileViewModel.files, f => f.value)], []);
+        strict.deepEqual([...fileViewModel.files], []);
         strict.equal(fileViewModel.header, 'Temp Saves (0)');
         strict.equal(fileViewModel.serverId, serverIdService.currentServerId);
     });
@@ -95,9 +94,9 @@ describe('FileViewModel', function () {
         let globalFileViewModel = mainViewModel.globalFileViewModel;
 
         // Assert.
-        strict.deepEqual([...IterableHelper.map(tempFileViewModel.files, f => f.value)], tempFiles);
-        strict.deepEqual([...IterableHelper.map(localFileViewModel.files, f => f.value)], localFiles);
-        strict.deepEqual([...IterableHelper.map(globalFileViewModel.files, f => f.value)], globalFiles);
+        strict.deepEqual([...tempFileViewModel.files], tempFiles);
+        strict.deepEqual([...localFileViewModel.files], localFiles);
+        strict.deepEqual([...globalFileViewModel.files], globalFiles);
 
         strict.equal(tempFileViewModel.header, 'Temp Saves (2)');
         strict.equal(localFileViewModel.header, 'Local Saves (2)');
@@ -117,10 +116,9 @@ describe('FileViewModel', function () {
         hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: tempFiles });
 
         let tempFileViewModel = mainViewModel.tempFileViewModel;
-        let box = tempFileViewModel.files.getBoxByKey(tempFile.Name);
 
         // Act.
-        tempFileViewModel.files.setSingleSelected(box);
+        tempFileViewModel.files.setSingleSelected(tempFile.Name);
 
         // Assert.
         strict.equal(tempFileViewModel.header, 'Temp Saves (2) - Selected: file.zip');

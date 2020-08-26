@@ -49,11 +49,8 @@ describe('ManageVersionViewModel', function () {
         let viewModel = new ManageVersionViewModel(manageVersionService, serverConsoleService.status, errorService);
 
         // Assert.
-        let actualCachedVersions = IterableHelper.map(viewModel.cachedVersions, x => x.value);
-        let actualDownloadableVersions = IterableHelper.map(viewModel.downloadableVersions, x => x.value);
-
-        strict.deepEqual([...actualCachedVersions], ['0.2.0', '0.0.1', '0.0.0']);
-        strict.deepEqual([...actualDownloadableVersions], ['0.3.0', '0.2.0', '0.0.1', 'latest']);
+        strict.deepEqual([...viewModel.cachedVersions], ['0.2.0', '0.0.1', '0.0.0']);
+        strict.deepEqual([...viewModel.downloadableVersions], ['0.3.0', '0.2.0', '0.0.1', 'latest']);
         strict.equal(viewModel.isFetchingVersions.value, true);
         strict.equal(viewModel.updateTooltip, null);
     });
@@ -128,17 +125,15 @@ describe('ManageVersionViewModel', function () {
         // Act.
         let viewModel = new ManageVersionViewModel(manageVersionService, serverConsoleService.status, errorService);
 
-        // Assert.
-        let versions = IterableHelper.map(viewModel.downloadableVersions, x => x.value);
-        strict.deepEqual([...versions], [ManageVersionService.latestVersion]);
+        // Assert.        
+        strict.deepEqual([...viewModel.downloadableVersions], [ManageVersionService.latestVersion]);
 
         // With other versions
         let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
         hubService._onDownloadableVersions.raise(downloadabledVersions);
 
-        // Assert.
-        versions = IterableHelper.map(viewModel.downloadableVersions, x => x.value);
-        strict.equal(IterableHelper.any(versions, x => x === ManageVersionService.latestVersion), true);
+        // Assert.        
+        strict.equal(IterableHelper.any(viewModel.downloadableVersions, x => x === ManageVersionService.latestVersion), true);
     });
 
     describe('download and update command', function () {
@@ -162,7 +157,7 @@ describe('ManageVersionViewModel', function () {
             await PromiseHelper.delay(0);
 
             // Assert.
-            let selected = [...IterableHelper.map(viewModel.downloadableVersions.selected, x => x.value)][0];
+            let selected = [...viewModel.downloadableVersions.selected][0];
             hubService.assertMethodCalled('update', selected);
 
             strict.equal(closedCalled, true);
