@@ -88,6 +88,23 @@ describe('ModPacksViewModel', function () {
         strict.deepEqual(selected, [modPack]);
     });
 
+    it('selected modpack updates when modPacks are reset', function () {
+        // Arrange.
+        let services = new ServersPageTestServiceLocator();
+        let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+        let modPacksViewModel = mainViewModel.modPacksViewModel;
+
+        let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+        hubService._onSelectedModPack.raise('modpack');
+
+        // Act.
+        hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+
+        // Assert.
+        let selected = [...modPacksViewModel.modPacks.selected];
+        strict.deepEqual(selected, [modPack]);
+    });
+
     it('selected modpack unselected when onSelectedModPack raised with missing modpack', function () {
         // Arrange.
         let services = new ServersPageTestServiceLocator();

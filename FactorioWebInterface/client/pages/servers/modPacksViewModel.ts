@@ -3,6 +3,7 @@ import { ObservableObject } from "../../utils/observableObject";
 import { ServerFileService } from "./serverFileService";
 import { ObservableCollection, CollectionView } from "../../utils/collections/module";
 import { IterableHelper } from "../../utils/iterableHelper";
+import { CollectionChangeType } from "../../ts/utils";
 
 export class ModPacksViewModel extends ObservableObject {
     private _sourceModPacks: ObservableCollection<ModPackMetaData>;
@@ -37,6 +38,11 @@ export class ModPacksViewModel extends ObservableObject {
         });
 
         selectedModPack.bind(modPack => this.setSelectModPackByName(modPack));
+        modPacks.subscribe(event => {
+            if (event.Type === CollectionChangeType.Reset) {
+                this.setSelectModPackByName(selectedModPack.value);
+            }
+        });
 
         this.modPacks.bind(() => this.updateHeader());
     }
