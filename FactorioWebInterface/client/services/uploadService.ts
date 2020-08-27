@@ -73,16 +73,13 @@ export class UploadService {
                 try {
                     parsed = JSON.parse(text)
                 }
-                catch{
-                    result = { Success: false, Errors: [{ Key: 'UploadError', Description: text }] };
+                catch {
                 }
 
-                if (parsed != undefined) {
-                    if (parsed.Success) {
-                        result = { Success: true };
-                    } else {
-                        result = { Success: false, Errors: parsed.Errors ?? [{ Key: 'UploadError', Description: text }] };
-                    }
+                if (parsed?.Success) {
+                    result = { Success: true };
+                } else {
+                    result = { Success: false, Errors: parsed?.Errors ?? [{ Key: 'UploadError', Description: text }] };
                 }
 
                 callback({ type: FileUploadEventType.end, result: result });
