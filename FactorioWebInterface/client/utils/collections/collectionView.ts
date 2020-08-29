@@ -96,6 +96,10 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
         return new CollectionViewNewSingleSelectedObservable(this);
     }
 
+    get filterSpecifications(): ObservableProperty<FilterSpecifications<T>[]> {
+        return this._filterSpecifications;
+    }
+
     get isSorted(): boolean {
         return this._comparator != null;
     }
@@ -152,7 +156,7 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
         return this.isSelected(this._keySelector(item));
     }
 
-    setSingleSelected(key: K | undefined) {
+    setSingleSelected(key?: K) {
         if (key === undefined) {
             this.unSelectAll();
             return;
@@ -190,14 +194,12 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
 
         selected.clear();
 
-        let added = false;
-        if (addItem != null && this.isAllowedByFilter(addItem)) {
-            added = true;
+        if (addItem !== undefined) {
             selected.add(key);
             this.raise({ type: CollectionViewChangeType.Add, items: [...removedItems, addItem] });
         }
 
-        if ((added || removedItems.length > 0) && this.isSortedBySelection()) {
+        if ((addItem !== undefined || removedItems.length > 0) && this.isSortedBySelection()) {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
@@ -206,7 +208,7 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
             this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removedItems });
         }
 
-        if (added) {
+        if (addItem !== undefined) {
             this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [addItem] });
         }
     }
@@ -219,7 +221,7 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
         let item = this._map.get(key);
 
         if (selected) {
-            if (item === undefined || this._selected.has(key) || !this.isAllowedByFilter(item)) {
+            if (item === undefined || this._selected.has(key)) {
                 return;
             }
 
@@ -266,20 +268,10 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
         let selected = this._selected;
         let change: T[] = [];
 
-        let filter = this._predicate;
-        if (filter) {
-            for (let [key, item] of this._map) {
-                if (!selected.has(key) && filter(item)) {
-                    selected.add(key);
-                    change.push(item);
-                }
-            }
-        } else {
-            for (let [key, item] of this._map) {
-                if (!selected.has(key)) {
-                    selected.add(key);
-                    change.push(item);
-                }
+        for (let [key, item] of this._map) {
+            if (!selected.has(key)) {
+                selected.add(key);
+                change.push(item);
             }
         }
 
@@ -411,7 +403,7 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
 
     filterBy(filterSpecifications?: FilterSpecifications<T> | FilterSpecifications<T>[]): void {
         if (!Array.isArray(filterSpecifications)) {
-            filterSpecifications = [filterSpecifications];
+            filterSpecifications = filterSpecifications == null ? [] : [filterSpecifications];
         }
 
         let filter = CollectionView.buildPredicate(filterSpecifications);
@@ -438,11 +430,12 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
 
         this.sort();
         this.raise({ type: CollectionViewChangeType.Reset });
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Reset });
         this._filterSpecifications.raise(filterSpecifications);
     }
 
     private static buildPredicate<T>(filterSpecifications: FilterSpecifications<T>[]): (item: T) => boolean {
-        if (filterSpecifications.length === 0 || filterSpecifications[0] == null) {
+        if (filterSpecifications.length === 0) {
             return undefined;
         }
 
@@ -677,16 +670,6 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
         }
 
         return false;
-    }
-
-    private isAllowedByFilter(item: T): boolean {
-        let filter = this._predicate;
-
-        if (filter == null) {
-            return true;
-        }
-
-        return filter(item);
     }
 }
 
