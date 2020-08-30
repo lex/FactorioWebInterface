@@ -96,7 +96,7 @@ export class Table<K = any, T = any> extends HTMLTableElement {
                 continue;
             }
 
-            cell.setAttribute('sort', sortSpec.ascending ? 'ascending' : 'descending');
+            cell.setAttribute('sort', (sortSpec.ascending ?? true) ? 'ascending' : 'descending');
         }
     }
 
