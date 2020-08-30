@@ -6,9 +6,9 @@ import { CollectionChangedData, CollectionChangeType } from "../../ts/utils";
 import { ArrayHelper } from "../arrayHelper";
 
 export interface SortSpecification<T> {
-    // Comparator that sorts T in ascending order, if not set, ascendingBoxComparator or property should be set.
+    // Comparator that sorts T in ascending order, if not set property should be set.
     ascendingComparator?: (left: T, right: T) => number;
-    // If ascendingComparator and ascendingBoxComparator is not set, the property that should be used to sort T.
+    // If ascendingComparator is not set, the property that should be used to sort T.
     property?: string;
     // An optional Id used to identify what is being sorted, use if property can't be used.
     sortId?: any;
