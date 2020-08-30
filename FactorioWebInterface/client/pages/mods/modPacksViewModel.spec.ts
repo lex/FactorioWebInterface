@@ -10,7 +10,6 @@ import { ModPackMetaData } from "../servers/serversTypes";
 import { ModsHubService } from "./modsHubService";
 import { ModsHubServiceMockBase } from "../../testUtils/pages/mods/modsHubServiceMockBase";
 import { CollectionChangeType } from "../../ts/utils";
-import { IterableHelper } from "../../utils/iterableHelper";
 
 const modPack: ModPackMetaData = {
     Name: 'name',
@@ -97,10 +96,9 @@ describe('ModPacksViewModel', function () {
         // Act.
         hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: [modPack, modPack2] })
 
-        // Assert.
-        let actual = IterableHelper.map(viewModel.modPacks.values(), m => m.value);
+        // Assert.        
         // mod packs should be sorted by LastModifiedTime descending.
         let expected = [modPack2, modPack];
-        strict.deepEqual([...actual], expected);
+        strict.deepEqual([...viewModel.modPacks], expected);
     });
 });

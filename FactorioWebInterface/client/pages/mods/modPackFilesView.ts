@@ -12,7 +12,7 @@ import { Button, iconButton } from "../../components/button";
 import { Label } from "../../components/label";
 import { Select } from "../../components/select";
 
-class ModPackFileNameColumn extends ColumnTemplate<ModPackFileMetaData>{
+class ModPackFileNameColumn extends ColumnTemplate<string, ModPackFileMetaData>{
     constructor(modPackFilesViewModel: ModPackFilesViewModel) {
         super();
 

@@ -1,17 +1,14 @@
 ﻿import { ObservableCollection, ObservableKeyCollection } from "./observableCollection";
 import { Observable, IObservable } from "../observable";
-import { Box } from "../box";
 import { ObservableProperty, IObservableProperty } from "../observableProperty";
 import { IterableHelper } from "../iterableHelper";
 import { CollectionChangedData, CollectionChangeType } from "../../ts/utils";
 import { ArrayHelper } from "../arrayHelper";
 
 export interface SortSpecification<T> {
-    // Comparator that sorts T in ascending order, if not set, ascendingBoxComparator or property should be set.
+    // Comparator that sorts T in ascending order, if not set property should be set.
     ascendingComparator?: (left: T, right: T) => number;
-    // Comparator that sorts Box<T> in ascending order, if not set, ascendingComparator or property should be set.
-    ascendingBoxComparator?: (left: Box<T>, right: Box<T>) => number;
-    // If ascendingComparator and ascendingBoxComparator is not set, the property that should be used to sort T.
+    // If ascendingComparator is not set, the property that should be used to sort T.
     property?: string;
     // An optional Id used to identify what is being sorted, use if property can't be used.
     sortId?: any;
@@ -21,7 +18,6 @@ export interface SortSpecification<T> {
 
 export interface FilterSpecifications<T> {
     predicate?: (value: T) => boolean;
-    boxPredicate?: (value: Box<T>) => boolean;
 }
 
 export enum CollectionViewChangeType {
@@ -33,24 +29,24 @@ export enum CollectionViewChangeType {
 
 export interface CollectionViewChangedData<T> {
     type: CollectionViewChangeType;
-    items?: Box<T>[];
+    items?: T[];
 }
 
-export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> implements Iterable<Box<T>> {
+export class CollectionView<K, T> extends Observable<CollectionViewChangedData<T>> implements Iterable<T> {
     static readonly selectedSortId = {};
 
     private _source: ObservableCollection<T>;
-    private _keySelector: (value: T) => any;
+    private _keySelector: (value: T) => K;
 
-    private _map: Map<any, Box<T>>;
-    private _array: Box<T>[];
-    private _selected: Set<Box<T>>;
+    private _map: Map<K, T>;
+    private _array: T[];
+    private _selected: Set<K>;
 
     private _sortSpecifications: ObservableProperty<SortSpecification<T>[]> = new ObservableProperty([]);
-    private _comparator: (left: Box<T>, right: Box<T>) => number;
+    private _comparator: (left: T, right: T) => number;
 
     private _filterSpecifications: ObservableProperty<FilterSpecifications<T>[]> = new ObservableProperty([]);
-    private _predicate: (value: Box<T>) => boolean;
+    private _predicate: (value: T) => boolean;
 
     private _selectedChanged: Observable<CollectionViewChangedData<T>>;
 
@@ -58,29 +54,38 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return CollectionView.selectedSortId;
     }
 
-    [Symbol.iterator](): IterableIterator<Box<T>> {
+    [Symbol.iterator](): IterableIterator<T> {
         return this._array.values();
     }
 
-    values(): IterableIterator<Box<T>> {
+    values(): IterableIterator<T> {
         return this._array.values();
     }
 
-    get selected(): IterableIterator<Box<T>> {
+    get keySelector(): (value: T) => K {
+        return this._keySelector;
+    }
+
+    get selectedKeys(): IterableIterator<K> {
         return this._selected.values();
+    }
+
+    get selected(): IterableIterator<T> {
+        let map = this._map;
+        return IterableHelper.map(this._selected.values(), x => map.get(x));
     }
 
     get selectedCount(): number {
         return this._selected.size
     }
 
-    get viewableSelected(): IterableIterator<Box<T>> {
-        let iterator = this._selected.values();
-        if (this._predicate == null) {
-            return iterator;
+    get viewableSelected(): IterableIterator<T> {
+        let filter = this._predicate
+        if (filter == null) {
+            return this.selected
         }
 
-        return IterableHelper.where(iterator, this._predicate);
+        return IterableHelper.where(this.selected, filter);
     }
 
     get selectedChanged(): IObservable<CollectionViewChangedData<T>> {
@@ -89,6 +94,10 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
     get newSingleSelectedChanged(): IObservable<CollectionViewChangedData<T>> {
         return new CollectionViewNewSingleSelectedObservable(this);
+    }
+
+    get filterSpecifications(): ObservableProperty<FilterSpecifications<T>[]> {
+        return this._filterSpecifications;
     }
 
     get isSorted(): boolean {
@@ -103,21 +112,23 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return this._sortSpecifications
     }
 
-    constructor(source: ObservableCollection<T>, keySelector?: (value: T) => any) {
+    constructor(source: ObservableCollection<T>, keySelector?: (value: T) => K) {
         super();
         this._source = source;
         this._selected = new Set();
         this._selectedChanged = new Observable();
 
         this._keySelector = keySelector;
-        if (this._keySelector === undefined && this._source instanceof ObservableKeyCollection) {
+        if (this._keySelector == null && this._source instanceof ObservableKeyCollection) {
             this._keySelector = this._source.keySelector;
         }
 
-        this._array = [];
-        if (this._keySelector !== undefined) {
-            this._map = new Map();
+        if (this._keySelector == null) {
+            throw 'keySelector must be set or source must provide a keySelector';
         }
+
+        this._array = [];
+        this._map = new Map();
 
         this.doReset();
         this.sort();
@@ -133,31 +144,20 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return subscription;
     }
 
-    getBoxByKey(key: any): Box<T> {
-        return this._map?.get(key);
+    getItemByKey(key: K): T {
+        return this._map.get(key);
     }
 
-    getBoxByItem(item: T): Box<T> {
-        if (this._keySelector === undefined) {
-            let array = this._array;
-            for (let i = 0; i < array.length; i++) {
-                let box = array[i];
-                if (box.value === item) {
-                    return box;
-                }
-            }
-        } else {
-            let key = this._keySelector(item);
-            return this._map.get(key);
-        }
+    isSelected(key: K): boolean {
+        return this._selected.has(key);
     }
 
-    isSelected(box: Box<T>): boolean {
-        return this._selected.has(box);
+    isSelectedItem(item: T): boolean {
+        return this.isSelected(this._keySelector(item));
     }
 
-    setSingleSelected(item: Box<T> | undefined) {
-        if (item == null) {
+    setSingleSelected(key?: K) {
+        if (key === undefined) {
             this.unSelectAll();
             return;
         }
@@ -165,61 +165,79 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         let selected = this._selected;
         let oldSelected = selected.values();
 
-        if (selected.has(item)) {
+        if (selected.has(key)) {
             if (selected.size === 1) {
                 return;
             }
 
-            let removed = [...IterableHelper.where(oldSelected, x => x !== item)];
+            let removedKeys = IterableHelper.where(oldSelected, x => x !== key);
+            let removedItems = [...IterableHelper.map(removedKeys, x => this._map.get(x))];
 
             selected.clear();
-            selected.add(item);
-            this.raise({ type: CollectionViewChangeType.Add, items: removed });
+            selected.add(key);
+            this.raise({ type: CollectionViewChangeType.Add, items: removedItems });
 
             if (this.isSortedBySelection()) {
                 this.sort();
                 this.raise({ type: CollectionViewChangeType.Reorder });
             }
 
-            if (removed.length > 0) {
-                this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+            if (removedItems.length > 0) {
+                this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removedItems });
             }
-
-            this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
 
             return;
         }
 
-        let removed = [...oldSelected]
-        selected.clear();
-        selected.add(item);
-        this.raise({ type: CollectionViewChangeType.Add, items: [...removed, item] });
+        let removedItems = [...IterableHelper.map(oldSelected, x => this._map.get(x))];
+        let addItem = this._map.get(key);
 
-        if (this.isSortedBySelection()) {
+        let changedItems = [...removedItems];
+        if (addItem !== undefined) {
+            changedItems.push(addItem);
+        }
+
+        selected.clear();
+        if (addItem !== undefined) {
+            selected.add(key);
+        }
+
+        if (changedItems.length > 0) {
+            this.raise({ type: CollectionViewChangeType.Add, items: changedItems });
+        }
+
+        if (changedItems.length > 0 && this.isSortedBySelection()) {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
 
-        if (removed.length > 0) {
-            this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removed });
+        if (removedItems.length > 0) {
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: removedItems });
         }
 
-        this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [item] });
+        if (addItem !== undefined) {
+            this._selectedChanged.raise({ type: CollectionViewChangeType.Add, items: [addItem] });
+        }
     }
 
-    setSelected(item: Box<T>, selected: boolean) {
+    setSingleSelectedItem(item: T) {
+        return this.setSingleSelected(this._keySelector(item));
+    }
+
+    setSelected(key: K, selected: boolean) {
+        let item = this._map.get(key);
+
         if (selected) {
-            if (this._selected.has(item)) {
+            if (item === undefined || this._selected.has(key)) {
                 return;
             }
-            this._selected.add(item);
+
+            this._selected.add(key);
         } else {
-            if (!this._selected.delete(item)) {
+            if (!this._selected.delete(key)) {
                 return;
             }
         }
-
-        // todo - check filter.
 
         this.raise({ type: CollectionViewChangeType.Add, items: [item] });
 
@@ -231,32 +249,36 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         this._selectedChanged.raise({ type: selected ? CollectionViewChangeType.Add : CollectionViewChangeType.Remove, items: [item] });
     }
 
-    unSelectAll() {
-        let selected = [...this._selected.values()];
+    setSelectedItem(item: T, selected: boolean) {
+        return this.setSelected(this._keySelector(item), selected);
+    }
 
-        if (selected.length === 0) {
+    unSelectAll() {
+        let selectedItems = [...this.selected];
+
+        if (selectedItems.length === 0) {
             return;
         }
 
         this._selected.clear();
-        this.raise({ type: CollectionViewChangeType.Add, items: selected });
+        this.raise({ type: CollectionViewChangeType.Add, items: selectedItems });
 
         if (this.isSortedBySelection()) {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
 
-        this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selected });
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: selectedItems });
     }
 
     selectAll() {
         let selected = this._selected;
-        let change: Box<T>[] = [];
+        let change: T[] = [];
 
-        for (let box of this._array) {
-            if (!selected.has(box)) {
-                selected.add(box);
-                change.push(box);
+        for (let [key, item] of this._map) {
+            if (!selected.has(key)) {
+                selected.add(key);
+                change.push(item);
             }
         }
 
@@ -277,8 +299,13 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
     setFirstSingleSelected(): void {
         let first = this._array[0];
-        if (first != null) {
-            this.setSingleSelected(first);
+        if (first === undefined) {
+            return;
+        }
+
+        let key = this._keySelector(first);
+        if (key !== undefined) {
+            this.setSingleSelected(key);
         }
     }
 
@@ -293,18 +320,18 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
             return;
         }
 
-        let comp: (left: Box<T>, right: Box<T>) => number;
+        let comp: (left: T, right: T) => number;
 
         if (sortSpecifications.length === 1) {
             comp = this.buildComparator(sortSpecifications[0]);
         } else {
-            let comps: ((left: Box<T>, right: Box<T>) => number)[] = [];
+            let comps: ((left: T, right: T) => number)[] = [];
             for (let i = 0; i < sortSpecifications.length; i++) {
                 let sortSpecification = sortSpecifications[i];
                 comps.push(this.buildComparator(sortSpecification));
             }
 
-            comp = ((left: Box<T>, right: Box<T>): number => {
+            comp = ((left: T, right: T): number => {
                 let sign = 0;
                 for (let c = 0; c < comps.length; c++) {
                     sign = comps[c](left, right);
@@ -323,12 +350,13 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         this.raise({ type: CollectionViewChangeType.Reorder });
     }
 
-    selectedComparatorBuilder(): (left: Box<T>, right: Box<T>) => number {
+    selectedComparatorBuilder(): (left: T, right: T) => number {
         let selected = this._selected;
+        let keySelector = this._keySelector;
 
-        return ((left: Box<T>, right: Box<T>): number => {
-            let leftSelected = selected.has(left);
-            let rightSelected = selected.has(right);
+        return ((left: T, right: T): number => {
+            let leftSelected = selected.has(keySelector(left));
+            let rightSelected = selected.has(keySelector(right));
 
             if (leftSelected === rightSelected) {
                 return 0;
@@ -340,23 +368,16 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         });
     }
 
-    private buildComparator(sortSpecification: SortSpecification<T>): (left: Box<T>, right: Box<T>) => number {
-        let comp: (left: Box<T>, right: Box<T>) => number;
+    private buildComparator(sortSpecification: SortSpecification<T>): (left: T, right: T) => number {
+        let comp: (left: T, right: T) => number;
 
         if (sortSpecification.ascendingComparator != null) {
-            let valueComp = sortSpecification.ascendingComparator;
-
-            comp = ((left: Box<T>, right: Box<T>) => {
-                return valueComp(left.value, right.value);
-            });
-        }
-        else if (sortSpecification.ascendingBoxComparator != null) {
-            comp = sortSpecification.ascendingBoxComparator;
+            comp = sortSpecification.ascendingComparator;
         }
         else if (sortSpecification.property) {
             let property = sortSpecification.property;
 
-            let valueComp = ((left, right) => {
+            comp = ((left, right) => {
                 left = left[property];
                 right = right[property];
                 if (left === right) {
@@ -367,12 +388,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                     return -1;
                 }
             });
-
-            comp = ((left: Box<T>, right: Box<T>) => {
-                return valueComp(left.value, right.value);
-            });
         } else {
-            let valueComp = ((left, right) => {
+            comp = ((left, right) => {
                 if (left === right) {
                     return 0;
                 } else if (left > right) {
@@ -380,10 +397,6 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
                 } else {
                     return -1;
                 }
-            });
-
-            comp = ((left: Box<T>, right: Box<T>) => {
-                return valueComp(left.value, right.value);
             });
         }
 
@@ -397,36 +410,47 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
     filterBy(filterSpecifications?: FilterSpecifications<T> | FilterSpecifications<T>[]): void {
         if (!Array.isArray(filterSpecifications)) {
-            filterSpecifications = [filterSpecifications];
+            filterSpecifications = filterSpecifications == null ? [] : [filterSpecifications];
         }
 
-        this._predicate = CollectionView.buildPredicate(filterSpecifications);
+        let filter = CollectionView.buildPredicate(filterSpecifications);
+        this._predicate = filter;
+
+        let selected = this._selected;
+        let oldSelectedKeys = [...selected];
 
         this.doReset();
+
+        if (filter == null) {
+            for (const key of oldSelectedKeys) {
+                selected.add(key);
+            }
+        } else {
+            let map = this._map;
+            for (const key of oldSelectedKeys) {
+                let item = map.get(key);
+                if (item !== undefined && filter(item)) {
+                    selected.add(key);
+                }
+            }
+        }
+
         this.sort();
         this.raise({ type: CollectionViewChangeType.Reset });
+        this._selectedChanged.raise({ type: CollectionViewChangeType.Reset });
         this._filterSpecifications.raise(filterSpecifications);
     }
 
-    private static buildPredicate<T>(filterSpecifications: FilterSpecifications<T>[]): (value: Box<T>) => boolean {
-        if (filterSpecifications.length === 0 || filterSpecifications[0] == null) {
+    private static buildPredicate<T>(filterSpecifications: FilterSpecifications<T>[]): (item: T) => boolean {
+        if (filterSpecifications.length === 0) {
             return undefined;
         }
 
         let predicates = [...IterableHelper.map(filterSpecifications.values(), f => {
-            if (f.boxPredicate) {
-                return f.boxPredicate;
-            }
-
-            let p = f.predicate;
-            if (p) {
-                return (item: Box<T>) => p(item.value);
-            }
-
-            return () => true;
+            return f.predicate ?? (() => true);
         })];
 
-        return ((item: Box<T>) => {
+        return ((item: T) => {
             for (let i = 0; i < predicates.length; i++) {
                 if (!predicates[i](item)) {
                     return false;
@@ -492,6 +516,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
     private doReset(items?: T[]): boolean {
         let array = this._array;
         array.length = 0;
+        let map = this._map;
+        map.clear();
 
         let iterator = (items == null)
             ? this._source.values()
@@ -499,63 +525,22 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
 
         let filter = this._predicate;
         if (filter != null) {
-            if (this._keySelector === undefined) {
-                for (let item of iterator) {
-                    let box = new Box(item);
-                    if (filter(box)) {
-                        array.push(box);
-                    }
+            for (let item of iterator) {
+                if (!filter(item)) {
+                    continue;
                 }
-            } else {
-                let map = this._map;
-                map.clear();
 
-                for (let item of iterator) {
-                    let key = this._keySelector(item);
-                    let box = map.get(key);
-                    let newBox = false;
-
-                    if (box === undefined) {
-                        box = new Box(item);
-                        newBox = true;
-                    }
-
-                    if (!filter(box)) {
-                        continue;
-                    }
-
-                    if (newBox) {
-                        map.set(key, box);
-                        array.push(box);
-                    } else {
-                        box.value = item;
-                    }
-                }
+                let key = this._keySelector(item);
+                map.set(key, item);
             }
         } else {
-            if (this._keySelector === undefined) {
-                for (let item of iterator) {
-                    let box = new Box(item);
-                    array.push(box);
-                }
-            } else {
-                let map = this._map;
-                map.clear();
-
-                for (let item of iterator) {
-                    let key = this._keySelector(item);
-
-                    let box = map.get(key);
-                    if (box === undefined) {
-                        box = new Box(item);
-                        map.set(key, box);
-                        array.push(box);
-                    } else {
-                        box.value = item;
-                    }
-                }
+            for (let item of iterator) {
+                let key = this._keySelector(item);
+                map.set(key, item);
             }
         }
+
+        array.push(...map.values());
 
         let selected = this._selected;
         if (selected.size > 0) {
@@ -566,8 +551,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         return false;
     }
 
-    private doAdd(items: T[]): [Box<T>[], Box<T>[]] {
-        let removed: Box<T>[] = [];
+    private doAdd(items: T[]): [T[], T[]] {
+        let removed: T[] = [];
 
         if (items == null) {
             return [[], removed];
@@ -577,46 +562,22 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         let keySelector = this._keySelector;
         let filter = this._predicate;
 
-        if (keySelector === undefined) {
-            let added: Box<T>[] = [];
-            if (filter == null) {
-                for (let item of items) {
-                    let box = new Box(item);
-
-                    array.push(box);
-                    added.push(box);
-                }
-            } else {
-                for (let item of items) {
-                    let box = new Box(item);
-
-                    if (filter(box)) {
-                        array.push(box);
-                        added.push(box);
-                    }
-                }
-            }
-
-            return [added, removed];
-        }
-
         let map = this._map;
-        let added = new Map<any, Box<T>>();
+        let added = new Map<K, T>();
 
         if (filter == null) {
             for (let item of items) {
                 let key = keySelector(item);
 
-                let box = map.get(key);
-                if (box == null) {
-                    box = new Box(item);
-                    map.set(key, box);
-                    array.push(box);
+                let oldItem = map.get(key);
+                if (oldItem !== undefined) {
+                    ArrayHelper.replace(array, oldItem, item);
                 } else {
-                    box.value = item;
+                    array.push(item);
                 }
 
-                added.set(key, box);
+                map.set(key, item);
+                added.set(key, item);
             }
 
             return [[...added.values()], removed];
@@ -625,81 +586,59 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
         for (let item of items) {
             let key = keySelector(item);
 
-            let box = map.get(key);
-            if (box == null) {
-                box = new Box(item);
-
-                if (filter(box)) {
-                    map.set(key, box);
-                    array.push(box);
-                    added.set(key, box);
-                }
-            } else {
-                box.value = item;
-
-                if (filter(box)) {
-                    added.set(key, box);
+            let oldItem = map.get(key);
+            if (oldItem !== undefined) {
+                if (filter(item)) {
+                    ArrayHelper.replace(array, oldItem, item);
+                    map.set(key, item);
+                    added.set(key, item);
                 } else {
                     map.delete(key);
-                    ArrayHelper.remove(array, box);
-                    removed.push(box);
+                    ArrayHelper.remove(array, oldItem);
+                    removed.push(item);
                 }
+
+                continue;
+            }
+
+            if (filter(item)) {
+                map.set(key, item);
+                array.push(item);
+                added.set(key, item);
             }
         }
 
         return [[...added.values()], removed];
     }
 
-    private doRemove(items: T[]): { removed: Box<T>[], selectedRemoved: Box<T>[] } {
-        let removed: Box<T>[] = [];
+    private doRemove(items: T[]): { removed: T[], selectedRemoved: T[] } {
+        let removed: T[] = [];
         let array = this._array;
         let keySelector = this._keySelector;
-        let selectedRemoved: Box<T>[] = [];
+        let selectedRemoved: T[] = [];
+        let map = this._map;
 
-        if (keySelector === undefined) {
-            for (let i = 0; i < items.length; i++) {
-                let item = items[i];
+        for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            let key = keySelector(item);
 
-                for (let i = 0; i < array.length; i++) {
-                    let box = array[i];
-                    if (box.value === item) {
-                        array.splice(i, 1);
-                        removed.push(box);
-
-                        if (this._selected.delete(box)) {
-                            selectedRemoved.push(box);
-                        }
-
-                        break;
-                    }
-                }
+            let oldItem = map.get(key);
+            if (oldItem === undefined || !map.delete(key)) {
+                continue;
             }
-        }
-        else {
-            let map = this._map;
 
-            for (let i = 0; i < items.length; i++) {
-                let item = items[i];
-                let key = keySelector(item);
+            ArrayHelper.remove(array, oldItem);
+            removed.push(oldItem);
 
-                let box = map.get(key);
-                if (box) {
-                    if (map.delete(key)) {
-                        ArrayHelper.remove(array, box);
-                        removed.push(box);
-                    }
-
-                    if (this._selected.delete(box)) {
-                        selectedRemoved.push(box);
-                    }
-                }
+            if (this._selected.delete(key)) {
+                selectedRemoved.push(oldItem);
             }
         }
 
         return { removed, selectedRemoved };
     }
 
-    private doAddAndRemovedSortAndRaise(added: Box<T>[], removed: Box<T>[]): void {
+    private doAddAndRemovedSortAndRaise(added: T[], removed: T[]): void {
         if (removed.length === 0 && added.length === 0) {
             return;
         }
@@ -741,8 +680,8 @@ export class CollectionView<T> extends Observable<CollectionViewChangedData<T>> 
     }
 }
 
-class CollectionViewNewSingleSelectedObservable<T> implements IObservable<CollectionViewChangedData<T>>{
-    constructor(private readonly collectionView: CollectionView<T>) { }
+class CollectionViewNewSingleSelectedObservable<K, T> implements IObservable<CollectionViewChangedData<T>>{
+    constructor(private readonly collectionView: CollectionView<K, T>) { }
 
     subscribe(callback: (event: CollectionViewChangedData<T>) => void, subscriptions?: (() => void)[]): () => void {
         let filterdCallback = (event: CollectionViewChangedData<T>) => {

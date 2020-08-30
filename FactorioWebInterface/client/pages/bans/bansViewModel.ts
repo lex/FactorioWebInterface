@@ -12,7 +12,7 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
     private _bansService: BansService
     private _errorService: ErrorService;
 
-    private _bans: CollectionView<Ban>;
+    private _bans: CollectionView<string, Ban>;
 
     private _formFields = {
         username: '',
@@ -30,7 +30,7 @@ export class BansViewModel extends ObservableObject implements IObservableErrors
     private _addBanCommand: DelegateCommand;
     private _removeBanCommand: DelegateCommand<Ban>;
 
-    get bans(): CollectionView<Ban> {
+    get bans(): CollectionView<string, Ban> {
         return this._bans;
     }
 

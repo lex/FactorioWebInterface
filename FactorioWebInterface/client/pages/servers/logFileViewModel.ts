@@ -7,14 +7,14 @@ export class LogFileViewModel extends ObservableObject {
     private _tableName: string;
 
     private _header: string;
-    private _files: CollectionView<FileMetaData>;
+    private _files: CollectionView<string, FileMetaData>;
     private _handler: string;
 
     get header() {
         return this._header;
     }
 
-    get files() {
+    get files(): CollectionView<string, FileMetaData> {
         return this._files;
     }
 

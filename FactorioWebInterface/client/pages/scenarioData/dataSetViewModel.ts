@@ -16,7 +16,7 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
 
     private _header: string;
     private _placeholder: string;
-    private _dataSets: CollectionView<string>;
+    private _dataSets: CollectionView<string, string>;
 
     private _refreshDataSetsCommand: DelegateCommand;
 
@@ -32,7 +32,7 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
         return this._scenarioDataService.fetchingDataSets;
     }
 
-    get dataSets(): CollectionView<string> {
+    get dataSets(): CollectionView<string, string> {
         return this._dataSets;
     }
 
@@ -94,7 +94,7 @@ export class DataSetViewModel extends ObservableObject<DataSetViewModel> {
     }
 
     private setDataSet() {
-        let selectedDataSet: string = IterableHelper.firstOrDefault(this._dataSets.selected)?.value;
+        let selectedDataSet: string = IterableHelper.firstOrDefault(this._dataSets.selected);
 
         if (selectedDataSet == null) {
             return;

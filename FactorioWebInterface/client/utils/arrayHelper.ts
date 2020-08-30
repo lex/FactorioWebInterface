@@ -1,10 +1,23 @@
 ﻿export class ArrayHelper {
     static remove<T>(array: T[], item: T): boolean {
-        let index = array.indexOf(item);
+        const index = array.indexOf(item);
 
         if (index >= 0) {
             array.splice(index, 1);
             return true;
+        }
+
+        return false;
+    }
+
+    static replace<T>(array: T[], oldItem: T, newItem: T): boolean {
+        for (let i = 0; i < array.length; i++) {
+            const item = array[i];
+
+            if (item === oldItem) {
+                array[i] = newItem
+                return true;
+            }
         }
 
         return false;

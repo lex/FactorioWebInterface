@@ -10,15 +10,13 @@ import { ComparatorHelper } from "../../utils/comparatorHelper";
 import { Label } from "../../components/label";
 import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
-class FileNameColumn extends ColumnTemplate<FileMetaData>{
+class FileNameColumn extends ColumnTemplate<string, FileMetaData>{
     constructor(serverId: IObservableProperty<string>) {
         super();
 
         this.property = 'Name';
 
-        this.cell = (name: string, box: Box<FileMetaData>) => {
-            let file = box.value;
-
+        this.cell = (name: string, file: FileMetaData) => {
             let link = document.createElement('a') as HTMLAnchorElement;
             link.innerText = file.Name;
             link.href = `/admin/servers?handler=file&serverId=${encodeURIComponent(serverId.value)}&directory=${encodeURIComponent(file.Directory)}&name=${encodeURIComponent(file.Name)}`;
@@ -53,7 +51,7 @@ export class FileView extends VirtualComponent {
             .addClasses('is-4', 'header');
         header.style.wordBreak = 'break-all';
 
-        let collapse = new Collapse(header, table);        
+        let collapse = new Collapse(header, table);
         collapse.open = true;
         collapse.classList.add('section');
         this._root = collapse;

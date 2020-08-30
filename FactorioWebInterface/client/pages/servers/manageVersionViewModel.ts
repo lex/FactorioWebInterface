@@ -18,8 +18,8 @@ export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
     private _status: IObservableProperty<FactorioServerStatus>;
     private _errorService: ErrorService;
 
-    private _downloadableVersions: CollectionView<string>;
-    private _cachedVersions: CollectionView<string>;
+    private _downloadableVersions: CollectionView<string, string>;
+    private _cachedVersions: CollectionView<string, string>;
     private _isFetchingVersions = new ObservableProperty<boolean>(true);
 
     private _updateTooltip = null;
@@ -30,11 +30,11 @@ export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
 
     private _subscriptions: (() => void)[] = [];
 
-    get downloadableVersions(): CollectionView<string> {
+    get downloadableVersions(): CollectionView<string, string> {
         return this._downloadableVersions;
     }
 
-    get cachedVersions(): CollectionView<string> {
+    get cachedVersions(): CollectionView<string, string> {
         return this._cachedVersions;
     }
 
@@ -73,11 +73,11 @@ export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
         this._status = status;
         this._errorService = errorService;
 
-        this._downloadableVersions = new CollectionView<string>(manageVersionService.downloadableVersions);
+        this._downloadableVersions = new CollectionView<string, string>(manageVersionService.downloadableVersions);
         this._downloadableVersions.sortBy({ property: null, ascendingComparator: ManageVersionViewModel.downloadableVersionsComparator, ascending: false });
         this.updatedSelected();
 
-        this._cachedVersions = new CollectionView<string>(manageVersionService.cachedVersions);
+        this._cachedVersions = new CollectionView<string, string>(manageVersionService.cachedVersions);
         this._cachedVersions.sortBy({ property: null, ascendingComparator: ComparatorHelper.caseInsensitiveStringComparator, ascending: false });
 
         manageVersionService.downloadableVersions.subscribe(event => {
@@ -90,7 +90,7 @@ export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
 
         this._downloadAndUpdateCommand = new DelegateCommand(
             () => {
-                let selected = IterableHelper.firstOrDefault(this._downloadableVersions.selected)?.value;
+                let selected = IterableHelper.firstOrDefault(this._downloadableVersions.selected);
                 this.update(selected);
             },
             () => {

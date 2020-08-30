@@ -9,15 +9,13 @@ import { LogFileViewModel } from "./logFileViewModel";
 import { Label } from "../../components/label";
 import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
-class LogFileNameColumn extends ColumnTemplate<FileMetaData>{
+class LogFileNameColumn extends ColumnTemplate<string, FileMetaData>{
     constructor(handler: string) {
         super();
 
         this.property = 'Name';
 
-        this.cell = (name: string, box: Box<FileMetaData>) => {
-            let file = box.value;
-
+        this.cell = (name: string, file: FileMetaData) => {
             let link = document.createElement('a') as HTMLAnchorElement;
             link.innerText = file.Name;
             link.href = `/admin/servers?handler=${encodeURIComponent(handler)}&directory=${encodeURIComponent(file.Directory)}&name=${encodeURIComponent(file.Name)}`;

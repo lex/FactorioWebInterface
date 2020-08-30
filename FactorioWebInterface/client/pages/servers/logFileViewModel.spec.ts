@@ -2,7 +2,6 @@
 import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocator";
 import { ServerFileService } from "./serverFileService";
 import { LogFileViewModel } from "./logFileViewModel";
-import { IterableHelper } from "../../utils/iterableHelper";
 import { strict } from "assert";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
 import { ServersViewModel } from "./serversViewModel";
@@ -55,7 +54,7 @@ describe('LogFileViewModel', function () {
 
         // Assert.
         strict.equal(logFileViewModel.count, 0);
-        strict.deepEqual([...IterableHelper.map(logFileViewModel.files, f => f.value)], []);
+        strict.deepEqual([...logFileViewModel.files], []);
         strict.equal(logFileViewModel.header, 'Logs (0)');
         strict.equal(logFileViewModel.handler, 'logFile');
     });
@@ -74,8 +73,8 @@ describe('LogFileViewModel', function () {
         let chatLogFileViewModel = mainViewModel.chatLogFileViewModel;
 
         // Assert.
-        strict.deepEqual([...IterableHelper.map(logFileViewModel.files, f => f.value)], logFiles);
-        strict.deepEqual([...IterableHelper.map(chatLogFileViewModel.files, f => f.value)], chatLogFiles);
+        strict.deepEqual([...logFileViewModel.files], logFiles);
+        strict.deepEqual([...chatLogFileViewModel.files], chatLogFiles);
 
 
         strict.equal(logFileViewModel.header, 'Logs (2)');

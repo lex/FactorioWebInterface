@@ -9,14 +9,14 @@ export class FileViewModel extends ObservableObject {
     private _tableName: string;
 
     private _header: string;
-    private _files: CollectionView<FileMetaData>;
+    private _files: CollectionView<string, FileMetaData>;
     private _serverId: IObservableProperty<string>;
 
     get header() {
         return this._header;
     }
 
-    get files() {
+    get files(): CollectionView<string, FileMetaData> {
         return this._files;
     }
 
@@ -46,7 +46,7 @@ export class FileViewModel extends ObservableObject {
         if (selectedCount === 0) {
             this._header = `${this._tableName} (${this.count})`;
         } else if (selectedCount === 1) {
-            let selected = IterableHelper.firstOrDefault(this._files.selected).value.Name;
+            let selected = IterableHelper.firstOrDefault(this._files.selected).Name;
             this._header = `${this._tableName} (${this.count}) - Selected: ${selected}`;
         } else {
             this._header = `${this._tableName} (${this.count}) - Selected: ${selectedCount} saves`;

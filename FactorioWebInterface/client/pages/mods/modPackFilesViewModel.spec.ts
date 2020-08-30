@@ -4,7 +4,6 @@ import { ModsHubService } from "./modsHubService";
 import { ModsHubServiceMockBase } from "../../testUtils/pages/mods/modsHubServiceMockBase";
 import { ModPackMetaData, ModPackFileMetaData } from "../servers/serversTypes";
 import { CollectionChangeType, Result } from "../../ts/utils";
-import { IterableHelper } from "../../utils/iterableHelper";
 import { strict } from "assert";
 import { ModPackFilesViewModel } from "./modPackFilesViewModel";
 import { FileSelectionService } from "../../services/fileSelectionservice";
@@ -134,11 +133,10 @@ describe('ModPackFilesViewModel', function () {
         // Act.        
         hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
 
-        // Assert.
-        let actual = IterableHelper.map(viewModel.modPacks.values(), m => m.value);
+        // Assert.        
         // mod packs should be sorted by LastModifiedTime descending.     
         let expected = [modPack3, modPack2, modPack];
-        strict.deepEqual([...actual], expected);
+        strict.deepEqual([...viewModel.modPacks], expected);
     });
 
     it('updates onSendModPackFiles', function () {
@@ -157,11 +155,10 @@ describe('ModPackFilesViewModel', function () {
         // Act.        
         hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: [modFile2, modFile] } });
 
-        // Assert.
-        let actual = IterableHelper.map(viewModel.files.values(), m => m.value);
+        // Assert.        
         // mod pack files should be sorted by name ascending. 
         let expected = [modFile, modFile2];
-        strict.deepEqual([...actual], expected);
+        strict.deepEqual([...viewModel.files], expected);
     });
 
     it('does not update onSendModPackFiles for not selected mod pack', function () {
@@ -176,9 +173,8 @@ describe('ModPackFilesViewModel', function () {
         // Act.        
         hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: [modFile2, modFile] } });
 
-        // Assert.
-        let actual = IterableHelper.map(viewModel.files.values(), m => m.value);
-        strict.deepEqual([...actual], []);
+        // Assert.        
+        strict.deepEqual([...viewModel.files], []);
     });
 
     it('when mod pack selected mod files requested', function () {
@@ -593,8 +589,7 @@ describe('ModPackFilesViewModel', function () {
 
             hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
 
-            let modFile2Box = viewModel.files.getBoxByKey(modFile2.Name);
-            viewModel.files.setSelected(modFile2Box, true);
+            viewModel.files.setSelected(modFile2.Name, true);
 
             // Act.
             strict.equal(true, viewModel.deleteFilesCommand.canExecute());
@@ -687,11 +682,8 @@ describe('ModPackFilesViewModel', function () {
 
             hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
 
-            let modFile2Box = viewModel.files.getBoxByKey(modFile2.Name);
-            viewModel.files.setSelected(modFile2Box, true);
-
-            let modPack2Box = viewModel.modPacks.getBoxByKey(modPack2.Name);
-            viewModel.modPacks.setSingleSelected(modPack2Box);
+            viewModel.files.setSelected(modFile2.Name, true);
+            viewModel.modPacks.setSingleSelected(modPack2.Name);
 
             // Act.
             strict.equal(true, viewModel.moveFilesCommand.canExecute());
@@ -717,8 +709,7 @@ describe('ModPackFilesViewModel', function () {
             hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
 
             viewModel.files.selectAll();
-            let modPack3Box = viewModel.modPacks.getBoxByKey(modPack3.Name);
-            viewModel.modPacks.setSingleSelected(modPack3Box);
+            viewModel.modPacks.setSingleSelected(modPack3.Name);
 
             // Act.
             strict.equal(true, viewModel.moveFilesCommand.canExecute());
@@ -811,11 +802,8 @@ describe('ModPackFilesViewModel', function () {
 
             hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
 
-            let modFile2Box = viewModel.files.getBoxByKey(modFile2.Name);
-            viewModel.files.setSelected(modFile2Box, true);
-
-            let modPack2Box = viewModel.modPacks.getBoxByKey(modPack2.Name);
-            viewModel.modPacks.setSingleSelected(modPack2Box);
+            viewModel.files.setSelected(modFile2.Name, true);
+            viewModel.modPacks.setSingleSelected(modPack2.Name);
 
             // Act.
             strict.equal(true, viewModel.copyFilesCommand.canExecute());
@@ -841,8 +829,7 @@ describe('ModPackFilesViewModel', function () {
             hub._onSendModPackFiles.raise({ modPack: modPack.Name, data: { Type: CollectionChangeType.Reset, NewItems: modFiles } });
 
             viewModel.files.selectAll();
-            let modPack3Box = viewModel.modPacks.getBoxByKey(modPack3.Name);
-            viewModel.modPacks.setSingleSelected(modPack3Box);
+            viewModel.modPacks.setSingleSelected(modPack3.Name);
 
             // Act.
             strict.equal(true, viewModel.copyFilesCommand.canExecute());
@@ -936,7 +923,7 @@ describe('ModPackFilesViewModel', function () {
             modPackViewModel.setSelectModPack(modPack);
 
             // Assert.
-            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack2]);
+            strict.deepEqual([...viewModel.modPacks], [modPack3, modPack2]);
         });
 
         it('changes items when selected mod pack changes', function () {
@@ -951,13 +938,13 @@ describe('ModPackFilesViewModel', function () {
 
             let modPackViewModel = mainViewModel.modPacksViewModel;
             modPackViewModel.setSelectModPack(modPack);
-            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack2]);
+            strict.deepEqual([...viewModel.modPacks], [modPack3, modPack2]);
 
             // Act.
             modPackViewModel.setSelectModPack(modPack2);
 
             // Assert.
-            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack]);
+            strict.deepEqual([...viewModel.modPacks], [modPack3, modPack]);
         });
 
         it('sorted same as mod packs', function () {
@@ -971,7 +958,7 @@ describe('ModPackFilesViewModel', function () {
             hub._onSendModPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
 
             // Should start sorted by LastModifiedTime descending.
-            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack3, modPack2, modPack]);
+            strict.deepEqual([...viewModel.modPacks], [modPack3, modPack2, modPack]);
 
             let sortSpec = { property: 'Name', ascending: true };
             let modPackViewModel = mainViewModel.modPacksViewModel;
@@ -981,7 +968,7 @@ describe('ModPackFilesViewModel', function () {
 
             // Assert.
             strict.deepEqual(viewModel.modPacks.sortSpecifications, [sortSpec]);
-            strict.deepEqual([...IterableHelper.map(viewModel.modPacks, x => x.value)], [modPack, modPack2, modPack3]);
+            strict.deepEqual([...viewModel.modPacks], [modPack, modPack2, modPack3]);
         });
     });
 });

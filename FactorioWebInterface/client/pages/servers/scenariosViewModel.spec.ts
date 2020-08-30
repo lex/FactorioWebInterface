@@ -3,7 +3,6 @@ import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocato
 import { ScenariosViewModel } from "./scenariosViewModel";
 import { ServerFileService } from "./serverFileService";
 import { strict } from "assert";
-import { IterableHelper } from "../../utils/iterableHelper";
 import { ServersViewModel } from "./serversViewModel";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
 import { ServersHubService } from "./serversHubService";
@@ -34,7 +33,7 @@ describe('ScenariosViewModel', function () {
 
         // Assert.
         strict.equal(scenariosViewModel.count, 0);
-        strict.deepEqual([...IterableHelper.map(scenariosViewModel.scenarios, f => f.value)], []);
+        strict.deepEqual([...scenariosViewModel.scenarios], []);
         strict.equal(scenariosViewModel.header, 'Scenarios (0)');
     });
 
@@ -50,7 +49,7 @@ describe('ScenariosViewModel', function () {
         let scenariosViewModel = mainViewModel.scenariosViewModel;
 
         // Assert.
-        strict.deepEqual([...IterableHelper.map(scenariosViewModel.scenarios, f => f.value)], scenarios);
+        strict.deepEqual([...scenariosViewModel.scenarios], scenarios);
         strict.equal(scenariosViewModel.header, 'Scenarios (2)');
         strict.equal(scenariosViewModel.count, 2);
     });
@@ -64,10 +63,9 @@ describe('ScenariosViewModel', function () {
         hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: scenarios });
 
         let scenariosViewModel = mainViewModel.scenariosViewModel;
-        let box = scenariosViewModel.scenarios.getBoxByKey(scenario.Name);
 
         // Act.
-        scenariosViewModel.scenarios.setSingleSelected(box);
+        scenariosViewModel.scenarios.setSingleSelected(scenario.Name);
 
         // Assert.
         strict.equal(scenariosViewModel.header, 'Scenarios (2) - Selected: scenario');

@@ -104,7 +104,7 @@ export class BansView extends VirtualComponent {
                 .setCommandParameter(ban);
         }
 
-        let table = new Table<Ban>(this._bansViewModel.bans, [
+        let table = new Table<string, Ban>(this._bansViewModel.bans, [
             new TextColumn('Username'),
             new TextColumn('Reason'),
             new TextColumn('Admin'),

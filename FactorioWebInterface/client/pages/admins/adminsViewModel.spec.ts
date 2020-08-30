@@ -8,7 +8,6 @@ import { CollectionChangeType } from "../../ts/utils";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { ValidationResult } from "../../utils/validation/module";
 import { assertValidationResultEqual } from "../../testUtils/utils/validation";
-import { MethodInvocation } from "../../testUtils/invokeBase";
 
 const admins: Admin[] = [
     { Name: 'hij' },
@@ -59,7 +58,7 @@ describe('AdminsViewModel', function () {
         hub._onSendAdmins.raise({ Type: CollectionChangeType.Reset, NewItems: admins });
 
         // Assert.
-        let actual = IterableHelper.map(viewModel.admins.values(), a => a.value.Name);
+        let actual = IterableHelper.map(viewModel.admins, a => a.Name);
         // names should be sorted.
         let expected = ['abc', 'def', 'hij'];
         strict.deepEqual([...actual], expected);

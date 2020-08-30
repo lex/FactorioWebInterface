@@ -4,7 +4,6 @@ import { ScenarioDataHubServiceMockBase } from "../../testUtils/pages/scenarioDa
 import { ScenarioDataViewModel } from "./scenarioDataViewModel";
 import { CollectionChangeType } from "../../ts/utils";
 import { strict } from "assert";
-import { IterableHelper } from "../../utils/iterableHelper";
 import { Entry } from "./scenarioData";
 
 const dataSets: string[] = [
@@ -73,10 +72,9 @@ describe('DataSetViewModel', function () {
             // Act.
             hub._onSendDataSets.raise({ Type: CollectionChangeType.Reset, NewItems: dataSets });
 
-            // Assert.
-            let actual = IterableHelper.map(viewModel.dataSets.values(), d => d.value);
+            // Assert.            
             // should be sorted by string case insensitive.
-            strict.deepEqual([...actual], ['abc', 'def', 'ghi']);
+            strict.deepEqual([...viewModel.dataSets], ['abc', 'def', 'ghi']);
         });
 
         it('fetchingDatasets set to false onSendDataSets', function () {
@@ -110,8 +108,7 @@ describe('DataSetViewModel', function () {
             let hub: ScenarioDataHubServiceMockBase = services.get(ScenarioDataHubService);
             hub._onSendDataSets.raise({ Type: CollectionChangeType.Reset, NewItems: dataSets });
 
-            let dataSetBox = viewModel.dataSets.getBoxByKey(dataSets[1]);
-            viewModel.dataSets.setSingleSelected(dataSetBox);
+            viewModel.dataSets.setSingleSelected(dataSets[1]);
 
             // Act.
             hub._onConnection.raise();
@@ -132,10 +129,8 @@ describe('DataSetViewModel', function () {
             let hub: ScenarioDataHubServiceMockBase = services.get(ScenarioDataHubService);
             hub._onSendDataSets.raise({ Type: CollectionChangeType.Reset, NewItems: dataSets });
 
-            let dataSetBox = viewModel.dataSets.getBoxByKey(dataSets[1]);
-
             // Act.
-            viewModel.dataSets.setSingleSelected(dataSetBox);
+            viewModel.dataSets.setSingleSelected(dataSets[1]);
 
             // Assert.
             strict.equal('def (fetching...)', viewModel.header);
@@ -151,8 +146,7 @@ describe('DataSetViewModel', function () {
             let hub: ScenarioDataHubServiceMockBase = services.get(ScenarioDataHubService);
             hub._onSendDataSets.raise({ Type: CollectionChangeType.Reset, NewItems: dataSets });
 
-            let dataSetBox = viewModel.dataSets.getBoxByKey(dataSets[1]);
-            viewModel.dataSets.setSingleSelected(dataSetBox);
+            viewModel.dataSets.setSingleSelected(dataSets[1]);
             strict.equal('def (fetching...)', viewModel.header);
 
             // Act.
@@ -172,8 +166,7 @@ describe('DataSetViewModel', function () {
             let hub: ScenarioDataHubServiceMockBase = services.get(ScenarioDataHubService);
             hub._onSendDataSets.raise({ Type: CollectionChangeType.Reset, NewItems: dataSets });
 
-            let dataSetBox = viewModel.dataSets.getBoxByKey(dataSets[1]);
-            viewModel.dataSets.setSingleSelected(dataSetBox);
+            viewModel.dataSets.setSingleSelected(dataSets[1]);
 
             // Act.
             hub._onSendEntries.raise({ dataSet: dataSets[1], data: { Type: CollectionChangeType.Reset, NewItems: entries } });
@@ -196,8 +189,7 @@ describe('DataSetViewModel', function () {
             let hub: ScenarioDataHubServiceMockBase = services.get(ScenarioDataHubService);
             hub._onSendDataSets.raise({ Type: CollectionChangeType.Reset, NewItems: dataSets });
 
-            let dataSetBox = viewModel.dataSets.getBoxByKey(dataSets[0]);
-            viewModel.dataSets.setSingleSelected(dataSetBox);
+            viewModel.dataSets.setSingleSelected(dataSets[0]);
 
             // Act.
             hub._onSendEntries.raise({ dataSet: dataSets[1], data: { Type: CollectionChangeType.Reset, NewItems: entries } });

@@ -239,7 +239,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Act.
             viewModel.loadCommand.execute();
@@ -272,7 +272,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._tempSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [tempFile] });
 
             let tempFiles = mainViewModel.tempFileViewModel.files;
-            tempFiles.setSingleSelected(tempFiles.getBoxByKey(tempFile.Name));
+            tempFiles.setSingleSelected(tempFile.Name);
 
             // Act.
             viewModel.loadCommand.execute();
@@ -312,7 +312,7 @@ describe('ServerConsoleViewModel', function () {
             strict.equal(viewModel.loadCommand.canExecute(), false);
         });
 
-        it('can not execute when mutliple selected files.', function () {
+        it('can not execute when multiple selected files.', function () {
             // Arrange.          
             let services = new ServersPageTestServiceLocator();
 
@@ -392,7 +392,7 @@ describe('ServerConsoleViewModel', function () {
                 expected: tempFile,
                 act: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile.Name));
+                    files.setSingleSelected(tempFile.Name);
                 }
             },
             {
@@ -400,7 +400,7 @@ describe('ServerConsoleViewModel', function () {
                 expected: tempFile2,
                 act: (vm: ServersViewModel) => {
                     let files = vm.tempFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(tempFile2.Name));
+                    files.setSingleSelected(tempFile2.Name);
                 }
             },
             {
@@ -408,7 +408,7 @@ describe('ServerConsoleViewModel', function () {
                 expected: localFile,
                 act: (vm: ServersViewModel) => {
                     let files = vm.localFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(localFile.Name));
+                    files.setSingleSelected(localFile.Name);
                 }
             },
             {
@@ -416,7 +416,7 @@ describe('ServerConsoleViewModel', function () {
                 expected: globalFile,
                 act: (vm: ServersViewModel) => {
                     let files = vm.globalFileViewModel.files;
-                    files.setSingleSelected(files.getBoxByKey(globalFile.Name));
+                    files.setSingleSelected(globalFile.Name);
                 }
             }
         ]
@@ -478,7 +478,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
 
             let scenarios = mainViewModel.scenariosViewModel.scenarios;
-            scenarios.setSingleSelected(scenarios.getBoxByKey(scenario.Name));
+            scenarios.setSingleSelected(scenario.Name);
 
             // Act.
             viewModel.startScenarioCommand.execute();
@@ -508,7 +508,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario] });
 
             let scenarios = mainViewModel.scenariosViewModel.scenarios;
-            scenarios.setSingleSelected(scenarios.getBoxByKey(scenario.Name));
+            scenarios.setSingleSelected(scenario.Name);
 
             // Act.
             viewModel.startScenarioCommand.execute();
@@ -609,7 +609,7 @@ describe('ServerConsoleViewModel', function () {
             viewModel.startScenarioCommand.canExecuteChanged.subscribe(() => raised = true);
 
             // Act.
-            scenarios.setSingleSelected(scenarios.getBoxByKey(scenario.Name));
+            scenarios.setSingleSelected(scenario.Name);
 
             // Assert.
             strict.equal(raised, true);
@@ -647,7 +647,7 @@ describe('ServerConsoleViewModel', function () {
                 hubService._scenarios.raise({ Type: CollectionChangeType.Reset, NewItems: [scenario, scenario2] });
 
                 let scenarios = mainViewModel.scenariosViewModel.scenarios;
-                scenarios.setSingleSelected(scenarios.getBoxByKey(testCase.scenario.Name));
+                scenarios.setSingleSelected(testCase.scenario.Name);
 
                 // Act.
                 viewModel.startScenarioCommand.execute();
@@ -951,7 +951,7 @@ describe('ServerConsoleViewModel', function () {
             viewModel.sendText = message3;
             viewModel.sendCommand.execute();
 
-            // Act + Assert prev.
+            // Act + Assert previous.
             viewModel.sendInputKey(38); // up
             strict.equal(viewModel.sendText, message3);
 
@@ -1166,7 +1166,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
 
             let localFiles = mainViewModel.localFileViewModel.files;
-            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            localFiles.setSingleSelected(localFile.Name);
 
             // Act.            
             hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
@@ -1223,7 +1223,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._localSaveFiles.raise({ Type: CollectionChangeType.Reset, serverId: '1', NewItems: [localFile] });
 
             let localFiles = mainViewModel.localFileViewModel.files;
-            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            localFiles.setSingleSelected(localFile.Name);
 
             // Act.            
             hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
@@ -1245,7 +1245,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._onSelectedModPack.raise(modPack.Name);
 
             let localFiles = mainViewModel.localFileViewModel.files;
-            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            localFiles.setSingleSelected(localFile.Name);
 
             // Act.            
             hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Stopped, oldStatus: FactorioServerStatus.Unknown });
@@ -1277,7 +1277,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._onFactorioStatusChanged.raise({ newStatus: FactorioServerStatus.Running, oldStatus: FactorioServerStatus.Unknown });
 
             let localFiles = mainViewModel.localFileViewModel.files;
-            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            localFiles.setSingleSelected(localFile.Name);
 
             let raisedCount = 0;
             viewModel.propertyChanged('loadTooltip', event => raisedCount++);
@@ -1305,7 +1305,7 @@ describe('ServerConsoleViewModel', function () {
 
             // Act.
             let localFiles = mainViewModel.localFileViewModel.files;
-            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            localFiles.setSingleSelected(localFile.Name);
 
             // Assert.
             strict.equal(raisedCount, 1);
@@ -1324,7 +1324,7 @@ describe('ServerConsoleViewModel', function () {
             hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
 
             let localFiles = mainViewModel.localFileViewModel.files;
-            localFiles.setSingleSelected(localFiles.getBoxByKey(localFile.Name));
+            localFiles.setSingleSelected(localFile.Name);
 
             let raisedCount = 0;
             viewModel.propertyChanged('loadTooltip', event => raisedCount++);
@@ -1855,7 +1855,7 @@ describe('ServerConsoleViewModel', function () {
             let serverIds = viewModel.serverIds;
 
             // Act.            
-            serverIds.setSingleSelected(serverIds.getBoxByKey('2'));
+            serverIds.setSingleSelected('2');
             await PromiseHelper.delay(0);
 
             // Assert.

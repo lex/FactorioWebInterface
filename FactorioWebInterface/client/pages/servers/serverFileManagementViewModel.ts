@@ -33,7 +33,7 @@ export class ServerFileManagementViewModel extends ObservableObject {
     private _globalFiles: FileViewModel;
 
     private _destinations: ObservableKeyArray<string, Destination>;
-    private _destinationsCollectionView: CollectionView<Destination>;
+    private _destinationsCollectionView: CollectionView<string, Destination>;
 
     private _newFileName = '';
 
@@ -63,7 +63,7 @@ export class ServerFileManagementViewModel extends ObservableObject {
         return this._serverFileManagementService.deflating;
     }
 
-    get destinationsCollectionView(): CollectionView<Destination> {
+    get destinationsCollectionView(): CollectionView<string, Destination> {
         return this._destinationsCollectionView;
     }
 
@@ -316,23 +316,21 @@ export class ServerFileManagementViewModel extends ObservableObject {
     private getSelectedSaveFile(): FileMetaData {
         return (IterableHelper.firstOrDefault(this._tempFiles.files.selected) ??
             IterableHelper.firstOrDefault(this._localFiles.files.selected) ??
-            IterableHelper.firstOrDefault(this._globalFiles.files.selected)).value;
+            IterableHelper.firstOrDefault(this._globalFiles.files.selected));
     }
 
     private getAllSelectedSaveFiles(): IterableIterator<FileMetaData> {
-        let all = IterableHelper.combine(this._tempFiles.files.selected,
+        return IterableHelper.combine(this._tempFiles.files.selected,
             this._localFiles.files.selected,
             this._globalFiles.files.selected);
-
-        return IterableHelper.map(all, x => x.value);
     }
 
     private getSelectedDestinationPath(): string {
-        return IterableHelper.firstOrDefault(this._destinationsCollectionView.selected)?.value.path;
+        return IterableHelper.firstOrDefault(this._destinationsCollectionView.selected)?.path;
     }
 
     private getSelectedDestinationName(): string {
-        return IterableHelper.firstOrDefault(this._destinationsCollectionView.selected)?.value.name;
+        return IterableHelper.firstOrDefault(this._destinationsCollectionView.selected)?.name;
     }
 
     private updateUploadSavesTooltip(): void {
