@@ -10,7 +10,7 @@ import { ComparatorHelper } from "../../utils/comparatorHelper";
 import { Label } from "../../components/label";
 import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
-class FileNameColumn extends ColumnTemplate<FileMetaData>{
+class FileNameColumn extends ColumnTemplate<string, FileMetaData>{
     constructor(serverId: IObservableProperty<string>) {
         super();
 

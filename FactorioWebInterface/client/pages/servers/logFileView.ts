@@ -9,7 +9,7 @@ import { LogFileViewModel } from "./logFileViewModel";
 import { Label } from "../../components/label";
 import { ObservableObjectBindingSource } from "../../utils/binding/module";
 
-class LogFileNameColumn extends ColumnTemplate<FileMetaData>{
+class LogFileNameColumn extends ColumnTemplate<string, FileMetaData>{
     constructor(handler: string) {
         super();
 
