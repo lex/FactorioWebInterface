@@ -348,7 +348,10 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
             cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
@@ -367,10 +370,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(1, actualEvents.length);
-
             let addEvent = actualEvents[0];
             strict.equal(addEvent.type, CollectionViewChangeType.Add);
-            strict.deepEqual(addEvent.items, expectedSelected);
+            strict.deepEqual(addEvent.items, [2]);
+
+            strict.equal(1, actualSelectedEvents.length);
+
+            let addSelectedEvent = actualSelectedEvents[0];
+            strict.equal(addSelectedEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addSelectedEvent.items, expectedSelected);
 
             strict.equal(1, actualSingleSelectedEvents.length);
 
@@ -389,7 +397,10 @@ describe('CollectionView', function () {
             cv.setSingleSelected(2);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
             cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
@@ -407,15 +418,20 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(2), false);
             strict.equal(cv.isSelected(3), true);
 
-            strict.equal(2, actualEvents.length);
-
-            let removeEvent = actualEvents[0];
-            strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(removeEvent.items, [2]);
-
-            let addEvent = actualEvents[1];
+            strict.equal(1, actualEvents.length);
+            let addEvent = actualEvents[0];
             strict.equal(addEvent.type, CollectionViewChangeType.Add);
-            strict.deepEqual(addEvent.items, expectedSelected);
+            strict.deepEqual(addEvent.items, [2, 3]);
+
+            strict.equal(2, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, [2]);
+
+            let addSelectedEvent = actualSelectedEvents[1];
+            strict.equal(addSelectedEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addSelectedEvent.items, expectedSelected);
 
             strict.equal(1, actualSingleSelectedEvents.length);
 
@@ -434,7 +450,10 @@ describe('CollectionView', function () {
             cv.setSingleSelected(2);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
             cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
@@ -453,10 +472,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(1, actualEvents.length);
+            let addEvent = actualEvents[0];
+            strict.equal(addEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addEvent.items, [2]);
 
-            let removeEvent = actualEvents[0];
-            strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(removeEvent.items, [2]);
+            strict.equal(1, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, [2]);
 
             strict.equal(1, actualSingleSelectedEvents.length);
 
@@ -472,10 +496,11 @@ describe('CollectionView', function () {
 
             o.add(1, 2, 3);
 
-            cv.filterBy({ predicate: () => false });
-
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
             cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
@@ -494,6 +519,7 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(0, actualEvents.length);
+            strict.equal(0, actualSelectedEvents.length);
             strict.equal(0, actualSingleSelectedEvents.length);
         });
 
@@ -503,10 +529,14 @@ describe('CollectionView', function () {
             let cv = new CollectionView(o);
 
             o.add(1, 2, 3);
+
             cv.setSingleSelected(2);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             let actualSingleSelectedEvents: CollectionViewChangedData<number>[] = [];
             cv.newSingleSelectedChanged.subscribe(event => actualSingleSelectedEvents.push(event));
@@ -525,10 +555,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(1, actualEvents.length);
+            let addEvent = actualEvents[0];
+            strict.equal(addEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addEvent.items, [2]);
 
-            let removeEvent = actualEvents[0];
-            strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(removeEvent.items, [2]);
+            strict.equal(1, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, [2]);
 
             strict.equal(1, actualSingleSelectedEvents.length);
 
@@ -547,7 +582,10 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.setSelected(2, true);
@@ -563,10 +601,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(1, actualEvents.length);
-
             let addEvent = actualEvents[0];
             strict.equal(addEvent.type, CollectionViewChangeType.Add);
-            strict.deepEqual(addEvent.items, expectedSelected);
+            strict.deepEqual(addEvent.items, [2]);
+
+            strict.equal(1, actualSelectedEvents.length);
+
+            let addSelectedEvent = actualSelectedEvents[0];
+            strict.equal(addSelectedEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addSelectedEvent.items, expectedSelected);
         });
 
         it('select item when another item is selected', function () {
@@ -578,7 +621,10 @@ describe('CollectionView', function () {
             cv.setSelected(1, true);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.setSelected(2, true);
@@ -594,10 +640,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(1, actualEvents.length);
-
             let addEvent = actualEvents[0];
             strict.equal(addEvent.type, CollectionViewChangeType.Add);
             strict.deepEqual(addEvent.items, [2]);
+
+            strict.equal(1, actualSelectedEvents.length);
+
+            let addSelectedEvent = actualSelectedEvents[0];
+            strict.equal(addSelectedEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addSelectedEvent.items, [2]);
         });
 
         it('unselect item', function () {
@@ -610,7 +661,10 @@ describe('CollectionView', function () {
             cv.setSelected(2, true);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.setSelected(2, false);
@@ -626,10 +680,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(1, actualEvents.length);
+            let addEvent = actualEvents[0];
+            strict.equal(addEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addEvent.items, [2]);
 
-            let removeEvent = actualEvents[0];
-            strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(removeEvent.items, [2]);
+            strict.equal(1, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, [2]);
         });
 
         it('unselect item when multiple selected', function () {
@@ -643,7 +702,10 @@ describe('CollectionView', function () {
             cv.setSelected(3, true);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.setSelected(2, false);
@@ -659,10 +721,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), true);
 
             strict.equal(1, actualEvents.length);
+            let addEvent = actualEvents[0];
+            strict.equal(addEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addEvent.items, [2]);
 
-            let removeEvent = actualEvents[0];
-            strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(removeEvent.items, [2]);
+            strict.equal(1, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, [2]);
         });
 
         it('unselect item that is not selected', function () {
@@ -673,7 +740,10 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.setSelected(2, false);
@@ -689,6 +759,7 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(0, actualEvents.length);
+            strict.equal(0, actualSelectedEvents.length);
         });
     });
 
@@ -701,7 +772,10 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.selectAll();
@@ -717,10 +791,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), true);
 
             strict.equal(1, actualEvents.length);
-
             let addEvent = actualEvents[0];
             strict.equal(addEvent.type, CollectionViewChangeType.Add);
-            strict.deepEqual(addEvent.items, expectedSelected);
+            strict.deepEqual(addEvent.items, [1, 2, 3]);
+
+            strict.equal(1, actualSelectedEvents.length);
+
+            let addSelectedEvent = actualSelectedEvents[0];
+            strict.equal(addSelectedEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addSelectedEvent.items, expectedSelected);
         });
 
         it('does select all when items already selected', function () {
@@ -732,7 +811,10 @@ describe('CollectionView', function () {
             cv.setSelected(2, true);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.selectAll();
@@ -748,10 +830,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), true);
 
             strict.equal(1, actualEvents.length);
-
             let addEvent = actualEvents[0];
             strict.equal(addEvent.type, CollectionViewChangeType.Add);
             strict.deepEqual(addEvent.items, [1, 3]);
+
+            strict.equal(1, actualSelectedEvents.length);
+
+            let addSelectedEvent = actualSelectedEvents[0];
+            strict.equal(addSelectedEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addSelectedEvent.items, [1, 3]);
         });
 
         it('does nothing when all items selected', function () {
@@ -763,7 +850,10 @@ describe('CollectionView', function () {
             cv.selectAll();
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.selectAll();
@@ -779,6 +869,7 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), true);
 
             strict.equal(0, actualEvents.length);
+            strict.equal(0, actualSelectedEvents.length);
         });
     });
 
@@ -792,7 +883,10 @@ describe('CollectionView', function () {
             cv.selectAll();
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.unSelectAll();
@@ -808,10 +902,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(1, actualEvents.length);
+            let addEvent = actualEvents[0];
+            strict.equal(addEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addEvent.items, [1, 2, 3]);
 
-            let removeEvent = actualEvents[0];
-            strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(removeEvent.items, [1, 2, 3]);
+            strict.equal(1, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, [1, 2, 3]);
         });
 
         it('does unselect all when some items not selected', function () {
@@ -824,7 +923,10 @@ describe('CollectionView', function () {
             cv.setSelected(3, true);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.unSelectAll();
@@ -841,10 +943,15 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(4), false);
 
             strict.equal(1, actualEvents.length);
+            let addEvent = actualEvents[0];
+            strict.equal(addEvent.type, CollectionViewChangeType.Add);
+            strict.deepEqual(addEvent.items, [1, 3]);
 
-            let removeEvent = actualEvents[0];
-            strict.equal(removeEvent.type, CollectionViewChangeType.Remove);
-            strict.deepEqual(removeEvent.items, [1, 3]);
+            strict.equal(1, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, [1, 3]);
         });
 
         it('does nothing when all items unselected', function () {
@@ -855,7 +962,10 @@ describe('CollectionView', function () {
             o.add(1, 2, 3);
 
             let actualEvents: CollectionViewChangedData<number>[] = [];
-            cv.selectedChanged.subscribe(event => actualEvents.push(event));
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
 
             // Act.
             cv.unSelectAll();
@@ -871,6 +981,7 @@ describe('CollectionView', function () {
             strict.equal(cv.isSelected(3), false);
 
             strict.equal(0, actualEvents.length);
+            strict.equal(0, actualSelectedEvents.length);
         });
     });
 

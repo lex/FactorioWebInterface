@@ -192,14 +192,21 @@ export class CollectionView<K, T> extends Observable<CollectionViewChangedData<T
         let removedItems = [...IterableHelper.map(oldSelected, x => this._map.get(x))];
         let addItem = this._map.get(key);
 
-        selected.clear();
-
+        let changedItems = [...removedItems];
         if (addItem !== undefined) {
-            selected.add(key);
-            this.raise({ type: CollectionViewChangeType.Add, items: [...removedItems, addItem] });
+            changedItems.push(addItem);
         }
 
-        if ((addItem !== undefined || removedItems.length > 0) && this.isSortedBySelection()) {
+        selected.clear();
+        if (addItem !== undefined) {
+            selected.add(key);
+        }
+
+        if (changedItems.length > 0) {
+            this.raise({ type: CollectionViewChangeType.Add, items: changedItems });
+        }
+
+        if (changedItems.length > 0 && this.isSortedBySelection()) {
             this.sort();
             this.raise({ type: CollectionViewChangeType.Reorder });
         }
