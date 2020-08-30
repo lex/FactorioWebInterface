@@ -16,7 +16,7 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
     private _addAdminsText = '';
     private _adminListHeader = 'Admin List (fetching...)';
 
-    private _admins: CollectionView<Admin, string>;
+    private _admins: CollectionView<string, Admin>;
 
     private _validator: Validator<AdminsViewModel>;
     private _errors = new ObservableErrors();
@@ -44,7 +44,7 @@ export class AdminsViewModel extends ObservableObject implements IObservableErro
         this.errors.setError('addAdminsText', validationResult);
     }
 
-    get admins(): CollectionView<Admin, string> {
+    get admins(): CollectionView<string, Admin> {
         return this._admins;
     }
 

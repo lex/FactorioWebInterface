@@ -67,7 +67,7 @@ export class ServersConsoleViewModel extends ObservableObject<ServersConsoleView
     private _manageVersionCommand: DelegateCommand;
     private _sendCommand: DelegateCommand;
 
-    get serverIds(): CollectionView<string> {
+    get serverIds(): CollectionView<string, string> {
         return this._serverIdsCollectionView;
     }
 

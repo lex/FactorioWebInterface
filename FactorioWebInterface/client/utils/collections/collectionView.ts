@@ -32,7 +32,7 @@ export interface CollectionViewChangedData<T> {
     items?: T[];
 }
 
-export class CollectionView<T, K = any> extends Observable<CollectionViewChangedData<T>> implements Iterable<T> {
+export class CollectionView<K, T> extends Observable<CollectionViewChangedData<T>> implements Iterable<T> {
     static readonly selectedSortId = {};
 
     private _source: ObservableCollection<T>;
@@ -673,8 +673,8 @@ export class CollectionView<T, K = any> extends Observable<CollectionViewChanged
     }
 }
 
-class CollectionViewNewSingleSelectedObservable<T> implements IObservable<CollectionViewChangedData<T>>{
-    constructor(private readonly collectionView: CollectionView<T>) { }
+class CollectionViewNewSingleSelectedObservable<K, T> implements IObservable<CollectionViewChangedData<T>>{
+    constructor(private readonly collectionView: CollectionView<K, T>) { }
 
     subscribe(callback: (event: CollectionViewChangedData<T>) => void, subscriptions?: (() => void)[]): () => void {
         let filterdCallback = (event: CollectionViewChangedData<T>) => {

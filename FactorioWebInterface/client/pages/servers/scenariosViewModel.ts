@@ -7,13 +7,13 @@ export class ScenariosViewModel extends ObservableObject {
     private _sourceScenarios: ObservableCollection<ScenarioMetaData>;
 
     private _header: string;
-    private _scenarios: CollectionView<ScenarioMetaData, string>;
+    private _scenarios: CollectionView<string, ScenarioMetaData>;
 
     get header(): string {
         return this._header;
     }
 
-    get scenarios(): CollectionView<ScenarioMetaData, string> {
+    get scenarios(): CollectionView<string, ScenarioMetaData> {
         return this._scenarios;
     }
 

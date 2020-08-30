@@ -13,7 +13,7 @@ export class Option<T> extends HTMLOptionElement {
 
 customElements.define('a-option', Option, { extends: 'option' });
 
-export class Select<T = any, K = any> extends BaseElement {
+export class Select<K = any, T = any> extends BaseElement {
     static readonly bindingKeys = {
         placeholder: {},
         isLoading: {},
@@ -22,7 +22,7 @@ export class Select<T = any, K = any> extends BaseElement {
 
     private _select: HTMLSelectElement;
 
-    private _source: CollectionView<T, K>;
+    private _source: CollectionView<K, T>;
     private _optionBuilder: (item: T) => string | Option<T>;
     private _optionMap: Map<K, HTMLOptionElement>;
 
@@ -113,7 +113,7 @@ export class Select<T = any, K = any> extends BaseElement {
         this.classList.toggle('is-loading', value);
     }
 
-    constructor(source?: T[] | ObservableCollection<T> | CollectionView<T, K>, optionBuilder?: (item: T) => string | Option<T>) {
+    constructor(source?: T[] | ObservableCollection<T> | CollectionView<K, T>, optionBuilder?: (item: T) => string | Option<T>) {
         super();
 
         this._select = document.createElement('select');

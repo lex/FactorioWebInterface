@@ -84,14 +84,14 @@ export class AdminsView extends VirtualComponent {
         return tableCollapse;
     }
 
-    private buildTable(): Table<Admin> {
+    private buildTable(): Table<string, Admin> {
         let removeCellBuilder = ((admin: Admin) => {
             return new Button('Remove', Button.classes.danger)
                 .setCommand(this._adminsViewModel.removeAdminCommand)
                 .setCommandParameter(admin);
         });
 
-        let table = new Table<Admin>(this._adminsViewModel.admins, [
+        let table = new Table<string, Admin>(this._adminsViewModel.admins, [
             new TextColumn('Name'),
             new ColumnTemplate()
                 .setHeader(() => 'Remove')

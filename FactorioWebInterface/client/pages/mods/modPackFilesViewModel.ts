@@ -15,8 +15,8 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
     private _fileSelectionService: FileSelectionService;
     private _errorService: ErrorService;
 
-    private _files: CollectionView<ModPackFileMetaData, string>;
-    private _modPacks: CollectionView<ModPackMetaData, string>;
+    private _files: CollectionView<string, ModPackFileMetaData>;
+    private _modPacks: CollectionView<string, ModPackMetaData>;
 
     private _title = ModPackFilesViewModel.defaultTitle;
 
@@ -26,11 +26,11 @@ export class ModPackFilesViewModel extends ObservableObject<ModPackFilesViewMode
     private _copyFilesCommand: DelegateCommand;
     private _moveFilesCommand: DelegateCommand;
 
-    get files(): CollectionView<ModPackFileMetaData, string> {
+    get files(): CollectionView<string, ModPackFileMetaData> {
         return this._files;
     }
 
-    get modPacks(): CollectionView<ModPackMetaData, string> {
+    get modPacks(): CollectionView<string, ModPackMetaData> {
         return this._modPacks;
     }
 

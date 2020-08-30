@@ -27,9 +27,9 @@ export class TableRow<T = any> extends HTMLTableRowElement implements rowClickEv
 
 customElements.define('a-tr', TableRow, { extends: 'tr' });
 
-export class Table<T = any, K = any> extends HTMLTableElement {
-    private _source: CollectionView<T, K>;
-    private _columns: IColumnTemplate<T>[];
+export class Table<K = any, T = any> extends HTMLTableElement {
+    private _source: CollectionView<K, T>;
+    private _columns: IColumnTemplate<K, T>[];
     private _rowClickHandler: (this: HTMLTableRowElement) => void;
     private _rowClickObservable: Observable<rowClickEventArgs<T>>;
 
@@ -41,11 +41,11 @@ export class Table<T = any, K = any> extends HTMLTableElement {
     private _rowMap: Map<K, TableRow<T>>;
     private _sortIdMap: Map<any, HTMLTableHeaderCellElement>;
 
-    get source(): CollectionView<T> {
+    get source(): CollectionView<K, T> {
         return this._source;
     }
 
-    constructor(source?: ObservableCollection<T> | CollectionView<T, K>, columns?: IColumnTemplate<T>[], rowClick?: (event: rowClickEventArgs<T>) => void) {
+    constructor(source?: ObservableCollection<T> | CollectionView<K, T>, columns?: IColumnTemplate<K, T>[], rowClick?: (event: rowClickEventArgs<T>) => void) {
         super();
 
         if (source instanceof CollectionView) {
@@ -188,7 +188,7 @@ export class Table<T = any, K = any> extends HTMLTableElement {
         return item + '';
     }
 
-    private onHeaderClick(column: IColumnTemplate<T>) {
+    private onHeaderClick(column: IColumnTemplate<K, T>) {
         let sortId = this.getSortId(column);
 
         let cell = this._sortIdMap.get(sortId);
@@ -198,7 +198,7 @@ export class Table<T = any, K = any> extends HTMLTableElement {
         this.sortBy(column, ascending);
     }
 
-    private getSortId(column: IColumnTemplate<T>) {
+    private getSortId(column: IColumnTemplate<K, T>) {
         let sortId: any;
         if (column.getSortSpecification != null) {
             sortId = column.getSortSpecification(this).sortId
@@ -360,22 +360,22 @@ export class Table<T = any, K = any> extends HTMLTableElement {
 
 customElements.define('a-table', Table, { extends: 'table' });
 
-export interface IColumnTemplate<T = any> {
+export interface IColumnTemplate<K = any, T = any> {
     property?: string;
-    header?: (headerCell?: HTMLTableHeaderCellElement, table?: Table<T>) => Node | string;
-    cell?: (value: any, item?: T, table?: Table<T>) => Node | string;
+    header?: (headerCell?: HTMLTableHeaderCellElement, table?: Table<K, T>) => Node | string;
+    cell?: (value: any, item?: T, table?: Table<K, T>) => Node | string;
     comparator?: (a: any, b: any) => number;
     sortId?: any;
     sortingDisabled?: boolean;
-    getSortSpecification?(table?: Table<T>): SortSpecification<T>;
-    connectedCallback?(table?: Table<T>): void;
-    disconnectedCallback?(table?: Table<T>): void;
+    getSortSpecification?(table?: Table<K, T>): SortSpecification<T>;
+    connectedCallback?(table?: Table<K, T>): void;
+    disconnectedCallback?(table?: Table<K, T>): void;
 }
 
-export class ColumnTemplate<T = any> implements IColumnTemplate<T>{
+export class ColumnTemplate<K = any, T = any> implements IColumnTemplate<K, T>{
     property: string;
-    header: (headerCell?: HTMLTableHeaderCellElement, table?: Table<T>) => Node | string;
-    cell: (value: any, item: T, table?: Table<T>) => Node | string;
+    header: (headerCell?: HTMLTableHeaderCellElement, table?: Table<K, T>) => Node | string;
+    cell: (value: any, item: T, table?: Table<K, T>) => Node | string;
     comparator: (a: any, b: any) => number;
     sortId: any;
     sortingDisabled: boolean;
@@ -385,12 +385,12 @@ export class ColumnTemplate<T = any> implements IColumnTemplate<T>{
         return this;
     }
 
-    setHeader(header: (headerCell?: HTMLTableHeaderCellElement, table?: Table<T>) => Node | string): this {
+    setHeader(header: (headerCell?: HTMLTableHeaderCellElement, table?: Table<K, T>) => Node | string): this {
         this.header = header;
         return this;
     }
 
-    setCell(cell: (value: any, item: T, table?: Table<T>) => Node | string): this {
+    setCell(cell: (value: any, item: T, table?: Table<K, T>) => Node | string): this {
         this.cell = cell;
         return this;
     }
@@ -411,7 +411,7 @@ export class ColumnTemplate<T = any> implements IColumnTemplate<T>{
     }
 }
 
-export class TextColumn<T = any> extends ColumnTemplate<T> {
+export class TextColumn<K = any, T = any> extends ColumnTemplate<K, T> {
     private static textCellBuilder(item: any): string {
         return item + '';
     }
@@ -447,7 +447,7 @@ export class TextColumn<T = any> extends ColumnTemplate<T> {
     }
 }
 
-export class DateTimeColumn<T = any> extends ColumnTemplate<T>{
+export class DateTimeColumn<K = any, T = any> extends ColumnTemplate<K, T>{
     static cell(item: Date): string {
         return Utils.formatDate(item);
     }
@@ -459,8 +459,8 @@ export class DateTimeColumn<T = any> extends ColumnTemplate<T>{
     }
 }
 
-export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
-    static cell<T>(value: any, item: T, table: Table<T>): Node {
+export class MultiSelectColumn<K = any, T = any> extends ColumnTemplate<K, T>{
+    static cell<K, T>(value: any, item: T, table: Table<K, T>): Node {
         let source = table.source;
 
         let checkbox = document.createElement('input');
@@ -474,7 +474,7 @@ export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
         return checkbox;
     }
 
-    static header<T>(headerCell?: HTMLTableHeaderCellElement, table?: Table<T>): Node {
+    static header<K, T>(headerCell?: HTMLTableHeaderCellElement, table?: Table<K, T>): Node {
         let source = table.source;
 
         let container = document.createElement('span');
@@ -508,7 +508,7 @@ export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
         this.header = MultiSelectColumn.header;
     }
 
-    connectedCallback(table: Table<T>) {
+    connectedCallback(table: Table<K, T>) {
         if (this.disableRowClick) {
             return;
         }
@@ -522,17 +522,17 @@ export class MultiSelectColumn<T = any> extends ColumnTemplate<T>{
         });
     }
 
-    disconnectedCallback(table: Table<T>) {
+    disconnectedCallback(table: Table<K, T>) {
         Observable.unSubscribe(this._rowClickSubscription);
     }
 
-    getSortSpecification(table: Table<T>): SortSpecification<T> {
+    getSortSpecification(table: Table<K, T>): SortSpecification<T> {
         return { ascendingComparator: table.source.selectedComparatorBuilder(), sortId: table.source.selectedSortId };
     }
 }
 
-export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
-    static cell<T>(value: any, item: T, table: Table<T>): Node {
+export class SingleSelectColumn<K = any, T = any> extends ColumnTemplate<K, T>{
+    static cell<K, T>(value: any, item: T, table: Table<K, T>): Node {
         let source = table.source;
 
         let radio = document.createElement('input');
@@ -551,7 +551,7 @@ export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
         return radio;
     }
 
-    static header<T>(headerCell?: HTMLTableHeaderCellElement, table?: Table<T>): Node {
+    static header<K, T>(headerCell?: HTMLTableHeaderCellElement, table?: Table<K, T>): Node {
         let source = table.source;
 
         let container = document.createElement('span');
@@ -582,7 +582,7 @@ export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
         this.header = SingleSelectColumn.header;
     }
 
-    connectedCallback(table: Table<T>) {
+    connectedCallback(table: Table<K, T>) {
         if (this.disableRowClick) {
             return;
         }
@@ -599,11 +599,11 @@ export class SingleSelectColumn<T = any> extends ColumnTemplate<T>{
         });
     }
 
-    disconnectedCallback(table: Table<T>) {
+    disconnectedCallback(table: Table<K, T>) {
         Observable.unSubscribe(this._rowClickSubscription);
     }
 
-    getSortSpecification(table: Table<T>): SortSpecification<T> {
+    getSortSpecification(table: Table<K, T>): SortSpecification<T> {
         return { ascendingComparator: table.source.selectedComparatorBuilder(), sortId: table.source.selectedSortId };
     }
 }

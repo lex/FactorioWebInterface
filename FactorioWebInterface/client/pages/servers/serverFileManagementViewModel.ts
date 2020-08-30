@@ -33,7 +33,7 @@ export class ServerFileManagementViewModel extends ObservableObject {
     private _globalFiles: FileViewModel;
 
     private _destinations: ObservableKeyArray<string, Destination>;
-    private _destinationsCollectionView: CollectionView<Destination, string>;
+    private _destinationsCollectionView: CollectionView<string, Destination>;
 
     private _newFileName = '';
 
@@ -63,7 +63,7 @@ export class ServerFileManagementViewModel extends ObservableObject {
         return this._serverFileManagementService.deflating;
     }
 
-    get destinationsCollectionView(): CollectionView<Destination, string> {
+    get destinationsCollectionView(): CollectionView<string, Destination> {
         return this._destinationsCollectionView;
     }
 

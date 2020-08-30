@@ -9,13 +9,13 @@ export class ModPacksViewModel extends ObservableObject {
     private _sourceModPacks: ObservableCollection<ModPackMetaData>;
 
     private _header: string;
-    private _modPacks: CollectionView<ModPackMetaData, string>;
+    private _modPacks: CollectionView<string, ModPackMetaData>;
 
     get header(): string {
         return this._header;
     }
 
-    get modPacks(): CollectionView<ModPackMetaData, string> {
+    get modPacks(): CollectionView<string, ModPackMetaData> {
         return this._modPacks;
     }
 

@@ -9,14 +9,14 @@ export class FileViewModel extends ObservableObject {
     private _tableName: string;
 
     private _header: string;
-    private _files: CollectionView<FileMetaData, string>;
+    private _files: CollectionView<string, FileMetaData>;
     private _serverId: IObservableProperty<string>;
 
     get header() {
         return this._header;
     }
 
-    get files(): CollectionView<FileMetaData, string> {
+    get files(): CollectionView<string, FileMetaData> {
         return this._files;
     }
 

@@ -13,7 +13,7 @@ export class ModPacksViewModel {
     private _modalService: IModalService;
     private _errorService: ErrorService;
 
-    private _modPacks: CollectionView<ModPackMetaData>;
+    private _modPacks: CollectionView<string, ModPackMetaData>;
 
     private _newCommand: DelegateCommand;
     private _renameCommand: DelegateCommand<ModPackMetaData>;
@@ -31,7 +31,7 @@ export class ModPacksViewModel {
         return this._deleteCommand;
     }
 
-    get modPacks(): CollectionView<ModPackMetaData> {
+    get modPacks(): CollectionView<string, ModPackMetaData> {
         return this._modPacks;
     }
 
