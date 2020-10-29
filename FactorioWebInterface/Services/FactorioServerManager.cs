@@ -972,6 +972,71 @@ namespace FactorioWebInterface.Services
                     content = content.Replace("\\n", "\n");
                     _ = _discordService.SendToAdminChannel(content);
                     break;
+                case Constants.DiscordNamedTag:
+                    {
+                        if (SplitNamedChannelDiscordMessage(content) is (string channelName, string message))
+                        {
+                            message = message.Replace("\\n", "\n");
+                            message = SanitizeGameChat(message);
+                            _ = _discordService.SendToNamedChannel(channelName, message);
+                        }
+                        break;
+                    }
+                case Constants.DiscordNamedRawTag:
+                    {
+                        if (SplitNamedChannelDiscordMessage(content) is (string channelName, string message))
+                        {
+                            message = message.Replace("\\n", "\n");
+                            _ = _discordService.SendToNamedChannel(channelName, message);
+                        }
+                        break;
+                    }
+                case Constants.DiscordNamedBoldTag:
+                    {
+                        if (SplitNamedChannelDiscordMessage(content) is (string channelName, string message))
+                        {
+                            message = message.Replace("\\n", "\n");
+                            message = SanitizeGameChat(message);
+                            message = Format.Bold(message);
+                            _ = _discordService.SendToNamedChannel(channelName, message);
+                        }
+                        break;
+                    }
+                case Constants.DiscordNamedEmbedTag:
+                    {
+                        if (SplitNamedChannelDiscordMessage(content) is (string channelName, string message))
+                        {
+                            message = message.Replace("\\n", "\n");
+                            message = SanitizeGameChat(message);
+
+                            var embed = new EmbedBuilder()
+                            {
+                                Description = message,
+                                Color = DiscordColors.infoColor,
+                                Timestamp = DateTimeOffset.UtcNow
+                            };
+
+                            _ = _discordService.SendToNamedChannel(channelName, embed: embed.Build());
+                        }
+                        break;
+                    }
+                case Constants.DiscordNamedEmbedRawTag:
+                    {
+                        if (SplitNamedChannelDiscordMessage(content) is (string channelName, string message))
+                        {
+                            message = message.Replace("\\n", "\n");
+
+                            var embed = new EmbedBuilder()
+                            {
+                                Description = message,
+                                Color = DiscordColors.infoColor,
+                                Timestamp = DateTimeOffset.UtcNow
+                            };
+
+                            _ = _discordService.SendToNamedChannel(channelName, embed: embed.Build());
+                        }
+                        break;
+                    }
                 case Constants.PlayerJoinTag:
                     _ = DoPlayerJoined(serverId, content);
 
@@ -1141,42 +1206,6 @@ namespace FactorioWebInterface.Services
             DoCheckNonTag(serverId, data);
 
             await t1;
-        }
-
-        private static string BuildServerTopicFromOnlinePlayers(SortedList<string, int> onlinePlayers, int count)
-        {
-            var sb = new StringBuilder();
-
-            if (count == 0)
-            {
-                sb.Append("Players online 0");
-                return sb.ToString();
-            }
-            else
-            {
-                sb.Append("Players online ").Append(count);
-            }
-
-            sb.Append(" - ");
-            foreach (var item in onlinePlayers)
-            {
-                for (int i = 0; i < item.Value; i++)
-                {
-                    sb.Append(item.Key).Append(", ");
-                }
-
-                if (sb.Length > Constants.discordTopicMaxLength)
-                {
-                    const int start = Constants.discordTopicMaxLength - 3;
-                    int length = sb.Length - start;
-                    sb.Remove(start, length);
-                    sb.Append("...");
-                    return sb.ToString();
-                }
-            }
-            sb.Remove(sb.Length - 2, 2);
-
-            return sb.ToString();
         }
 
         private async Task DoPlayerJoined(string serverId, string name)
@@ -2537,6 +2566,26 @@ namespace FactorioWebInterface.Services
             }
 
             return _factorioFileManager.GetChatLogs(serverData);
+        }
+
+        private static (string channelName, string message)? SplitNamedChannelDiscordMessage(string content)
+        {
+            int space = content.IndexOf(' ');
+            if (space < 0)
+            {
+                return null;
+            }
+
+            int rest = content.Length - space - 1;
+            if (rest < 1)
+            {
+                return null;
+            }
+
+            string name = content.Substring(0, space);
+            string message = content.Substring(space + 1, rest);
+
+            return (name, message);
         }
     }
 }

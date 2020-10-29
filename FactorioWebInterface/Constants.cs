@@ -97,6 +97,11 @@ namespace FactorioWebInterface
         public const string DiscordBold = "[DISCORD-BOLD]";
         public const string DiscordAdminTag = "[DISCORD-ADMIN]";
         public const string DiscordAdminRawTag = "[DISCORD-ADMIN-RAW]";
+        public const string DiscordNamedTag = "[DISCORD-NAMED]";
+        public const string DiscordNamedRawTag = "[DISCORD-NAMED-RAW]";
+        public const string DiscordNamedBoldTag = "[DISCORD-NAMED-BOLD]";
+        public const string DiscordNamedEmbedTag = "[DISCORD-NAMED-EMBED]";
+        public const string DiscordNamedEmbedRawTag = "[DISCORD-NAMED-EMBED-RAW]";
         public const string JoinTag = "[JOIN]";
         public const string LeaveTag = "[LEAVE]";
         public const string PlayerJoinTag = "[PLAYER-JOIN]";
@@ -140,5 +145,7 @@ namespace FactorioWebInterface
         public const string InvalidReleaseDataErrorKey = "InvalidReleaseData";
         public const string MissingModErrorKey = "missingMod";
         public const string MissingVersionErrorKey = "missingVersion";
+        public const string MissingName = "missingName";
+        public const string InvalidName = "invalidName";
     }
 }

@@ -177,5 +177,65 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordServiceTests
             Assert.Equal(message, actualMessage);
             clientMock.Verify();
         }
+
+        [Fact]
+        public async Task DoesSendNamedChannelTextToMessageQueue()
+        {
+            // Arrange.
+            const string channelName = "test";
+            const ulong channelId = 1;
+            const string message = "message";
+
+            var messageSent = new TaskCompletionSource<string>();
+
+            var db = DbContextFactory.Create<ApplicationDbContext>();
+            db.NamedDiscordChannels.Add(new NamedDiscordChannel() { DiscordChannelId = channelId, Name = channelName });
+            await db.SaveChangesAsync();
+
+            var clientMock = MakeMockClientThatExpectGetChannel(channelId);
+            Client = clientMock.Object;
+
+            MessageQueueFactory = MakeMessageQueueFactory((s, _) => messageSent.SetResult(s));
+
+            await DiscordService.Init();
+
+            // Act.
+            await DiscordService.SendToNamedChannel(channelName, message);
+            var actualMessage = await messageSent.Task.TimeoutAfter(1000);
+
+            // Assert.
+            Assert.Equal(message, actualMessage);
+            clientMock.Verify();
+        }
+
+        [Fact]
+        public async Task DoesSendNamedChannelEmbedToMessageQueue()
+        {
+            // Arrange.
+            const string channelName = "test";
+            const ulong channelId = 1;
+            Embed message = new EmbedBuilder().Build();
+
+            var messageSent = new TaskCompletionSource<Embed>();
+
+            var db = DbContextFactory.Create<ApplicationDbContext>();
+            db.NamedDiscordChannels.Add(new NamedDiscordChannel() { DiscordChannelId = channelId, Name = channelName });
+            await db.SaveChangesAsync();
+
+            var clientMock = MakeMockClientThatExpectGetChannel(channelId);
+            Client = clientMock.Object;
+
+            MessageQueueFactory = MakeMessageQueueFactory((_, e) => messageSent.SetResult(e));
+
+            await DiscordService.Init();
+
+            // Act.
+            await DiscordService.SendToNamedChannel(channelName, embed: message);
+            var actualMessage = await messageSent.Task.TimeoutAfter(1000);
+
+            // Assert.
+            Assert.Equal(message, actualMessage);
+            clientMock.Verify();
+        }
     }
 }

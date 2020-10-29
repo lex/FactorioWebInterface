@@ -2,6 +2,7 @@
 using Discord.Commands;
 using FactorioWebInterface.Models;
 using Microsoft.Extensions.Configuration;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace FactorioWebInterface.Services.Discord
@@ -85,7 +86,80 @@ namespace FactorioWebInterface.Services.Discord
                     : $"Factorio serverID {serverId} has been disconnected from this channel.";
             }
 
-            await ReplyForResult(result, successDescription);
+            await ReplyForResult(result, successMessage: successDescription);
+        }
+
+        [Command("setnamed")]
+        [Alias("sn")]
+        [Summary("Sets a name for the channel which can be referenced from Factorio.")]
+        [Remarks("Associates the Discord channel with a name that can be used from Factorio. A name can only be linked to one channel but a channel can have multiple names. If the name belonged to another channel the old link is removed. Names can be removed with the `;;unsetnamed` command.")]
+        [Example("map-promotion")]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task SetNamed([Summary("The name to associate with the channel, can not contain space ' ' characters.")] string name)
+        {
+            var result = await _discordService.SetNamedChannel(name, Context.Channel.Id);
+            await ReplyForResult(result, successMessage: $"The name {name} has been linked to this channel.");
+        }
+
+        [Command("unsetnamed")]
+        [Alias("un")]
+        [Summary("Removes the given name for the list of named channels.")]
+        [Remarks("If the name is a linked to a channel, removes the association.")]
+        [Example("map-promotion")]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task UnSetNamed([Summary("The name to disassociate with the channel")] string name)
+        {
+            var result = await _discordService.UnSetNamedChannel(name);
+            await ReplyForResult(result, successMessage: $"The name {name} is no longer linked to a channel.");
+        }
+
+        [Command("listnamed")]
+        [Alias("ln")]
+        [Summary("Lists the named channels")]
+        [Remarks("See `;;setnamed` command to associate a name with the channel.")]
+        [Example("")]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task ListNamed()
+        {
+            Result<(string name, ulong channel)[]>? result = await _discordService.GetNamedChannels();
+
+            EmbedBuilder embed;
+            if (result.Success)
+            {
+                string description;
+                if (result.Value!.Length == 0)
+                {
+                    description = "No channel names are set, see `;;setnamed` command";
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+                    foreach (var (name, channel) in result.Value)
+                    {
+                        sb.Append("**").Append(name).Append("** - ").Append(MentionUtils.MentionChannel(channel)).Append("\n");
+                    }
+                    sb.Length--;
+                    description = sb.ToString();
+                }
+
+                embed = new EmbedBuilder()
+                {
+                    Title = "Channel Names",
+                    Description = description,
+                    Color = DiscordColors.infoColor
+                };
+            }
+            else
+            {
+                embed = new EmbedBuilder()
+                {
+                    Title = DefaultFailureTitle,
+                    Description = result.ErrorDescriptions,
+                    Color = DiscordColors.failureColor
+                };
+            }
+
+            await ReplyAsync(embed: embed.Build());
         }
 
         [Command("setadmin")]
