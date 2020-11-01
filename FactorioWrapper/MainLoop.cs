@@ -156,9 +156,9 @@ namespace FactorioWrapper
                 {
                     try
                     {
-                        if (process.MainModule.FileName == factorioFileName)
+                        if (process.MainModule.FileName.EndsWith(factorioFileName))
                         {
-                            process.Kill();
+                            process.Kill(entireProcessTree: true);
                         }
                     }
                     catch (Exception e)
@@ -344,7 +344,7 @@ namespace FactorioWrapper
                     var p = factorioProcess;
                     if (p != null && !p.HasExited)
                     {
-                        p.Kill();
+                        p.Kill(entireProcessTree: true);
                     }
 
                     await ChangeStatus(FactorioServerStatus.Killing);
