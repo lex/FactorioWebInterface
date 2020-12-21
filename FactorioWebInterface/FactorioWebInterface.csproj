@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <TypeScriptToolsVersion>3.9</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>4.0</TypeScriptToolsVersion>
     <Configurations>Debug;Release;Wsl;Windows;Watch</Configurations>
     <Nullable>enable</Nullable>
     <UserSecretsId>6492e168-c513-4411-a2df-51bed8c13577</UserSecretsId>

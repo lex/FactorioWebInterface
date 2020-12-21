@@ -376,7 +376,13 @@ export class ColumnTemplate<K = any, T = any> implements IColumnTemplate<K, T>{
     property: string;
     header: (headerCell?: HTMLTableHeaderCellElement, table?: Table<K, T>) => Node | string;
     cell: (value: any, item: T, table?: Table<K, T>) => Node | string;
-    comparator: (a: any, b: any) => number;
+    private _comparator: (a: any, b: any) => number;
+    get comparator(): (a: any, b: any) => number {
+        return this._comparator;
+    }
+    set comparator(value: (a: any, b: any) => number) {
+        this._comparator = value;
+    }
     sortId: any;
     sortingDisabled: boolean;
 
@@ -416,7 +422,7 @@ export class TextColumn<K = any, T = any> extends ColumnTemplate<K, T> {
         return item + '';
     }
 
-    private _comparator: (a: any, b: any) => number;
+    private _com: (a: any, b: any) => number;
 
     caseSensitive = false;
 
@@ -426,18 +432,18 @@ export class TextColumn<K = any, T = any> extends ColumnTemplate<K, T> {
     }
 
     get comparator(): (a: any, b: any) => number {
-        if (this._comparator == null) {
+        if (this._com == null) {
             if (this.property) {
-                this._comparator = ComparatorHelper.buildStringComparatorForProperty(this.property, this.caseSensitive);
+                this._com = ComparatorHelper.buildStringComparatorForProperty(this.property, this.caseSensitive);
             } else {
-                this._comparator = ComparatorHelper.buildStringComparator(this.caseSensitive);
+                this._com = ComparatorHelper.buildStringComparator(this.caseSensitive);
             }
         }
 
-        return this._comparator;
+        return this._com;
     }
     set comparator(comparator: (a: any, b: any) => number) {
-        this._comparator = comparator
+        this._com = comparator
     }
 
     constructor(property?: string) {
