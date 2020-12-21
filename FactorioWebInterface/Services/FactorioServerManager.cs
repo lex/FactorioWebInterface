@@ -667,10 +667,10 @@ namespace FactorioWebInterface.Services
                 {
                     try
                     {
-                        if (process.MainModule.FileName == mutableData.ExecutablePath)
+                        if (process.MainModule.FileName.EndsWith(mutableData.ExecutablePath))
                         {
                             foundCount++;
-                            process.Kill();
+                            process.Kill(entireProcessTree: true);
                             killedCount++;
                         }
                     }
