@@ -3,7 +3,6 @@ using FactorioWebInterface.Data;
 using FactorioWebInterface.Services;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using System;
 using System.Threading.Tasks;
 using Xunit;
 

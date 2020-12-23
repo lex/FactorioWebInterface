@@ -17,6 +17,12 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotCommandHelpBuilde
         [InlineData("s")]
         [InlineData("unset")]
         [InlineData("u")]
+        [InlineData("setnamed")]
+        [InlineData("sn")]
+        [InlineData("unsetnamed")]
+        [InlineData("un")]
+        [InlineData("listnamed")]
+        [InlineData("ln")]
         [InlineData("setadmin")]
         [InlineData("a")]
         [InlineData("help")]
@@ -39,6 +45,9 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotCommandHelpBuilde
         [InlineData("ping")]
         [InlineData("setserver")]
         [InlineData("unset")]
+        [InlineData("setnamed")]
+        [InlineData("unsetnamed")]
+        [InlineData("listnamed")]
         [InlineData("setadmin")]
         [InlineData("help")]
         public void HelpListingsShowsAllCommandsForDiscordBotCommands(string commandName)
@@ -46,8 +55,11 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotCommandHelpBuilde
             // Arrange.
             (var _, var commandListings) = DiscordBotCommandHelpBuilder.BuildHelp<DiscordBotCommands>();
 
+            // Act.
+            bool found = commandListings.Fields.Any(f => f.Name.Contains(commandName));
+
             // Assert.
-            var field = commandListings.Fields.Single(f => f.Name.Contains(commandName));            
+            Assert.True(found);
         }
     }
 }

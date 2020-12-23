@@ -14,7 +14,7 @@ namespace FactorioWebInterface.Data
         }
 
         public DbSet<DiscordServers> DiscordServers { get; set; } = default!;
-        public DbSet<NamedDiscordServer> NamedDiscordServers { get; set; } = default!;
+        public DbSet<NamedDiscordChannel> NamedDiscordChannels { get; set; } = default!;
         public DbSet<Admin> Admins { get; set; } = default!;
         public DbSet<Ban> Bans { get; set; } = default!;
 
@@ -27,8 +27,7 @@ namespace FactorioWebInterface.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<NamedDiscordServer>()
-                .HasKey(e => new { e.DiscordChannelId, e.Name });
+            modelBuilder.Entity<NamedDiscordChannel>().Property(x => x.Name).HasColumnType("TEXT COLLATE NOCASE");
 
             modelBuilder.Entity<ApplicationUser>(b =>
             {

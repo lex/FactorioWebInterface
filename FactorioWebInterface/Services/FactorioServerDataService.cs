@@ -24,7 +24,7 @@ namespace FactorioWebInterface.Services
 
         IReadOnlyDictionary<string, FactorioServerData> Servers { get; }
 
-        bool TryGetServerData(string serverId, out FactorioServerData serverData);
+        bool TryGetServerData(string serverId, [MaybeNullWhen(false)] out FactorioServerData serverData);
 
         bool IsValidServerId(string serverId);
 
@@ -144,12 +144,18 @@ namespace FactorioWebInterface.Services
 
         public bool TryGetServerData(string serverId, [MaybeNullWhen(false)] out FactorioServerData serverData)
         {
+            if (serverId is null)
+            {
+                serverData = null;
+                return false;
+            }
+
             return servers.TryGetValue(serverId, out serverData!);
         }
 
         public bool IsValidServerId(string serverId)
         {
-            return servers.ContainsKey(serverId);
+            return serverId is not null && servers.ContainsKey(serverId);
         }
 
         private async Task<FactorioServerExtraSettings> GetFactorioServerExtraSettings(FactorioServerData serverData)
