@@ -9,6 +9,8 @@ export class ServerFileService {
     static readonly scenarioMetaDataKeySelector = (scenario: ScenarioMetaData) => scenario.Name;
     static readonly modPackMetaDataKeySelector = (modPack: ScenarioMetaData) => modPack.Name;
 
+    private _updatingModPacks = false;
+
     private _serverIdService: ServerIdService;
     private _serversHubService: ServersHubService;
 
@@ -79,7 +81,13 @@ export class ServerFileService {
         });
 
         serversHubService.modPacks.subscribe(event => {
-            this._modPacks.update(event);
+            try {
+                this._updatingModPacks = true;
+                this._modPacks.update(event);
+            }
+            finally {
+                this._updatingModPacks = false;
+            }
         });
 
         serversHubService.logFiles.subscribe(event => {
@@ -95,7 +103,13 @@ export class ServerFileService {
         });
 
         serversHubService.onSelectedModPack.subscribe(event => {
-            this._selectedModPack.raise(event);
+            try {
+                this._updatingModPacks = true;
+                this._selectedModPack.raise(event);
+            }
+            finally {
+                this._updatingModPacks = false;
+            }
         })
 
         serversHubService.whenConnection(() => {
@@ -109,7 +123,7 @@ export class ServerFileService {
     }
 
     setSelectedModPack(modPack: string) {
-        if (this._selectedModPack.value === modPack) {
+        if (this._updatingModPacks || this._selectedModPack.value === modPack) {
             return;
         }
 
