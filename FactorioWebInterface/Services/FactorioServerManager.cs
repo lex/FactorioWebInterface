@@ -317,6 +317,7 @@ namespace FactorioWebInterface.Services
                 };
             }
 
+            mutableData.ControlMessageBuffer.Add(message);
             var group = _factorioControlHub.Clients.Groups(mutableData.ServerId);
 
             return Task.WhenAll(group.FactorioStatusChanged(newStatusString, oldStatusString), group.SendMessage(message));
@@ -650,7 +651,7 @@ namespace FactorioWebInterface.Services
 
                         return;
                     }
-                    catch (TaskCanceledException)
+                    catch (OperationCanceledException)
                     {
                         _logger.LogInformation("No response Killing server via wrapper serverId: {serverId} user: {userName}", serverId, userName);
                     }

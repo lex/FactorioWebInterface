@@ -76,7 +76,7 @@ namespace FactorioWebInterface.Services.Discord
                     await DoUpdate();
                     await _timeSystem.Delay(throttleTimeout);
                 }
-                catch (TaskCanceledException)
+                catch (OperationCanceledException)
                 {
                     ScheduleUpdate();
                 }
