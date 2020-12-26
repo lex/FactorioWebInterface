@@ -323,12 +323,12 @@ namespace FactorioWebInterface.Services
             return Task.WhenAll(group.FactorioStatusChanged(newStatusString, oldStatusString), group.SendMessage(message));
         }
 
-        private string SanitizeGameChat(string message)
+        private static string SanitizeGameChat(string message)
         {
             return Format.Sanitize(message).Replace("@", "@\u200B"); // Prevent mentions from working.
         }
 
-        private string SanitizeDiscordChat(string message)
+        private static string SanitizeDiscordChat(string message)
         {
             StringBuilder sb = new StringBuilder(message);
 

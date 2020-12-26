@@ -1,4 +1,5 @@
-﻿using FactorioWebInterface.Models;
+﻿using Discord;
+using FactorioWebInterface.Models;
 using Shared;
 using System.Collections.Generic;
 using System.Text;
@@ -64,24 +65,20 @@ namespace FactorioWebInterface.Services.Discord
 
         private static string BuildServerTopicFromOnlinePlayers(SortedList<string, int> onlinePlayers, int count)
         {
-            var sb = new StringBuilder();
-
             if (count == 0)
             {
-                sb.Append("Players online 0");
-                return sb.ToString();
-            }
-            else
-            {
-                sb.Append("Players online ").Append(count);
+                return "Players online 0";
             }
 
-            sb.Append(" - ");
+            var sb = new StringBuilder();
+            sb.Append("Players online ").Append(count).Append(" - ");
+
             foreach (var item in onlinePlayers)
             {
+                string name = SanitizeName(item.Key);
                 for (int i = 0; i < item.Value; i++)
                 {
-                    sb.Append(item.Key).Append(", ");
+                    sb.Append(name).Append(", ");
                 }
 
                 if (sb.Length > Constants.discordTopicMaxLength)
@@ -96,6 +93,11 @@ namespace FactorioWebInterface.Services.Discord
             sb.Length -= 2;
 
             return sb.ToString();
+        }
+
+        private static string SanitizeName(string message)
+        {
+            return Format.Sanitize(message).Replace("@", "@\u200B"); // Prevent mentions from working.
         }
     }
 }

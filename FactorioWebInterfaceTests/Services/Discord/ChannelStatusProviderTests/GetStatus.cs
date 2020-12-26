@@ -197,5 +197,27 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelStatusProviderTests
             Assert.EndsWith("...", channelStatus.Topic);
             Assert.Equal(Constants.discordTopicMaxLength, channelStatus.Topic!.Length);
         }
+
+        [Theory]
+        [InlineData("Players online 1 - \\_\\_name\\_\\_", "__name__")]
+        [InlineData("Players online 1 - @\u200Bname", "@name")]
+        public void TopicEscapesMarkdown(string expectedTopic, string name)
+        {
+            // Arrange.
+            var data = ServerDataHelper.MakeMutableData();
+            data.OnlinePlayers = new SortedList<string, int>()
+            {
+                [name] = 1
+            };
+            data.OnlinePlayerCount = 1;
+            data.ServerExtraSettings.SetDiscordChannelTopic = true;
+            data.Status = FactorioServerStatus.Running;
+
+            // Act.
+            var channelStatus = ChannelStatusProvider.GetStatus(data);
+
+            // Assert.
+            Assert.Equal(expectedTopic, channelStatus.Topic);
+        }
     }
 }
