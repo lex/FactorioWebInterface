@@ -1777,14 +1777,16 @@ namespace FactorioWebInterface.Services
                     Description = "Server has **crashed**",
                     Color = DiscordColors.failureColor,
                     Timestamp = DateTimeOffset.UtcNow
-                };
-
-                var startTime = await serverData.LockAsync(md => md.ServerExtraSettings.PingDiscordCrashRole ? md.StartTime : default);
+                };                
 
                 string? mention = null;
-                if (startTime != default && (DateTime.UtcNow - startTime) >= crashStartTimeCooldown)
+                if (oldStatus == FactorioServerStatus.Running)
                 {
-                    mention = _discordService.CrashRoleMention;
+                    (bool ping, DateTime startTime) = await serverData.LockAsync(md => (md.ServerExtraSettings.PingDiscordCrashRole, md.StartTime));
+                    if (ping && (DateTime.UtcNow - startTime) >= crashStartTimeCooldown)
+                    {
+                        mention = _discordService.CrashRoleMention;
+                    }
                 }
 
                 _ = _discordService.SendToConnectedChannel(serverId, mention, embed.Build());
