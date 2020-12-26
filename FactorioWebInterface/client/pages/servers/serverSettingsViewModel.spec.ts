@@ -42,6 +42,7 @@ describe('ServerSettingsViewModel', function () {
         { property: 'Admins', value: 'new value', settingValue: ['new value'] },
         { property: 'AutosaveInterval', value: 10, settingValue: 10 },
         { property: 'AutosaveSlots', value: 10, settingValue: 10 },
+        { property: 'AfkAutokickInterval', value: 10, settingValue: 10 },
         { property: 'NonBlockingSaving', value: false, settingValue: false },
         { property: 'PublicVisible', value: false, settingValue: false },
     ];
@@ -154,6 +155,40 @@ describe('ServerSettingsViewModel', function () {
         }
     });
 
+    describe('setting form property to invalid when default triggers updates', function () {
+        const testCases = [
+            { property: 'Name', value: ' ' },
+            { property: 'Description', value: ' ' },
+            { property: 'Tags', value: ' ' },
+            { property: 'MaxPlayers', value: -1 },
+            { property: 'MaxUploadSlots', value: -1 },
+            { property: 'Admins', value: ' ' },
+            { property: 'AutosaveSlots', value: -1 },
+            { property: 'AfkAutokickInterval', value: -1 },
+        ]
+        for (let testCase of testCases) {
+            it(testCase.property, function () {
+                // Arrange.
+                const defaultValue = ServerSettingsViewModel.formFieldsDefaultValues[testCase.property]
+
+                let services = new ServersPageTestServiceLocator();
+                let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+                let viewModel = mainViewModel.serverSettingsViewModel;
+
+                viewModel[testCase.property] = defaultValue;
+
+                let actaulPropertyValue: any = undefined;
+                viewModel.propertyChanged(testCase.property as propertyOf<ServerSettingsViewModel>, event => actaulPropertyValue = event);
+
+                // Act.
+                viewModel[testCase.property as string] = testCase.value;
+
+                // Assert.            
+                strict.deepEqual(actaulPropertyValue, defaultValue);
+            });
+        }
+    });
+
     describe('setting from update triggers property', function () {
         for (let testCase of serverSettingsTestCases) {
             it(testCase.property, function () {
@@ -262,6 +297,7 @@ describe('ServerSettingsViewModel', function () {
                 Admins: [],
                 AutosaveInterval: 5,
                 AutosaveSlots: 20,
+                AfkAutokickInterval: 0,
                 NonBlockingSaving: true,
                 PublicVisible: true
             };
@@ -428,6 +464,7 @@ describe('ServerSettingsViewModel', function () {
         viewModel.Admins = 'admin1, admin2';
         viewModel.AutosaveInterval = 4;
         viewModel.AutosaveSlots = 8;
+        viewModel.AfkAutokickInterval = 12;
         viewModel.NonBlockingSaving = true;
         viewModel.PublicVisible = false;
 
@@ -443,6 +480,7 @@ describe('ServerSettingsViewModel', function () {
             Admins: ['admin1', 'admin2'],
             AutosaveInterval: 4,
             AutosaveSlots: 8,
+            AfkAutokickInterval: 12,
             NonBlockingSaving: true,
             PublicVisible: false
         };
@@ -487,6 +525,7 @@ describe('ServerSettingsViewModel', function () {
                 Admins: ['admin1', 'admin2'],
                 AutosaveInterval: 4,
                 AutosaveSlots: 8,
+                AfkAutokickInterval: 12,
                 NonBlockingSaving: false,
                 PublicVisible: false
             };
@@ -503,6 +542,7 @@ describe('ServerSettingsViewModel', function () {
                 Admins: 'admin1, admin2',
                 AutosaveInterval: 4,
                 AutosaveSlots: 8,
+                AfkAutokickInterval: 12,
                 NonBlockingSaving: false,
                 PublicVisible: false
             };

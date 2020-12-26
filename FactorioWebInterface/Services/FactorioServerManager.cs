@@ -1931,6 +1931,7 @@ namespace FactorioWebInterface.Services
                 Admins = adminList,
                 AutosaveInterval = settings.AutosaveInterval,
                 AutosaveSlots = settings.AutosaveSlots,
+                AfkAutokickInterval = settings.AfkAutokickInterval,
                 NonBlockingSaving = settings.NonBlockingSaving,
                 PublicVisible = settings.Visibility.Public
             };
@@ -1974,6 +1975,7 @@ namespace FactorioWebInterface.Services
             settings.MaxUploadSlots = settings.MaxUploadSlots < 0 ? 0 : settings.MaxUploadSlots;
             settings.AutosaveSlots = settings.AutosaveSlots < 0 ? 0 : settings.AutosaveSlots;
             settings.AutosaveInterval = settings.AutosaveInterval < 1 ? 1 : settings.AutosaveInterval;
+            settings.AfkAutokickInterval = settings.AfkAutokickInterval < 0 ? 0 : settings.AfkAutokickInterval;
 
             async Task<Result> Inner(FactorioServerMutableData md)
             {
@@ -1989,6 +1991,7 @@ namespace FactorioWebInterface.Services
                 serverSettigns.UseDefaultAdmins = settings.UseDefaultAdmins;
                 serverSettigns.AutosaveSlots = settings.AutosaveSlots;
                 serverSettigns.AutosaveInterval = settings.AutosaveInterval;
+                serverSettigns.AfkAutokickInterval = settings.AfkAutokickInterval;
                 serverSettigns.NonBlockingSaving = settings.NonBlockingSaving;
                 serverSettigns.Visibility.Public = settings.PublicVisible;
 
@@ -2187,6 +2190,9 @@ namespace FactorioWebInterface.Services
                             break;
                         case nameof(FactorioServerSettingsWebEditable.AutosaveSlots):
                             settings.AutosaveSlots = value as int? ?? 20;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.AfkAutokickInterval):
+                            settings.AfkAutokickInterval = value as int? ?? 0;
                             break;
                         case nameof(FactorioServerSettingsWebEditable.NonBlockingSaving):
                             settings.NonBlockingSaving = value as bool? ?? false;

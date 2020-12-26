@@ -36,6 +36,7 @@ export class ServerSettingsView extends VirtualComponent {
             adminsField,
             new NumberField('AutosaveInterval', 'Autosave Interval (in minutes, min value 1)'),
             new NumberField('AutosaveSlots', 'Autosave Slots (0 to turn off auto saves)'),
+            new NumberField('AfkAutokickInterval', 'Akf auto kick time (in minutes, 0 for unlimited)'),
             new CheckboxField('NonBlockingSaving', 'Non Blocking Saving'),
             new CheckboxField('PublicVisible', 'Public Visible'),
             new Field(this.builldFormButtons()),
