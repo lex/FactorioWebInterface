@@ -5,7 +5,7 @@ namespace FactorioWebInterface.Models
 {
     public static class FactorioVersionFinder
     {
-        private const string errorMesssage = "No version (use Manage Version)";
+        public const string errorMesssage = "No version (use Manage Version)";
 
         public static string GetVersionString(string pathToExecutable)
         {

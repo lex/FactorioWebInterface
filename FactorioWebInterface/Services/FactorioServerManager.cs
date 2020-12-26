@@ -739,11 +739,16 @@ namespace FactorioWebInterface.Services
             {
                 var result = await _factorioUpdater.DoUpdate(serverData, version);
 
+                string executableVersion = FactorioVersionFinder.GetVersionString(serverData.ExecutablePath);
+
                 var oldStatus = serverData.Status;
                 var group = _factorioControlHub.Clients.Group(serverId);
 
                 void ReportInstall(FactorioServerMutableData mutableData)
                 {
+                    mutableData.Version = executableVersion;
+                    _ = group.SendVersion(executableVersion);
+
                     if (result.Success)
                     {
                         mutableData.Status = FactorioServerStatus.Updated;
@@ -760,16 +765,20 @@ namespace FactorioWebInterface.Services
                         mutableData.ControlMessageBuffer.Add(messageData);
                         _ = group.SendMessage(messageData);
 
+                        string versionText = version == "latest" && executableVersion != FactorioVersionFinder.errorMesssage
+                            ? $"{executableVersion} (latest)"
+                            : version;
+
                         var embed = new EmbedBuilder()
                         {
                             Title = "Status:",
-                            Description = $"Server has **updated** to version {version}",
+                            Description = $"Server has **updated** to version {versionText}",
                             Color = DiscordColors.updateColor,
                             Timestamp = DateTimeOffset.UtcNow
                         };
                         _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
-                        _logger.LogInformation("Updated server to version: {version}.", version);
+                        _logger.LogInformation("Updated server to version: {version}.", executableVersion);
                     }
                     else
                     {
@@ -797,9 +806,6 @@ namespace FactorioWebInterface.Services
                         mutableData.ControlMessageBuffer.Add(messageData2);
                         _ = group.SendMessage(messageData2);
                     }
-
-                    mutableData.Version = FactorioVersionFinder.GetVersionString(mutableData.ExecutablePath);
-                    _ = group.SendVersion(mutableData.Version);
                 }
 
                 await serverData.LockAsync(ReportInstall);
@@ -1777,7 +1783,7 @@ namespace FactorioWebInterface.Services
                     Description = "Server has **crashed**",
                     Color = DiscordColors.failureColor,
                     Timestamp = DateTimeOffset.UtcNow
-                };                
+                };
 
                 string? mention = null;
                 if (oldStatus == FactorioServerStatus.Running)
