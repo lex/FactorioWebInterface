@@ -29,7 +29,7 @@ namespace Shared.Utils
                     var item = await task;
                     await consumer(item);
                 }
-                catch (TaskCanceledException)
+                catch (OperationCanceledException)
                 {
                     lock (queue)
                     {
@@ -48,7 +48,7 @@ namespace Shared.Utils
                         var item = await DequeueAsync();
                         await consumer(item);
                     }
-                    catch (TaskCanceledException)
+                    catch (OperationCanceledException)
                     {
                         lock (queue)
                         {
@@ -124,7 +124,7 @@ namespace Shared.Utils
             {
                 if (disposed)
                 {
-                    return Task.FromException<T>(new TaskCanceledException());
+                    return Task.FromException<T>(new OperationCanceledException());
                 }
 
                 if (queue.TryDequeue(out T item))

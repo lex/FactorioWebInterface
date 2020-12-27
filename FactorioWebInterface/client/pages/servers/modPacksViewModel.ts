@@ -1,7 +1,7 @@
 ﻿import { ModPackMetaData } from "./serversTypes";
 import { ObservableObject } from "../../utils/observableObject";
 import { ServerFileService } from "./serverFileService";
-import { ObservableCollection, CollectionView } from "../../utils/collections/module";
+import { ObservableCollection, CollectionView, CollectionViewChangeType } from "../../utils/collections/module";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionChangeType } from "../../ts/utils";
 
@@ -32,8 +32,14 @@ export class ModPacksViewModel extends ObservableObject {
         this._sourceModPacks = modPacks;
         this._modPacks = new CollectionView(modPacks);
         this._modPacks.sortBy({ property: 'LastModifiedTime', ascending: false });
-        this._modPacks.newSingleSelectedChanged.subscribe(() => {
-            let name = IterableHelper.firstOrDefault(this._modPacks.selected)?.Name ?? '';
+        this._modPacks.newSingleSelectedChanged.subscribe(event => {
+            if (event.type == CollectionViewChangeType.Reset) {
+                // This only happens if the collection is reset, which only happens from the backend when fetching the mod packs.
+                // So this isn't user input and shouldn't change which mod pack is selected.
+                return;
+            }
+
+            let name = IterableHelper.firstOrDefault(this._modPacks.selectedKeys) ?? '';
             serverFileService.setSelectedModPack(name);
         });
 

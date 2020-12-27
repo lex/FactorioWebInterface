@@ -24,6 +24,7 @@ interface FormFields {
     AutosaveSlots: number;
     NonBlockingSaving: boolean;
     PublicVisible: boolean;
+    AfkAutokickInterval: number;
 }
 
 export class ServerSettingsViewModel extends ObservableObject<ServerSettingsViewModel> implements IObservableErrors {
@@ -44,7 +45,8 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
         AutosaveInterval: 5,
         AutosaveSlots: 20,
         NonBlockingSaving: true,
-        PublicVisible: true
+        PublicVisible: true,
+        AfkAutokickInterval: 0
     }
 
     private _suppressUpdate = false;
@@ -184,6 +186,18 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
         this.setField('PublicVisible', value);
     }
 
+    get AfkAutokickInterval() {
+        return this._formFields.AfkAutokickInterval;
+    }
+    set AfkAutokickInterval(value: number) {
+        value = MathHelper.toIntegerOrDefault(value);
+        if (value < 0) {
+            value = ServerSettingsViewModel.formFieldsDefaultValues.AfkAutokickInterval;
+        }
+
+        this.setField('AfkAutokickInterval', value, true);
+    }
+
     get saved(): boolean {
         return this._saved;
     }
@@ -283,7 +297,7 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
             } else {
                 this._changesDuringSupression = true;
             }
-            
+
             return true;
         }
 
@@ -308,7 +322,8 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
             case 'MaxPlayers':
             case 'MaxUploadSlots':
             case 'AutosaveInterval':
-            case 'AutosaveSlots': {
+            case 'AutosaveSlots':
+            case 'AfkAutokickInterval': {
                 settingValue = Number(settingValue);
                 if (isNaN(settingValue)) {
                     settingValue = null;

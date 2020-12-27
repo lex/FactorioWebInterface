@@ -95,6 +95,7 @@ export interface FactorioServerSettings {
     Admins: string[];
     AutosaveInterval: number;
     AutosaveSlots: number;
+    AfkAutokickInterval: number;
     NonBlockingSaving: boolean;
     PublicVisible: boolean;
 }

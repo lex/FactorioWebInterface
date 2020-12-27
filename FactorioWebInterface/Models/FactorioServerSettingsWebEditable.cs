@@ -50,6 +50,10 @@ namespace FactorioWebInterface.Models
         [JsonPropertyName("autosave_slots")]
         public int AutosaveSlots { get; set; }
 
+        [JsonProperty(PropertyName = "afk_autokick_interval")]
+        [JsonPropertyName("afk_autokick_interval")]
+        public int AfkAutokickInterval { get; set; }
+
         [JsonProperty(PropertyName = "non_blocking_saving")]
         [JsonPropertyName("non_blocking_saving")]
         public bool NonBlockingSaving { get; set; }
@@ -69,6 +73,7 @@ namespace FactorioWebInterface.Models
             AutosaveInterval = 5,
             AutosaveSlots = 20,
             AutoPause = true,
+            AfkAutokickInterval = 0,
             UseDefaultAdmins = true,
             Admins = Array.Empty<string>(),
             NonBlockingSaving = false,

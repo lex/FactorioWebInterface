@@ -317,17 +317,18 @@ namespace FactorioWebInterface.Services
                 };
             }
 
+            mutableData.ControlMessageBuffer.Add(message);
             var group = _factorioControlHub.Clients.Groups(mutableData.ServerId);
 
             return Task.WhenAll(group.FactorioStatusChanged(newStatusString, oldStatusString), group.SendMessage(message));
         }
 
-        private string SanitizeGameChat(string message)
+        private static string SanitizeGameChat(string message)
         {
             return Format.Sanitize(message).Replace("@", "@\u200B"); // Prevent mentions from working.
         }
 
-        private string SanitizeDiscordChat(string message)
+        private static string SanitizeDiscordChat(string message)
         {
             StringBuilder sb = new StringBuilder(message);
 
@@ -650,7 +651,7 @@ namespace FactorioWebInterface.Services
 
                         return;
                     }
-                    catch (TaskCanceledException)
+                    catch (OperationCanceledException)
                     {
                         _logger.LogInformation("No response Killing server via wrapper serverId: {serverId} user: {userName}", serverId, userName);
                     }
@@ -738,11 +739,16 @@ namespace FactorioWebInterface.Services
             {
                 var result = await _factorioUpdater.DoUpdate(serverData, version);
 
+                string executableVersion = FactorioVersionFinder.GetVersionString(serverData.ExecutablePath);
+
                 var oldStatus = serverData.Status;
                 var group = _factorioControlHub.Clients.Group(serverId);
 
                 void ReportInstall(FactorioServerMutableData mutableData)
                 {
+                    mutableData.Version = executableVersion;
+                    _ = group.SendVersion(executableVersion);
+
                     if (result.Success)
                     {
                         mutableData.Status = FactorioServerStatus.Updated;
@@ -759,16 +765,20 @@ namespace FactorioWebInterface.Services
                         mutableData.ControlMessageBuffer.Add(messageData);
                         _ = group.SendMessage(messageData);
 
+                        string versionText = version == "latest" && executableVersion != FactorioVersionFinder.errorMesssage
+                            ? $"{executableVersion} (latest)"
+                            : version;
+
                         var embed = new EmbedBuilder()
                         {
                             Title = "Status:",
-                            Description = $"Server has **updated** to version {version}",
+                            Description = $"Server has **updated** to version {versionText}",
                             Color = DiscordColors.updateColor,
                             Timestamp = DateTimeOffset.UtcNow
                         };
                         _ = _discordService.SendToConnectedChannel(serverId, embed: embed.Build());
 
-                        _logger.LogInformation("Updated server to version: {version}.", version);
+                        _logger.LogInformation("Updated server to version: {version}.", executableVersion);
                     }
                     else
                     {
@@ -796,9 +806,6 @@ namespace FactorioWebInterface.Services
                         mutableData.ControlMessageBuffer.Add(messageData2);
                         _ = group.SendMessage(messageData2);
                     }
-
-                    mutableData.Version = FactorioVersionFinder.GetVersionString(mutableData.ExecutablePath);
-                    _ = group.SendVersion(mutableData.Version);
                 }
 
                 await serverData.LockAsync(ReportInstall);
@@ -1778,12 +1785,14 @@ namespace FactorioWebInterface.Services
                     Timestamp = DateTimeOffset.UtcNow
                 };
 
-                var startTime = await serverData.LockAsync(md => md.ServerExtraSettings.PingDiscordCrashRole ? md.StartTime : default);
-
                 string? mention = null;
-                if (startTime != default && (DateTime.UtcNow - startTime) >= crashStartTimeCooldown)
+                if (oldStatus == FactorioServerStatus.Running)
                 {
-                    mention = _discordService.CrashRoleMention;
+                    (bool ping, DateTime startTime) = await serverData.LockAsync(md => (md.ServerExtraSettings.PingDiscordCrashRole, md.StartTime));
+                    if (ping && (DateTime.UtcNow - startTime) >= crashStartTimeCooldown)
+                    {
+                        mention = _discordService.CrashRoleMention;
+                    }
                 }
 
                 _ = _discordService.SendToConnectedChannel(serverId, mention, embed.Build());
@@ -1922,6 +1931,7 @@ namespace FactorioWebInterface.Services
                 Admins = adminList,
                 AutosaveInterval = settings.AutosaveInterval,
                 AutosaveSlots = settings.AutosaveSlots,
+                AfkAutokickInterval = settings.AfkAutokickInterval,
                 NonBlockingSaving = settings.NonBlockingSaving,
                 PublicVisible = settings.Visibility.Public
             };
@@ -1965,6 +1975,7 @@ namespace FactorioWebInterface.Services
             settings.MaxUploadSlots = settings.MaxUploadSlots < 0 ? 0 : settings.MaxUploadSlots;
             settings.AutosaveSlots = settings.AutosaveSlots < 0 ? 0 : settings.AutosaveSlots;
             settings.AutosaveInterval = settings.AutosaveInterval < 1 ? 1 : settings.AutosaveInterval;
+            settings.AfkAutokickInterval = settings.AfkAutokickInterval < 0 ? 0 : settings.AfkAutokickInterval;
 
             async Task<Result> Inner(FactorioServerMutableData md)
             {
@@ -1980,6 +1991,7 @@ namespace FactorioWebInterface.Services
                 serverSettigns.UseDefaultAdmins = settings.UseDefaultAdmins;
                 serverSettigns.AutosaveSlots = settings.AutosaveSlots;
                 serverSettigns.AutosaveInterval = settings.AutosaveInterval;
+                serverSettigns.AfkAutokickInterval = settings.AfkAutokickInterval;
                 serverSettigns.NonBlockingSaving = settings.NonBlockingSaving;
                 serverSettigns.Visibility.Public = settings.PublicVisible;
 
@@ -2178,6 +2190,9 @@ namespace FactorioWebInterface.Services
                             break;
                         case nameof(FactorioServerSettingsWebEditable.AutosaveSlots):
                             settings.AutosaveSlots = value as int? ?? 20;
+                            break;
+                        case nameof(FactorioServerSettingsWebEditable.AfkAutokickInterval):
+                            settings.AfkAutokickInterval = value as int? ?? 0;
                             break;
                         case nameof(FactorioServerSettingsWebEditable.NonBlockingSaving):
                             settings.NonBlockingSaving = value as bool? ?? false;

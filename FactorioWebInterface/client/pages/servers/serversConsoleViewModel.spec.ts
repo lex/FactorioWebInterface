@@ -1695,6 +1695,7 @@ describe('ServerConsoleViewModel', function () {
             Admins: ['Admins'],
             AutosaveInterval: 0,
             AutosaveSlots: 0,
+            AfkAutokickInterval: 0,
             NonBlockingSaving: true,
             PublicVisible: true
         };

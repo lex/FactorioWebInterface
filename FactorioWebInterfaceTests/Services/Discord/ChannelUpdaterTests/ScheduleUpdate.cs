@@ -155,7 +155,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelUpdaterTests
 
                 if (count == 1)
                 {
-                    throw new TaskCanceledException();
+                    throw new OperationCanceledException();
                 }
 
                 name = n;
