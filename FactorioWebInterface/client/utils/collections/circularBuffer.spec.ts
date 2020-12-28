@@ -120,7 +120,7 @@ describe('CircularBuffer', function () {
     }
 
     it('throws error when capacity <= 0', function () {
-        strict.throws(() => new CircularBuffer(0), 'capacity must be greater than 0.');
-        strict.throws(() => new CircularBuffer(-1), 'capacity must be greater than 0.');
+        strict.throws(() => new CircularBuffer(0), /capacity must be greater than 0.$/);
+        strict.throws(() => new CircularBuffer(-1), /capacity must be greater than 0.$/);
     });
 });

@@ -1,4 +1,5 @@
 ﻿const path = require("path");
+const webpack = require('webpack');
 const TerserJSPlugin = require('terser-webpack-plugin');
 //const HtmlWebpackPlugin = require("html-webpack-plugin");
 //const CleanWebpackPlugin = require("clean-webpack-plugin");
@@ -9,7 +10,7 @@ const glob = require('glob');
 
 module.exports = (env, argv) => {
     const isDev = argv.mode === 'development';
-    const isTest = !!argv.test;
+    const isTest = env.test;
 
     let entry;
     if (isTest) {
@@ -54,9 +55,7 @@ module.exports = (env, argv) => {
                         {
                             loader: MiniCssExtractPlugin.loader,
                             options: {
-                                publicPath: '/',
-                                hmr: isDev,
-                                reloadAll: true
+                                publicPath: '/'
                             }
                         },
                         "css-loader",
@@ -77,6 +76,11 @@ module.exports = (env, argv) => {
             //        include: [path.resolve(__dirname, 'wwwroot/css/test.css')]
             //    }
             //})
+            new webpack.ProvidePlugin({
+                Buffer: 'buffer',
+                util: 'util',
+                process: 'process/browser',
+            })
         ],
         optimization: {
             minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})],
