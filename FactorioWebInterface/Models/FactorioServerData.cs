@@ -26,6 +26,8 @@ namespace FactorioWebInterface.Models
         public string ServerId => Constants.ServerId;
         public FactorioServerStatus Status => mutableData.Status;
         public string Version => mutableData.Version;
+        public string? RunningName => mutableData.ServerRunningSettings?.Name;
+        public DateTime StartTime => mutableData.StartTime;
         public string BaseDirectoryPath => Constants.BaseDirectoryPath;
         public string TempSavesDirectoryPath => Constants.TempSavesDirectoryPath;
         public string LocalSavesDirectoroyPath => Constants.LocalSavesDirectoroyPath;

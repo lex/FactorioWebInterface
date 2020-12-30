@@ -48,10 +48,16 @@ namespace FactorioWebInterface.Models
             return this;
         }
 
+        public FactorioCommandBuilder Add(int number)
+        {
+            sb.Append(number);
+            return this;
+        }
+
         public FactorioCommandBuilder AddQuotedString(string s)
         {
             sb.Append('\'');
-            sb.Append(s);
+            sb.Append(s.Replace(@"\", @"\\").Replace(@"'", @"\'"));
             sb.Append('\'');
 
             return this;
@@ -60,7 +66,7 @@ namespace FactorioWebInterface.Models
         public FactorioCommandBuilder AddDoubleQuotedString(string s)
         {
             sb.Append('"');
-            sb.Append(s);
+            sb.Append(s.Replace(@"\", @"\\").Replace(@"""", @"\"""));
             sb.Append('"');
 
             return this;
@@ -83,6 +89,5 @@ namespace FactorioWebInterface.Models
 
             return sb.ToString();
         }
-
     }
 }
