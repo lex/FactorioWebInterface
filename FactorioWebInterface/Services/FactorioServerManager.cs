@@ -1664,7 +1664,10 @@ namespace FactorioWebInterface.Services
         {
             var serverId = serverData.ServerId;
 
-            var processTask = SendToFactorioProcess(serverId, FactorioCommandBuilder.Static.server_started);
+            await serverData.LockAsync(md => md.StartTime = DateTime.UtcNow);
+
+            var setStartDataTask = SendToFactorioProcess(serverId, ServerStartDataBuilder.BuildCommand(serverData));
+            var serverStartedTask = SendToFactorioProcess(serverId, FactorioCommandBuilder.Static.server_started);
 
             var embed = new EmbedBuilder()
             {
@@ -1679,9 +1682,8 @@ namespace FactorioWebInterface.Services
 
             LogChat(serverData, "[SERVER-STARTED]", dateTime);
 
-            await serverData.LockAsync(md => md.StartTime = DateTime.UtcNow);
-
-            await processTask;
+            await setStartDataTask;
+            await serverStartedTask;
             await ServerConnected(serverData);
         }
 
