@@ -1045,14 +1045,10 @@ namespace FactorioWebInterface.Services
                         break;
                     }
                 case Constants.PlayerJoinTag:
-                    _ = DoPlayerJoined(serverId, content);
-
-                    LogChat(serverId, $"{Constants.PlayerJoinTag} {content}", dateTime);
+                    _ = DoPlayerJoined(serverId, content, dateTime);
                     break;
                 case Constants.PlayerLeaveTag:
-                    _ = DoPlayerLeft(serverId, content);
-
-                    LogChat(serverId, $"{Constants.PlayerLeaveTag} {content}", dateTime);
+                    _ = DoPlayerLeft(serverId, content, dateTime);
                     break;
                 case Constants.QueryPlayersTag:
                     _ = DoPlayerQuery(serverId, content);
@@ -1215,7 +1211,7 @@ namespace FactorioWebInterface.Services
             await t1;
         }
 
-        private async Task DoPlayerJoined(string serverId, string name)
+        private async Task DoPlayerJoined(string serverId, string name, DateTime dateTime)
         {
             if (name == null)
             {
@@ -1226,6 +1222,8 @@ namespace FactorioWebInterface.Services
             {
                 return;
             }
+
+            LogChat(serverData, $"{Constants.PlayerJoinTag} {name}", dateTime);
 
             string safeName = SanitizeGameChat(name);
             _ = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has joined the game**");
@@ -1248,9 +1246,9 @@ namespace FactorioWebInterface.Services
             _ = _discordService.ScheduleUpdateChannelNameAndTopic(serverId);
         }
 
-        private async Task DoPlayerLeft(string serverId, string name)
+        private async Task DoPlayerLeft(string serverId, string content, DateTime dateTime)
         {
-            if (name == null)
+            if (string.IsNullOrWhiteSpace(content))
             {
                 return;
             }
@@ -1260,8 +1258,13 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
+            (string name, string reason) = GetPlayerNameAndReason(content);
+            string space = string.IsNullOrWhiteSpace(reason) ? "" : " ";
+
+            LogChat(serverData, $"{Constants.PlayerLeaveTag} {name}{space}{reason}", dateTime);
+
             string safeName = SanitizeGameChat(name);
-            _ = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has left the game**");
+            _ = _discordService.SendToConnectedChannel(serverId, $"**{safeName} has left the game{space}{reason}**");
 
             bool shouldUpdateChannel = await serverData.LockAsync(md =>
             {
@@ -1712,9 +1715,9 @@ namespace FactorioWebInterface.Services
             });
         }
 
-        private async Task MarkChannelOffline(FactorioServerData serverData)
+        private Task MarkChannelOffline(FactorioServerData serverData)
         {
-            _ = _discordService.ScheduleUpdateChannelNameAndTopic(serverData.ServerId);
+            return _discordService.ScheduleUpdateChannelNameAndTopic(serverData.ServerId);
         }
 
         public async Task StatusChanged(string serverId, FactorioServerStatus newStatus, FactorioServerStatus oldStatus, DateTime dateTime)
@@ -2461,16 +2464,6 @@ namespace FactorioWebInterface.Services
             return serverData.Version;
         }
 
-        private void LogChat(string serverId, string content, DateTime dateTime)
-        {
-            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
-            {
-                return;
-            }
-
-            LogChat(serverData, content, dateTime);
-        }
-
         private void LogChat(FactorioServerData serverData, string content, DateTime dateTime)
         {
             void SafeLog(Logger logger, string c, DateTime dt, ILogger<FactorioServerManager> expectionLogger)
@@ -2603,6 +2596,26 @@ namespace FactorioWebInterface.Services
             string message = content.Substring(space + 1, rest);
 
             return (name, message);
+        }
+
+        private static (string name, string reason) GetPlayerNameAndReason(string content)
+        {
+            int space = content.IndexOf(' ');
+            if (space < 0)
+            {
+                return (content, "");
+            }
+
+            int rest = content.Length - space - 1;
+            if (rest < 1)
+            {
+                return (content, "");
+            }
+
+            string name = content.Substring(0, space);
+            string reason = content.Substring(space + 1, rest);
+
+            return (name, reason);
         }
     }
 }
