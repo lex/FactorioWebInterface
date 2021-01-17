@@ -8,7 +8,7 @@ import { ObservableProperty, IObservableProperty } from "../../utils/observableP
 import { FactorioServerStatus } from "./serversTypes";
 import { FactorioServerStatusUtils } from "./factorioServerStatusUtils";
 import { Observable } from "../../utils/observable";
-import { CollectionView, ObservableCollection } from "../../utils/collections/module";
+import { CollectionView } from "../../utils/collections/module";
 import { ComparatorHelper } from "../../utils/comparatorHelper";
 
 export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
@@ -74,11 +74,11 @@ export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
         this._errorService = errorService;
 
         this._downloadableVersions = new CollectionView<string, string>(manageVersionService.downloadableVersions);
-        this._downloadableVersions.sortBy({ property: null, ascendingComparator: ManageVersionViewModel.downloadableVersionsComparator, ascending: false });
+        this._downloadableVersions.sortBy({ property: null, ascendingComparator: ComparatorHelper.patchStringComparator, ascending: false });
         this.updatedSelected();
 
         this._cachedVersions = new CollectionView<string, string>(manageVersionService.cachedVersions);
-        this._cachedVersions.sortBy({ property: null, ascendingComparator: ComparatorHelper.caseInsensitiveStringComparator, ascending: false });
+        this._cachedVersions.sortBy({ property: null, ascendingComparator: ComparatorHelper.patchStringComparator, ascending: false });
 
         manageVersionService.downloadableVersions.subscribe(event => {
             if (event.Type === CollectionChangeType.Reset) {
@@ -147,21 +147,5 @@ export class ManageVersionViewModel extends ObservableObjectCloseBaseViewModel {
         } else {
             this.updateTooltip = ManageVersionViewModel.updateDisabledTooltipMessage;
         }
-    }
-
-    private static downloadableVersionsComparator(a: string, b: string): number {
-        if (a === b) {
-            return 0;
-        }
-
-        if (a === ManageVersionService.latestVersion) {
-            return -1;
-        }
-
-        if (b === ManageVersionService.latestVersion) {
-            return 1;
-        }
-
-        return ComparatorHelper.caseInsensitiveStringComparator(a, b);
     }
 }

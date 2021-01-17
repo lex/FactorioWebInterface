@@ -1,4 +1,6 @@
 ﻿export class ComparatorHelper {
+    private static readonly _latestVersion = 'latest';
+
     static readonly caseInsensitiveStringComparator = ComparatorHelper.buildCaseInsensitiveStringComparator();
     static readonly caseSensitiveStringComparator = ComparatorHelper.buildCaseSensitiveStringComparator();
 
@@ -49,4 +51,52 @@
         }
     }
 
+    static patchStringComparator(left: string, right: string) {
+        if (left === right) {
+            return 0;
+        }
+
+        if (left.toLowerCase() === ComparatorHelper._latestVersion) {
+            return -1;
+        }
+
+        if (right.toLowerCase() === ComparatorHelper._latestVersion) {
+            return 1;
+        }
+
+        let leftParts = left.split('.');
+        let rightParts = right.split('.');
+        return ComparatorHelper.compareParts(leftParts, rightParts);
+    }
+
+    private static compareParts(leftParts: string[], rightParts: string[]): number {
+        let maxLength = Math.max(leftParts.length, rightParts.length);
+        for (let i = 0; i < maxLength; i++) {
+            let value = ComparatorHelper.comparePart(leftParts[i], rightParts[i]);
+            if (value !== 0) {
+                return value;
+            }
+        }
+
+        return 0;
+    }
+
+    private static comparePart(left: string | undefined, right: string | undefined): number {
+        let leftNumber = parseInt(left);
+        let rightNumber = parseInt(right);
+
+        if (isNaN(leftNumber)) {
+            if (isNaN(rightNumber)) {
+                return 0;
+            }
+
+            return -1;
+        }
+
+        if (isNaN(rightNumber)) {
+            return 1;
+        }
+
+        return leftNumber - rightNumber;
+    }
 }
