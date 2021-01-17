@@ -7,6 +7,7 @@ import { Button, iconButton } from "../../components/button";
 import { Icon } from "../../components/icon";
 import { Table, TextColumn, ColumnTemplate } from "../../components/table";
 import { ReadonlyObservablePropertyBindingSource, ObservableObjectBindingSource } from "../../utils/binding/module";
+import { ComparatorHelper } from "../../utils/comparatorHelper";
 
 export class ManageVersionView extends VirtualComponent {
     constructor(manageVersionViewModel: ManageVersionViewModel) {
@@ -55,7 +56,7 @@ export class ManageVersionView extends VirtualComponent {
         cachedVersionHeader.style.margin = '1em';
 
         let cachedVersionsTable = new Table(manageVersionViewModel.cachedVersions, [
-            new TextColumn(null).setHeader(() => 'Version'),
+            new TextColumn(null).setHeader(() => 'Version').setComparator(ComparatorHelper.patchStringComparator),
             new ColumnTemplate().setHeader(() => 'Update').setCell(updateCellBuilder).setSortingDisabled(true),
             new ColumnTemplate().setHeader(() => 'Delete').setCell(deleteCellBuilder).setSortingDisabled(true)
         ]);

@@ -47,6 +47,7 @@
     <None Remove="client\pages\servers\scenariosViewModel.spec.ts" />
     <None Remove="client\utils\binding\bindingSource.spec.ts" />
     <None Remove="client\utils\collections\observableKeyArray.spec.ts" />
+    <None Remove="client\utils\comparatorHelper.spec.ts" />
     <None Remove="FactorioWebInterface.db" />
     <None Remove="Scenario.db" />
     <None Remove="client\components\button.ts" />
@@ -514,6 +515,7 @@
     <TypeScriptCompile Include="client\utils\collections\collectionView.ts" />
     <TypeScriptCompile Include="client\utils\commandHistory.spec.ts" />
     <TypeScriptCompile Include="client\utils\commandHistory.ts" />
+    <TypeScriptCompile Include="client\utils\comparatorHelper.spec.ts" />
     <TypeScriptCompile Include="client\utils\comparatorHelper.ts" />
     <TypeScriptCompile Include="client\utils\eventListener.ts" />
     <TypeScriptCompile Include="client\utils\fieldId.ts" />
