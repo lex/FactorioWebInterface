@@ -4,6 +4,7 @@ import { ObservableProperty, IObservableProperty } from "../../utils/observableP
 import { ServerIdService } from "./serverIdService";
 import { UploadService, FileUploadEventType } from "../../services/uploadService";
 import { WindowService } from "../../services/windowService";
+import { ErrorService } from "../../services/errorService";
 
 export class ServerFileManagementService {
     static readonly fileUploadUrl = '/admin/servers?handler=fileUpload';
@@ -12,6 +13,7 @@ export class ServerFileManagementService {
     private _serversHubService: ServersHubService;
     private _uploadService: UploadService;
     private _windowsService: WindowService;
+    private _errorService: ErrorService;
 
     private _deflating = new ObservableProperty<boolean>(false);
     private _uploading = new ObservableProperty<boolean>(false);
@@ -29,14 +31,17 @@ export class ServerFileManagementService {
         return this._uploadProgress;
     }
 
-    constructor(serverIdService: ServerIdService, serversHubService: ServersHubService, uploadService: UploadService, windowService: WindowService) {
+    constructor(serverIdService: ServerIdService, serversHubService: ServersHubService, uploadService: UploadService, windowService: WindowService, errorService: ErrorService) {
         this._serverIdService = serverIdService;
         this._serversHubService = serversHubService;
         this._uploadService = uploadService;
         this._windowsService = windowService;
+        this._errorService = errorService;
 
         serversHubService.onDeflateFinished.subscribe((event: Result) => {
             this._deflating.raise(false);
+
+            this._errorService.reportIfError(event);
         });
     }
 

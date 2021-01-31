@@ -35,7 +35,8 @@ export function registerServerPageServices(serviceLocator: ServiceLocator): Serv
         services.get(ServerIdService),
         services.get(ServersHubService),
         services.get(UploadService),
-        services.get(WindowService)));
+        services.get(WindowService),
+        services.get(ErrorService)));
 
     serviceLocator.register(ServersViewModel, (services) => new ServersViewModel(
         services.get(ServerIdService),

@@ -2,6 +2,7 @@
 using FactorioWebInterface.Data;
 using FactorioWebInterface.Hubs;
 using FactorioWebInterface.Models;
+using FactorioWebInterface.Models.CodeDeflate;
 using FactorioWebInterface.Services.Discord;
 using FactorioWebInterface.Utils;
 using Microsoft.AspNetCore.SignalR;
@@ -2387,12 +2388,17 @@ namespace FactorioWebInterface.Services
                     try
                     {
                         fileInfo.CopyTo(newFilePath);
-
-                        var deflater = new SaveDeflater();
-                        deflater.Deflate(newFilePath);
+                        SaveDeflater.Deflate(newFilePath);
 
                         _factorioControlHub.Clients.Clients(connectionId).DeflateFinished(Result.OK);
-
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "Error deflating file {fileName}.", fileName);
+                        _factorioControlHub.Clients.Clients(connectionId).DeflateFinished(Result.Failure(Constants.FileErrorKey, $"Error deflating {serverId}/{directoryName}/{newFileInfo.Name}."));
+                    }
+                    finally
+                    {
                         newFileInfo.Refresh();
 
                         string dirName = directory.Name;
@@ -2422,11 +2428,6 @@ namespace FactorioWebInterface.Services
                             default:
                                 break;
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError("Error deflating file.", e);
-                        _factorioControlHub.Clients.Clients(connectionId).DeflateFinished(Result.Failure(Constants.FileErrorKey, $"Error deflating files"));
                     }
                 });
 

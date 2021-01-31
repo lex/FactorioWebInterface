@@ -3,7 +3,7 @@ import { ServersPageTestServiceLocator } from "../../testUtils/testServiceLocato
 import { ServersViewModel } from "./serversViewModel";
 import { ServersHubServiceMockBase } from "../../testUtils/pages/servers/serversHubServiceMockBase";
 import { ServersHubService } from "./serversHubService";
-import { CollectionChangeType } from "../../ts/utils";
+import { CollectionChangeType, Result } from "../../ts/utils";
 import { FileMetaData } from "./serversTypes";
 import { FileSelectionServiceMockBase } from "../../testUtils/services/fileSelectionServiceMockBase";
 import { FileSelectionService } from "../../services/fileSelectionservice";
@@ -13,6 +13,8 @@ import { MethodInvocation } from "../../testUtils/invokeBase";
 import { PromiseHelper } from "../../utils/promiseHelper";
 import { ServerFileManagementService } from "./serverFileManagementService";
 import { ServerFileManagementViewModel } from "./serverFileManagementViewModel";
+import { ErrorServiceMockBase } from "../../testUtils/services/errorServiceMockBase";
+import { ErrorService } from "../../services/errorService";
 
 const tempFile: FileMetaData = {
     Name: 'file.zip',
@@ -978,6 +980,24 @@ describe('ServerFileManagementViewModel', function () {
             strict.equal(viewModel.isDeflating.value, false);
             strict.equal(calledCount, 2);
         });
+    });
+
+    it('deflate reports error when error deflating', function () {
+        // Arrange.          
+        let services = new ServersPageTestServiceLocator();
+
+        let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+        let errorService: ErrorServiceMockBase = services.get(ErrorService);
+
+        // Needed to create all the services for the test.
+        services.get(ServersViewModel);
+
+        // Act.
+        let error: Result = { Success: false };
+        hubService._onDeflateFinished.raise(error);
+
+        // Assert.
+        strict.equal(errorService._errorsReported.length, 1);
     });
 
     describe('upload tooltip', function () {
