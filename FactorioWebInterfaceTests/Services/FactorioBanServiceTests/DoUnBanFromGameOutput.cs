@@ -29,13 +29,15 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             serviceProvider.Dispose();
         }
 
-        [Fact]
-        public async Task BanIsRemovedFromDatabase()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task BanIsRemovedFromDatabase(string username, string expectedName)
         {
             // Arrange.
             var serverData = ServerDataHelper.MakeServerData(md => md.ServerExtraSettings = new FactorioServerExtraSettings() { SyncBans = true });
-            var content = " abc was unbanned by admin.";
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var content = $" {username} was unbanned by admin.";
+            var ban = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason." };
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();
@@ -88,14 +90,16 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             Assert.Equal(ban, bans[0]);
         }
 
-        [Fact]
-        public async Task WhenBanIsRemovedEventIsRaised()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsRemovedEventIsRaised(string username, string expectedName)
         {
             // Arrange.
             var serverExtraSettings = new FactorioServerExtraSettings() { SyncBans = true };
             var serverData = ServerDataHelper.MakeServerData(md => md.ServerExtraSettings = serverExtraSettings);
-            var content = " abc was unbanned by admin.";
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var content = $" {username} was unbanned by admin.";
+            var ban = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason." };
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();

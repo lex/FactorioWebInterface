@@ -29,13 +29,15 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             serviceProvider.Dispose();
         }
 
-        [Fact]
-        public async Task BanIsAddedToDatabase()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task BanIsAddedToDatabase(string username, string expectedName)
         {
             // Arrange.
-            var expected = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var expected = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason." };
             var serverData = ServerDataHelper.MakeServerData(md => md.ServerExtraSettings = new FactorioServerExtraSettings() { SyncBans = true });
-            var gameOutput = " abc was banned by admin. Reason: reason.";
+            var gameOutput = $" {username} was banned by admin. Reason: reason.";
 
             // Act.
             await factorioBanService.DoBanFromGameOutput(serverData, gameOutput);
@@ -125,14 +127,16 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             Assert.Null(eventArgs);
         }
 
-        [Fact]
-        public async Task WhenBanIsAddedEventIsRaised()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsAddedEventIsRaised(string username, string expectedName)
         {
             // Arrange.
-            var ban = new Ban() { Username = "grilledham", Admin = "admin", Reason = "reason." };
+            var ban = new Ban() { Username = username, Admin = "admin", Reason = "reason." };
             var serverData = ServerDataHelper.MakeServerData(md => md.ServerExtraSettings = new FactorioServerExtraSettings() { SyncBans = true });
 
-            var gameOutput = " grilledham was banned by admin. Reason: reason.";
+            var gameOutput = $" {username} was banned by admin. Reason: reason.";
             var sync = true;
 
             var eventRaised = new AsyncManualResetEvent();
@@ -158,7 +162,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             Assert.Equal(CollectionChangeType.Add, changeData.Type);
             Assert.Single(changeData.NewItems);
-            Assert.Equal(ban.Username, changeData.NewItems[0].Username);
+            Assert.Equal(expectedName, changeData.NewItems[0].Username);
             Assert.Equal(ban.Admin, changeData.NewItems[0].Admin);
             Assert.Equal(ban.Reason, changeData.NewItems[0].Reason);
         }

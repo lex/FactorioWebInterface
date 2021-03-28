@@ -49,17 +49,19 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             Assert.False(actual.Success);
         }
 
-        [Fact]
-        public async Task BanIsRemovedFromDatabase()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task BanIsRemovedFromDatabase(string username, string expectedName)
         {
             // Arrange.
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason" };
+            var ban = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason" };
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();
 
             // Act.
-            var result = await factorioBanService.RemoveBanFromWeb(ban.Username, true, "actor");
+            var result = await factorioBanService.RemoveBanFromWeb(username, true, "actor");
 
             // Assert.
             var bans = await db.Bans.ToArrayAsync();
@@ -68,11 +70,13 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             Assert.Empty(bans);
         }
 
-        [Fact]
-        public async Task WhenBanIsRemovedEventIsRaised()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsRemovedEventIsRaised(string username, string expectedName)
         {
             // Arrange.
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason" };
+            var ban = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason" };
             var sync = true;
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
@@ -89,7 +93,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             factorioBanService.BanChanged += FactorioBanService_BanChanged;
 
             // Act.
-            var result = await factorioBanService.RemoveBanFromWeb(ban.Username, sync, "actor");
+            var result = await factorioBanService.RemoveBanFromWeb(username, sync, "actor");
             await eventRaised.WaitAsyncWithTimeout(1000);
 
             // Assert.

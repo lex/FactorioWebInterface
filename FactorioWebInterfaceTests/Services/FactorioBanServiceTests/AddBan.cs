@@ -30,11 +30,13 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             serviceProvider.Dispose();
         }
 
-        [Fact]
-        public async Task BanIsAddedToDatabase()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task BanIsAddedToDatabase(string username, string expectedName)
         {
             // Arrange.
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason" };
+            var ban = new Ban() { Username = username, Admin = "admin", Reason = "reason" };
 
             // Act.
             var result = await factorioBanService.AddBan(ban, "", true, "");
@@ -45,14 +47,17 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             Assert.True(result);
             Assert.Single(bans);
+            Assert.Equal(expectedName, bans[0].Username);
             Assert.Equal(ban, bans[0]);
         }
 
-        [Fact]
-        public async Task WhenBanIsAddedEventIsRaised()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsAddedEventIsRaised(string username, string expectedName)
         {
             // Arrange.
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var ban = new Ban() { Username = username, Admin = "admin", Reason = "reason." };
             const string serverId = "serverId";
             const bool sync = true;
 
@@ -79,17 +84,20 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             Assert.Equal(CollectionChangeType.Add, changeData.Type);
             Assert.Single(changeData.NewItems);
+            Assert.Equal(expectedName, changeData.NewItems[0].Username);
             Assert.Equal(ban, changeData.NewItems[0]);
         }
 
-        [Fact]
-        public async Task WhenBanIsAddedLog()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsAddedLog(string username, string expectedName)
         {
             // Arrange.
             const string actor = "actor";
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var ban = new Ban() { Username = username, Admin = "admin", Reason = "reason." };
             var parma = new object[] { ban.Username, ban.Admin, ban.Reason, actor };
-            string expected = $"[BAN] {ban.Username} was banned by {ban.Admin}. Reason: {ban.Reason} Actor: {actor}";
+            string expected = $"[BAN] {expectedName} was banned by {ban.Admin}. Reason: {ban.Reason} Actor: {actor}";
 
             LogLevel level = default;
             string? message = null;
@@ -132,11 +140,34 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
         }
 
         [Fact]
-        public async Task OldBanIsUpdated()
+        public async Task DoesNotAddDuplicateBanWithDifferentCasing()
         {
             // Arrange.
-            var oldBan = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
-            var newBan = new Ban() { Username = "abc", Admin = "newAdmin", Reason = "new reason." };
+            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+
+            var db = dbContextFactory.Create<ApplicationDbContext>();
+            db.Add(ban);
+            await db.SaveChangesAsync();
+
+            // Act.
+            ban.Username = ban.Username.ToUpperInvariant();
+            await factorioBanService.AddBan(ban, "", true, "");
+
+            // Assert.
+            db = dbContextFactory.Create<ApplicationDbContext>();
+            var bans = await db.Bans.ToArrayAsync();
+
+            Assert.Single(bans);
+        }
+
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("def", "DEF")]
+        public async Task OldBanIsUpdated(string firstUsername, string secondUsername)
+        {
+            // Arrange.
+            var oldBan = new Ban() { Username = firstUsername, Admin = "admin", Reason = "reason." };
+            var newBan = new Ban() { Username = secondUsername, Admin = "newAdmin", Reason = "new reason." };
 
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(oldBan);

@@ -30,13 +30,15 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             serviceProvider.Dispose();
         }
 
-        [Fact]
-        public async Task WhenBanIsRemovedEventIsRaised()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsRemovedEventIsRaised(string username, string expectedName)
         {
             // Arrange.
             string serverId = "serverId";
             bool syncBans = true;
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var ban = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason." };
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();
@@ -52,7 +54,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             factorioBanService.BanChanged += FactorioBanService_BanChanged;
 
             // Act.
-            await factorioBanService.RemoveBan(ban.Username, serverId, syncBans, "actor");
+            await factorioBanService.RemoveBan(username, serverId, syncBans, "actor");
             await eventRaised.WaitAsyncWithTimeout(1000);
 
             // Assert.
@@ -67,12 +69,14 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             Assert.Equal(ban.Username, changeData.OldItems[0].Username);
         }
 
-        [Fact]
-        public async Task WhenBanIsRemovedLog()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsRemovedLog(string username, string expectedName)
         {
             // Arrange.
             var actor = "actor";
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var ban = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason." };
             var parma = new object[] { ban.Username, ban.Admin, ban.Reason, actor };
             var expected = $"[UNBAN] {ban.Username} was unbanned by: {actor}";
 
@@ -90,26 +94,28 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             var fbs = new FactorioBanService(dbContextFactory, logger);
 
             // Act.
-            await fbs.RemoveBan(ban.Username, "", true, actor);
+            await fbs.RemoveBan(username, "", true, actor);
 
             // Assert.
             Assert.Equal(LogLevel.Information, level);
             Assert.Equal(expected, message);
         }
 
-        [Fact]
-        public async Task BanIsRemovedFromDatabase()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task BanIsRemovedFromDatabase(string username, string expectedName)
         {
             // Arrange.
             string serverId = "serverId";
             bool syncBans = true;
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason." };
+            var ban = new Ban() { Username = expectedName, Admin = "admin", Reason = "reason." };
             var db = dbContextFactory.Create<ApplicationDbContext>();
             db.Add(ban);
             await db.SaveChangesAsync();
 
             // Act.
-            await factorioBanService.RemoveBan(ban.Username, serverId, syncBans, "");
+            await factorioBanService.RemoveBan(username, serverId, syncBans, "");
 
             // Assert.
             var bans = await db.Bans.ToArrayAsync();
