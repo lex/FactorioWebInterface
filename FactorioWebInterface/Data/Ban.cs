@@ -34,7 +34,7 @@ namespace FactorioWebInterface.Data
         public bool Equals(Ban? other)
         {
             return other != null &&
-                   Username == other.Username &&
+                   Username.Equals(other.Username, StringComparison.InvariantCultureIgnoreCase) &&
                    Reason == other.Reason &&
                    Address == other.Address &&
                    Admin == other.Admin &&

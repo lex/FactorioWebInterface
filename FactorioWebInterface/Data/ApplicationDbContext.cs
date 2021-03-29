@@ -19,7 +19,7 @@ namespace FactorioWebInterface.Data
         public DbSet<Ban> Bans { get; set; } = default!;
 
         /// <summary>
-        /// This just changes the default names for the tables, becasue I didn't like all the tables
+        /// This just changes the default names for the tables, because I didn't like all the tables
         /// being called 'AspNetTableName'.
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -28,6 +28,8 @@ namespace FactorioWebInterface.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<NamedDiscordChannel>().Property(x => x.Name).HasColumnType("TEXT COLLATE NOCASE");
+
+            modelBuilder.Entity<Ban>().Property(x => x.Username).HasColumnType("TEXT COLLATE NOCASE");
 
             modelBuilder.Entity<ApplicationUser>(b =>
             {

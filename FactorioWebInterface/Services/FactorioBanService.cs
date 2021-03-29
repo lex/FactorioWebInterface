@@ -123,6 +123,8 @@ namespace FactorioWebInterface.Services
 
         public async Task<bool> AddBan(Ban ban, string serverId, bool synchronizeWithServers, string? actor)
         {
+            ban.Username = ban.Username.ToLowerInvariant();
+
             bool added = await AddBanToDatabase(ban);
             if (added)
             {
@@ -139,8 +141,6 @@ namespace FactorioWebInterface.Services
 
         private async Task<bool> AddBanToDatabase(Ban ban)
         {
-            ban.Username = ban.Username.ToLowerInvariant();
-
             using (var db = _dbContextFactory.Create<ApplicationDbContext>())
             {
                 int retryCount = 10;
@@ -251,6 +251,7 @@ namespace FactorioWebInterface.Services
 
         public async Task<bool> RemoveBan(string username, string serverId, bool synchronizeWithServers, string? actor)
         {
+            username = username.ToLowerInvariant();
             bool removed = await RemoveBanFromDatabase(username);
             if (removed)
             {

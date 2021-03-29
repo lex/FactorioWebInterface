@@ -53,11 +53,13 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
             Assert.False(actual.Success);
         }
 
-        [Fact]
-        public async Task BanIsAddedToDatabase()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task BanIsAddedToDatabase(string username, string expectedName)
         {
             // Arrange.
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason" };
+            var ban = new Ban() { Username = username, Admin = "admin", Reason = "reason" };
 
             // Act.
             var result = await factorioBanService.AddBanFromWeb(ban, true, "");
@@ -68,14 +70,17 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             Assert.True(result.Success);
             Assert.Single(bans);
+            Assert.Equal(expectedName, bans[0].Username);
             Assert.Equal(ban, bans[0]);
         }
 
-        [Fact]
-        public async Task WhenBanIsAddedEventIsRaised()
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("DEF", "def")]
+        public async Task WhenBanIsAddedEventIsRaised(string username, string expectedName)
         {
             // Arrange.
-            var ban = new Ban() { Username = "abc", Admin = "admin", Reason = "reason" };
+            var ban = new Ban() { Username = username, Admin = "admin", Reason = "reason" };
             var sync = true;
 
             var eventRaised = new AsyncManualResetEvent();
@@ -101,6 +106,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             Assert.Equal(CollectionChangeType.Add, changeData.Type);
             Assert.Single(changeData.NewItems);
+            Assert.Equal(expectedName, changeData.NewItems[0].Username);
             Assert.Equal(ban, changeData.NewItems[0]);
         }
     }
