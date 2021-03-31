@@ -16,6 +16,10 @@ export class TableRow<T = any> extends HTMLTableRowElement implements rowClickEv
         return this._item;
     }
 
+    set item(value: T) {
+        this._item = value
+    }
+
     get row() {
         return this;
     }
@@ -279,6 +283,7 @@ export class Table<K = any, T = any> extends HTMLTableElement {
                 }
             } else {
                 row.innerHTML = '';
+                row.item = entry;
 
                 for (let i = 0; i < this._columns.length; i++) {
                     this.buildCell(row, entry, i);
