@@ -170,7 +170,7 @@ namespace FactorioWebInterface.Services.Discord
         {
             if (string.IsNullOrWhiteSpace(name) || name.Contains(' '))
             {
-                return Result.Failure(Constants.InvalidName, "Channel name can not be empty or whitespace or contain space ' ' characters.");
+                return Result.Failure(Constants.InvalidNameErrorKey, "Channel name can not be empty or whitespace or contain space ' ' characters.");
             }
 
             try
@@ -227,7 +227,7 @@ namespace FactorioWebInterface.Services.Discord
 
                     if (query.Length == 0)
                     {
-                        return Result.Failure(Constants.MissingName, $"The name {name} was not found.");
+                        return Result.Failure(Constants.MissingNameErrorKey, $"The name {name} was not found.");
                     }
 
                     foreach (var ds in query)

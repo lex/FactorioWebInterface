@@ -43,14 +43,14 @@ namespace FactorioWebInterface
                 await Task.WhenAll(
                     // This makes sure the databases are setup.
                     SeedData(host),
-                    services.GetService<IFactorioServerDataService>().Init(),
-                    services.GetService<DiscordBot>().Init(),
-                    services.GetService<IDiscordService>().Init());
+                    services.GetRequiredService<IFactorioServerDataService>().Init(),
+                    services.GetRequiredService<DiscordBot>().Init(),
+                    services.GetRequiredService<IDiscordService>().Init());
 
                 // This makes sure the FactorioServerManger is started when the web interface starts.
-                services.GetService<IFactorioServerManager>();
-                services.GetService<BanHubEventHandlerService>();
-                services.GetService<FactorioAdminServiceEventHandlerService>();
+                services.GetRequiredService<IFactorioServerManager>();
+                services.GetRequiredService<BanHubEventHandlerService>();
+                services.GetRequiredService<FactorioAdminServiceEventHandlerService>();
 
                 host.Run();
             }
@@ -83,18 +83,18 @@ namespace FactorioWebInterface
             {
                 var services = scope.ServiceProvider;
 
-                var appDb = services.GetService<ApplicationDbContext>();
+                var appDb = services.GetRequiredService<ApplicationDbContext>();
                 appDb.Database.Migrate();
 
-                var scenarioDb = services.GetService<ScenarioDbContext>();
+                var scenarioDb = services.GetRequiredService<ScenarioDbContext>();
                 scenarioDb.Database.Migrate();
 
-                var roleManager = services.GetService<RoleManager<IdentityRole>>();
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
                 await roleManager.CreateAsync(new IdentityRole(Constants.RootRole));
                 await roleManager.CreateAsync(new IdentityRole(Constants.AdminRole));
 
-                await services.GetService<IDefaultAdminAccountService>().SetupDefaultUserAsync();
+                await services.GetRequiredService<IDefaultAdminAccountService>().SetupDefaultUserAsync();
             }
         }
     }

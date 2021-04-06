@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using FactorioWebInterface.Models;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -93,6 +94,33 @@ namespace FactorioWebInterface.Utils
 
                 return await task;
             }
+        }
+
+        public static async Task LogExceptions(this Task task, ILogger logger, [CallerMemberName] string name = "")
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, name);
+            }
+        }
+
+        public static async Task LogErrors(this Task<Result> task, ILogger logger, [CallerMemberName] string name = "")
+        {
+            Result result = await task;
+            if (!result.Success)
+            {
+                logger.LogError("{name}: {Errors}", name, result.Errors);
+            }
+        }
+
+        public static Task LogErrorsAndExceptions(this Task<Result> task, ILogger logger, [CallerMemberName] string name = "")
+        {
+            return task.LogErrors(logger, name)
+                       .LogExceptions(logger, name);
         }
     }
 }

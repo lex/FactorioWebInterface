@@ -26,7 +26,7 @@ namespace FactorioWebInterface.Models.CodeDeflate
         private int bufferIndex;
         private int stateIndex = 0;
         private bool escaped = false;
-        bool skipWhiteSpace = false;
+        private bool skipWhiteSpace = false;
         private readonly StringBuilder stringBuilder = new StringBuilder();
 
         private readonly char directorySeparatorChar;
