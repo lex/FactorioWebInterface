@@ -1,4 +1,5 @@
 ﻿using FactorioWebInterface.Models.CodeDeflate;
+using FactorioWebInterfaceTests.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -27,7 +28,7 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
                 "scenario/file2.lua"
             };
 
-            using var zip = CreateZip(files);
+            using Stream zip = FileHelper.StreamFromZipFiles(files);
 
             // Act.
             SaveDeflater.Deflate(zip);
@@ -54,7 +55,7 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
                 "scenario/file2.lua"
             };
 
-            using var zip = CreateZip(files);
+            using Stream zip = FileHelper.StreamFromZipFiles(files);
 
             // Act.
             SaveDeflater.Deflate(zip);
@@ -87,7 +88,7 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
                 "scenario/features/gui/file1.lua"
             };
 
-            using var zip = CreateZip(files);
+            using Stream zip = FileHelper.StreamFromZipFiles(files);
 
             // Act.
             SaveDeflater.Deflate(zip);
@@ -113,12 +114,12 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
             var expectedFiles = new[]
             {
                 "scenario/control.lua",
-                "scenario/file1.lua",                
+                "scenario/file1.lua",
                 "scenario/features/file1.lua",
-                "scenario/features/file2.lua",                
+                "scenario/features/file2.lua",
             };
 
-            using var zip = CreateZip(files);
+            using Stream zip = FileHelper.StreamFromZipFiles(files);
 
             // Act.
             SaveDeflater.Deflate(zip);
@@ -163,7 +164,7 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
                 "scenario/image.jpg"
             };
 
-            using var zip = CreateZip(files);
+            using Stream zip = FileHelper.StreamFromZipFiles(files);
 
             // Act.
             SaveDeflater.Deflate(zip);
@@ -188,7 +189,7 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
                 "scenario/control.lua"
             };
 
-            using var zip = CreateZip(files);
+            using Stream zip = FileHelper.StreamFromZipFiles(files);
 
             // Act.
             SaveDeflater.Deflate(zip);
@@ -211,7 +212,7 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
                 "scenario/control.lua"
             };
 
-            using var zip = CreateZip(files);
+            using Stream zip = FileHelper.StreamFromZipFiles(files);
 
             // Act.
             SaveDeflater.Deflate(zip);
@@ -228,22 +229,6 @@ namespace FactorioWebInterfaceTests.Models.CodeDeflateTests
             var actualFiles = archive.Entries.Select(x => x.FullName).OrderBy(x => x);
             expectedFiles = expectedFiles.OrderBy(x => x);
             Assert.Equal(expectedFiles, actualFiles);
-        }
-
-        private static Stream CreateZip(Dictionary<string, string> files)
-        {
-            var memory = new MemoryStream();
-            using var archive = new ZipArchive(memory, ZipArchiveMode.Update, leaveOpen: true);
-
-            foreach (var file in files)
-            {
-                using var stream = archive.CreateEntry(file.Key).Open();
-                using var streamWriter = new StreamWriter(stream, leaveOpen: true);
-                streamWriter.Write(file.Value);
-            }
-
-            memory.Position = 0;
-            return memory;
         }
     }
 }

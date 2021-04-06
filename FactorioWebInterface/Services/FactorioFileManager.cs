@@ -31,6 +31,7 @@ namespace FactorioWebInterface.Services
         List<FileMetaData> GetLogs(FactorioServerData serverData);
         DirectoryInfo? GetSaveDirectory(string serverId, string dirName);
         IFileInfo? GetSaveFile(string serverId, string directoryName, string fileName);
+        IDirectoryInfo GetScenariosDirectory();
         ScenarioMetaData[] GetScenarios();
         bool HasTempSaveFiles(string tempSavesDirectoryPath);
         FileMetaData[] GetTempSaveFiles(string tempSavesDirectoryPath);
@@ -55,7 +56,7 @@ namespace FactorioWebInterface.Services
     {
         private readonly ILogger<FactorioFileManager> _logger;
         private readonly IFactorioServerDataService _factorioServerDataService;
-        private readonly IFileSystem _fileSystem = new FileSystem();
+        private readonly IFileSystem _fileSystem;
 
         public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? TempSaveFilesChanged;
         public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? LocalSaveFilesChanged;
@@ -64,10 +65,11 @@ namespace FactorioWebInterface.Services
         public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? ChatLogFilesChanged;
         public event EventHandler<IFactorioFileManager, CollectionChangedData<ScenarioMetaData>>? ScenariosChanged;
 
-        public FactorioFileManager(ILogger<FactorioFileManager> logger, IFactorioServerDataService factorioServerDataService)
+        public FactorioFileManager(ILogger<FactorioFileManager> logger, IFactorioServerDataService factorioServerDataService, IFileSystem fileSystem)
         {
             _logger = logger;
             _factorioServerDataService = factorioServerDataService;
+            _fileSystem = fileSystem;
         }
 
         public bool HasTempSaveFiles(string tempSavesDirectoryPath)
@@ -165,15 +167,22 @@ namespace FactorioWebInterface.Services
             return logs;
         }
 
+        public IDirectoryInfo GetScenariosDirectory()
+        {
+            var dir = _fileSystem.DirectoryInfo.FromDirectoryName(_factorioServerDataService.ScenarioDirectoryPath);
+            if (!dir.Exists)
+            {
+                dir.Create();
+            }
+
+            return dir;
+        }
+
         public ScenarioMetaData[] GetScenarios()
         {
             try
             {
-                var dir = new DirectoryInfo(_factorioServerDataService.ScenarioDirectoryPath);
-                if (!dir.Exists)
-                {
-                    dir.Create();
-                }
+                var dir = GetScenariosDirectory();
 
                 return dir.EnumerateDirectories().Select(d =>
                     new ScenarioMetaData()
@@ -1306,7 +1315,7 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public void EnsureScenarioDirectoryRemoved(string localScenarioDirectoryPath) => DirectoryHelpers.DeleteIfExists(localScenarioDirectoryPath);
+        public void EnsureScenarioDirectoryRemoved(string localScenarioDirectoryPath) => _fileSystem.DeleteDirectoryIfExists(localScenarioDirectoryPath);
 
         public void EnsureScenarioDirectoryCreated(string localScenarioDirectoryPath)
         {

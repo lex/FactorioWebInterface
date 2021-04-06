@@ -19,12 +19,13 @@ namespace FactorioWebInterface
         public const string ServerSettingsUsernameKey = "serverSettingsUsername";
         public const string ServerSettingsTokenKey = "serverSettingsToken";
         public const string FactorioWrapperNameKey = "FactorioWrapperNameKey";
-        public const string GitHubCallbackFilePathKey = "WebHookGitHubCallbackFile";
-        public const string PlaguesScriptDefaultPathKey = "PlaguesScriptDefaultPath";
+        public const string ScenarioTemplatesDirectoryNameKey = "ScenarioTemplatesDirectoryName";
+        public const string ScenarioDownloadUrlKey = "ScenarioDownloadUrl";
 
         public const string DefaultAdminAccount = "DefaultAdminAccount";
         public const string DefaultAdminName = "Admin";
         public const string DefaultAdminFile = "DefaultUser.txt";
+        public const string DefaultScenarioTemplatesDirectoryName = "scenario_templates";
 
         public const string DiscordBotCommandPrefix = ";;";
 
@@ -145,7 +146,9 @@ namespace FactorioWebInterface
         public const string InvalidReleaseDataErrorKey = "InvalidReleaseData";
         public const string MissingModErrorKey = "missingMod";
         public const string MissingVersionErrorKey = "missingVersion";
-        public const string MissingName = "missingName";
-        public const string InvalidName = "invalidName";
+        public const string MissingNameErrorKey = "missingName";
+        public const string InvalidNameErrorKey = "invalidName";
+        public const string MissingConfigurationErrorKey = "missingConfiguration";
+        public const string DownloadErrorKey = "downloadError";
     }
 }

@@ -80,6 +80,9 @@ namespace FactorioWebInterface
             services.AddSingleton<FactorioAdminServiceEventHandlerService, FactorioAdminServiceEventHandlerService>();
             services.AddSingleton<IFactorioModPortalService, FactorioModPortalService>();
             services.AddTransient<IDefaultAdminAccountService, DefaultAdminAccountService>();
+            services.AddSingleton<IDownloadGitHubScenarioService, DownloadGitHubScenarioService>();
+            services.AddSingleton<IUpdateScenarioService, UpdateScenarioService>();
+            services.AddSingleton<IGitHubService, GitHubService>();
 
             services.AddRouting(o => o.LowercaseUrls = true);
 

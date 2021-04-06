@@ -1,25 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO.Abstractions;
 
 namespace FactorioWebInterface.Utils
 {
     public static class DirectoryHelpers
     {
-        public static void DeleteIfExists(string path)
+        public static bool DeleteDirectoryIfExists(this IFileSystem fileSystem, string path)
         {
             try
             {
-                var dir = new DirectoryInfo(path);
+                var dir = fileSystem.DirectoryInfo.FromDirectoryName(path);
                 if (dir.Exists)
                 {
-                    dir.Delete(true);
+                    dir.Delete(recursive: true);
                 }
+
+                return true;
             }
             catch
             {
+                return false;
             }
         }
     }
