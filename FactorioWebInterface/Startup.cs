@@ -28,7 +28,6 @@ namespace FactorioWebInterface
     public class Startup
     {
         private readonly SymmetricSecurityKey SecurityKey;
-        private readonly JwtSecurityTokenHandler JwtTokenHandler = new JwtSecurityTokenHandler();
 
         public Startup(IConfiguration configuration)
         {
@@ -239,14 +238,6 @@ namespace FactorioWebInterface
                 // enables immediate logout, after updating the user's stat.
                 options.ValidationInterval = TimeSpan.Zero;
             });
-        }
-
-        private string GenerateToken()
-        {
-            var claims = new[] { new Claim(ClaimTypes.NameIdentifier, Constants.FactorioWrapperClaim) };
-            var credentials = new SigningCredentials(SecurityKey, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken("Server", claims: claims, signingCredentials: credentials);
-            return JwtTokenHandler.WriteToken(token);
         }
     }
 }
