@@ -499,7 +499,7 @@ export class MultiSelectColumn<K = any, T = any> extends ColumnTemplate<K, T>{
             if (checkbox.checked) {
                 source.selectAll();
             } else {
-                source.unSelectAll();
+                source.unSelectAll(true);
             }
         });
         container.append(checkbox);
@@ -574,7 +574,7 @@ export class SingleSelectColumn<K = any, T = any> extends ColumnTemplate<K, T>{
             event.stopPropagation();
 
             radio.checked = false;
-            source.unSelectAll();
+            source.unSelectAll(true);
         });
         container.append(radio);
 

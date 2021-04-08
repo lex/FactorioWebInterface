@@ -2,12 +2,10 @@
 using FactorioWebInterface.Models;
 using Microsoft.AspNetCore.SignalR;
 using Shared;
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Sdk;
 
 namespace FactorioWebInterfaceTests.Utils
 {
@@ -70,9 +68,9 @@ namespace FactorioWebInterfaceTests.Utils
                 {
                     return;
                 }
-
-                throw new ContainsInvocationException($"Change Status with {nameof(oldStatus)}: {oldStatusString} and {nameof(newStatus)}: {newStatusString} not found.");
             }
+
+            throw new ContainsInvocationException($"Change Status with {nameof(oldStatus)}: {oldStatusString} and {nameof(newStatus)}: {newStatusString} not found.");
         }
 
         private TestFactorioControlClients factorioControlClients = new TestFactorioControlClients();

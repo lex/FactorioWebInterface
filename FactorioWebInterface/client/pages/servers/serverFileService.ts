@@ -128,6 +128,14 @@ export class ServerFileService {
         }
 
         this._serversHubService.setSelectedModPack(modPack);
+
+        try {
+            this._updatingModPacks = true;
+            this._selectedModPack.raise(modPack);
+        }
+        finally {
+            this._updatingModPacks = false;
+        }
     }
 
     private updateLocalFiles() {

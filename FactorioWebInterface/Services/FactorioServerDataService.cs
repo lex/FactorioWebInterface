@@ -114,14 +114,16 @@ namespace FactorioWebInterface.Services
                     {
                         var extraSettingsTask = GetFactorioServerExtraSettings(serverData);
                         var runningSettingsTask = GetFactorioServerRunningSettings(serverData);
+                        var extraDataTask = GetFactorioServerExtraData(serverData);
                         var versionTask = GetVersion(serverData);
 
-                        await Task.WhenAll(extraSettingsTask, runningSettingsTask, versionTask);
+                        await Task.WhenAll(extraSettingsTask, runningSettingsTask, extraDataTask, versionTask);
 
                         serverData.Lock(md =>
                         {
                             md.ServerExtraSettings = extraSettingsTask.Result;
                             md.ServerRunningSettings = runningSettingsTask.Result;
+                            md.ModPack = extraDataTask.Result?.SelectedModPack ?? "";
                             md.Version = versionTask.Result;
                         });
                     }
@@ -174,6 +176,24 @@ namespace FactorioWebInterface.Services
             }
 
             return FactorioServerExtraSettings.MakeDefault();
+        }
+
+        private async Task<FactorioServerExtraData?> GetFactorioServerExtraData(FactorioServerData serverData)
+        {
+            try
+            {
+                var fi = new FileInfo(serverData.Constants.ServerExtraDataPath);
+                if (fi.Exists)
+                {
+                    var bytes = await File.ReadAllBytesAsync(fi.FullName);
+                    return System.Text.Json.JsonSerializer.Deserialize<FactorioServerExtraData>(bytes.AsSpan());
+                }
+            }
+            catch
+            {
+            }
+
+            return null;
         }
 
         private async Task<FactorioServerSettings?> GetFactorioServerRunningSettings(FactorioServerData serverData)

@@ -23,6 +23,7 @@ namespace FactorioWebInterface.Models
         public string ServerSettingsPath => Constants.ServerSettingsPath;
         public string ServerRunningSettingsPath => Constants.ServerRunningSettingsPath;
         public string ServerExtraSettingsPath => Constants.ServerExtraSettingsPath;
+        public string ServerExtraDataPath => Constants.ServerExtraDataPath;
         public string ServerBanListPath => Constants.ServerBanListPath;
         public string ServerAdminListPath => Constants.ServerAdminListPath;
         public string Port => Constants.Port;

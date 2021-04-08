@@ -101,6 +101,11 @@ namespace FactorioWebInterface.Services
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(modPack))
+                {
+                    return null;
+                }
+
                 var dir = new DirectoryInfo(_factorioServerDataService.ModsDirectoryPath);
 
                 if (!dir.Exists)

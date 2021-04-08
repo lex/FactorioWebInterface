@@ -57,6 +57,7 @@ namespace FactorioWebInterface.Models
         public static Result Failure(Error error) => new Result(false, new Error[] { error });
         public static Result Failure(IReadOnlyList<Error> errors) => new Result(false, errors);
         public static Result Failure(string key, string description = "") => Failure(new Error(key, description));
+        public static Result FromException(Exception ex) => Failure(Constants.UnexpectedErrorKey, ex.Message);
 
         [JsonProperty(PropertyName = "Success")]
         [JsonPropertyName("Success")]

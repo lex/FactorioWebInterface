@@ -81,6 +81,7 @@ namespace FactorioWebInterface
         public const string ServerSettingsFileName = "server-settings.json";
         public const string ServerRunningSettingsFileName = "server-running-settings.json";
         public const string ServerExtraSettingsFileName = "server-extra-settings.json";
+        public const string ServerExtraDataFileName = "server-extra-data.json";
         public const string ServerBanListFileName = "server-banlist.json";
         public const string ServerAdminListFileName = "server-adminlist.json";
 
@@ -145,6 +146,7 @@ namespace FactorioWebInterface
         public const string InvalidHttpResponseErrorKey = "invalidHttpResponse";
         public const string InvalidReleaseDataErrorKey = "InvalidReleaseData";
         public const string MissingModErrorKey = "missingMod";
+        public const string MissingModPackErrorKey = "missingModPack";
         public const string MissingVersionErrorKey = "missingVersion";
         public const string MissingNameErrorKey = "missingName";
         public const string InvalidNameErrorKey = "invalidName";

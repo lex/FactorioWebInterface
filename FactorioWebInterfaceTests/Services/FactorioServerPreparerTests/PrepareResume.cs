@@ -27,9 +27,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
             factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath).Verifiable();
 
-            var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
-            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null).Verifiable();
-
             var banServiceMock = new Mock<IFactorioBanService>(MockBehavior.Strict);
             banServiceMock.Setup(x => x.BuildBanList(data.ServerBanListPath)).Returns(Task.FromResult(Result.OK)).Verifiable();
 
@@ -47,7 +44,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(
                 factorioServerDataService: factorioServerDataService.Object,
-                factorioModManager: factorioModManager.Object,
                 factorioBanService: banServiceMock.Object,
                 factorioAdminService: adminServiceMock.Object,
                 factorioFileManager: fileManagerMock.Object,
@@ -60,7 +56,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             // Assert.
             factorioServerDataService.Verify();
-            factorioModManager.Verify();
             banServiceMock.Verify();
             adminServiceMock.Verify();
             fileManagerMock.Verify();
@@ -85,21 +80,18 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
         public async Task FailsCorrectly()
         {
             // Arrange.            
+            string modPack = "missingModPack";
+
             var data = ServerDataHelper.MakeMutableData();
             data.Status = FactorioServerStatus.Stopped;
             data.ServerExtraSettings.BuildBansFromDatabaseOnStart = true;
             data.ServerSettings = new FactorioServerSettings() { UseDefaultAdmins = true };
-
-            const string startTypeArguments = Constants.FactorioLoadLatestSaveFlag;
-            const string factorioWrapperPath = "FactorioWrapperPath";
+            data.ModPack = modPack;
 
             Result banResult = Result.Failure("Ban");
             Result adminResult = Result.Failure("Admin");
             Result logResult = Result.Failure("Log");
             Result settingsResult = Result.Failure("settings");
-
-            var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
-            factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath).Verifiable();
 
             var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
             factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null).Verifiable();
@@ -120,20 +112,16 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var factorioControlHub = new TestFactorioControlHub();
 
             var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(
-                factorioServerDataService: factorioServerDataService.Object,
                 factorioModManager: factorioModManager.Object,
                 factorioBanService: banServiceMock.Object,
                 factorioAdminService: adminServiceMock.Object,
                 factorioFileManager: fileManagerMock.Object,
                 factorioControlHub: factorioControlHub);
 
-            string expected = $"{factorioWrapperPath} {data.ServerId} {data.ExecutablePath} {startTypeArguments} --server-settings {data.ServerSettingsPath} --port {data.Port} ";
-
             // Act.
             var result = await service.PrepareResume(data);
 
             // Assert.
-            factorioServerDataService.Verify();
             factorioModManager.Verify();
             banServiceMock.Verify();
             adminServiceMock.Verify();
@@ -150,6 +138,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error building Admin list: {adminResult}");
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error rotating logs: {Result.Combine(logResult, logResult)}");
             factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error building server running settings: {settingsResult}");
+            factorioControlHub.AssertContainsMessage(data.ServerId, MessageType.Error, $"Error with mod pack: The mod pack '{modPack}' was not found.");
         }
     }
 }

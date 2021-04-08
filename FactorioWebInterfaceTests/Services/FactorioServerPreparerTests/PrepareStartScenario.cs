@@ -4,8 +4,6 @@ using FactorioWebInterface.Services;
 using FactorioWebInterfaceTests.Utils;
 using Moq;
 using Shared;
-using System.Data;
-using System.IO.Abstractions;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -29,9 +27,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
             var factorioServerDataService = new Mock<IFactorioServerDataService>(MockBehavior.Strict);
             factorioServerDataService.SetupGet(x => x.FactorioWrapperPath).Returns(factorioWrapperPath).Verifiable();
 
-            var factorioModManager = new Mock<IFactorioModManager>(MockBehavior.Strict);
-            factorioModManager.Setup(x => x.GetModPackDirectoryInfo(It.IsAny<string>())).Returns((IDirectoryInfo?)null).Verifiable();
-
             var banServiceMock = new Mock<IFactorioBanService>(MockBehavior.Strict);
             banServiceMock.Setup(x => x.BuildBanList(data.ServerBanListPath)).Returns(Task.FromResult(Result.OK)).Verifiable();
 
@@ -49,7 +44,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             var service = FactorioServerPreparerHelpers.MakeFactorioServerPreparer(
                 factorioServerDataService: factorioServerDataService.Object,
-                factorioModManager: factorioModManager.Object,
                 factorioBanService: banServiceMock.Object,
                 factorioAdminService: adminServiceMock.Object,
                 factorioFileManager: fileManagerMock.Object,
@@ -62,7 +56,6 @@ namespace FactorioWebInterfaceTests.Services.FactorioServerPreparerTests
 
             // Assert.
             factorioServerDataService.Verify();
-            factorioModManager.Verify();
             banServiceMock.Verify();
             adminServiceMock.Verify();
             fileManagerMock.Verify();

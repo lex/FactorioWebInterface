@@ -71,6 +71,22 @@ describe('ModPacksViewModel', function () {
         strict.equal(modPacksViewModel.header, 'Mod Packs (2) - Selected: modpack');
     });
 
+    it('header shows missing selected mod pack', function () {
+        // Arrange.
+        let services = new ServersPageTestServiceLocator();
+        let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+        let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+
+        hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+        hubService._onSelectedModPack.raise("missing");        
+
+        // Act.
+        let modPacksViewModel = mainViewModel.modPacksViewModel;
+
+        // Assert.
+        strict.equal(modPacksViewModel.header, 'Mod Packs (2) - Selected: missing');
+    });
+
     it('selected modpack updates when onSelectedModPack raised', function () {
         // Arrange.
         let services = new ServersPageTestServiceLocator();
@@ -107,7 +123,7 @@ describe('ModPacksViewModel', function () {
         hubService.assertMethodNotCalled('setSelectedModPack');
     });
 
-    it('selected modpack unselected when onSelectedModPack raised with missing modpack', function () {
+    it('modPacks selected modpack unselected when onSelectedModPack raised with missing modpack', function () {
         // Arrange.
         let services = new ServersPageTestServiceLocator();
         let mainViewModel: ServersViewModel = services.get(ServersViewModel);
@@ -166,5 +182,23 @@ describe('ModPacksViewModel', function () {
 
         // Assert.        
         hubService.assertMethodCalled('setSelectedModPack', modPack.Name);
+    });
+
+    it('clearing selected modpack sends to hub when missing modpack selected', function () {
+        // Arrange.
+        let services = new ServersPageTestServiceLocator();
+        let mainViewModel: ServersViewModel = services.get(ServersViewModel);
+
+        let hubService: ServersHubServiceMockBase = services.get(ServersHubService);
+        hubService._modPacks.raise({ Type: CollectionChangeType.Reset, NewItems: modPacks });
+        hubService._onSelectedModPack.raise("missing");
+
+        let modPacksViewModel = mainViewModel.modPacksViewModel;
+
+        // Act.        
+        modPacksViewModel.modPacks.unSelectAll(true);
+
+        // Assert.        
+        hubService.assertMethodCalled('setSelectedModPack', "");
     });
 });
