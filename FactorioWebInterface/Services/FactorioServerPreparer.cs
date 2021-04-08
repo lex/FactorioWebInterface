@@ -246,9 +246,8 @@ namespace FactorioWebInterface.Services
             return result;
         }
 
-        internal ProcessStartInfo MakeStartInfo(FactorioServerMutableData mutableData, string startTypeArguments)
+        internal ProcessStartInfo MakeStartInfo(FactorioServerMutableData mutableData, string startTypeArguments, string modDirPath)
         {
-            string modDirPath = PrepareModDirectory(mutableData);
             string modDirPathArg = string.IsNullOrWhiteSpace(modDirPath) ? "" : $"--mod-directory {modDirPath}";
             // The order of these arguments matters. The wrapper expects serverId first and executablePath second.
             string arguments = $"{mutableData.ServerId} {mutableData.ExecutablePath} {startTypeArguments} --server-settings {mutableData.ServerSettingsPath} --port {mutableData.Port} {modDirPathArg}";
@@ -268,43 +267,47 @@ namespace FactorioWebInterface.Services
             mutableData.StartTime = default;
         }
 
-        private string PrepareModDirectory(FactorioServerMutableData mutableData)
+        private Result<string> PrepareModDirectory(FactorioServerMutableData mutableData)
         {
-            var dir = _factorioModManager.GetModPackDirectoryInfo(mutableData.ModPack);
-            if (dir != null)
+            string modPack = mutableData.ModPack;
+            if (string.IsNullOrWhiteSpace(modPack))
             {
-                return dir.FullName;
+                return Result<string>.OK("");
             }
 
-            if (!string.IsNullOrEmpty(mutableData.ModPack))
+            var dir = _factorioModManager.GetModPackDirectoryInfo(modPack);
+            if (dir is null)
             {
-                mutableData.ModPack = "";
-                _factorioControlHub.Clients.Group(mutableData.ServerId).SendSelectedModPack("");
-                // Return error?
+                string errorDescription = $"The mod pack '{modPack}' was not found.";
+                _ = FactorioServerUtils.SendErrorMessage(mutableData, _factorioControlHub, $"Error with mod pack: {errorDescription}");
+
+                return Result<string>.Failure(Constants.MissingModPackErrorKey, errorDescription);
             }
 
-            return "";
+            return Result<string>.OK(dir.FullName);
         }
 
         private async Task<Result<ProcessStartInfo>> PrepareServerCommon(FactorioServerMutableData mutableData, string startTypeArguments)
         {
-            var banTask = BuildBanList(mutableData);
-            var adminTask = BuildAdminList(mutableData);
-            var logTask = RotateLogs(mutableData);
+            Task<Result> banTask = BuildBanList(mutableData);
+            Task<Result> adminTask = BuildAdminList(mutableData);
+            Task<Result> logTask = RotateLogs(mutableData);
 
-            var runningSettingsResult = BuildServerRunningSettings(mutableData);
+            Result<string> modPackResult = PrepareModDirectory(mutableData);
+            Result runningSettingsResult = BuildServerRunningSettings(mutableData);
 
             ResetData(mutableData);
             mutableData.ServerRunningSettings = FactorioServerSettings.Copy(mutableData.ServerSettings);
 
-            var startInfo = MakeStartInfo(mutableData, startTypeArguments);
-
             var results = (await Task.WhenAll(banTask, adminTask, logTask)).ToList();
             results.Add(runningSettingsResult);
+            results.Add(modPackResult);
             if (results.Any(x => !x.Success))
             {
                 return Result<ProcessStartInfo>.FromResult(Result.Combine(results));
             }
+
+            ProcessStartInfo startInfo = MakeStartInfo(mutableData, startTypeArguments, modPackResult.Value!);
 
             return Result<ProcessStartInfo>.OK(startInfo);
         }

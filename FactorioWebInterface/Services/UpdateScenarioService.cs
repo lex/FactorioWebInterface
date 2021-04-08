@@ -35,10 +35,15 @@ namespace FactorioWebInterface.Services
 
         public async Task<Result> UpdateScenarios()
         {
+            await updateLock.WaitAsync();
+
             try
             {
-                await updateLock.WaitAsync();
                 return await DoUpdateScenario();
+            }
+            catch (Exception ex)
+            {
+                return Result.FromException(ex);
             }
             finally
             {
@@ -62,10 +67,6 @@ namespace FactorioWebInterface.Services
                 ScenarioBuilder.BuildFromTemplates(baseScenario, scenarioTemplateDirectoryName, scenariosDirectory);
 
                 return Result.OK;
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(Constants.UnexpectedErrorKey, ex.Message);
             }
             finally
             {

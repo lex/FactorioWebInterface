@@ -4,12 +4,14 @@ import { ServerFileService } from "./serverFileService";
 import { ObservableCollection, CollectionView, CollectionViewChangeType } from "../../utils/collections/module";
 import { IterableHelper } from "../../utils/iterableHelper";
 import { CollectionChangeType } from "../../ts/utils";
+import { IObservableProperty } from "../../utils/observableProperty";
 
 export class ModPacksViewModel extends ObservableObject {
     private _sourceModPacks: ObservableCollection<ModPackMetaData>;
 
     private _header: string;
     private _modPacks: CollectionView<string, ModPackMetaData>;
+    private _selectedModPack: IObservableProperty<string>;
 
     get header(): string {
         return this._header;
@@ -27,7 +29,7 @@ export class ModPacksViewModel extends ObservableObject {
         super();
 
         let modPacks = serverFileService.modPacks;
-        let selectedModPack = serverFileService.selectedModPack;
+        this._selectedModPack = serverFileService.selectedModPack;
 
         this._sourceModPacks = modPacks;
         this._modPacks = new CollectionView(modPacks);
@@ -43,10 +45,13 @@ export class ModPacksViewModel extends ObservableObject {
             serverFileService.setSelectedModPack(name);
         });
 
-        selectedModPack.bind(modPack => this.setSelectModPackByName(modPack));
+        this._selectedModPack.bind(modPack => {
+            this.setSelectModPackByName(modPack);
+            this.updateHeader();
+        });
         modPacks.subscribe(event => {
             if (event.Type === CollectionChangeType.Reset) {
-                this.setSelectModPackByName(selectedModPack.value);
+                this.setSelectModPackByName(this._selectedModPack.value);
             }
         });
 
@@ -58,12 +63,12 @@ export class ModPacksViewModel extends ObservableObject {
     }
 
     private updateHeader() {
-        let selectedCount = this._modPacks.selectedCount;
-        if (selectedCount === 0) {
-            this._header = `Mod Packs (${this.count})`;
-        } else {
-            let selected = IterableHelper.firstOrDefault(this._modPacks.selected).Name;
+        let selected = this._selectedModPack.value ?? '';
+
+        if (selected) {
             this._header = `Mod Packs (${this.count}) - Selected: ${selected}`;
+        } else {
+            this._header = `Mod Packs (${this.count})`;
         }
 
         this.raise('header', this._header);

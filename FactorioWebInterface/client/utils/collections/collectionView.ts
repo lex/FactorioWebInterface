@@ -253,10 +253,13 @@ export class CollectionView<K, T> extends Observable<CollectionViewChangedData<T
         return this.setSelected(this._keySelector(item), selected);
     }
 
-    unSelectAll() {
+    unSelectAll(forceRaiseSelectedChangeEvent = false) {
         let selectedItems = [...this.selected];
 
         if (selectedItems.length === 0) {
+            if (forceRaiseSelectedChangeEvent) {
+                this._selectedChanged.raise({ type: CollectionViewChangeType.Remove, items: [] });
+            }
             return;
         }
 

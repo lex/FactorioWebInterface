@@ -50,11 +50,12 @@ namespace FactorioWebInterface.Services
         void EnsureScenarioDirectoryRemoved(string localScenarioDirectoryPath);
         void EnsureScenarioDirectoryCreated(string localScenarioDirectoryPath);
         Result BuildServerRunningSettings(FactorioServerConstantData serverData);
+        Task SaveServerExtraData(FactorioServerMutableData mutableData);
     }
 
     public class FactorioFileManager : IFactorioFileManager
     {
-        private readonly ILogger<FactorioFileManager> _logger;
+        private readonly ILogger<IFactorioFileManager> _logger;
         private readonly IFactorioServerDataService _factorioServerDataService;
         private readonly IFileSystem _fileSystem;
 
@@ -65,7 +66,7 @@ namespace FactorioWebInterface.Services
         public event EventHandler<IFactorioFileManager, FilesChangedEventArgs>? ChatLogFilesChanged;
         public event EventHandler<IFactorioFileManager, CollectionChangedData<ScenarioMetaData>>? ScenariosChanged;
 
-        public FactorioFileManager(ILogger<FactorioFileManager> logger, IFactorioServerDataService factorioServerDataService, IFileSystem fileSystem)
+        public FactorioFileManager(ILogger<IFactorioFileManager> logger, IFactorioServerDataService factorioServerDataService, IFileSystem fileSystem)
         {
             _logger = logger;
             _factorioServerDataService = factorioServerDataService;
@@ -1313,6 +1314,15 @@ namespace FactorioWebInterface.Services
                 _logger.LogError(ex, nameof(BuildServerRunningSettings));
                 return Result.Failure(Constants.UnexpectedErrorKey, ex.Message);
             }
+        }
+
+        public Task SaveServerExtraData(FactorioServerMutableData mutableData)
+        {
+            var data = new FactorioServerExtraData() { SelectedModPack = mutableData.ModPack };
+            byte[] bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(data);
+
+            return _fileSystem.WriteAllBytesAsync(mutableData.ServerExtraDataPath, bytes)
+                              .LogExceptions(_logger);
         }
 
         public void EnsureScenarioDirectoryRemoved(string localScenarioDirectoryPath) => _fileSystem.DeleteDirectoryIfExists(localScenarioDirectoryPath);

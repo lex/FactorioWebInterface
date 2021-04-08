@@ -983,6 +983,41 @@ describe('CollectionView', function () {
             strict.equal(0, actualEvents.length);
             strict.equal(0, actualSelectedEvents.length);
         });
+
+        it('raises event when forceRaiseSelectedChangeEvent', function () {
+            // Arrange.
+            let o = new ObservableKeyArray<number, number>(x => x);
+            let cv = new CollectionView(o);
+
+            o.add(1, 2, 3);
+
+            let actualEvents: CollectionViewChangedData<number>[] = [];
+            cv.subscribe(event => actualEvents.push(event));
+
+            let actualSelectedEvents: CollectionViewChangedData<number>[] = [];
+            cv.selectedChanged.subscribe(event => actualSelectedEvents.push(event));
+
+            // Act.
+            cv.unSelectAll(true);
+
+            // Assert.
+            let expectedSelected = [];
+
+            strict.deepEqual([...cv.selected], expectedSelected);
+            strict.deepEqual([...cv.viewableSelected], expectedSelected);
+            strict.equal(cv.selectedCount, 0);
+            strict.equal(cv.isSelected(1), false);
+            strict.equal(cv.isSelected(2), false);
+            strict.equal(cv.isSelected(3), false);
+
+            strict.equal(0, actualEvents.length);
+
+            strict.equal(1, actualSelectedEvents.length);
+
+            let removeSelectedEvent = actualSelectedEvents[0];
+            strict.equal(removeSelectedEvent.type, CollectionViewChangeType.Remove);
+            strict.deepEqual(removeSelectedEvent.items, []);
+        });
     });
 
     describe('selectedComparatorBuilder', function () {

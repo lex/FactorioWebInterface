@@ -2525,6 +2525,8 @@ namespace FactorioWebInterface.Services
                 md.ModPack = modPack;
 
                 _ = _factorioControlHub.Clients.Group(md.ServerId).SendSelectedModPack(modPack);
+
+                return _factorioFileManager.SaveServerExtraData(md);
             });
         }
 
