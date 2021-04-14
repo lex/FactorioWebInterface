@@ -106,6 +106,30 @@ namespace FactorioWebInterface.Models
             }
         }
 
+        public string ToString(bool removeNewLines)
+        {
+            if (Success)
+            {
+                return "OK";
+            }
+            else
+            {
+                var sb = new StringBuilder();
+                foreach (var error in Errors)
+                {
+                    sb.Append(error.Key).Append(": ").AppendLine(error.Description);
+                }
+                sb.RemoveLast(Environment.NewLine.Length);
+
+                if (removeNewLines)
+                {
+                    sb.Replace('\n', ' ').Replace('\r', ' ');
+                }
+
+                return sb.ToString();
+            }
+        }
+
         public string? ErrorDescriptions => Errors.Count == 0 ? null : string.Join(Environment.NewLine, Errors.Select(e => e.Description));
 
         public override bool Equals(object? obj)

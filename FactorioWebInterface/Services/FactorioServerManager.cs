@@ -440,6 +440,36 @@ namespace FactorioWebInterface.Services
             }
         }
 
+        private async Task<Result> LoadInner(FactorioServerMutableData mutableData, string directoryName, string fileName, string userName, string? modPackOverride)
+        {
+            if (!mutableData.Status.IsStartable())
+            {
+                return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load server when in state {mutableData.Status}");
+            }
+
+            if (modPackOverride is not null)
+            {
+                await SetSelectedModPack(mutableData, modPackOverride);
+            }
+
+            _ = FactorioServerUtils.SendControlMessage(mutableData, _factorioControlHub, $"Server load file: {fileName} by user: {userName}");
+
+            var startInfoResult = await _factorioServerPreparer.PrepareLoadSave(mutableData, directoryName, fileName);
+            if (!startInfoResult.Success)
+            {
+                return startInfoResult;
+            }
+
+            var startInfo = startInfoResult.Value!;
+            var runResult = _factorioServerRunner.Run(mutableData, startInfo);
+            if (!runResult.Success)
+            {
+                return runResult;
+            }
+
+            return Result.OK;
+        }
+
         public async Task<Result> Load(string serverId, string directoryName, string fileName, string userName)
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
@@ -453,34 +483,9 @@ namespace FactorioWebInterface.Services
                 return result;
             }
 
-            async Task<Result> LoadInner(FactorioServerMutableData mutableData)
-            {
-                if (!mutableData.Status.IsStartable())
-                {
-                    return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load server when in state {mutableData.Status}");
-                }
-
-                _ = FactorioServerUtils.SendControlMessage(mutableData, _factorioControlHub, $"Server load file: {fileName} by user: {userName}");
-
-                var startInfoResult = await _factorioServerPreparer.PrepareLoadSave(mutableData, directoryName, fileName);
-                if (!startInfoResult.Success)
-                {
-                    return startInfoResult;
-                }
-
-                var startInfo = startInfoResult.Value!;
-                var runResult = _factorioServerRunner.Run(mutableData, startInfo);
-                if (!runResult.Success)
-                {
-                    return runResult;
-                }
-
-                return Result.OK;
-            }
-
             try
             {
-                return await serverData.LockAsync(LoadInner);
+                return await serverData.LockAsync(md => LoadInner(md, directoryName, fileName, userName, modPackOverride: null));
             }
             catch (Exception e)
             {
@@ -489,11 +494,59 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        private async Task<Result> StartScenarioInner(FactorioServerMutableData mutableData, string scenarioName, string userName)
+        private async Task<Result> ForceLoad(string serverId, string directoryName, string fileName, string userName, string? modPackOverride)
+        {
+            if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
+            {
+                return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
+            }
+
+            Result result = Result.Combine
+            (
+                _factorioServerPreparer.CanLoadSave(serverId, directoryName, fileName),
+                CanSetSelectedModPack(modPackOverride)
+            );
+
+            if (!result.Success)
+            {
+                return result;
+            }
+
+            async Task<Result> ForceLoadInner(FactorioServerMutableData mutableData)
+            {
+                if (mutableData.Status == FactorioServerStatus.Running)
+                {
+                    mutableData.StopCallback = md => LoadInner(md, directoryName, fileName, userName, modPackOverride);
+
+                    await StopInner(mutableData, userName);
+
+                    return Result.OK;
+                }
+
+                return await LoadInner(mutableData, directoryName, fileName, userName, modPackOverride);
+            }
+
+            try
+            {
+                return await serverData.LockAsync(ForceLoadInner);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(nameof(ForceLoad), ex);
+                return Result.Failure(Constants.UnexpectedErrorKey);
+            }
+        }
+
+        private async Task<Result> StartScenarioInner(FactorioServerMutableData mutableData, string scenarioName, string userName, string? modPackOverride)
         {
             if (!mutableData.Status.IsStartable())
             {
                 return Result.Failure(Constants.InvalidServerStateErrorKey, $"Cannot load scenario when server in state {mutableData.Status}");
+            }
+
+            if (modPackOverride is not null)
+            {
+                await SetSelectedModPack(mutableData, modPackOverride);
             }
 
             _ = FactorioServerUtils.SendControlMessage(mutableData, _factorioControlHub, $"Server start scenario: {scenarioName} by user: {userName}");
@@ -529,7 +582,7 @@ namespace FactorioWebInterface.Services
 
             try
             {
-                return await serverData.LockAsync(md => StartScenarioInner(md, scenarioName, userName));
+                return await serverData.LockAsync(md => StartScenarioInner(md, scenarioName, userName, modPackOverride: null));
             }
             catch (Exception e)
             {
@@ -538,14 +591,19 @@ namespace FactorioWebInterface.Services
             }
         }
 
-        public async Task<Result> ForceStartScenario(string serverId, string scenarioName, string userName)
+        private async Task<Result> ForceStartScenario(string serverId, string scenarioName, string userName, string? modPackOverride)
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
             {
                 return Result.Failure(Constants.ServerIdErrorKey, $"serverId {serverId} not found.");
             }
 
-            var result = _factorioServerPreparer.CanStartScenario(scenarioName);
+            Result result = Result.Combine
+            (
+                _factorioServerPreparer.CanStartScenario(scenarioName),
+                CanSetSelectedModPack(modPackOverride)
+            );
+
             if (!result.Success)
             {
                 return result;
@@ -555,7 +613,7 @@ namespace FactorioWebInterface.Services
             {
                 if (mutableData.Status == FactorioServerStatus.Running)
                 {
-                    mutableData.StopCallback = md => StartScenarioInner(md, scenarioName, userName);
+                    mutableData.StopCallback = md => StartScenarioInner(md, scenarioName, userName, modPackOverride);
 
                     await StopInner(mutableData, userName);
 
@@ -563,7 +621,7 @@ namespace FactorioWebInterface.Services
                 }
                 else if (mutableData.Status.IsStartable())
                 {
-                    return await StartScenarioInner(mutableData, scenarioName, userName);
+                    return await StartScenarioInner(mutableData, scenarioName, userName, modPackOverride);
                 }
                 else
                 {
@@ -580,6 +638,55 @@ namespace FactorioWebInterface.Services
                 _logger.LogError(nameof(ForceStartScenario), e);
                 return Result.Failure(Constants.UnexpectedErrorKey);
             }
+        }
+
+        private async Task StartGame(string serverId, string content)
+        {
+            var result = await DoStartGame(serverId, content);
+            if (!result.Success)
+            {
+                _ = SendToFactorioProcess(serverId, $"StartGame failed - {result.ToString(removeNewLines: true)}");
+            }
+        }
+
+        private async Task<Result> DoStartGame(string serverId, string content)
+        {
+            if (!JsonSerializerHelper.TryDeserialize<StartGameData>(content, out StartGameData? data))
+            {
+                return Result.Failure(Constants.DeserializationErrorKey, "Could not deserialize StartGameData.");
+            }
+
+            if (data.Name is not string name || string.IsNullOrWhiteSpace(name))
+            {
+                return Result.Failure(Constants.DeserializationErrorKey, $"Missing property 'name'.");
+            }
+
+            if (string.Equals(data.Type, StartGameData.GameType.Save, StringComparison.OrdinalIgnoreCase))
+            {
+                if (_factorioFileManager.GetSaveFile(serverId, Constants.LocalSavesDirectoryName, name) is not null)
+                {
+                    return await ForceLoad(serverId, Constants.LocalSavesDirectoryName, name, "<server>", data.ModPack);
+                }
+                else if (_factorioFileManager.GetSaveFile(serverId, Constants.GlobalSavesDirectoryName, name) is not null)
+                {
+                    return await ForceLoad(serverId, Constants.GlobalSavesDirectoryName, name, "<server>", data.ModPack);
+                }
+                else
+                {
+                    return Result.Combine
+                    (
+                        Result.Failure(Constants.MissingFileErrorKey, $"The save file '{name}' cannot be found."),
+                        CanSetSelectedModPack(data.ModPack)
+                    );
+                }
+            }
+
+            if (string.IsNullOrEmpty(data.Type) || string.Equals(data.Type, StartGameData.GameType.Scenario, StringComparison.OrdinalIgnoreCase))
+            {
+                return await ForceStartScenario(serverId, name, "<server>", data.ModPack);
+            }
+
+            return Result.Failure(Constants.DeserializationErrorKey, $"The property 'type' must be {StartGameData.GameType.Save} or {StartGameData.GameType.Scenario} or empty.");
         }
 
         private async Task StopInner(FactorioServerMutableData mutableData, string userName)
@@ -1114,13 +1221,16 @@ namespace FactorioWebInterface.Services
                         break;
                     }
                 case Constants.StartScenarioTag:
-                    var result = await ForceStartScenario(serverId, content, "<server>");
+                    var result = await ForceStartScenario(serverId, content, "<server>", modPackOverride: null);
 
                     if (!result.Success)
                     {
                         _ = SendToFactorioProcess(serverId, result.ToString());
                     }
 
+                    break;
+                case Constants.StartGameTag:
+                    await StartGame(serverId, content);
                     break;
                 case Constants.BanTag:
                     await DoBan(serverId, content);
@@ -2513,6 +2623,15 @@ namespace FactorioWebInterface.Services
             return await serverData.LockAsync(md => md.ModPack);
         }
 
+        private Task SetSelectedModPack(FactorioServerMutableData mutableData, string modPack)
+        {
+            mutableData.ModPack = modPack;
+
+            _ = _factorioControlHub.Clients.Group(mutableData.ServerId).SendSelectedModPack(modPack);
+
+            return _factorioFileManager.SaveServerExtraData(mutableData);
+        }
+
         public Task SetSelectedModPack(string serverId, string modPack)
         {
             if (!_factorioServerDataService.TryGetServerData(serverId, out var serverData))
@@ -2520,14 +2639,22 @@ namespace FactorioWebInterface.Services
                 return Task.CompletedTask;
             }
 
-            return serverData.LockAsync(md =>
+            return serverData.LockAsync(md => SetSelectedModPack(md, modPack));
+        }
+
+        private Result CanSetSelectedModPack(string? modPack)
+        {
+            if (string.IsNullOrEmpty(modPack))
             {
-                md.ModPack = modPack;
+                return Result.OK;
+            }
 
-                _ = _factorioControlHub.Clients.Group(md.ServerId).SendSelectedModPack(modPack);
+            if (_factorioModManager.GetModPackDirectoryInfo(modPack) is null)
+            {
+                return Result.Failure(Constants.MissingModPackErrorKey, $"The mod pack '{modPack}' was not found.");
+            }
 
-                return _factorioFileManager.SaveServerExtraData(md);
-            });
+            return Result.OK;
         }
 
         public FileMetaData[] GetTempSaveFiles(string serverId)

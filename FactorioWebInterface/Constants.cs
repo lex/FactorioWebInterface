@@ -113,6 +113,7 @@ namespace FactorioWebInterface
         public const string DiscordAdminEmbedTag = "[DISCORD-ADMIN-EMBED]";
         public const string DiscordAdminEmbedRawTag = "[DISCORD-ADMIN-EMBED-RAW]";
         public const string StartScenarioTag = "[START-SCENARIO]";
+        public const string StartGameTag = "[START-GAME]";
         public const string BanTag = "[BAN]";
         public const string UnBannedTag = "[UNBANNED]";
         public const string BanSyncTag = "[BAN-SYNC]";
@@ -152,5 +153,6 @@ namespace FactorioWebInterface
         public const string InvalidNameErrorKey = "invalidName";
         public const string MissingConfigurationErrorKey = "missingConfiguration";
         public const string DownloadErrorKey = "downloadError";
+        public const string DeserializationErrorKey = "deserializationError";
     }
 }
