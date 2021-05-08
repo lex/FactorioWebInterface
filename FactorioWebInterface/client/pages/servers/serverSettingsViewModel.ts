@@ -252,7 +252,7 @@ export class ServerSettingsViewModel extends ObservableObject<ServerSettingsView
         this._errorService = errorService;
 
         this._validator = new Validator<this>(this, [
-            new PropertyValidation('Name').maxStringLength(49)
+            new PropertyValidation('Name').maxStringLength(50)
         ]);
 
         this._saveCommand = new DelegateCommand(() => this.saveSettings(), () => !this.saved);
