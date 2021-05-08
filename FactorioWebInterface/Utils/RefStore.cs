@@ -32,7 +32,7 @@ namespace FactorioWebInterface.Utils
             (entry.value as IDisposable)?.Dispose();
         }
 
-        public TValue GetValueOrCreate<TState>(TKey key, Func<TState, TValue> factory, TState state = default)
+        public TValue GetValueOrCreate<TState>(TKey key, Func<TState?, TValue> factory, TState? state = default)
         {
             if (!store.TryGetValue(key, out (int count, TValue value) entry))
             {
@@ -41,7 +41,7 @@ namespace FactorioWebInterface.Utils
 
             if (entry.value is null)
             {
-                entry.value = factory(state!);
+                entry.value = factory(state);
                 store[key] = entry;
             }
 

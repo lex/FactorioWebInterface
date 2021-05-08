@@ -164,7 +164,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(new Error(Constants.FileAlreadyExistsErrorKey, $"Mod pack {name} already exists."));
                 }
-                if (modPackDir.Parent.FullName != dir.FullName)
+                if (modPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(new Error(Constants.FileErrorKey, $"Error creating mod pack with name {name}."));
                 }
@@ -210,7 +210,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
-                if (modPackDir.Parent.FullName != dir.FullName)
+                if (modPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
@@ -256,7 +256,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
-                if (modPackDir.Parent.FullName != dir.FullName)
+                if (modPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {name} does not exist.");
                 }
@@ -278,7 +278,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(new Error(Constants.FileAlreadyExistsErrorKey, $"Mod pack {newName} already exists."));
                 }
-                if (modPackNewDir.Parent.FullName != dir.FullName)
+                if (modPackNewDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(new Error(Constants.FileErrorKey, $"Error renaming mod pack from {name} to {newName}."));
                 }
@@ -332,7 +332,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Array.Empty<ModPackFileMetaData>();
                 }
-                if (modPackDir.Parent.FullName != dir.FullName)
+                if (modPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Array.Empty<ModPackFileMetaData>();
                 }
@@ -376,7 +376,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
-                if (modPackDir.Parent.FullName != dir.FullName)
+                if (modPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
@@ -400,7 +400,7 @@ namespace FactorioWebInterface.Services
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
                     }
-                    if (fileInfo.Directory.FullName != modPackDir.FullName)
+                    if (fileInfo.Directory?.FullName != modPackDir.FullName)
                     {
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
@@ -478,7 +478,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
-                if (modPackDir.Parent.FullName != dir.FullName)
+                if (modPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
                 }
@@ -505,7 +505,7 @@ namespace FactorioWebInterface.Services
                         errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, fileName));
                         continue;
                     }
-                    if (fileInfo.Directory.FullName != modPackDir.FullName)
+                    if (fileInfo.Directory?.FullName != modPackDir.FullName)
                     {
                         errors.Add(new Error(Constants.InvalidFileNameErrorKey, fileName));
                         continue;
@@ -588,7 +588,7 @@ namespace FactorioWebInterface.Services
                 {
                     return null;
                 }
-                if (modPackDir.Parent.FullName != dir.FullName)
+                if (modPackDir.Parent?.FullName != dir.FullName)
                 {
                     return null;
                 }
@@ -606,7 +606,7 @@ namespace FactorioWebInterface.Services
                 {
                     return null;
                 }
-                if (fileInfo.Directory.FullName != modPackDir.FullName)
+                if (fileInfo.Directory?.FullName != modPackDir.FullName)
                 {
                     return null;
                 }
@@ -645,7 +645,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
                 }
-                if (sourceModPackDir.Parent.FullName != dir.FullName)
+                if (sourceModPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
                 }
@@ -683,7 +683,7 @@ namespace FactorioWebInterface.Services
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
                     }
-                    if (sourceFileInfo.Directory.FullName != sourceModPackDir.FullName)
+                    if (sourceFileInfo.Directory?.FullName != sourceModPackDir.FullName)
                     {
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
@@ -698,7 +698,7 @@ namespace FactorioWebInterface.Services
                         errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, file));
                         continue;
                     }
-                    if (targetFileInfo.Directory.FullName != targetModPackDir.FullName)
+                    if (targetFileInfo.Directory?.FullName != targetModPackDir.FullName)
                     {
                         errors.Add(new Error(Constants.FileErrorKey, file));
                         continue;
@@ -780,7 +780,7 @@ namespace FactorioWebInterface.Services
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
                 }
-                if (sourceModPackDir.Parent.FullName != dir.FullName)
+                if (sourceModPackDir.Parent?.FullName != dir.FullName)
                 {
                     return Result.Failure(Constants.MissingFileErrorKey, $"Mod pack {sourceModPack} does not exist.");
                 }
@@ -819,7 +819,7 @@ namespace FactorioWebInterface.Services
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
                     }
-                    if (sourceFileInfo.Directory.FullName != sourceModPackDir.FullName)
+                    if (sourceFileInfo.Directory?.FullName != sourceModPackDir.FullName)
                     {
                         errors.Add(new Error(Constants.MissingFileErrorKey, file));
                         continue;
@@ -834,7 +834,7 @@ namespace FactorioWebInterface.Services
                         errors.Add(new Error(Constants.FileAlreadyExistsErrorKey, file));
                         continue;
                     }
-                    if (targetFileInfo.Directory.FullName != targetModPackDir.FullName)
+                    if (targetFileInfo.Directory?.FullName != targetModPackDir.FullName)
                     {
                         errors.Add(new Error(Constants.FileErrorKey, file));
                         continue;
@@ -1022,7 +1022,7 @@ namespace FactorioWebInterface.Services
             {
                 return Result<DirectoryInfo>.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
             }
-            if (modPackDir.Parent.FullName != dir.FullName)
+            if (modPackDir.Parent?.FullName != dir.FullName)
             {
                 return Result<DirectoryInfo>.Failure(Constants.MissingFileErrorKey, $"Mod pack {modPack} does not exist.");
             }

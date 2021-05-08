@@ -39,7 +39,7 @@
             <div id="navbarContent" class="navbar-menu">
 
                 @{
-                    var page = ViewContext.RouteData.Values["page"].ToString()!.ToLowerInvariant();
+                    var page = ViewContext.RouteData.Values["page"]?.ToString()?.ToLowerInvariant();
                 }
 
                 <div class="navbar-start">

@@ -9,6 +9,7 @@ using System.Text;
 
 namespace FactorioWebInterfaceTests.Utils
 {
+#pragma warning disable CS0067 // Unused member.
     public class TestProcess : IProcess
     {
         public IntPtr MinWorkingSet { get; set; }
@@ -20,7 +21,7 @@ namespace FactorioWebInterfaceTests.Utils
         public string MainWindowTitle { get; } = default!;
         public string MachineName { get; } = default!;
         public bool Responding { get; }
-        public ISynchronizeInvoke SynchronizingObject { get; set; } = default!;
+        public ISynchronizeInvoke? SynchronizingObject { get; set; } = default!;
         public int BasePriority { get; }
         public bool EnableRaisingEvents { get; set; }
         public int ExitCode { get; }
@@ -53,9 +54,9 @@ namespace FactorioWebInterfaceTests.Utils
         public int SessionId { get; }
         public int Id { get; }
 
-        public event DataReceivedEventHandler ErrorDataReceived = default!;
-        public event DataReceivedEventHandler OutputDataReceived = default!;
-        public event EventHandler Exited = default!;
+        public event DataReceivedEventHandler? ErrorDataReceived;
+        public event DataReceivedEventHandler? OutputDataReceived;
+        public event EventHandler? Exited;
 
         public void BeginErrorReadLine()
         {

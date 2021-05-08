@@ -6,19 +6,20 @@ using System.IO;
 
 namespace FactorioWebInterface.Utils.ProcessAbstractions
 {
+#pragma warning disable CA1416 // Validate platform compatibility
     public class PhysicalProcess : IProcess
     {
         public System.Diagnostics.Process Process { get; }
         public IntPtr MinWorkingSet { get => Process.MinWorkingSet; set => Process.MinWorkingSet = value; }
         public IntPtr MaxWorkingSet { get => Process.MaxWorkingSet; set => Process.MaxWorkingSet = value; }
-        public ProcessModule MainModule { get => Process.MainModule; }
+        public ProcessModule? MainModule => Process.MainModule;
         public IntPtr Handle { get => Process.Handle; }
         public int HandleCount { get => Process.HandleCount; }
         public IntPtr MainWindowHandle { get => Process.MainWindowHandle; }
         public string MainWindowTitle { get => Process.MainWindowTitle; }
         public string MachineName { get => Process.MachineName; }
         public bool Responding { get => Process.Responding; }
-        public ISynchronizeInvoke SynchronizingObject { get => Process.SynchronizingObject; set => Process.SynchronizingObject = value; }
+        public ISynchronizeInvoke? SynchronizingObject { get => Process.SynchronizingObject; set => Process.SynchronizingObject = value; }
         public int BasePriority { get => Process.BasePriority; }
         public bool EnableRaisingEvents { get => Process.EnableRaisingEvents; set => Process.EnableRaisingEvents = value; }
         public int ExitCode { get => Process.ExitCode; }
@@ -51,9 +52,9 @@ namespace FactorioWebInterface.Utils.ProcessAbstractions
         public int SessionId { get => Process.SessionId; }
         public int Id { get => Process.Id; }
 
-        public event DataReceivedEventHandler ErrorDataReceived { add => Process.ErrorDataReceived += value; remove => Process.ErrorDataReceived -= value; }
-        public event DataReceivedEventHandler OutputDataReceived { add => Process.OutputDataReceived += value; remove => Process.OutputDataReceived -= value; }
-        public event EventHandler Exited { add => Process.Exited += value; remove => Process.Exited -= value; }
+        public event DataReceivedEventHandler? ErrorDataReceived { add => Process.ErrorDataReceived += value; remove => Process.ErrorDataReceived -= value; }
+        public event DataReceivedEventHandler? OutputDataReceived { add => Process.OutputDataReceived += value; remove => Process.OutputDataReceived -= value; }
+        public event EventHandler? Exited { add => Process.Exited += value; remove => Process.Exited -= value; }
 
         public PhysicalProcess(System.Diagnostics.Process process)
         {

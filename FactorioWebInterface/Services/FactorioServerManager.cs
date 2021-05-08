@@ -669,7 +669,7 @@ namespace FactorioWebInterface.Services
                 {
                     try
                     {
-                        if (process.MainModule.FileName.EndsWith(mutableData.ExecutablePath))
+                        if (process.MainModule?.FileName?.EndsWith(mutableData.ExecutablePath) == true)
                         {
                             foundCount++;
                             process.Kill(entireProcessTree: true);

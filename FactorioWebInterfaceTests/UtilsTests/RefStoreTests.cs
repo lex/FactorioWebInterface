@@ -168,7 +168,7 @@ namespace FactorioWebInterfaceTests.UtilsTests
             refStore.AddUsage(firstKey);
             refStore.AddUsage(secondKey);
 
-            Func<object, object> factory = state => state;
+            Func<object?, object> factory = state => state!;
 
             // Act.
             var actualFirst = refStore.GetValueOrCreate(firstKey, factory, firstValue);

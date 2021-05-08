@@ -37,8 +37,10 @@ namespace FactorioWebInterface.Utils
             {
                 StartInfo =
                 {
-                    FileName = fileName, Arguments = arguments,
-                    UseShellExecute = false, CreateNoWindow = true,
+                    FileName = fileName,
+                    Arguments = arguments ?? "",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
                 }
             };
 
@@ -83,8 +85,10 @@ namespace FactorioWebInterface.Utils
             {
                 StartInfo =
                 {
-                    FileName = fileName, Arguments = arguments,
-                    UseShellExecute = false, CreateNoWindow = true,
+                    FileName = fileName,
+                    Arguments = arguments ?? "",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 }
@@ -137,8 +141,10 @@ namespace FactorioWebInterface.Utils
             {
                 StartInfo =
                 {
-                    FileName = fileName, Arguments = arguments,
-                    UseShellExecute = false, CreateNoWindow = true,
+                    FileName = fileName,
+                    Arguments = arguments ?? "",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
                 },
                 EnableRaisingEvents = true
             };
@@ -185,8 +191,10 @@ namespace FactorioWebInterface.Utils
             {
                 StartInfo =
                 {
-                    FileName = fileName, Arguments = arguments,
-                    UseShellExecute = false, CreateNoWindow = true,
+                    FileName = fileName,
+                    Arguments = arguments ?? "",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
                 },
                 EnableRaisingEvents = true
             };

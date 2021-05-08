@@ -5,11 +5,11 @@ namespace FactorioWebInterface.Utils
 {
     public static class HubCallerContextExtensions
     {
-        public static T GetDataOrDefault<T>(this HubCallerContext context, T defaultValue = default)
+        public static T GetDataOrDefault<T>(this HubCallerContext context, T defaultValue = default!)
         {
             if (context.Items.TryGetValue(typeof(T), out object? data))
             {
-                return (T)data;
+                return (T)data!;
             }
             else
             {
@@ -17,11 +17,11 @@ namespace FactorioWebInterface.Utils
             }
         }
 
-        public static bool TryGetData<T>(this HubCallerContext context, [MaybeNull] out T data)
+        public static bool TryGetData<T>(this HubCallerContext context, [MaybeNullWhen(false)] out T data)
         {
             if (context.Items.TryGetValue(typeof(T), out object? obj))
             {
-                data = (T)obj;
+                data = (T)obj!;
                 return true;
             }
             else
