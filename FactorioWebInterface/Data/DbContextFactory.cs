@@ -9,8 +9,8 @@ namespace FactorioWebInterface.Data
         T Create<T>() where T : DbContext;
     }
 
-    // This class exsits becasue it is not advisable to keep local copies to DBContext as the context will get stale.
-    // Everytime you want to do something with the databse create a dependency on this class and use Create() once per transcation.
+    // This class exists because it is not advisable to keep local copies to DBContext as the context will get stale.
+    // Every time you want to do something with the database create a dependency on this class and use Create() once per transaction.
     // https://stackoverflow.com/questions/10585478/one-dbcontext-per-web-request-why
     public class DbContextFactory : IDbContextFactory
     {
@@ -23,7 +23,7 @@ namespace FactorioWebInterface.Data
 
         public T Create<T>() where T : DbContext
         {
-            return _serviceProvider.CreateScope().ServiceProvider.GetService<T>();
+            return _serviceProvider.CreateScope().ServiceProvider.GetRequiredService<T>();
         }
     }
 }

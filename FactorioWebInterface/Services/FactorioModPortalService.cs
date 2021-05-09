@@ -90,7 +90,7 @@ namespace FactorioWebInterface.Services
                     return Result<IReadOnlyList<GetModDownloadResult>>.Failure(Constants.InvalidHttpResponseErrorKey, $"Http error: {response.StatusCode} when requesting mod data from mod portal.");
                 }
 
-                data = await JsonSerializer.DeserializeAsync<ModListResponse>(await response.Content.ReadAsStreamAsync());
+                data = await JsonSerializer.DeserializeAsync<ModListResponse>(await response.Content.ReadAsStreamAsync()) ?? new ModListResponse();
             }
             catch (Exception ex)
             {

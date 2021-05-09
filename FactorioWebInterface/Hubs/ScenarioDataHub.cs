@@ -12,16 +12,14 @@ namespace FactorioWebInterface.Hubs
     [Authorize]
     public class ScenarioDataHub : Hub<IScenarioDataClientMethods>
     {
-        private IFactorioServerManager _factorioServerManager;
-        private ScenarioDataManager _scenarioDataManger;
+        private readonly ScenarioDataManager _scenarioDataManger;
 
-        public ScenarioDataHub(IFactorioServerManager factorioServerManager, ScenarioDataManager scenarioDataManger)
+        public ScenarioDataHub(ScenarioDataManager scenarioDataManger)
         {
-            _factorioServerManager = factorioServerManager;
             _scenarioDataManger = scenarioDataManger;
         }
 
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override Task OnDisconnectedAsync(Exception? exception)
         {
             string connectionId = Context.ConnectionId;
             if (Context.TryGetData(out string? oldDataSet) && oldDataSet != null)

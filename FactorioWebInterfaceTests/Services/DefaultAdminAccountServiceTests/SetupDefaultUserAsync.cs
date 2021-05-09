@@ -28,8 +28,8 @@ namespace FactorioWebInterfaceTests.Services.DefaultAdminAccountServiceTests
             serviceProvider = DefaultAdminAccountServiceHelper.MakeDefaultAdminAccountServiceProvider();
             logger = (TestLogger<IDefaultAdminAccountService>)serviceProvider.GetRequiredService<ILogger<IDefaultAdminAccountService>>();
             fileSystem = (MockFileSystem)serviceProvider.GetRequiredService<IFileSystem>();
-            roleManager = serviceProvider.GetService<RoleManager<IdentityRole>>();
-            userManager = serviceProvider.GetService<UserManager<ApplicationUser>>();
+            roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             defaultAdminAccountService = serviceProvider.GetRequiredService<DefaultAdminAccountService>();
             DefaultAdminAccountServiceHelper.SetupRoles(roleManager);
             DefaultAdminAccountServiceHelper.SetupFileSystem(fileSystem);

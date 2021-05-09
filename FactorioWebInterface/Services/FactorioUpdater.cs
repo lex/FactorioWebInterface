@@ -36,8 +36,14 @@ namespace FactorioWebInterface.Services
             _factorioServerDataService = factorioServerDataService;
         }
 
-        private string GetVersionOrFileName(string fileName)
+        private static string GetVersionOrFileName(string? fileName)
         {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                // Fallback name in case the downloaded file doesn't have a name.
+                return $"Factorio-{DateTime.UtcNow:yyyy-MM-ddThh:mm:ss}";
+            }
+
             var match = versionRegex.Match(fileName);
 
             if (match.Success)
@@ -63,7 +69,7 @@ namespace FactorioWebInterface.Services
                 string path = Path.Combine(dir.FullName, version);
                 FileInfo file = new FileInfo(path);
 
-                if (!file.Exists || file.Directory.FullName != dir.FullName)
+                if (!file.Exists || file.Directory?.FullName != dir.FullName)
                 {
                     return null;
                 }
@@ -96,7 +102,7 @@ namespace FactorioWebInterface.Services
 
                 FileInfo file = new FileInfo(path);
 
-                if (!file.Exists || file.Directory.FullName != dir.FullName)
+                if (!file.Exists || file.Directory?.FullName != dir.FullName)
                 {
                     return false;
                 }
@@ -197,10 +203,10 @@ namespace FactorioWebInterface.Services
                     return null;
                 }
 
-                var fileName = download.Content.Headers.ContentDisposition.FileName;
-                fileName = GetVersionOrFileName(fileName);
+                string? fileName = download.Content.Headers.ContentDisposition?.FileName;
+                string processedFileName = GetVersionOrFileName(fileName);
 
-                var binariesPath = Path.Combine(_factorioServerDataService.UpdateCacheDirectoryPath, fileName);
+                var binariesPath = Path.Combine(_factorioServerDataService.UpdateCacheDirectoryPath, processedFileName);
                 var binaries = new FileInfo(binariesPath);
 
                 using (var fs = binaries.Open(FileMode.Create, FileAccess.Write, FileShare.None))

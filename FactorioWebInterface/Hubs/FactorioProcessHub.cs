@@ -20,7 +20,7 @@ namespace FactorioWebInterface.Hubs
             _factorioServerManger = factorioServerManger;
         }
 
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override Task OnDisconnectedAsync(Exception? exception)
         {
             string connectionId = Context.ConnectionId;
             if (Context.TryGetData(out string? serverId) && serverId != null)

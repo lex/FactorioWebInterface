@@ -10,14 +10,14 @@ namespace FactorioWebInterface.Utils.ProcessAbstractions
     {
         IntPtr MinWorkingSet { get; set; }
         IntPtr MaxWorkingSet { get; set; }
-        ProcessModule MainModule { get; }
+        ProcessModule? MainModule { get; }
         IntPtr Handle { get; }
         int HandleCount { get; }
         IntPtr MainWindowHandle { get; }
         string MainWindowTitle { get; }
         string MachineName { get; }
         bool Responding { get; }
-        ISynchronizeInvoke SynchronizingObject { get; set; }
+        ISynchronizeInvoke? SynchronizingObject { get; set; }
         int BasePriority { get; }
         bool EnableRaisingEvents { get; set; }
         int ExitCode { get; }
@@ -49,9 +49,9 @@ namespace FactorioWebInterface.Utils.ProcessAbstractions
         long PeakPagedMemorySize64 { get; }
         int SessionId { get; }
         int Id { get; }
-        event DataReceivedEventHandler ErrorDataReceived;
-        event DataReceivedEventHandler OutputDataReceived;
-        event EventHandler Exited;
+        event DataReceivedEventHandler? ErrorDataReceived;
+        event DataReceivedEventHandler? OutputDataReceived;
+        event EventHandler? Exited;
         void BeginErrorReadLine();
         void BeginOutputReadLine();
         void CancelErrorRead();

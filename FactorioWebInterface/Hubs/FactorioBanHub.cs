@@ -34,13 +34,13 @@ namespace FactorioWebInterface.Hubs
 
         public Task<Result> AddBan(Ban ban, bool synchronizeWithServers)
         {
-            string? actor = Context.User.Identity.Name;
+            string? actor = Context.User?.Identity?.Name;
             return _factorioBanManager.AddBanFromWeb(ban, synchronizeWithServers, actor);
         }
 
         public Task<Result> RemoveBan(string username, bool synchronizeWithServers)
         {
-            string? actor = Context.User.Identity.Name;
+            string? actor = Context.User?.Identity?.Name;
             return _factorioBanManager.RemoveBanFromWeb(username, synchronizeWithServers, actor);
         }
     }

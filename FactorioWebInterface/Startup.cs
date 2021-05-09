@@ -197,7 +197,6 @@ namespace FactorioWebInterface
                 endpoints.MapHub<FactorioAdminHub>("/factorioAdminHub");
                 endpoints.MapHub<ScenarioDataHub>("/scenarioDataHub");
                 endpoints.MapHub<FactorioBanHub>("/factorioBanHub");
-                endpoints.MapHub<PlaguesPlaygroundHub>("/plaguesPlaygroundHub");
                 endpoints.MapHub<FactorioModHub>("/factorioModHub");
             });
         }
