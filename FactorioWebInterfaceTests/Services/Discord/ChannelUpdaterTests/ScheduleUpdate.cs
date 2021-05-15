@@ -47,7 +47,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelUpdaterTests
             var modifyEvent = new AsyncManualResetEvent();
 
             var timeSystemMock = new Mock<ITimeSystem>(MockBehavior.Strict);
-            timeSystemMock.Setup(x => x.Delay(It.IsAny<TimeSpan>())).Returns((TimeSpan _) => timeoutEvent.WaitAsyncWithTimeout(1000));
+            timeSystemMock.Setup(x => x.Delay(It.IsAny<TimeSpan>())).Returns((TimeSpan _) => timeoutEvent.WaitAsyncWithTimeout(5000));
 
             string? name = null;
             string? topic = null;
@@ -62,7 +62,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelUpdaterTests
 
             // Act.
             channelUpdater.ScheduleUpdate();
-            await modifyEvent.WaitAsyncWithTimeout(1000);
+            await modifyEvent.WaitAsyncWithTimeout(5000);
 
             modifyEvent.Reset();
             channelUpdater.ScheduleUpdate();
@@ -75,7 +75,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelUpdaterTests
             timeoutEvent.Set();
 
             // Assert.
-            await modifyEvent.WaitAsyncWithTimeout(1000);
+            await modifyEvent.WaitAsyncWithTimeout(5000);
             Assert.NotNull(name);
             Assert.NotNull(topic);
         }
@@ -95,7 +95,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelUpdaterTests
 
             // Act.
             channelUpdater.ScheduleUpdate();
-            await finishedLogging.WaitAsyncWithTimeout(1000);
+            await finishedLogging.WaitAsyncWithTimeout(5000);
 
             // Assert.
             logger.AssertContainsLog(LogLevel.Error, expectedState, exception);
@@ -128,11 +128,11 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelUpdaterTests
             }, logger: logger);
 
             channelUpdater.ScheduleUpdate();
-            await finishedLogging.WaitAsyncWithTimeout(1000);
+            await finishedLogging.WaitAsyncWithTimeout(5000);
 
             // Act.
             channelUpdater.ScheduleUpdate();
-            await modifyEvent.WaitAsyncWithTimeout(1000);
+            await modifyEvent.WaitAsyncWithTimeout(5000);
 
             // Assert.
             Assert.Equal(2, count);
@@ -165,7 +165,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.ChannelUpdaterTests
 
             // Act.
             channelUpdater.ScheduleUpdate();
-            await modifyEvent.WaitAsyncWithTimeout(1000);
+            await modifyEvent.WaitAsyncWithTimeout(5000);
 
             // Assert.
             Assert.Equal(2, count);

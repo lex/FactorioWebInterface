@@ -116,7 +116,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             // Act.
             await factorioBanService.DoUnBanFromGameOutput(serverData, content);
-            await eventRaised.WaitAsyncWithTimeout(1000);
+            await eventRaised.WaitAsyncWithTimeout(5000);
 
             // Assert.
             Assert.NotNull(eventArgs);

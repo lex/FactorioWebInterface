@@ -55,7 +55,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             // Act.
             await factorioBanService.RemoveBan(username, serverId, syncBans, "actor");
-            await eventRaised.WaitAsyncWithTimeout(1000);
+            await eventRaised.WaitAsyncWithTimeout(5000);
 
             // Assert.
             Assert.NotNull(eventArgs);
