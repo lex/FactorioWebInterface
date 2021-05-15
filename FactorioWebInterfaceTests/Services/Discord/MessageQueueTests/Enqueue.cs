@@ -207,7 +207,7 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             {
                 queue.Enqueue(embed: new EmbedBuilder().Build());
             }
-            await finishedLogging.WaitAsyncWithTimeout(1000);
+            await finishedLogging.WaitAsyncWithTimeout(5000);
 
             // Assert.
             logger.AssertContainsLog(LogLevel.Error, expectedState, exception);
@@ -238,13 +238,13 @@ namespace FactorioWebInterfaceTests.Services.Discord.MessageQueueTests
             var queue = MakeMessageQueue(Callback, logger);
 
             queue.Enqueue("Some text");
-            await finishedLogging.WaitAsyncWithTimeout(1000);
+            await finishedLogging.WaitAsyncWithTimeout(5000);
             logger.AssertContainsLog(LogLevel.Error, "SendBatch", exception);
             shouldThrow = false;
 
             // Act.           
             queue.Enqueue(secondInput);
-            await sent.Task.TimeoutAfter(1000);
+            await sent.Task.TimeoutAfter(5000);
 
             // Assert.
             Assert.Equal(secondInput, sent.Task.Result);

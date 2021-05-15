@@ -95,7 +95,7 @@ namespace FactorioWebInterfaceTests.Services.FactorioBanServiceTests
 
             // Act.
             var result = await factorioBanService.AddBanFromWeb(ban, sync, "");
-            await eventRaised.WaitAsyncWithTimeout(1000);
+            await eventRaised.WaitAsyncWithTimeout(5000);
 
             // Assert.
             Assert.NotNull(eventArgs);
