@@ -50,7 +50,8 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if not exist &quot;$(ProjectDir)settings.json&quot; (&#xD;&#xA;    copy &quot;$(ProjectDir)settings.template.json&quot; &quot;$(ProjectDir)settings.json&quot;&#xD;&#xA;)" />
+    <!-- TODO needs a shell equivalent -->
+    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="if not exist &quot;$(ProjectDir)settings.json&quot; (&#xD;&#xA;    copy &quot;$(ProjectDir)settings.template.json&quot; &quot;$(ProjectDir)settings.json&quot;&#xD;&#xA;)" />
   </Target>
 
 </Project>
