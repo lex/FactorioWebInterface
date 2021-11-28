@@ -5,7 +5,7 @@ import { IModalService } from "../../services/iModalService";
 import { NewModPackViewModel } from "./newModPackViewModel";
 import { ErrorService } from "../../services/errorService";
 import { RenameModPackViewModel } from "./renameModPackViewModel";
-import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
+import { DeleteModPackViewModel } from "./deleteModPackViewModel";
 import { CollectionView } from "../../utils/collections/module";
 
 export class ModPacksViewModel {

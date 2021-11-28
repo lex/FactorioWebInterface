@@ -3,7 +3,7 @@ import { ModPacksViewModel } from "./modPacksViewModel";
 import { IModalService } from "../../services/iModalService";
 import { ErrorService } from "../../services/errorService";
 import { ModPackFilesViewModel } from "./modPackFilesViewModel";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 
 export class ModsViewModel {
     readonly modPacksViewModel: ModPacksViewModel;

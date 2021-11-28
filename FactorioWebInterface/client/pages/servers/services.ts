@@ -7,7 +7,7 @@ import { ServerSettingsService } from "./serverSettingsService";
 import { CopyToClipboardService } from "../../services/copyToClipboardService";
 import { ServerConsoleService } from "./serverConsoleService";
 import { ServerExtraSettingsService } from "./serverExtraSettingsService";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 import { UploadService } from "../../services/uploadService";
 import { ServerFileManagementService } from "./serverFileManagementService";
 import { ErrorService } from "../../services/errorService";

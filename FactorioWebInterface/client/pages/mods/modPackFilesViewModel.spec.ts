@@ -6,7 +6,7 @@ import { ModPackMetaData, ModPackFileMetaData } from "../servers/serversTypes";
 import { CollectionChangeType, Result } from "../../ts/utils";
 import { strict } from "assert";
 import { ModPackFilesViewModel } from "./modPackFilesViewModel";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 import { FileSelectionServiceMockBase } from "../../testUtils/services/fileSelectionServiceMockBase";
 import { UploadService, FileUploadEvent, FileUploadEventType } from "../../services/uploadService";
 import { UploadServiceMockBase } from "../../testUtils/services/uploadServiceMockBase";

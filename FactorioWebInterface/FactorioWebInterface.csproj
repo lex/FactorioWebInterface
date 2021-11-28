@@ -102,7 +102,7 @@
     <None Remove="client\pages\bans\helpSectionView.ts" />
     <None Remove="client\pages\bans\services.ts" />
     <None Remove="client\pages\mods\deleteModPackView.ts" />
-    <None Remove="client\pages\mods\DeleteModPackViewModel.ts" />
+    <None Remove="client\pages\mods\deleteModPackViewModel.ts" />
     <None Remove="client\pages\mods\helpSectionView.ts" />
     <None Remove="client\pages\mods\modPackFilesView.ts" />
     <None Remove="client\pages\mods\modPackFilesViewModel.ts" />
@@ -174,7 +174,7 @@
     <None Remove="client\services\copyToClipboardService.ts" />
     <None Remove="client\services\documentService.ts" />
     <None Remove="client\services\errorService.ts" />
-    <None Remove="client\services\fileSelectionservice.ts" />
+    <None Remove="client\services\fileSelectionService.ts" />
     <None Remove="client\services\hiddenInputService.ts" />
     <None Remove="client\services\iDocumentService.ts" />
     <None Remove="client\services\iHiddenInputService.ts" />
@@ -233,7 +233,7 @@
     <None Remove="client\utils\box.ts" />
     <None Remove="client\utils\circularBuffer.spec.ts" />
     <None Remove="client\utils\circularBuffer.ts" />
-    <None Remove="client\utils\CloseBaseViewModel.ts" />
+    <None Remove="client\utils\closeBaseViewModel.ts" />
     <None Remove="client\utils\collections\module.ts" />
     <None Remove="client\utils\collectionView.ts" />
     <None Remove="client\utils\commandHistory.spec.ts" />
@@ -502,7 +502,7 @@
     <TypeScriptCompile Include="client\components\inputFieldBase.ts" />
     <TypeScriptCompile Include="client\components\numberField.ts" />
     <TypeScriptCompile Include="client\components\flexPanel.ts" />
-    <TypeScriptCompile Include="client\components\textareaField.ts" />
+    <TypeScriptCompile Include="client\components\textAreaField.ts" />
     <TypeScriptCompile Include="client\components\textField.ts" />
     <TypeScriptCompile Include="client\components\virtualComponent.ts" />
     <TypeScriptCompile Include="client\components\virtualForm.ts" />

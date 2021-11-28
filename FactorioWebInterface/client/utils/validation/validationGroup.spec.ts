@@ -1,4 +1,4 @@
-﻿import { ValidationResult } from "./ValidationResult";
+﻿import { ValidationResult } from "./validationResult";
 import { PropertyValidation } from "./validationGroup";
 import { assertValidationResultEqual } from "../../testUtils/utils/validation";
 

@@ -2,7 +2,7 @@
 import { ModPackFileMetaData, ModPackMetaData } from "../servers/serversTypes";
 import { ModsService } from "./modsService";
 import { DelegateCommand, ICommand } from "../../utils/command";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { ErrorService } from "../../services/errorService";
 import { IterableHelper } from "../../utils/iterableHelper";

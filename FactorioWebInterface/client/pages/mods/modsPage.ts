@@ -2,14 +2,14 @@
 import { ServiceLocator } from "../../utils/serviceLocator";
 import { BaseServices } from "../../services/baseServices";
 import { registerModsPageServices } from "./services";
-import { ModsView } from "./ModsView";
+import { ModsView } from "./modsView";
 import { ModsViewModel } from "./modsViewModel";
 import { NewModPackViewModel } from "./newModPackViewModel";
 import { ViewLocator } from "../../services/viewLocator";
 import { NewModPackView } from "./newModPackView";
 import { RenameModPackViewModel } from "./renameModPackViewModel";
 import { RenameModPackView } from "./renameModPackView";
-import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
+import { DeleteModPackViewModel } from "./deleteModPackViewModel";
 import { DeleteModPackView } from "./deleteModPackView";
 import { Nav } from "../../shared/nav";
 import { NavService } from "../../services/navService";

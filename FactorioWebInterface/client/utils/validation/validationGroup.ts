@@ -1,4 +1,4 @@
-﻿import { ValidationResult } from "./ValidationResult";
+﻿import { ValidationResult } from "./validationResult";
 import { IValidationRule, NotEmptyString, NoWhitespaceString, NotNull, MaxStringLength, MinMaxStringLength, EqualToOtherString } from "./validationRule";
 
 export interface IValidationGroup<T> {

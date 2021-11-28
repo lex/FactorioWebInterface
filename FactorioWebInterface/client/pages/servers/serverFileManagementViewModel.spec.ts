@@ -6,7 +6,7 @@ import { ServersHubService } from "./serversHubService";
 import { CollectionChangeType, Result } from "../../ts/utils";
 import { FileMetaData } from "./serversTypes";
 import { FileSelectionServiceMockBase } from "../../testUtils/services/fileSelectionServiceMockBase";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 import { UploadService, FileUploadEvent, FileUploadEventType } from "../../services/uploadService";
 import { UploadServiceMockBase } from "../../testUtils/services/uploadServiceMockBase";
 import { MethodInvocation } from "../../testUtils/invokeBase";

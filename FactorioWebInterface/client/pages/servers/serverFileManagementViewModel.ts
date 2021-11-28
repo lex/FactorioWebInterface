@@ -1,7 +1,7 @@
 ﻿import { ServerFileManagementService } from "./serverFileManagementService";
 import { IObservableProperty } from "../../utils/observableProperty";
 import { DelegateCommand, ICommand } from "../../utils/command";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 import { FileViewModel } from "./fileViewModel";
 import { FileMetaData } from "./serversTypes";
 import { IterableHelper } from "../../utils/iterableHelper";

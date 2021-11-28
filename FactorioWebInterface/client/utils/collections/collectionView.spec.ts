@@ -1,4 +1,4 @@
-﻿import { ObservableKeyArray } from "./ObservableKeyArray";
+﻿import { ObservableKeyArray } from "./observableKeyArray";
 import { CollectionView, CollectionViewChangeType, CollectionViewChangedData, FilterSpecifications } from "./collectionView";
 import { strict } from "assert";
 import { CollectionChangeType } from "../../ts/utils";

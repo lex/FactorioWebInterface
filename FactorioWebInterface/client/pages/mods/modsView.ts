@@ -1,6 +1,6 @@
 ﻿import { VirtualComponent } from "../../components/virtualComponent";
 import { ModsViewModel } from "./modsViewModel";
-import { ModPacksView } from "./ModPacksView";
+import { ModPacksView } from "./modPacksView";
 import { HelpSectionView } from "./helpSectionView";
 import { ModPackFilesView } from "./modPackFilesView";
 import { FlexPanel } from "../../components/flexPanel";

@@ -1,6 +1,6 @@
 ﻿import { ModsService } from "./modsService";
 import { ErrorService } from "../../services/errorService";
-import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
+import { ObservableObjectCloseBaseViewModel } from "../../utils/closeBaseViewModel";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ModPackMetaData } from "../servers/serversTypes";

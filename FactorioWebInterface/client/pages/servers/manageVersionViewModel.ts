@@ -1,4 +1,4 @@
-﻿import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
+﻿import { ObservableObjectCloseBaseViewModel } from "../../utils/closeBaseViewModel";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { ManageVersionService } from "./manageVersionService";
 import { IterableHelper } from "../../utils/iterableHelper";

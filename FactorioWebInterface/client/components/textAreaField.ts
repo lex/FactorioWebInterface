@@ -1,4 +1,4 @@
-﻿import "./textareaField.ts.less";
+﻿import "./textAreaField.ts.less";
 import { InputFieldBase } from "./inputFieldBase";
 import { EventListener } from "../utils/eventListener";
 import { Label } from "./label";

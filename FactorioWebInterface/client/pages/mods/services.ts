@@ -6,7 +6,7 @@ import { WindowService } from "../../services/windowService";
 import { ModsViewModel } from "./modsViewModel";
 import { IModalService } from "../../services/iModalService";
 import { ErrorService } from "../../services/errorService";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 
 export function registerModsPageServices(serviceLocator: ServiceLocator): ServiceLocator {
     serviceLocator.register(ModsHubService, () => new ModsHubService());

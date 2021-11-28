@@ -4,7 +4,7 @@ import { Table, TextColumn, ColumnTemplate } from "../../components/table";
 import { Button } from "../../components/button";
 import { Collapse } from "../../components/collapse";
 import { VirtualForm } from "../../components/virtualForm";
-import { TextareaField } from "../../components/textareaField";
+import { TextareaField } from "../../components/textAreaField";
 import { Field } from "../../components/field";
 import { Admin } from "./adminsTypes";
 import { FlexPanel } from "../../components/flexPanel";

@@ -10,7 +10,7 @@ import { DateField } from "../../components/dateField";
 import { CheckboxField } from "../../components/checkboxField";
 import { Field } from "../../components/field";
 import { TimeField } from "../../components/timeField";
-import { TextareaField } from "../../components/textareaField";
+import { TextareaField } from "../../components/textAreaField";
 import { ToggleButton } from "../../components/toggleButton";
 import { Ban } from "./ban";
 import { FlexPanel } from "../../components/flexPanel";

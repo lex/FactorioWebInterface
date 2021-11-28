@@ -4,7 +4,7 @@ import { IModalService } from "../../services/iModalService";
 import { ModalServiceMockBase } from "../../testUtils/services/modalServiceMockBase";
 import { NewModPackViewModel } from "./newModPackViewModel";
 import { RenameModPackViewModel } from "./renameModPackViewModel";
-import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
+import { DeleteModPackViewModel } from "./deleteModPackViewModel";
 import { ModsViewModel } from "./modsViewModel";
 import { ModPackMetaData } from "../servers/serversTypes";
 import { ModsHubService } from "./modsHubService";

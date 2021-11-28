@@ -1,4 +1,4 @@
-﻿import { ValidationResult } from "./ValidationResult";
+﻿import { ValidationResult } from "./validationResult";
 import { NotEmptyString, NoWhitespaceString, NotNull, MaxStringLength, MinMaxStringLength, EqualToOtherString } from "./validationRule";
 import { strict } from "assert";
 import { assertValidationResultEqual } from "../../testUtils/utils/validation";

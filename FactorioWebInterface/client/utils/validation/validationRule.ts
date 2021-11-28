@@ -1,4 +1,4 @@
-﻿import { ValidationResult } from "./ValidationResult";
+﻿import { ValidationResult } from "./validationResult";
 
 export interface IValidationRule<T> {
     validate(value: any, obj?: T): ValidationResult;

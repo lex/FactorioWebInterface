@@ -1,4 +1,4 @@
-﻿import { ObservableObjectCloseBaseViewModel } from "../../utils/CloseBaseViewModel";
+﻿import { ObservableObjectCloseBaseViewModel } from "../../utils/closeBaseViewModel";
 import { ModsService } from "./modsService";
 import { DelegateCommand, ICommand } from "../../utils/command";
 import { IObservableErrors, ObservableErrors } from "../../utils/observableErrors";

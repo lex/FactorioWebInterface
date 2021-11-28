@@ -1,7 +1,7 @@
 ﻿import { VirtualForm } from "../../components/virtualForm";
 import { UpdateDataViewModel } from "./updateDataViewModel";
 import { TextField } from "../../components/textField";
-import { TextareaField } from "../../components/textareaField";
+import { TextareaField } from "../../components/textAreaField";
 import { VirtualComponent } from "../../components/virtualComponent";
 import { Collapse } from "../../components/collapse";
 import { ToggleButton } from "../../components/toggleButton";

@@ -1,4 +1,4 @@
-﻿import { ValidationResult } from "./ValidationResult";
+﻿import { ValidationResult } from "./validationResult";
 import { IValidationGroup } from "./validationGroup";
 
 export class Validator<T> {

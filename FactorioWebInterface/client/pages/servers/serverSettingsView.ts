@@ -3,7 +3,7 @@ import { ServerSettingsViewModel } from "./serverSettingsViewModel";
 import { Collapse } from "../../components/collapse";
 import { VirtualForm } from "../../components/virtualForm";
 import { TextField } from "../../components/textField";
-import { TextareaField } from "../../components/textareaField";
+import { TextareaField } from "../../components/textAreaField";
 import { NumberField } from "../../components/numberField";
 import { CheckboxField } from "../../components/checkboxField";
 import { Field } from "../../components/field";

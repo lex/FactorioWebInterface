@@ -1,4 +1,4 @@
-﻿import { FileSelectionService } from "../../services/fileSelectionservice";
+﻿import { FileSelectionService } from "../../services/fileSelectionService";
 import { InvokeBase } from "../invokeBase";
 import { PublicPart } from "../../utils/types";
 

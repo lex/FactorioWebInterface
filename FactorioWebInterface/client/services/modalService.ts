@@ -1,5 +1,5 @@
 ﻿import { ViewLocator } from "./viewLocator";
-import { IClose } from "../utils/CloseBaseViewModel";
+import { IClose } from "../utils/closeBaseViewModel";
 import { Observable } from "../utils/observable";
 import { ModalBackground } from "../components/modalBackground";
 import { EventListener } from "../utils/eventListener";

@@ -2,7 +2,7 @@
 import { Modal } from "../../components/modal";
 import { FlexPanel } from "../../components/flexPanel";
 import { Button } from "../../components/button";
-import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
+import { DeleteModPackViewModel } from "./deleteModPackViewModel";
 import { Label } from "../../components/label";
 
 export class DeleteModPackView extends VirtualComponent {

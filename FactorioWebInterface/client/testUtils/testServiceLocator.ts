@@ -1,7 +1,7 @@
 ﻿import { ServiceLocator } from "../utils/serviceLocator";
 import { CopyToClipboardService } from "../services/copyToClipboardService";
 import { RequestVerificationService } from "../services/requestVerificationService";
-import { FileSelectionService } from "../services/fileSelectionservice";
+import { FileSelectionService } from "../services/fileSelectionService";
 import { UploadService } from "../services/uploadService";
 import { ErrorService } from "../services/errorService";
 import { ErrorServiceMockBase } from "./services/errorServiceMockBase";

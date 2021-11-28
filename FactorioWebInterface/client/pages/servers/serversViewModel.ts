@@ -13,7 +13,7 @@ import { ServerConsoleService } from "./serverConsoleService";
 import { ServerExtraSettingsViewModel } from "./serverExtraSettingsViewModel";
 import { ServerFileManagementViewModel } from "./serverFileManagementViewModel";
 import { ServerFileManagementService } from "./serverFileManagementService";
-import { FileSelectionService } from "../../services/fileSelectionservice";
+import { FileSelectionService } from "../../services/fileSelectionService";
 import { ErrorService } from "../../services/errorService";
 import { IModalService } from "../../services/iModalService";
 import { ManageVersionService } from "./manageVersionService";

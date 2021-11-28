@@ -1,7 +1,7 @@
 ﻿import { ServiceLocator } from "../utils/serviceLocator";
 import { CopyToClipboardService } from "./copyToClipboardService";
 import { RequestVerificationService } from "./requestVerificationService";
-import { FileSelectionService } from "./fileSelectionservice";
+import { FileSelectionService } from "./fileSelectionService";
 import { UploadService } from "./uploadService";
 import { ErrorService } from "./errorService";
 import { WindowService } from "./windowService";

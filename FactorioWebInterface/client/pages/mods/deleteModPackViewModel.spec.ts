@@ -1,5 +1,5 @@
 ﻿import { ModsPageTestServiceLocator } from "../../testUtils/testServiceLocator";
-import { DeleteModPackViewModel } from "./DeleteModPackViewModel";
+import { DeleteModPackViewModel } from "./deleteModPackViewModel";
 import { ModPackMetaData } from "../servers/serversTypes";
 import { ModsService } from "./modsService";
 import { ErrorService } from "../../services/errorService";
