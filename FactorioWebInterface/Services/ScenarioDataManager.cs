@@ -117,9 +117,9 @@ namespace FactorioWebInterface.Services
         /// <param name="data"></param>
         /// <param name="serverId">Source server for data, empty string if from web.</param>
         /// <returns></returns>
-        public async Task UpdateEntry(ScenarioDataEntry data, string serverId = "")
+        public async Task UpdateEntry(ScenarioDataEntry? data, string serverId = "")
         {
-            if (data.DataSet == null || data.Key == null)
+            if (data?.DataSet == null || data.Key == null)
             {
                 return;
             }
