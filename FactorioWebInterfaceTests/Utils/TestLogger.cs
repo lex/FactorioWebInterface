@@ -44,7 +44,7 @@ namespace FactorioWebInterfaceTests.Utils
             return true;
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception, string> formatter)
         {
             RecordInvoke(nameof(Log), logLevel, eventId, state!, exception, formatter);
             callback?.Invoke(logLevel, state!);
@@ -55,7 +55,7 @@ namespace FactorioWebInterfaceTests.Utils
             callback = null;
         }
 
-        private void RecordInvoke([CallerMemberName] string name = "", params object[] arguments)
+        private void RecordInvoke([CallerMemberName] string name = "", params object?[] arguments)
         {
             invocations.Add(new MethodInvokeData(name, arguments));
         }
