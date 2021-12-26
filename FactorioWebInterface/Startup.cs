@@ -47,6 +47,8 @@ namespace FactorioWebInterface
 
             services.AddDbContextPool<ScenarioDbContext>(options => options.UseSqlite("Data Source=Scenario.db"));
 
+            services.AddDatabaseDeveloperPageExceptionFilter();
+
             services.AddSingleton<IDbContextFactory, DbContextFactory>();
 
             SetupIdentity(services);
@@ -163,7 +165,7 @@ namespace FactorioWebInterface
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+                app.UseMigrationsEndPoint();
                 //app.UseBrowserLink(); This prevented the application from running on linux.
             }
             else

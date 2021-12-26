@@ -79,7 +79,7 @@ module.exports = (env, argv) => {
             new webpack.ProvidePlugin({
                 Buffer: 'buffer',
                 util: 'util',
-                process: 'process/browser',
+                process: 'process/browser.js',
             })
         ],
         optimization: {

@@ -21,7 +21,7 @@ namespace FactorioWebInterfaceTests.Utils
             }
 
             var options = new DbContextOptionsBuilder<T>()
-                    .UseSqlite(connection)
+                    .UseSqlite(connection!)
                     .Options;
 
             var value = (T)Activator.CreateInstance(typeof(T), options)!;
