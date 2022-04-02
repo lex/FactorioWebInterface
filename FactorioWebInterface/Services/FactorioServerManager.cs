@@ -875,7 +875,7 @@ namespace FactorioWebInterface.Services
 
                         string versionText = version == "latest" && executableVersion != FactorioVersionFinder.errorMesssage
                             ? $"{executableVersion} (latest)"
-                            : version;
+                            : executableVersion;
 
                         var embed = new EmbedBuilder()
                         {
