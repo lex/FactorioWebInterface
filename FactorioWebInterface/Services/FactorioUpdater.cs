@@ -16,7 +16,7 @@ namespace FactorioWebInterface.Services
 {
     public class FactorioUpdater
     {
-        private static readonly Regex downloadRegex = new Regex(@"/get-download/(\d+\.\d+\.\d+)/headless/linux64", RegexOptions.Compiled);
+        private static readonly Regex downloadRegex = new Regex(@"/download/archive/(\d+\.\d+\.\d+)", RegexOptions.Compiled);
         private static readonly Regex versionRegex = new Regex(@"factorio_headless_x64_(\d+\.\d+\.\d+)", RegexOptions.Compiled);
 
         private readonly SemaphoreSlim downloadLock = new SemaphoreSlim(1);
@@ -203,7 +203,7 @@ namespace FactorioWebInterface.Services
                     return null;
                 }
 
-                string? fileName = download.Content.Headers.ContentDisposition?.FileName;
+                string? fileName = download.Content.Headers.ContentDisposition?.FileName ?? download.RequestMessage?.RequestUri?.Segments.LastOrDefault();
                 string processedFileName = GetVersionOrFileName(fileName);
 
                 var binariesPath = Path.Combine(_factorioServerDataService.UpdateCacheDirectoryPath, processedFileName);

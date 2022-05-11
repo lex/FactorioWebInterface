@@ -120,9 +120,9 @@ namespace FactorioWebInterfaceTests.Services.Discord.DiscordBotHelpServiceTests
         private ISocketMessageChannel TestChannel(Action<Embed> callback)
         {
             var channelMock = new Mock<ISocketMessageChannel>(MockBehavior.Strict);
-            channelMock.Setup(x => x.SendMessageAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>(), It.IsAny<AllowedMentions>(), It.IsAny<MessageReference>()))
+            channelMock.Setup(x => x.SendMessageAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<Embed>(), It.IsAny<RequestOptions>(), It.IsAny<AllowedMentions>(), It.IsAny<MessageReference>(), It.IsAny<MessageComponent>(), It.IsAny<ISticker[]>(), It.IsAny<Embed[]>()))
                 .Returns(Task.FromResult<RestUserMessage>(null!))
-                .Callback((string _, bool __, Embed embed, RequestOptions ___, AllowedMentions ____, MessageReference _____) => callback(embed));
+                .Callback((string _, bool __, Embed embed, RequestOptions ___, AllowedMentions ____, MessageReference _____, MessageComponent ______, ISticker[] _______, Embed[] ________) => callback(embed));
 
             return channelMock.Object;
         }

@@ -17,7 +17,7 @@ namespace FactorioWebInterface.Services.Discord
         string? CrashRoleMention { get; }
 
         Task<bool> IsAdminRoleAsync(ulong userId);
-        Task<bool> IsAdminRoleAsync(string userId);
+        Task<bool> IsAdminRoleAsync(string? userId);
         Task<Result> SetServer(string serverId, ulong channelId);
         Task<Result> SetAdminChannel(ulong channelId);
         Task<Result<string?>> UnSetServer(ulong channelId);
@@ -143,7 +143,7 @@ namespace FactorioWebInterface.Services.Discord
         /// Returns a boolean for if the discord user has the admin-like role in the Redmew guild.
         /// </summary>
         /// <param name="userId">The discord user's id.</param> 
-        public Task<bool> IsAdminRoleAsync(string userId)
+        public Task<bool> IsAdminRoleAsync(string? userId)
         {
             if (ulong.TryParse(userId, out ulong id))
                 return IsAdminRoleAsync(id);

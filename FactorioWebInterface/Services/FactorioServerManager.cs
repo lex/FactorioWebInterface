@@ -875,7 +875,7 @@ namespace FactorioWebInterface.Services
 
                         string versionText = version == "latest" && executableVersion != FactorioVersionFinder.errorMesssage
                             ? $"{executableVersion} (latest)"
-                            : version;
+                            : executableVersion;
 
                         var embed = new EmbedBuilder()
                         {
@@ -1417,7 +1417,7 @@ namespace FactorioWebInterface.Services
             string[] players;
             try
             {
-                players = JsonConvert.DeserializeObject<string[]>(content);
+                players = JsonConvert.DeserializeObject<string[]>(content) ?? Array.Empty<string>();
             }
             catch (Exception e)
             {
@@ -1458,7 +1458,7 @@ namespace FactorioWebInterface.Services
             string[] dataSets;
             try
             {
-                dataSets = JsonConvert.DeserializeObject<string[]>(content);
+                dataSets = JsonConvert.DeserializeObject<string[]>(content) ?? Array.Empty<string>();
             }
             catch (Exception e)
             {
@@ -1494,7 +1494,7 @@ namespace FactorioWebInterface.Services
             string func = content.Substring(0, space);
             string dataString = content.Substring(space + 1, rest);
 
-            ScenarioDataEntry data;
+            ScenarioDataEntry? data;
             try
             {
                 data = JsonConvert.DeserializeObject<ScenarioDataEntry>(dataString);
@@ -1505,7 +1505,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (data.DataSet == null || data.Key == null)
+            if (data?.DataSet == null || data.Key == null)
             {
                 return;
             }
@@ -1553,7 +1553,7 @@ namespace FactorioWebInterface.Services
             string func = content.Substring(0, space);
             string dataString = content.Substring(space + 1, rest);
 
-            ScenarioDataEntry data;
+            ScenarioDataEntry? data;
             try
             {
                 data = JsonConvert.DeserializeObject<ScenarioDataEntry>(dataString);
@@ -1564,7 +1564,7 @@ namespace FactorioWebInterface.Services
                 return;
             }
 
-            if (data.DataSet == null)
+            if (data?.DataSet == null)
             {
                 return;
             }
@@ -1606,7 +1606,7 @@ namespace FactorioWebInterface.Services
 
         private async Task DoSetData(string serverId, string content)
         {
-            ScenarioDataEntry data;
+            ScenarioDataEntry? data;
             try
             {
                 data = JsonConvert.DeserializeObject<ScenarioDataEntry>(content);
@@ -1992,7 +1992,7 @@ namespace FactorioWebInterface.Services
 
             mutableData.ServerSettings = settings;
 
-            return settings;
+            return settings!;
         }
 
         private async Task<string[]> GetServerAdminList(FactorioServerMutableData mutableData)
@@ -2023,7 +2023,7 @@ namespace FactorioWebInterface.Services
                 using (var s = fi.OpenText())
                 {
                     string output = await s.ReadToEndAsync();
-                    adminList = JsonConvert.DeserializeObject<string[]>(output);
+                    adminList = JsonConvert.DeserializeObject<string[]>(output) ?? Array.Empty<string>();
                 }
             }
 

@@ -99,7 +99,7 @@ namespace FactorioWebInterface.Pages.Admin
             }
 
             var content = await tokenResult.Content.ReadAsAsync<JObject>();
-            string access_token = content.Value<string>("access_token");
+            string access_token = content.Value<string>("access_token")!;
 
             var userRequest = new HttpRequestMessage(HttpMethod.Get, "https://discordapp.com/api/users/@me");
             userRequest.Headers.Add("Authorization", "Bearer " + access_token);
