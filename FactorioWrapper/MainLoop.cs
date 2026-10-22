@@ -389,7 +389,8 @@ namespace FactorioWrapper
                 var startInfo = factorioProcess.StartInfo;
                 startInfo.FileName = factorioFileName;
                 // The rcon password is added after logging so that it doesn't end up in the log file.
-                startInfo.Arguments = $"{factorioArguments} --rcon-port {rconPort} --rcon-password {rconPassword}";
+                // Rcon is bound to localhost so that it isn't reachable from outside this machine.
+                startInfo.Arguments = $"{factorioArguments} --rcon-bind 127.0.0.1:{rconPort} --rcon-password {rconPassword}";
                 startInfo.UseShellExecute = false;
                 startInfo.CreateNoWindow = true;
                 startInfo.RedirectStandardInput = true;
