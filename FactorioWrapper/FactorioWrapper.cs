@@ -2,6 +2,7 @@
 using Serilog;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace FactorioWrapper
 {
@@ -53,6 +54,13 @@ namespace FactorioWrapper
                 if (string.IsNullOrWhiteSpace(settings.Url))
                 {
                     settings.Url = url;
+                }
+
+                // The password is passed to factorio as a command line argument, so it can't contain whitespace or quotes.
+                if (settings.RconPassword != null && settings.RconPassword.Any(c => char.IsWhiteSpace(c) || c == '"'))
+                {
+                    Log.Fatal("rcon_password in settings.json must not contain whitespace or quotes");
+                    return;
                 }
 
                 if (args.Length < 3)

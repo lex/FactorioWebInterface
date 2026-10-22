@@ -12,5 +12,9 @@ namespace FactorioWrapper
         [JsonProperty(PropertyName = "url")]
         [JsonPropertyName("url")]
         public string Url { get; set; }
+
+        [JsonProperty(PropertyName = "rcon_password")]
+        [JsonPropertyName("rcon_password")]
+        public string RconPassword { get; set; }
     }
 }

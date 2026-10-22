@@ -7,6 +7,7 @@ using Shared.Utils;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace FactorioWrapper
         private readonly Settings settings;
         private readonly string serverId;
         private readonly string factorioFileName;
-        private string factorioArguments;
+        private readonly string factorioArguments;
 
         // This is to stop multiple threads writing to the factorio process concurrently.
         private readonly SemaphoreSlim factorioProcessLock = new SemaphoreSlim(1, 1);
@@ -45,9 +46,9 @@ namespace FactorioWrapper
 
         private volatile RconMessenger rcon;
         private int rconPort;
-        private const string rconPassword = "no_one_will_guess_this_awesome_password.";
+        private readonly string rconPassword;
 
-        private void PrependRconArguments()
+        private void SetRconPort()
         {
             int index = factorioArguments.IndexOf("--port");
 
@@ -61,8 +62,6 @@ namespace FactorioWrapper
             string port = factorioArguments.Substring(start, end - start);
 
             int.TryParse(port, out rconPort);
-
-            factorioArguments += $" --rcon-port {rconPort} --rcon-password {rconPassword}";
         }
 
         private async Task ConnectRCON()
@@ -88,7 +87,12 @@ namespace FactorioWrapper
             this.factorioFileName = factorioFileName;
             this.factorioArguments = factorioArguments;
 
-            PrependRconArguments();
+            // Fall back to a random password so RCON is never left with a known password.
+            rconPassword = string.IsNullOrWhiteSpace(settings.RconPassword)
+                ? Convert.ToHexString(RandomNumberGenerator.GetBytes(32))
+                : settings.RconPassword;
+
+            SetRconPort();
 
             messageQueue = new SingleConsumerQueue<Func<Task>>(maxMessageQueueSize, async func =>
             {
@@ -384,7 +388,9 @@ namespace FactorioWrapper
                 factorioProcess = new Process();
                 var startInfo = factorioProcess.StartInfo;
                 startInfo.FileName = factorioFileName;
-                startInfo.Arguments = factorioArguments;
+                // The rcon password is added after logging so that it doesn't end up in the log file.
+                // Rcon is bound to localhost so that it isn't reachable from outside this machine.
+                startInfo.Arguments = $"{factorioArguments} --rcon-bind 127.0.0.1:{rconPort} --rcon-password {rconPassword}";
                 startInfo.UseShellExecute = false;
                 startInfo.CreateNoWindow = true;
                 startInfo.RedirectStandardInput = true;
